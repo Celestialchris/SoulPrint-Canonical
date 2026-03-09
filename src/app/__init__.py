@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
+import os
 
 from .models.db import db
 from ..config import Config
@@ -9,6 +10,13 @@ from .models import MemoryEntry
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    db_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+    if db_uri.startswith("sqlite:///"):
+        db_path = db_uri.replace("sqlite:///", "", 1)
+        db_dir = os.path.dirname(db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
 
     db.init_app(app)
 

@@ -1,6 +1,3 @@
-flask
-flask_sqlalchemy
+Flask
+Flask-SQLAlchemy
 python-dotenv
-chromadb
-sentence-transformers
-cryptography
