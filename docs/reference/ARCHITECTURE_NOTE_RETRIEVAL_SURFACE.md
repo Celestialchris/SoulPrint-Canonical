@@ -17,6 +17,12 @@ SoulPrint currently exposes retrieval through two explicit surfaces:
 
 These are intentionally separate and preserve current Milestone 1 behavior.
 
+3. **Federated read-only retrieval (minimal composition layer)**
+   - `federated_search(sqlite_path, keyword='', limit_per_lane=25)`
+   - Module: `src/retrieval/federated.py`
+   - Composes existing lane reads without changing storage models.
+   - Returns lightweight records with explicit lane/source provenance and stable IDs.
+
 ## Evolution guidance (without premature architecture)
 
 Near-term evolution should keep current storage untouched and improve retrieval ergonomics:
