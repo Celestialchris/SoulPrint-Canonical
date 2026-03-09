@@ -16,6 +16,17 @@ See:
 - sample fixture: `sample_data/chatgpt_export_sample.json`
 - tests: `tests/test_chatgpt_importer.py`
 
+## Duplicate import policy (ChatGPT lane)
+
+To prevent accidental re-imports of the same source conversation, the importer applies a minimal duplicate guard during persistence:
+
+- Identity key: `(source, source_conversation_id)`
+- Current source value for this lane: `chatgpt`
+- If that key already exists, the conversation is **skipped** (no duplicate conversation row and no duplicate message rows)
+- New source conversation IDs are still imported normally
+
+The import path reports both imported and skipped conversation counts.
+
 ## Minimal ChatGPT import CLI (local/dev)
 
 Use the importer CLI to load one ChatGPT export fixture or file into SQLite:
