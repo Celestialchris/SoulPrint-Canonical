@@ -1,6 +1,22 @@
-# Setup
+# Setup (Milestone 1 Baseline)
+
+This repository is currently stabilized around the verified Milestone 1 runtime:
+- app boot
+- `POST /save`
+- `GET /chats`
+
+No mem0, RAG, agent orchestration, or importer expansion is included in this baseline.
 
 ## 1) Create and activate a virtual environment
+
+### Windows PowerShell
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+### Linux/macOS (bash/zsh)
 
 ```bash
 python3 -m venv .venv
@@ -15,7 +31,7 @@ For Milestone 1 runtime (Flask + SQLite only):
 pip install -r requirements-minimal.txt
 ```
 
-For broader optional dependencies:
+Optional broader dependency set (not required for Milestone 1 smoke runtime):
 
 ```bash
 pip install -r requirements.txt
@@ -23,19 +39,27 @@ pip install -r requirements.txt
 
 ## 3) Run the app
 
+### Windows PowerShell
+
+```powershell
+python -m src.run
+```
+
+### Linux/macOS
+
 ```bash
 python -m src.run
 ```
 
-The app creates `instance/` if needed and initializes the SQLite database at `instance/soulprint.db` on first boot.
+On first boot, the app ensures `instance/` exists and initializes SQLite at `instance/soulprint.db`.
 
-## Validation status
+## 4) Run the Milestone 1 smoke test
 
-This repository repair validated only these checks in an automated shell:
-- `import src.run` succeeds
-- `create_app()` succeeds
-- Flask routes can be listed from the created app object
+```bash
+python -m unittest tests.test_milestone1_smoke
+```
 
-Local manual verification still required:
-- Open the UI in a browser and verify end-to-end interactions (`/`, `/save`, `/chats`)
-- Confirm persistence behavior in your local environment
+The smoke test verifies:
+- app import path works
+- app factory boots
+- Flask route map includes `/`, `/save`, and `/chats`
