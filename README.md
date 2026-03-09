@@ -30,6 +30,7 @@ After importing, you can inspect imported conversations and view one conversatio
 
 ```bash
 python -m src.importers.query_cli --db instance/soulprint.db list
+python -m src.importers.query_cli --db instance/soulprint.db search "trip"
 python -m src.importers.query_cli --db instance/soulprint.db show 1
 ```
 
