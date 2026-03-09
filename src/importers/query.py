@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from flask import Flask
+from sqlalchemy import func
 
 from src.app.models import ImportedConversation, ImportedMessage
 from src.app.models.db import db
@@ -46,6 +47,16 @@ class ImportedConversationDetail:
     created_at_unix: float | None
     updated_at_unix: float | None
     messages: list[ImportedMessageRecord]
+
+
+@dataclass(frozen=True)
+class ImportedConversationSearchResult:
+    """Lightweight conversation row returned by keyword search."""
+
+    id: int
+    source: str
+    source_conversation_id: str
+    title: str
 
 
 def _sqlite_app(sqlite_path: str | Path) -> Flask:
@@ -124,6 +135,57 @@ def get_imported_conversation(
                     for message in messages
                 ],
             )
+        finally:
+            db.session.remove()
+            db.engine.dispose()
+
+
+def search_imported_conversations(
+    sqlite_path: str | Path,
+    keyword: str,
+    limit: int = 50,
+) -> list[ImportedConversationSearchResult]:
+    """Search imported conversations by title and message content.
+
+    The search is SQLite-backed and intentionally minimal: case-insensitive
+    `LIKE` matching over conversation title and imported message content.
+    """
+
+    cleaned = keyword.strip()
+    if not cleaned:
+        return []
+
+    pattern = f"%{cleaned.lower()}%"
+    app = _sqlite_app(sqlite_path)
+    with app.app_context():
+        try:
+            message_match_exists = (
+                ImportedMessage.query.filter(
+                    ImportedMessage.conversation_id == ImportedConversation.id,
+                    func.lower(ImportedMessage.content).like(pattern),
+                )
+                .exists()
+            )
+
+            rows = (
+                ImportedConversation.query.filter(
+                    (func.lower(ImportedConversation.title).like(pattern))
+                    | message_match_exists
+                )
+                .order_by(ImportedConversation.id.desc())
+                .limit(limit)
+                .all()
+            )
+
+            return [
+                ImportedConversationSearchResult(
+                    id=row.id,
+                    source=row.source,
+                    source_conversation_id=row.source_conversation_id,
+                    title=row.title,
+                )
+                for row in rows
+            ]
         finally:
             db.session.remove()
             db.engine.dispose()

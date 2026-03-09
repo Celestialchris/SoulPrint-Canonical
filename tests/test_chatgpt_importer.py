@@ -10,7 +10,11 @@ from src.app.models import ImportedConversation, ImportedMessage
 from src.app.models.db import db
 from src.importers import parse_chatgpt_export_file, persist_normalized_conversations
 from src.importers.cli import import_chatgpt_export_to_sqlite
-from src.importers.query import get_imported_conversation, list_imported_conversations
+from src.importers.query import (
+    get_imported_conversation,
+    list_imported_conversations,
+    search_imported_conversations,
+)
 
 
 class ChatGPTImporterTest(unittest.TestCase):
@@ -112,6 +116,34 @@ class ChatGPTImporterTest(unittest.TestCase):
             self.assertEqual(detail.title, "Trip planning")
             self.assertEqual([m.sequence_index for m in detail.messages], [0, 1, 2])
             self.assertEqual([m.role for m in detail.messages], ["user", "assistant", "user"])
+
+    def test_search_imported_conversations_matches_title_and_content(self):
+        fixture = Path("sample_data/chatgpt_export_sample.json")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sqlite_path = Path(tmpdir) / "query_search.db"
+            import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+
+            title_matches = search_imported_conversations(sqlite_path, "trip")
+            self.assertEqual([row.source_conversation_id for row in title_matches], ["conv-1"])
+
+            content_matches = search_imported_conversations(sqlite_path, "No title")
+            self.assertEqual([row.source_conversation_id for row in content_matches], ["conv-2"])
+
+    def test_search_imported_conversations_is_case_insensitive_and_deterministic(self):
+        fixture = Path("sample_data/chatgpt_export_sample.json")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sqlite_path = Path(tmpdir) / "query_search_order.db"
+            import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+            import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+
+            rows = search_imported_conversations(sqlite_path, "TRIP")
+            self.assertEqual([row.source_conversation_id for row in rows], ["conv-1", "conv-1"])
+            self.assertGreater(rows[0].id, rows[1].id)
+
+            empty = search_imported_conversations(sqlite_path, "   ")
+            self.assertEqual(empty, [])
 
 
 if __name__ == "__main__":
