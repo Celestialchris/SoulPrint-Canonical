@@ -92,3 +92,10 @@ PY
 ```bash
 python -m src.importers.query_cli --db instance/soulprint.db export-md 1 exports/conversation-1.md
 ```
+
+## 7) Query federated retrieval across both lanes (local/dev)
+
+```bash
+python -m src.retrieval.cli --db instance/soulprint.db
+python -m src.retrieval.cli --db instance/soulprint.db "trip"
+```

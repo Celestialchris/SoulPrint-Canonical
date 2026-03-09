@@ -45,6 +45,13 @@ SoulPrint now includes a minimal federated retrieval helper that composes both c
 - lanes returned: `native_memory` + `imported_conversation`
 - each result includes explicit lane/source, stable ID, title text, timestamp (if available), and source metadata
 
+Developer CLI for quick local inspection:
+
+```bash
+python -m src.retrieval.cli --db instance/soulprint.db
+python -m src.retrieval.cli --db instance/soulprint.db "lisbon"
+```
+
 ## Minimal imported conversation query CLI (local/dev)
 
 After importing, you can inspect imported conversations and view one conversation with ordered messages:
