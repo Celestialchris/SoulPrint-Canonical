@@ -15,3 +15,22 @@ See:
 - persistence: `src/importers/persistence.py`
 - sample fixture: `sample_data/chatgpt_export_sample.json`
 - tests: `tests/test_chatgpt_importer.py`
+
+## Minimal ChatGPT import CLI (local/dev)
+
+Use the importer CLI to load one ChatGPT export fixture or file into SQLite:
+
+```bash
+python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
+```
+
+You can verify imported rows with SQLite:
+
+```bash
+python - <<'PY'
+import sqlite3
+conn = sqlite3.connect('instance/soulprint.db')
+print('conversations:', conn.execute('select count(*) from imported_conversation').fetchone()[0])
+print('messages:', conn.execute('select count(*) from imported_message').fetchone()[0])
+PY
+```
