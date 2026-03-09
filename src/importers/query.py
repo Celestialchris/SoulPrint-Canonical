@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 from flask import Flask
@@ -57,6 +58,68 @@ class ImportedConversationSearchResult:
     source: str
     source_conversation_id: str
     title: str
+
+
+def _format_timestamp(timestamp_unix: float | None) -> str:
+    """Render a deterministic timestamp string for markdown exports."""
+
+    if timestamp_unix is None:
+        return "N/A"
+
+    iso_utc = (
+        datetime.fromtimestamp(timestamp_unix, tz=timezone.utc)
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z")
+    )
+    return f"{timestamp_unix:.3f} ({iso_utc})"
+
+
+def render_imported_conversation_markdown(detail: ImportedConversationDetail) -> str:
+    """Render one imported conversation as a readable markdown document."""
+
+    lines = [
+        f"# {detail.title}",
+        "",
+        "## Conversation Metadata",
+        f"- Source: {detail.source}",
+        f"- Source Conversation ID: {detail.source_conversation_id}",
+        f"- Created At: {_format_timestamp(detail.created_at_unix)}",
+        f"- Updated At: {_format_timestamp(detail.updated_at_unix)}",
+        "",
+        "## Messages",
+    ]
+
+    for message in detail.messages:
+        lines.extend(
+            [
+                "",
+                f"### [{message.sequence_index}] {message.role}",
+                f"- Source Message ID: {message.source_message_id}",
+                f"- Created At: {_format_timestamp(message.created_at_unix)}",
+                "",
+                message.content,
+            ]
+        )
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def export_imported_conversation_markdown(
+    sqlite_path: str | Path,
+    conversation_id: int,
+    output_path: str | Path,
+) -> Path | None:
+    """Export one imported conversation to a markdown file."""
+
+    detail = get_imported_conversation(sqlite_path, conversation_id)
+    if detail is None:
+        return None
+
+    rendered = render_imported_conversation_markdown(detail)
+    output_file = Path(output_path)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    output_file.write_text(rendered, encoding="utf-8")
+    return output_file
 
 
 def _sqlite_app(sqlite_path: str | Path) -> Flask:
