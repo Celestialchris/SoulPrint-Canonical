@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
+import os
 
 from .models.db import db
 from ..config import Config
@@ -9,6 +10,9 @@ from .models import MemoryEntry
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    db_path = os.path.abspath(os.path.join(app.root_path, "..", "..", "instance"))
+    os.makedirs(db_path, exist_ok=True)
 
     db.init_app(app)
 
