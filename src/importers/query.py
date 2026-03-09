@@ -64,22 +64,26 @@ def list_imported_conversations(
 
     app = _sqlite_app(sqlite_path)
     with app.app_context():
-        rows = (
-            ImportedConversation.query.order_by(ImportedConversation.id.desc())
-            .limit(limit)
-            .all()
-        )
-        return [
-            ImportedConversationSummary(
-                id=row.id,
-                source=row.source,
-                source_conversation_id=row.source_conversation_id,
-                title=row.title,
-                created_at_unix=row.created_at_unix,
-                updated_at_unix=row.updated_at_unix,
+        try:
+            rows = (
+                ImportedConversation.query.order_by(ImportedConversation.id.desc())
+                .limit(limit)
+                .all()
             )
-            for row in rows
-        ]
+            return [
+                ImportedConversationSummary(
+                    id=row.id,
+                    source=row.source,
+                    source_conversation_id=row.source_conversation_id,
+                    title=row.title,
+                    created_at_unix=row.created_at_unix,
+                    updated_at_unix=row.updated_at_unix,
+                )
+                for row in rows
+            ]
+        finally:
+            db.session.remove()
+            db.engine.dispose()
 
 
 def get_imported_conversation(
@@ -90,32 +94,36 @@ def get_imported_conversation(
 
     app = _sqlite_app(sqlite_path)
     with app.app_context():
-        row = ImportedConversation.query.filter_by(id=conversation_id).first()
-        if row is None:
-            return None
+        try:
+            row = ImportedConversation.query.filter_by(id=conversation_id).first()
+            if row is None:
+                return None
 
-        messages = (
-            ImportedMessage.query.filter_by(conversation_id=row.id)
-            .order_by(ImportedMessage.sequence_index.asc())
-            .all()
-        )
+            messages = (
+                ImportedMessage.query.filter_by(conversation_id=row.id)
+                .order_by(ImportedMessage.sequence_index.asc())
+                .all()
+            )
 
-        return ImportedConversationDetail(
-            id=row.id,
-            source=row.source,
-            source_conversation_id=row.source_conversation_id,
-            title=row.title,
-            created_at_unix=row.created_at_unix,
-            updated_at_unix=row.updated_at_unix,
-            messages=[
-                ImportedMessageRecord(
-                    id=message.id,
-                    source_message_id=message.source_message_id,
-                    role=message.role,
-                    content=message.content,
-                    sequence_index=message.sequence_index,
-                    created_at_unix=message.created_at_unix,
-                )
-                for message in messages
-            ],
-        )
+            return ImportedConversationDetail(
+                id=row.id,
+                source=row.source,
+                source_conversation_id=row.source_conversation_id,
+                title=row.title,
+                created_at_unix=row.created_at_unix,
+                updated_at_unix=row.updated_at_unix,
+                messages=[
+                    ImportedMessageRecord(
+                        id=message.id,
+                        source_message_id=message.source_message_id,
+                        role=message.role,
+                        content=message.content,
+                        sequence_index=message.sequence_index,
+                        created_at_unix=message.created_at_unix,
+                    )
+                    for message in messages
+                ],
+            )
+        finally:
+            db.session.remove()
+            db.engine.dispose()
