@@ -35,6 +35,16 @@ Use the importer CLI to load one ChatGPT export fixture or file into SQLite:
 python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
 ```
 
+
+## Minimal federated retrieval surface (read-only)
+
+SoulPrint now includes a minimal federated retrieval helper that composes both current storage lanes without changing schemas:
+
+- module: `src/retrieval/federated.py`
+- function: `federated_search(sqlite_path, keyword='', limit_per_lane=25)`
+- lanes returned: `native_memory` + `imported_conversation`
+- each result includes explicit lane/source, stable ID, title text, timestamp (if available), and source metadata
+
 ## Minimal imported conversation query CLI (local/dev)
 
 After importing, you can inspect imported conversations and view one conversation with ordered messages:
