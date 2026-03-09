@@ -15,6 +15,8 @@ from sqlalchemy import func
 from src.app.models import ImportedConversation, ImportedMessage, MemoryEntry
 from src.app.models.db import db
 
+from .mem0_adapter import ingest_federated_items, mem0_write_mode
+
 
 @dataclass(frozen=True)
 class FederatedReadResult:
@@ -122,7 +124,7 @@ def federated_search(
                 for row in imported_rows
             )
 
-            return sorted(
+            merged = sorted(
                 results,
                 key=lambda item: (
                     item.timestamp_unix is not None,
@@ -130,6 +132,11 @@ def federated_search(
                 ),
                 reverse=True,
             )
+
+            if mem0_write_mode() == "best_effort":
+                ingest_federated_items(merged)
+
+            return merged
         finally:
             db.session.remove()
             db.engine.dispose()

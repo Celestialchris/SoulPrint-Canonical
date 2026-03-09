@@ -52,6 +52,23 @@ python -m src.retrieval.cli --db instance/soulprint.db
 python -m src.retrieval.cli --db instance/soulprint.db "lisbon"
 ```
 
+## Optional mem0 adapter boundary (disabled by default)
+
+A minimal internal mem0 adapter boundary now exists for future integration without changing canonical storage behavior:
+
+- module: `src/retrieval/mem0_adapter.py`
+- boundary functions: `ingest_federated_items(...)`, `query_mem0(...)`, `hydrate_mem0_hits(...)`
+- canonical pointer payload preserved for each candidate item (`source_lane`, `stable_id`, `timestamp_unix`, `source_metadata`)
+
+Feature flags (safe defaults):
+
+- `SOULPRINT_MEM0_ENABLED=false`
+- `SOULPRINT_MEM0_TIMEOUT_MS=250`
+- `SOULPRINT_MEM0_WRITE_MODE=best_effort`
+
+With defaults, baseline retrieval remains canonical-only and mem0 behavior is a no-op.
+
+
 ## Minimal imported conversation query CLI (local/dev)
 
 After importing, you can inspect imported conversations and view one conversation with ordered messages:
