@@ -32,3 +32,8 @@ These checks were run after the fixes:
 - Browser-based UI interaction checks
 - Full workflow checks for import/normalize/store/retrieve
 - Non-minimal optional dependency feature validation
+
+## Windows SQLite test cleanup note
+
+- Import/query test paths now explicitly call `db.session.remove()` and `db.engine.dispose()` after SQLite operations to release pooled file handles before `TemporaryDirectory` teardown on Windows.
+- This is a lifecycle cleanup fix only; schema and runtime import/query behavior are unchanged.

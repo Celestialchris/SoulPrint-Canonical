@@ -38,6 +38,8 @@ def import_chatgpt_export_to_sqlite(export_path: str | Path, sqlite_path: str | 
     with app.app_context():
         db.create_all()
         persist_normalized_conversations(conversations)
+        db.session.remove()
+        db.engine.dispose()
 
     message_count = sum(len(conversation.messages) for conversation in conversations)
     return len(conversations), message_count
@@ -62,4 +64,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

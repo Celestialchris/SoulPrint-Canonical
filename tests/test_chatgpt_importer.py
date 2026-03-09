@@ -41,17 +41,21 @@ class ChatGPTImporterTest(unittest.TestCase):
 
             db.init_app(app)
             with app.app_context():
-                db.create_all()
-                persist_normalized_conversations([conversations[0]])
+                try:
+                    db.create_all()
+                    persist_normalized_conversations([conversations[0]])
 
-                stored_conv = ImportedConversation.query.one()
-                self.assertEqual(stored_conv.source, "chatgpt")
-                self.assertEqual(stored_conv.title, "Trip planning")
+                    stored_conv = ImportedConversation.query.one()
+                    self.assertEqual(stored_conv.source, "chatgpt")
+                    self.assertEqual(stored_conv.title, "Trip planning")
 
-                stored_messages = ImportedMessage.query.order_by(ImportedMessage.sequence_index.asc()).all()
-                self.assertEqual(len(stored_messages), 3)
-                self.assertEqual(stored_messages[0].content, "Plan me a 2-day trip to Lisbon.")
-                self.assertEqual(stored_messages[-1].role, "user")
+                    stored_messages = ImportedMessage.query.order_by(ImportedMessage.sequence_index.asc()).all()
+                    self.assertEqual(len(stored_messages), 3)
+                    self.assertEqual(stored_messages[0].content, "Plan me a 2-day trip to Lisbon.")
+                    self.assertEqual(stored_messages[-1].role, "user")
+                finally:
+                    db.session.remove()
+                    db.engine.dispose()
 
     def test_cli_import_path_imports_fixture_into_sqlite(self):
         fixture = Path("sample_data/chatgpt_export_sample.json")
@@ -69,8 +73,12 @@ class ChatGPTImporterTest(unittest.TestCase):
 
             db.init_app(verify_app)
             with verify_app.app_context():
-                self.assertEqual(ImportedConversation.query.count(), 2)
-                self.assertEqual(ImportedMessage.query.count(), 4)
+                try:
+                    self.assertEqual(ImportedConversation.query.count(), 2)
+                    self.assertEqual(ImportedMessage.query.count(), 4)
+                finally:
+                    db.session.remove()
+                    db.engine.dispose()
 
     def test_list_imported_conversations_returns_rows(self):
         fixture = Path("sample_data/chatgpt_export_sample.json")
