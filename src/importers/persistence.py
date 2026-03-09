@@ -1,7 +1,17 @@
-"""Persistence helpers for normalized importer records."""
+"""Persistence helpers for normalized importer records.
+
+Duplicate import policy (minimal, source-aware):
+- identity key: (source, source_conversation_id)
+- if a row already exists for that key, the incoming conversation is skipped
+- skipped conversations do not create additional messages
+
+This keeps importer behavior idempotent for repeat imports of the same export,
+without changing the current schema or query shape.
+"""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Iterable
 
 from src.app.models import ImportedConversation, ImportedMessage
@@ -10,14 +20,41 @@ from src.app.models.db import db
 from .chatgpt import NormalizedConversation
 
 
+@dataclass(frozen=True)
+class PersistResult:
+    """Counts from one persistence pass."""
+
+    imported_conversations: int
+    imported_messages: int
+    skipped_conversations: int
+
+
 def persist_normalized_conversations(
     conversations: Iterable[NormalizedConversation],
-) -> list[ImportedConversation]:
+) -> PersistResult:
     """Persist normalized conversations and messages in one transaction."""
 
-    persisted: list[ImportedConversation] = []
+    conversations_list = list(conversations)
+    incoming_ids = {conversation.source_conversation_id for conversation in conversations_list}
+    existing_ids = {
+        row.source_conversation_id
+        for row in ImportedConversation.query.with_entities(ImportedConversation.source_conversation_id)
+        .filter(
+            ImportedConversation.source == "chatgpt",
+            ImportedConversation.source_conversation_id.in_(incoming_ids),
+        )
+        .all()
+    }
 
-    for conversation in conversations:
+    imported_conversations = 0
+    imported_messages = 0
+    skipped_conversations = 0
+
+    for conversation in conversations_list:
+        if conversation.source_conversation_id in existing_ids:
+            skipped_conversations += 1
+            continue
+
         db_conversation = ImportedConversation(
             source="chatgpt",
             source_conversation_id=conversation.source_conversation_id,
@@ -39,8 +76,13 @@ def persist_normalized_conversations(
                     created_at_unix=message.created_at,
                 )
             )
+            imported_messages += 1
 
-        persisted.append(db_conversation)
+        imported_conversations += 1
 
     db.session.commit()
-    return persisted
+    return PersistResult(
+        imported_conversations=imported_conversations,
+        imported_messages=imported_messages,
+        skipped_conversations=skipped_conversations,
+    )

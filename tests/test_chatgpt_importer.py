@@ -49,7 +49,11 @@ class ChatGPTImporterTest(unittest.TestCase):
             with app.app_context():
                 try:
                     db.create_all()
-                    persist_normalized_conversations([conversations[0]])
+                    result = persist_normalized_conversations([conversations[0]])
+
+                    self.assertEqual(result.imported_conversations, 1)
+                    self.assertEqual(result.imported_messages, 3)
+                    self.assertEqual(result.skipped_conversations, 0)
 
                     stored_conv = ImportedConversation.query.one()
                     self.assertEqual(stored_conv.source, "chatgpt")
@@ -68,10 +72,11 @@ class ChatGPTImporterTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             sqlite_path = Path(tmpdir) / "cli_import.db"
-            conversation_count, message_count = import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+            result = import_chatgpt_export_to_sqlite(fixture, sqlite_path)
 
-            self.assertEqual(conversation_count, 2)
-            self.assertEqual(message_count, 4)
+            self.assertEqual(result.imported_conversations, 2)
+            self.assertEqual(result.imported_messages, 4)
+            self.assertEqual(result.skipped_conversations, 0)
 
             verify_app = Flask(__name__)
             verify_app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{sqlite_path}"
@@ -137,16 +142,50 @@ class ChatGPTImporterTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             sqlite_path = Path(tmpdir) / "query_search_order.db"
-            import_chatgpt_export_to_sqlite(fixture, sqlite_path)
-            import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+            first = import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+            second = import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+
+            self.assertEqual(first.imported_conversations, 2)
+            self.assertEqual(first.skipped_conversations, 0)
+            self.assertEqual(second.imported_conversations, 0)
+            self.assertEqual(second.skipped_conversations, 2)
 
             rows = search_imported_conversations(sqlite_path, "TRIP")
-            self.assertEqual([row.source_conversation_id for row in rows], ["conv-1", "conv-1"])
-            self.assertGreater(rows[0].id, rows[1].id)
+            self.assertEqual([row.source_conversation_id for row in rows], ["conv-1"])
 
             empty = search_imported_conversations(sqlite_path, "   ")
             self.assertEqual(empty, [])
 
+
+    def test_duplicate_import_policy_skips_existing_source_conversation_ids(self):
+        fixture = Path("sample_data/chatgpt_export_sample.json")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sqlite_path = Path(tmpdir) / "duplicate_policy.db"
+
+            first = import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+            second = import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+
+            self.assertEqual(first.imported_conversations, 2)
+            self.assertEqual(first.imported_messages, 4)
+            self.assertEqual(first.skipped_conversations, 0)
+
+            self.assertEqual(second.imported_conversations, 0)
+            self.assertEqual(second.imported_messages, 0)
+            self.assertEqual(second.skipped_conversations, 2)
+
+            verify_app = Flask(__name__)
+            verify_app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{sqlite_path}"
+            verify_app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+            db.init_app(verify_app)
+            with verify_app.app_context():
+                try:
+                    self.assertEqual(ImportedConversation.query.count(), 2)
+                    self.assertEqual(ImportedMessage.query.count(), 4)
+                finally:
+                    db.session.remove()
+                    db.engine.dispose()
 
     def test_render_imported_conversation_markdown_includes_metadata_and_ordered_messages(self):
         fixture = Path("sample_data/chatgpt_export_sample.json")

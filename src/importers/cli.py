@@ -14,14 +14,14 @@ from flask import Flask
 from src.app.models.db import db
 
 from .chatgpt import parse_chatgpt_export_file
-from .persistence import persist_normalized_conversations
+from .persistence import PersistResult, persist_normalized_conversations
 
 
-def import_chatgpt_export_to_sqlite(export_path: str | Path, sqlite_path: str | Path) -> tuple[int, int]:
+def import_chatgpt_export_to_sqlite(export_path: str | Path, sqlite_path: str | Path) -> PersistResult:
     """Import a ChatGPT export file into a SQLite database.
 
     Returns:
-        tuple[int, int]: (conversation_count, message_count)
+        PersistResult: imported/skipped conversation counts and imported message count.
     """
 
     export_path = Path(export_path)
@@ -37,12 +37,11 @@ def import_chatgpt_export_to_sqlite(export_path: str | Path, sqlite_path: str | 
     db.init_app(app)
     with app.app_context():
         db.create_all()
-        persist_normalized_conversations(conversations)
+        result = persist_normalized_conversations(conversations)
         db.session.remove()
         db.engine.dispose()
 
-    message_count = sum(len(conversation.messages) for conversation in conversations)
-    return len(conversations), message_count
+    return result
 
 
 def main() -> int:
@@ -57,8 +56,12 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    conversations, messages = import_chatgpt_export_to_sqlite(args.export_path, args.db)
-    print(f"Imported {conversations} conversations and {messages} messages into {args.db}")
+    result = import_chatgpt_export_to_sqlite(args.export_path, args.db)
+    print(
+        f"Imported {result.imported_conversations} conversations "
+        f"({result.skipped_conversations} skipped duplicates) and "
+        f"{result.imported_messages} messages into {args.db}"
+    )
     return 0
 
 

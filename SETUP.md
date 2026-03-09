@@ -64,6 +64,11 @@ The smoke test verifies:
 - app factory boots
 - Flask route map includes `/`, `/save`, and `/chats`
 
+## Import duplicate policy
+
+ChatGPT imports are deduplicated by `(source, source_conversation_id)` during persistence.
+Re-importing the same export will skip already-imported conversations and report skip counts in CLI output.
+
 ## 5) Import one ChatGPT export into SQLite (local/dev)
 
 ```bash
