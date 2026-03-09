@@ -60,8 +60,10 @@ SoulPrint now includes a minimal answering layer built on top of federated retri
 - module: `src/answering/local.py`
 - boundary functions: `build_answer_context(...)`, `answer_from_federated_hits(...)`, `format_grounded_answer(...)`
 - behavior: local-only, extractive/lightly synthesized output with citation provenance
+- statuses: `grounded`, `ambiguous`, or conservative `insufficient_evidence`
 - retrieval query path: natural-language questions are reduced to compact lexical terms before federated search
 - fallback: returns `insufficient_evidence` for weak, empty, or short/acronym-only question terms
+- ambiguity path: returns `ambiguous` when multiple top lexical matches are plausible without a dominant hit
 
 Developer CLI:
 

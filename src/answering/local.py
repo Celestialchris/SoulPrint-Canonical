@@ -88,8 +88,40 @@ def retrieval_keyword_from_question(question: str) -> str:
 
 
 def _hit_overlap_count(hit: FederatedReadResult, terms: list[str]) -> int:
-    haystack = hit.title.lower()
+    haystack = _evidence_text_for_hit(hit).lower()
     return sum(1 for term in terms if term in haystack)
+
+
+def _evidence_text_for_hit(hit: FederatedReadResult) -> str:
+    """Build best-effort evidence text from the existing federated result shape."""
+
+    fragments = [hit.title.strip()]
+    for key in ("tags", "role", "source", "source_conversation_id"):
+        value = hit.source_metadata.get(key, "").strip()
+        if value:
+            fragments.append(value)
+    return " ".join(fragment for fragment in fragments if fragment)
+
+
+def _evidence_summary_for_hit(hit: FederatedReadResult) -> str:
+    """Return concise, evidence-bearing text for answer assembly."""
+
+    summary = hit.title.strip()
+    tags = hit.source_metadata.get("tags", "").strip()
+    source = hit.source_metadata.get("source", "").strip()
+    if tags:
+        return f"{summary} (tags: {tags})"
+    if source:
+        return f"{summary} (source: {source})"
+    return summary
+
+
+def _is_ambiguous(top_score: int, second_score: int, term_count: int) -> bool:
+    if second_score == 0:
+        return False
+    if top_score == second_score:
+        return True
+    return (top_score - second_score) == 1 and top_score < max(3, term_count)
 
 
 def build_answer_context(question: str, federated_hits: list[FederatedReadResult]) -> AnswerContext:
@@ -111,6 +143,17 @@ def format_grounded_answer(
     """Render a concise grounded answer with visible evidence and citation markers."""
 
     evidence_titles = evidence_titles or []
+    if status == "ambiguous":
+        evidence = " | ".join(evidence_titles) if evidence_titles else "multiple plausible records"
+        citations_text = "; ".join(
+            f"[{idx + 1}] {citation.stable_id} ({citation.source_lane})"
+            for idx, citation in enumerate(citations)
+        )
+        return (
+            f"I found multiple plausible interpretations for '{question}'. "
+            f"Competing evidence: {evidence}. Sources: {citations_text}."
+        )
+
     if status == "insufficient_evidence":
         if citations:
             details = "; ".join(
@@ -167,7 +210,7 @@ def answer_from_federated_hits(question: str, federated_hits: list[FederatedRead
         )
         for hit in top_hits
     ]
-    evidence_titles = [hit.title for hit in top_hits]
+    evidence_titles = [_evidence_summary_for_hit(hit) for hit in top_hits]
 
     if not terms:
         return GroundedAnswer(
@@ -194,6 +237,20 @@ def answer_from_federated_hits(question: str, federated_hits: list[FederatedRead
             status="insufficient_evidence",
             citations=citations,
             notes=["Retrieved items did not lexically match the question terms."],
+        )
+
+    second_overlap = _hit_overlap_count(top_hits[1], terms) if len(top_hits) > 1 else 0
+    if _is_ambiguous(strongest_overlap, second_overlap, len(terms)):
+        return GroundedAnswer(
+            answer_text=format_grounded_answer(
+                context.question,
+                citations,
+                "ambiguous",
+                evidence_titles=evidence_titles,
+            ),
+            status="ambiguous",
+            citations=citations,
+            notes=["Multiple top hits plausibly match; clarify the intended interpretation."],
         )
 
     return GroundedAnswer(
