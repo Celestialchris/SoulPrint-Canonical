@@ -80,3 +80,10 @@ print(conn.execute('select count(*) from imported_conversation').fetchone()[0])
 print(conn.execute('select count(*) from imported_message').fetchone()[0])
 PY
 ```
+
+
+## 6) Export one imported conversation to markdown (local/dev)
+
+```bash
+python -m src.importers.query_cli --db instance/soulprint.db export-md 1 exports/conversation-1.md
+```

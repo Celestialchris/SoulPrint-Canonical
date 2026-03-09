@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 
 from .query import (
+    export_imported_conversation_markdown,
     get_imported_conversation,
     list_imported_conversations,
     search_imported_conversations,
@@ -32,6 +33,14 @@ def main() -> int:
     show_parser = subparsers.add_parser("show", help="Show one conversation and its messages")
     show_parser.add_argument("conversation_id", type=int, help="Imported conversation numeric id")
 
+    export_md_parser = subparsers.add_parser(
+        "export-md", help="Export one conversation to markdown"
+    )
+    export_md_parser.add_argument(
+        "conversation_id", type=int, help="Imported conversation numeric id"
+    )
+    export_md_parser.add_argument("output", help="Output markdown file path")
+
     args = parser.parse_args()
 
     if args.command == "list":
@@ -44,6 +53,19 @@ def main() -> int:
         rows = search_imported_conversations(args.db, args.keyword, limit=args.limit)
         for row in rows:
             print(f"{row.id}\t{row.source}\t{row.title}\t{row.source_conversation_id}")
+        return 0
+
+    if args.command == "export-md":
+        output = export_imported_conversation_markdown(
+            args.db,
+            args.conversation_id,
+            args.output,
+        )
+        if output is None:
+            print(f"No conversation found for id={args.conversation_id}")
+            return 1
+
+        print(f"Exported markdown: {output}")
         return 0
 
     detail = get_imported_conversation(args.db, args.conversation_id)

@@ -11,8 +11,10 @@ from src.app.models.db import db
 from src.importers import parse_chatgpt_export_file, persist_normalized_conversations
 from src.importers.cli import import_chatgpt_export_to_sqlite
 from src.importers.query import (
+    export_imported_conversation_markdown,
     get_imported_conversation,
     list_imported_conversations,
+    render_imported_conversation_markdown,
     search_imported_conversations,
 )
 
@@ -145,6 +147,80 @@ class ChatGPTImporterTest(unittest.TestCase):
             empty = search_imported_conversations(sqlite_path, "   ")
             self.assertEqual(empty, [])
 
+
+    def test_render_imported_conversation_markdown_includes_metadata_and_ordered_messages(self):
+        fixture = Path("sample_data/chatgpt_export_sample.json")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sqlite_path = Path(tmpdir) / "query_export_render.db"
+            import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+
+            rows = list_imported_conversations(sqlite_path)
+            conversation_id = next(
+                row.id for row in rows if row.source_conversation_id == "conv-1"
+            )
+
+            detail = get_imported_conversation(sqlite_path, conversation_id)
+            self.assertIsNotNone(detail)
+            assert detail is not None
+
+            rendered = render_imported_conversation_markdown(detail)
+
+            expected = """# Trip planning
+
+## Conversation Metadata
+- Source: chatgpt
+- Source Conversation ID: conv-1
+- Created At: 1710000000.000 (2024-03-09T16:00:00Z)
+- Updated At: 1710000300.000 (2024-03-09T16:05:00Z)
+
+## Messages
+
+### [0] user
+- Source Message ID: msg-user-1
+- Created At: 1710000001.000 (2024-03-09T16:00:01Z)
+
+Plan me a 2-day trip to Lisbon.
+
+### [1] assistant
+- Source Message ID: msg-assistant-1
+- Created At: 1710000002.000 (2024-03-09T16:00:02Z)
+
+Day 1: Alfama and Baixa.
+Day 2: Belém and LX Factory.
+
+### [2] user
+- Source Message ID: msg-user-2
+- Created At: 1710000003.000 (2024-03-09T16:00:03Z)
+
+Add food suggestions.
+"""
+            self.assertEqual(rendered, expected)
+
+    def test_export_imported_conversation_markdown_writes_file(self):
+        fixture = Path("sample_data/chatgpt_export_sample.json")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sqlite_path = Path(tmpdir) / "query_export_write.db"
+            output_path = Path(tmpdir) / "exports" / "conversation.md"
+            import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+
+            rows = list_imported_conversations(sqlite_path)
+            conversation_id = next(
+                row.id for row in rows if row.source_conversation_id == "conv-2"
+            )
+
+            output = export_imported_conversation_markdown(sqlite_path, conversation_id, output_path)
+
+            self.assertEqual(output, output_path)
+            self.assertTrue(output_path.exists())
+            content = output_path.read_text(encoding="utf-8")
+            self.assertIn("# Untitled Conversation", content)
+            self.assertIn("- Source Conversation ID: conv-2", content)
+            self.assertIn("### [0] user", content)
+
+            missing = export_imported_conversation_markdown(sqlite_path, 999999, output_path)
+            self.assertIsNone(missing)
 
 if __name__ == "__main__":
     unittest.main()
