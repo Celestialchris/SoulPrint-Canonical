@@ -99,3 +99,10 @@ python -m src.importers.query_cli --db instance/soulprint.db export-md 1 exports
 python -m src.retrieval.cli --db instance/soulprint.db
 python -m src.retrieval.cli --db instance/soulprint.db "trip"
 ```
+
+
+## 8) Ask a minimal grounded question over federated retrieval (local/dev)
+
+```bash
+python -m src.answering.cli --db instance/soulprint.db "What did I note about trip planning?"
+```

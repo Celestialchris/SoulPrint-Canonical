@@ -52,6 +52,22 @@ python -m src.retrieval.cli --db instance/soulprint.db
 python -m src.retrieval.cli --db instance/soulprint.db "lisbon"
 ```
 
+
+## Minimal local answering prototype (grounded, read-only)
+
+SoulPrint now includes a minimal answering layer built on top of federated retrieval.
+
+- module: `src/answering/local.py`
+- boundary functions: `build_answer_context(...)`, `answer_from_federated_hits(...)`, `format_grounded_answer(...)`
+- behavior: local-only, extractive/lightly synthesized output with citation provenance
+- fallback: returns `insufficient_evidence` for weak or empty retrieval
+
+Developer CLI:
+
+```bash
+python -m src.answering.cli --db instance/soulprint.db "What do I have about Lisbon?"
+```
+
 ## Optional mem0 adapter boundary (disabled by default)
 
 A minimal internal mem0 adapter boundary now exists for future integration without changing canonical storage behavior:
