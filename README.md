@@ -1,2 +1,2 @@
 # SoulPrint-Canonical
-Canonical 2026 SoulPrint repo. Scope: import -> normalize -> store -> retrieve. Excludes archive, Archetype vault, and historical snapshots.
+SoulPrint began as a sovereign memory project: an attempt to capture logs, reflections, imports, and symbolic meaning in one auditable system. The early practical form was a Flask + SQLite + Markdown application. The deeper ambition was larger: a memory engine that could hold lived experience, agent reflections, long-term retrieval, and later multi-agent orchestration through an Obsidian-friendly vault.
