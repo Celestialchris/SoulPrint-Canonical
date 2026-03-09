@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Memory Vault</title></head>
+<body>
+  <form method="get">
+    <input name="tag" placeholder="Filter by tag" value="{{ request.args.get('tag','') }}">
+    <button type="submit">Search</button>
+  </form>
+
+  {% for e in entries %}
+    <div style="margin-bottom: 30px;">
+      <b>{{ e.timestamp }} | {{ e.role }} | Tags: {{ e.tags }}</b><br>
+      <pre>{{ e.content }}</pre>
+      <hr>
+    </div>
+  {% endfor %}
+</body>
+</html>

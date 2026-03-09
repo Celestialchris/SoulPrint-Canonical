@@ -1,0 +1,16 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+instance/
+src/instance/
+chroma_db/
+uploads/
+obsidian/
+src/.env
+.env
+*.egg-info/
+.DS_Store
