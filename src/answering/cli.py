@@ -7,7 +7,7 @@ import json
 
 from src.retrieval import federated_search
 
-from .local import answer_from_federated_hits
+from .local import answer_from_federated_hits, retrieval_keyword_from_question
 
 
 def main() -> int:
@@ -28,7 +28,8 @@ def main() -> int:
     )
 
     args = parser.parse_args()
-    hits = federated_search(args.db, keyword=args.question, limit_per_lane=args.limit_per_lane)
+    retrieval_keyword = retrieval_keyword_from_question(args.question)
+    hits = federated_search(args.db, keyword=retrieval_keyword, limit_per_lane=args.limit_per_lane)
     result = answer_from_federated_hits(args.question, hits)
 
     print(f"status: {result.status}")

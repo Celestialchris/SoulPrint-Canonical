@@ -6,7 +6,9 @@ from .local import (
     GroundedAnswer,
     answer_from_federated_hits,
     build_answer_context,
+    extract_query_terms,
     format_grounded_answer,
+    retrieval_keyword_from_question,
 )
 
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
     "build_answer_context",
     "answer_from_federated_hits",
     "format_grounded_answer",
+    "extract_query_terms",
+    "retrieval_keyword_from_question",
 ]

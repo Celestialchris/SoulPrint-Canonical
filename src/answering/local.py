@@ -38,18 +38,56 @@ class GroundedAnswer:
     notes: list[str]
 
 
+_STOPWORDS = {
+    "the",
+    "and",
+    "for",
+    "with",
+    "what",
+    "when",
+    "where",
+    "which",
+    "about",
+    "have",
+    "from",
+    "that",
+    "this",
+    "your",
+    "into",
+    "note",
+    "notes",
+    "did",
+}
+
+
 def _to_iso_utc(timestamp_unix: float | None) -> str | None:
     if timestamp_unix is None:
         return None
     return datetime.fromtimestamp(timestamp_unix, tz=timezone.utc).isoformat(timespec="seconds")
 
 
-def _question_terms(question: str) -> set[str]:
+def extract_query_terms(question: str) -> list[str]:
+    """Extract compact lexical terms for retrieval and grounding checks."""
+
     tokens = re.findall(r"[a-z0-9]+", question.lower())
-    return {token for token in tokens if len(token) >= 3}
+    terms: list[str] = []
+    for token in tokens:
+        if len(token) < 4:
+            continue
+        if token in _STOPWORDS:
+            continue
+        if token not in terms:
+            terms.append(token)
+    return terms
 
 
-def _hit_overlap_count(hit: FederatedReadResult, terms: set[str]) -> int:
+def retrieval_keyword_from_question(question: str) -> str:
+    """Build compact retrieval keyword text from natural-language question."""
+
+    return " ".join(extract_query_terms(question))
+
+
+def _hit_overlap_count(hit: FederatedReadResult, terms: list[str]) -> int:
     haystack = hit.title.lower()
     return sum(1 for term in terms if term in haystack)
 
@@ -64,30 +102,40 @@ def build_answer_context(question: str, federated_hits: list[FederatedReadResult
     )
 
 
-def format_grounded_answer(question: str, citations: list[AnswerCitation], status: str) -> str:
-    """Render a concise grounded answer with visible citation markers."""
+def format_grounded_answer(
+    question: str,
+    citations: list[AnswerCitation],
+    status: str,
+    evidence_titles: list[str] | None = None,
+) -> str:
+    """Render a concise grounded answer with visible evidence and citation markers."""
 
+    evidence_titles = evidence_titles or []
     if status == "insufficient_evidence":
         if citations:
             details = "; ".join(
                 f"[{idx + 1}] {citation.stable_id} ({citation.source_lane})"
                 for idx, citation in enumerate(citations)
             )
+            evidence = " | ".join(evidence_titles) if evidence_titles else "no clear lexical match"
             return (
-                f"I found limited evidence for '{question}'. Most relevant records: {details}. "
-                "Please refine the question for a stronger grounded answer."
+                f"I found limited evidence for '{question}'. Evidence snippets: {evidence}. "
+                f"Most relevant records: {details}. Please refine the question for a stronger grounded answer."
             )
         return (
             f"I could not find grounded evidence for '{question}' in canonical records. "
             "Try different keywords."
         )
 
-    snippets = [
+    evidence = " | ".join(evidence_titles)
+    citations_text = "; ".join(
         f"[{idx + 1}] {citation.stable_id} ({citation.source_lane})"
         for idx, citation in enumerate(citations)
-    ]
-    joined = "; ".join(snippets)
-    return f"Grounded answer for '{question}' based on: {joined}."
+    )
+    return (
+        f"Grounded evidence for '{question}': {evidence}. "
+        f"Sources: {citations_text}."
+    )
 
 
 def answer_from_federated_hits(question: str, federated_hits: list[FederatedReadResult]) -> GroundedAnswer:
@@ -102,7 +150,7 @@ def answer_from_federated_hits(question: str, federated_hits: list[FederatedRead
             notes=["No federated retrieval hits were found."],
         )
 
-    terms = _question_terms(context.question)
+    terms = extract_query_terms(context.question)
     ranked_hits = sorted(
         context.hits,
         key=lambda hit: _hit_overlap_count(hit, terms),
@@ -119,20 +167,42 @@ def answer_from_federated_hits(question: str, federated_hits: list[FederatedRead
         )
         for hit in top_hits
     ]
+    evidence_titles = [hit.title for hit in top_hits]
 
-    strongest_overlap = _hit_overlap_count(top_hits[0], terms) if terms else 0
-    weak_evidence = bool(terms) and strongest_overlap == 0
-
-    if weak_evidence:
+    if not terms:
         return GroundedAnswer(
-            answer_text=format_grounded_answer(context.question, citations, "insufficient_evidence"),
+            answer_text=format_grounded_answer(
+                context.question,
+                citations,
+                "insufficient_evidence",
+                evidence_titles=evidence_titles,
+            ),
+            status="insufficient_evidence",
+            citations=citations,
+            notes=["Question terms were too short or ambiguous for lexical grounding."],
+        )
+
+    strongest_overlap = _hit_overlap_count(top_hits[0], terms)
+    if strongest_overlap == 0:
+        return GroundedAnswer(
+            answer_text=format_grounded_answer(
+                context.question,
+                citations,
+                "insufficient_evidence",
+                evidence_titles=evidence_titles,
+            ),
             status="insufficient_evidence",
             citations=citations,
             notes=["Retrieved items did not lexically match the question terms."],
         )
 
     return GroundedAnswer(
-        answer_text=format_grounded_answer(context.question, citations, "grounded"),
+        answer_text=format_grounded_answer(
+            context.question,
+            citations,
+            "grounded",
+            evidence_titles=evidence_titles,
+        ),
         status="grounded",
         citations=citations,
         notes=[],

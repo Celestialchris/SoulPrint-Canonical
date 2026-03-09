@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import unittest
 
-from src.answering.local import answer_from_federated_hits
+from src.answering.local import answer_from_federated_hits, extract_query_terms
 from src.retrieval import FederatedReadResult
 
 
 class AnsweringBoundaryTest(unittest.TestCase):
-    def test_grounded_answer_assembly_uses_hits(self):
+    def test_grounded_answer_assembly_uses_hits_and_evidence_text(self):
         hits = [
             FederatedReadResult(
                 source_lane="native_memory",
@@ -24,6 +24,7 @@ class AnsweringBoundaryTest(unittest.TestCase):
 
         self.assertEqual(result.status, "grounded")
         self.assertIn("memory:2", result.answer_text)
+        self.assertIn("Lisbon restaurant shortlist", result.answer_text)
         self.assertEqual(len(result.citations), 1)
 
     def test_citations_preserve_lane_id_timestamp_and_metadata(self):
@@ -60,7 +61,24 @@ class AnsweringBoundaryTest(unittest.TestCase):
 
         self.assertEqual(result.status, "insufficient_evidence")
         self.assertTrue(result.citations)
-        self.assertTrue(any("limited evidence" in result.answer_text for _ in [0]))
+        self.assertIn("limited evidence", result.answer_text)
+
+    def test_short_or_acronym_query_terms_fallback(self):
+        hits = [
+            FederatedReadResult(
+                source_lane="native_memory",
+                stable_id="memory:3",
+                title="NYC trip ideas",
+                timestamp_unix=1710000500.0,
+                source_metadata={"role": "user", "tags": "travel"},
+            )
+        ]
+
+        self.assertEqual(extract_query_terms("NYC?") ,[])
+        result = answer_from_federated_hits("NYC?", hits)
+
+        self.assertEqual(result.status, "insufficient_evidence")
+        self.assertIn("too short or ambiguous", " ".join(result.notes))
 
     def test_empty_retrieval_returns_safe_fallback(self):
         result = answer_from_federated_hits("Any notes about Porto?", [])
