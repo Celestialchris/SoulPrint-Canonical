@@ -9,6 +9,7 @@ from flask import Flask
 from src.app.models import ImportedConversation, ImportedMessage
 from src.app.models.db import db
 from src.importers import parse_chatgpt_export_file, persist_normalized_conversations
+from src.importers.cli import import_chatgpt_export_to_sqlite
 
 
 class ChatGPTImporterTest(unittest.TestCase):
@@ -50,6 +51,25 @@ class ChatGPTImporterTest(unittest.TestCase):
                 self.assertEqual(len(stored_messages), 3)
                 self.assertEqual(stored_messages[0].content, "Plan me a 2-day trip to Lisbon.")
                 self.assertEqual(stored_messages[-1].role, "user")
+
+    def test_cli_import_path_imports_fixture_into_sqlite(self):
+        fixture = Path("sample_data/chatgpt_export_sample.json")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sqlite_path = Path(tmpdir) / "cli_import.db"
+            conversation_count, message_count = import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+
+            self.assertEqual(conversation_count, 2)
+            self.assertEqual(message_count, 4)
+
+            verify_app = Flask(__name__)
+            verify_app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{sqlite_path}"
+            verify_app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+            db.init_app(verify_app)
+            with verify_app.app_context():
+                self.assertEqual(ImportedConversation.query.count(), 2)
+                self.assertEqual(ImportedMessage.query.count(), 4)
 
 
 if __name__ == "__main__":

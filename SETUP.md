@@ -63,3 +63,20 @@ The smoke test verifies:
 - app import path works
 - app factory boots
 - Flask route map includes `/`, `/save`, and `/chats`
+
+## 5) Import one ChatGPT export into SQLite (local/dev)
+
+```bash
+python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
+```
+
+Quick verification:
+
+```bash
+python - <<'PY'
+import sqlite3
+conn = sqlite3.connect('instance/soulprint.db')
+print(conn.execute('select count(*) from imported_conversation').fetchone()[0])
+print(conn.execute('select count(*) from imported_message').fetchone()[0])
+PY
+```
