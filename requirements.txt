@@ -1,5 +1,8 @@
-flask
-flask_sqlalchemy
+# Full dependency set (includes minimal runtime + optional extras).
+# Prefer requirements-minimal.txt for Milestone 1 runtime and local dev.
+-r requirements-minimal.txt
+
+# Optional / future-facing dependencies (not required for current Flask+SQLite runtime)
 python-dotenv
 chromadb
 sentence-transformers

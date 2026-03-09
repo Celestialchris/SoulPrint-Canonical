@@ -1,0 +1,3 @@
+# Milestone 1 minimal runtime dependencies (Flask + SQLite path)
+Flask
+Flask-SQLAlchemy
