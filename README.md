@@ -24,6 +24,15 @@ Use the importer CLI to load one ChatGPT export fixture or file into SQLite:
 python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
 ```
 
+## Minimal imported conversation query CLI (local/dev)
+
+After importing, you can inspect imported conversations and view one conversation with ordered messages:
+
+```bash
+python -m src.importers.query_cli --db instance/soulprint.db list
+python -m src.importers.query_cli --db instance/soulprint.db show 1
+```
+
 You can verify imported rows with SQLite:
 
 ```bash

@@ -10,6 +10,7 @@ from src.app.models import ImportedConversation, ImportedMessage
 from src.app.models.db import db
 from src.importers import parse_chatgpt_export_file, persist_normalized_conversations
 from src.importers.cli import import_chatgpt_export_to_sqlite
+from src.importers.query import get_imported_conversation, list_imported_conversations
 
 
 class ChatGPTImporterTest(unittest.TestCase):
@@ -70,6 +71,39 @@ class ChatGPTImporterTest(unittest.TestCase):
             with verify_app.app_context():
                 self.assertEqual(ImportedConversation.query.count(), 2)
                 self.assertEqual(ImportedMessage.query.count(), 4)
+
+    def test_list_imported_conversations_returns_rows(self):
+        fixture = Path("sample_data/chatgpt_export_sample.json")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sqlite_path = Path(tmpdir) / "query_list.db"
+            import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+
+            rows = list_imported_conversations(sqlite_path)
+
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0].source, "chatgpt")
+            self.assertEqual(rows[1].source_conversation_id, "conv-1")
+
+    def test_get_imported_conversation_returns_messages_in_sequence_order(self):
+        fixture = Path("sample_data/chatgpt_export_sample.json")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sqlite_path = Path(tmpdir) / "query_show.db"
+            import_chatgpt_export_to_sqlite(fixture, sqlite_path)
+
+            rows = list_imported_conversations(sqlite_path)
+            conversation_id = next(
+                row.id for row in rows if row.source_conversation_id == "conv-1"
+            )
+
+            detail = get_imported_conversation(sqlite_path, conversation_id)
+
+            self.assertIsNotNone(detail)
+            assert detail is not None
+            self.assertEqual(detail.title, "Trip planning")
+            self.assertEqual([m.sequence_index for m in detail.messages], [0, 1, 2])
+            self.assertEqual([m.role for m in detail.messages], ["user", "assistant", "user"])
 
 
 if __name__ == "__main__":
