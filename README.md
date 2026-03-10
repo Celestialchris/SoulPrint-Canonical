@@ -11,6 +11,7 @@ SoulPrint is **not** a hosted memory SaaS, and it is **not** a replacement for c
 - **Not a replacement for canonical ownership:** derived layers (including optional adapters) must trace back to canonical IDs/timestamps rather than replace them.
 
 See `POSITIONING.md` for the practical doctrine and boundaries.
+See `docs/MEMORY_PASSPORT_SPEC.md` for the formal v1 Memory Passport package contract.
 
 ## Current Milestone 1+ importer capability
 
