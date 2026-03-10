@@ -67,6 +67,14 @@ python -m src.retrieval.cli --db instance/soulprint.db
 python -m src.retrieval.cli --db instance/soulprint.db "lisbon"
 ```
 
+A minimal read-only federated browser surface is also available in the web app:
+
+```
+/federated
+```
+
+It reuses the same `federated_search(...)` behavior and renders mixed lane results with explicit provenance plus lane-specific handoff links when available.
+
 
 ## Minimal local answering prototype (grounded, read-only)
 

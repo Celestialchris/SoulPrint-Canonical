@@ -6,6 +6,7 @@ from .imported_explorer import anchor_for_message, build_prompt_toc, format_time
 from .models.db import db
 from ..config import Config
 from .models import ImportedConversation, ImportedMessage, MemoryEntry
+from ..retrieval.federated import federated_search
 from sqlalchemy import func
 
 
@@ -103,5 +104,34 @@ def create_app():
             q = q.filter(MemoryEntry.tags.contains(tag))
         entries = q.limit(100).all()
         return render_template("view.html", entries=entries)
+
+    @app.get("/federated")
+    def federated_browser():
+        keyword = request.args.get("q", "").strip()
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        sqlite_path = sqlite_uri.removeprefix("sqlite:///")
+        results = federated_search(sqlite_path=sqlite_path, keyword=keyword)
+
+        rows = []
+        for result in results:
+            handoff_href = None
+            if (
+                result.source_lane == "imported_conversation"
+                and result.stable_id.startswith("imported_conversation:")
+            ):
+                conversation_id = result.stable_id.split(":", maxsplit=1)[1]
+                if conversation_id.isdigit():
+                    handoff_href = f"/imported/{conversation_id}/explorer"
+            elif result.source_lane == "native_memory":
+                handoff_href = "/chats"
+
+            rows.append({"result": result, "handoff_href": handoff_href})
+
+        return render_template(
+            "federated.html",
+            keyword=keyword,
+            rows=rows,
+            format_timestamp=format_timestamp,
+        )
 
     return app
