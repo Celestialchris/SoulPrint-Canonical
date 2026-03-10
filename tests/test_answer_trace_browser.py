@@ -148,6 +148,27 @@ class AnswerTraceBrowserRouteTest(unittest.TestCase):
         self.assertNotIn('href="/memory/', html)
         self.assertNotIn('href="/imported/', html)
 
+    def test_answer_trace_detail_malformed_stable_id_is_plain_text(self):
+        trace_id = self._append_trace(
+            question="Malformed stable id",
+            citations=[
+                AnswerCitation(
+                    source_lane="native_memory",
+                    stable_id="memory:not-a-number",
+                    timestamp="2026-03-09T20:10:00+00:00",
+                    source_metadata={},
+                )
+            ],
+        )
+
+        response = self.client.get(f"/answer-traces/{trace_id}")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("memory:not-a-number", html)
+        self.assertIn("no direct handoff view yet", html)
+        self.assertNotIn('href="/memory/not-a-number"', html)
+
     def test_answer_trace_detail_renders_when_citations_are_absent(self):
         trace_id = self._append_trace(question="No citations", citations=[])
 
