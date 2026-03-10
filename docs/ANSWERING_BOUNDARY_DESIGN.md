@@ -151,3 +151,12 @@ Before shipping answering code, verify:
 3. Empty/weak/ambiguous retrieval paths are explicit and safe.
 4. Optional systems are not required for core execution.
 5. Canonical import -> normalize -> store -> retrieve behavior remains unchanged.
+
+## Derived Answer Trace (audit residue)
+
+For local answering v1, SoulPrint may optionally emit an **Answer Trace** as derived audit residue.
+
+- Storage surface: append-only JSONL (`answer_traces.jsonl`) beside the SQLite file by default.
+- Authority: derived only; never canonical truth.
+- Purpose: inspect how one answer was formed (question, retrieval terms, status, answer text, citations/stable IDs, lanes, and fallback notes).
+- Boundary rule: traces must point back to canonical stable IDs and must not mutate canonical records.
