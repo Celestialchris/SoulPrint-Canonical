@@ -2,33 +2,29 @@
 
 from __future__ import annotations
 
-import shutil
 import unittest
-from pathlib import Path
 from unittest.mock import patch
-from uuid import uuid4
 
 from src.app import create_app
 from src.config import Config
 from src.retrieval.federated import FederatedReadResult
+from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
 
 
 class FederatedBrowserRouteTest(unittest.TestCase):
     def setUp(self):
+        self.tmpdir = make_test_temp_dir(self, "federated-browser")
         self._old_uri = Config.SQLALCHEMY_DATABASE_URI
-        self._tmp_root = Path.cwd() / ".tmp-tests"
-        self._tmp_root.mkdir(exist_ok=True)
-        self.tmpdir = self._tmp_root / f"federated-browser-{uuid4().hex}"
-        self.tmpdir.mkdir()
+        self.addCleanup(self._restore_sqlite_uri)
         sqlite_path = self.tmpdir / "federated_browser_test.db"
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{sqlite_path}"
 
         self.app = create_app()
         self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
 
-    def tearDown(self):
+    def _restore_sqlite_uri(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def test_federated_route_renders_successfully(self):
         with patch("src.app.federated_search", return_value=[]):

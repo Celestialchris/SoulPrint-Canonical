@@ -5,8 +5,6 @@ from __future__ import annotations
 from contextlib import redirect_stdout
 import json
 from io import StringIO
-from pathlib import Path
-import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -19,6 +17,7 @@ from src.answering.trace import (
     list_answer_traces,
 )
 from src.retrieval import FederatedReadResult
+from tests.temp_helpers import make_test_temp_dir
 
 
 class AnswerTraceTest(unittest.TestCase):
@@ -76,106 +75,106 @@ class AnswerTraceTest(unittest.TestCase):
         self.assertEqual(trace.fallback_reason, "No federated retrieval hits were found.")
 
     def test_trace_store_append_list_and_get(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            store = Path(tmpdir) / "answer_traces.jsonl"
-            answer = GroundedAnswer(
-                answer_text="Grounded evidence.",
-                status="grounded",
-                citations=[],
-                notes=[],
-            )
-            trace = create_answer_trace(
-                question="Q1",
-                retrieval_terms="q1",
-                answer=answer,
-            )
-            append_answer_trace(store, trace)
+        workdir = make_test_temp_dir(self, "answer-trace")
+        store = workdir / "answer_traces.jsonl"
+        answer = GroundedAnswer(
+            answer_text="Grounded evidence.",
+            status="grounded",
+            citations=[],
+            notes=[],
+        )
+        trace = create_answer_trace(
+            question="Q1",
+            retrieval_terms="q1",
+            answer=answer,
+        )
+        append_answer_trace(store, trace)
 
-            rows = list_answer_traces(store, limit=5)
-            self.assertEqual(len(rows), 1)
-            self.assertEqual(rows[0]["trace_id"], trace.trace_id)
-            self.assertEqual(get_answer_trace(store, trace.trace_id)["question"], "Q1")
+        rows = list_answer_traces(store, limit=5)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["trace_id"], trace.trace_id)
+        self.assertEqual(get_answer_trace(store, trace.trace_id)["question"], "Q1")
 
 
     def test_get_trace_scans_full_log_not_only_recent_window(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            store = Path(tmpdir) / "answer_traces.jsonl"
-            answer = GroundedAnswer(
-                answer_text="Grounded evidence.",
-                status="grounded",
-                citations=[],
-                notes=[],
+        workdir = make_test_temp_dir(self, "answer-trace")
+        store = workdir / "answer_traces.jsonl"
+        answer = GroundedAnswer(
+            answer_text="Grounded evidence.",
+            status="grounded",
+            citations=[],
+            notes=[],
+        )
+
+        oldest_trace = create_answer_trace(
+            question="oldest",
+            retrieval_terms="oldest",
+            answer=answer,
+        )
+        append_answer_trace(store, oldest_trace)
+
+        for index in range(3):
+            append_answer_trace(
+                store,
+                create_answer_trace(
+                    question=f"newer-{index}",
+                    retrieval_terms=f"newer-{index}",
+                    answer=answer,
+                ),
             )
 
-            oldest_trace = create_answer_trace(
-                question="oldest",
-                retrieval_terms="oldest",
-                answer=answer,
-            )
-            append_answer_trace(store, oldest_trace)
+        recent_only = list_answer_traces(store, limit=2)
+        self.assertEqual(len(recent_only), 2)
+        self.assertNotIn(oldest_trace.trace_id, {row["trace_id"] for row in recent_only})
 
-            for index in range(3):
-                append_answer_trace(
-                    store,
-                    create_answer_trace(
-                        question=f"newer-{index}",
-                        retrieval_terms=f"newer-{index}",
-                        answer=answer,
-                    ),
-                )
-
-            recent_only = list_answer_traces(store, limit=2)
-            self.assertEqual(len(recent_only), 2)
-            self.assertNotIn(oldest_trace.trace_id, {row["trace_id"] for row in recent_only})
-
-            found = get_answer_trace(store, oldest_trace.trace_id)
-            self.assertIsNotNone(found)
-            self.assertEqual(found["question"], "oldest")
+        found = get_answer_trace(store, oldest_trace.trace_id)
+        self.assertIsNotNone(found)
+        self.assertEqual(found["question"], "oldest")
 
     def test_answering_cli_emit_trace_and_list_trace(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            store = Path(tmpdir) / "trace.jsonl"
-            db_path = Path(tmpdir) / "test.db"
+        workdir = make_test_temp_dir(self, "answer-trace-cli")
+        store = workdir / "trace.jsonl"
+        db_path = workdir / "test.db"
 
-            fake_hits = [
-                FederatedReadResult(
-                    source_lane="native_memory",
-                    stable_id="memory:1",
-                    title="Lisbon food notes",
-                    timestamp_unix=1710000000.0,
-                    source_metadata={"role": "user", "tags": "travel"},
-                )
-            ]
+        fake_hits = [
+            FederatedReadResult(
+                source_lane="native_memory",
+                stable_id="memory:1",
+                title="Lisbon food notes",
+                timestamp_unix=1710000000.0,
+                source_metadata={"role": "user", "tags": "travel"},
+            )
+        ]
 
-            write_output = StringIO()
-            with patch("src.answering.cli.federated_search", return_value=fake_hits):
-                with patch(
-                    "sys.argv",
-                    [
-                        "answer-cli",
-                        "--db",
-                        str(db_path),
-                        "What did I note about Lisbon food?",
-                        "--emit-trace",
-                        "--trace-store",
-                        str(store),
-                    ],
-                ):
-                    with redirect_stdout(write_output):
-                        exit_code = cli.main()
+        write_output = StringIO()
+        with patch("src.answering.cli.federated_search", return_value=fake_hits):
+            with patch(
+                "sys.argv",
+                [
+                    "answer-cli",
+                    "--db",
+                    str(db_path),
+                    "What did I note about Lisbon food?",
+                    "--emit-trace",
+                    "--trace-store",
+                    str(store),
+                ],
+            ):
+                with redirect_stdout(write_output):
+                    exit_code = cli.main()
 
-            self.assertEqual(exit_code, 0)
-            self.assertIn("trace_id:", write_output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertIn("trace_id:", write_output.getvalue())
 
-            list_output = StringIO()
-            with patch("sys.argv", ["answer-cli", "--list-traces", "1", "--trace-store", str(store)]):
-                with redirect_stdout(list_output):
-                    list_code = cli.main()
+        list_output = StringIO()
+        with patch("sys.argv", ["answer-cli", "--list-traces", "1", "--trace-store", str(store)]):
+            with redirect_stdout(list_output):
+                list_code = cli.main()
 
-            self.assertEqual(list_code, 0)
-            trace_obj = json.loads(list_output.getvalue())
-            self.assertEqual(trace_obj["question"], "What did I note about Lisbon food?")
-            self.assertEqual(trace_obj["trace_kind"], "answer_trace_derived_v1")
+        self.assertEqual(list_code, 0)
+        trace_obj = json.loads(list_output.getvalue())
+        self.assertEqual(trace_obj["question"], "What did I note about Lisbon food?")
+        self.assertEqual(trace_obj["trace_kind"], "answer_trace_derived_v1")
 
 
 if __name__ == "__main__":

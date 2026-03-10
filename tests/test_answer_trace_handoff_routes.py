@@ -2,36 +2,29 @@
 
 from __future__ import annotations
 
-import shutil
 import unittest
-import uuid
-from pathlib import Path
 
 from src.answering.local import AnswerCitation, GroundedAnswer
 from src.answering.trace import append_answer_trace, create_answer_trace
 from src.app import create_app
-from src.app.models.db import db
 from src.config import Config, sqlite_uri_from_path
+from tests.temp_helpers import make_test_temp_dir, release_app_db_handles, test_temp_root
 
 
 class AnswerTraceHandoffRouteTest(unittest.TestCase):
     def setUp(self):
+        self.workdir = make_test_temp_dir(self, "answer-trace-route")
         self._old_uri = Config.SQLALCHEMY_DATABASE_URI
-        self.workdir = Path.cwd() / ".tmp" / f"answer-trace-route-{uuid.uuid4().hex}"
-        self.workdir.mkdir(parents=True, exist_ok=True)
+        self.addCleanup(self._restore_sqlite_uri)
         self.sqlite_path = self.workdir / "trace_browser_test.db"
         Config.SQLALCHEMY_DATABASE_URI = sqlite_uri_from_path(self.sqlite_path)
 
         self.app = create_app()
         self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
 
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-            db.engine.dispose()
+    def _restore_sqlite_uri(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
-        shutil.rmtree(self.workdir, ignore_errors=True)
 
     def _append_trace(self, *, citations: list[AnswerCitation]) -> str:
         answer = GroundedAnswer(
@@ -47,6 +40,9 @@ class AnswerTraceHandoffRouteTest(unittest.TestCase):
         )
         append_answer_trace(self.workdir / "answer_traces.jsonl", trace)
         return trace.trace_id
+
+    def test_trace_temp_workspace_is_scoped_under_repo_local_root(self):
+        self.assertTrue(self.workdir.is_relative_to(test_temp_root()))
 
     def test_trace_detail_renders_clickable_links_for_mapped_citations(self):
         trace_id = self._append_trace(

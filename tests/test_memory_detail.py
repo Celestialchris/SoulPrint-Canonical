@@ -2,38 +2,30 @@
 
 from __future__ import annotations
 
-import shutil
 import unittest
 from datetime import datetime
-from pathlib import Path
-from uuid import uuid4
 
 from src.app import create_app
 from src.app.models import MemoryEntry
 from src.app.models.db import db
 from src.config import Config
+from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
 
 
 class MemoryDetailRouteTest(unittest.TestCase):
     def setUp(self):
+        self.tmpdir = make_test_temp_dir(self, "memory-detail")
         self._old_uri = Config.SQLALCHEMY_DATABASE_URI
-        self._tmp_root = Path.cwd() / ".tmp-tests"
-        self._tmp_root.mkdir(exist_ok=True)
-        self.tmpdir = self._tmp_root / f"memory-detail-{uuid4().hex}"
-        self.tmpdir.mkdir()
+        self.addCleanup(self._restore_sqlite_uri)
         sqlite_path = self.tmpdir / "memory_detail_test.db"
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{sqlite_path}"
 
         self.app = create_app()
         self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
 
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-            db.engine.dispose()
+    def _restore_sqlite_uri(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def _seed_entry(self) -> int:
         with self.app.app_context():

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -21,6 +20,7 @@ from src.importers.contracts import (
     validate_provider_id,
 )
 from src.importers.persistence import persist_normalized_conversations
+from tests.temp_helpers import make_test_temp_dir
 
 
 class ImporterContractTest(unittest.TestCase):
@@ -55,24 +55,24 @@ class ImporterContractTest(unittest.TestCase):
         fixture = Path("sample_data/chatgpt_export_sample.json")
         conversations = parse_chatgpt_export_file(fixture)
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            app = Flask(__name__)
-            app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{Path(tmpdir) / 'provider_identity.db'}"
-            app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        workdir = make_test_temp_dir(self, "importer-contract")
+        app = Flask(__name__)
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{workdir / 'provider_identity.db'}"
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-            db.init_app(app)
-            with app.app_context():
-                try:
-                    db.create_all()
-                    persist_normalized_conversations(conversations)
+        db.init_app(app)
+        with app.app_context():
+            try:
+                db.create_all()
+                persist_normalized_conversations(conversations)
 
-                    stored_sources = {
-                        row.source for row in ImportedConversation.query.with_entities(ImportedConversation.source).all()
-                    }
-                    self.assertEqual(stored_sources, {PROVIDER_CHATGPT})
-                finally:
-                    db.session.remove()
-                    db.engine.dispose()
+                stored_sources = {
+                    row.source for row in ImportedConversation.query.with_entities(ImportedConversation.source).all()
+                }
+                self.assertEqual(stored_sources, {PROVIDER_CHATGPT})
+            finally:
+                db.session.remove()
+                db.engine.dispose()
 
 
     def test_persistence_rejects_invalid_provider_identity(self):
@@ -86,20 +86,20 @@ class ImporterContractTest(unittest.TestCase):
             source_metadata={},
         )
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            app = Flask(__name__)
-            app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{Path(tmpdir) / 'invalid_provider.db'}"
-            app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        workdir = make_test_temp_dir(self, "importer-contract")
+        app = Flask(__name__)
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{workdir / 'invalid_provider.db'}"
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-            db.init_app(app)
-            with app.app_context():
-                try:
-                    db.create_all()
-                    with self.assertRaises(ValueError):
-                        persist_normalized_conversations([invalid])
-                finally:
-                    db.session.remove()
-                    db.engine.dispose()
+        db.init_app(app)
+        with app.app_context():
+            try:
+                db.create_all()
+                with self.assertRaises(ValueError):
+                    persist_normalized_conversations([invalid])
+            finally:
+                db.session.remove()
+                db.engine.dispose()
 
     def test_validate_provider_id_rejects_blank_or_unsupported(self):
         with self.assertRaises(ValueError):

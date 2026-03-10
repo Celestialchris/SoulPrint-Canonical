@@ -2,33 +2,29 @@
 
 from __future__ import annotations
 
-import tempfile
 import unittest
-from pathlib import Path
 
 from src.app import create_app
 from src.app.models import ImportedConversation, ImportedMessage
 from src.app.models.db import db
 from src.config import Config
+from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
 
 
 class ImportedListRouteTest(unittest.TestCase):
     def setUp(self):
+        self.workdir = make_test_temp_dir(self, "imported-list")
         self._old_uri = Config.SQLALCHEMY_DATABASE_URI
-        self.tmpdir = tempfile.TemporaryDirectory()
-        sqlite_path = Path(self.tmpdir.name) / "imported_list_test.db"
+        self.addCleanup(self._restore_sqlite_uri)
+        sqlite_path = self.workdir / "imported_list_test.db"
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{sqlite_path}"
 
         self.app = create_app()
         self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
 
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-            db.engine.dispose()
+    def _restore_sqlite_uri(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
-        self.tmpdir.cleanup()
 
     def _seed_conversation(
         self,

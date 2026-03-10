@@ -2,34 +2,29 @@
 
 from __future__ import annotations
 
-import tempfile
 import unittest
-from pathlib import Path
 
 from src.answering.local import AnswerCitation, GroundedAnswer
 from src.answering.trace import append_answer_trace, create_answer_trace
 from src.app import create_app
-from src.app.models.db import db
 from src.config import Config
+from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
 
 
 class AnswerTraceBrowserRouteTest(unittest.TestCase):
     def setUp(self):
+        self.workdir = make_test_temp_dir(self, "answer-trace-browser")
         self._old_uri = Config.SQLALCHEMY_DATABASE_URI
-        self.tmpdir = tempfile.TemporaryDirectory()
-        sqlite_path = Path(self.tmpdir.name) / "trace_browser_test.db"
+        self.addCleanup(self._restore_sqlite_uri)
+        sqlite_path = self.workdir / "trace_browser_test.db"
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{sqlite_path}"
 
         self.app = create_app()
         self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
 
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-            db.engine.dispose()
+    def _restore_sqlite_uri(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
-        self.tmpdir.cleanup()
 
     def _append_trace(self, *, question: str, citations: list[AnswerCitation] | None = None) -> str:
         if citations is None:
@@ -53,7 +48,7 @@ class AnswerTraceBrowserRouteTest(unittest.TestCase):
             retrieval_terms="lisbon memory",
             answer=answer,
         )
-        append_answer_trace(Path(self.tmpdir.name) / "answer_traces.jsonl", trace)
+        append_answer_trace(self.workdir / "answer_traces.jsonl", trace)
         return trace.trace_id
 
     def test_answer_trace_list_route_renders(self):
