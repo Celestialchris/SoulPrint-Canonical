@@ -1,44 +1,29 @@
-"""ChatGPT export parser producing a small normalized schema.
-
-The normalized schema is intentionally minimal for Milestone 1:
-- NormalizedConversation
-- NormalizedMessage
-
-These records are stable enough for SQLite persistence while keeping source IDs
-for traceability.
-"""
+"""ChatGPT exporter adapter using the shared importer normalization contract."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 from pathlib import Path
 from typing import Any
+
+from .contracts import (
+    PROVIDER_CHATGPT,
+    ConversationImporter,
+    NormalizedConversation,
+    NormalizedMessage,
+)
 
 
 DEFAULT_TITLE = "Untitled Conversation"
 
 
-@dataclass(slots=True)
-class NormalizedMessage:
-    """Normalized message row for a single conversation turn."""
+class ChatGPTImporter(ConversationImporter):
+    """Concrete importer adapter for ChatGPT export payloads."""
 
-    source_message_id: str
-    role: str
-    content: str
-    sequence_index: int
-    created_at: float | None
+    provider_id = PROVIDER_CHATGPT
 
-
-@dataclass(slots=True)
-class NormalizedConversation:
-    """Normalized conversation with ordered messages."""
-
-    source_conversation_id: str
-    title: str
-    created_at: float | None
-    updated_at: float | None
-    messages: list[NormalizedMessage]
+    def parse_payload(self, payload: Any) -> list[NormalizedConversation]:
+        return parse_chatgpt_export(payload)
 
 
 def parse_chatgpt_export_file(path: str | Path) -> list[NormalizedConversation]:
@@ -69,11 +54,13 @@ def parse_chatgpt_export(payload: Any) -> list[NormalizedConversation]:
 
         normalized.append(
             NormalizedConversation(
+                source_provider=PROVIDER_CHATGPT,
                 source_conversation_id=source_id,
                 title=title,
                 created_at=_to_float_or_none(raw_conversation.get("create_time")),
                 updated_at=_to_float_or_none(raw_conversation.get("update_time")),
                 messages=ordered_messages,
+                source_metadata={},
             )
         )
 

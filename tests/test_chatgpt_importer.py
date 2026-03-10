@@ -27,6 +27,7 @@ class ChatGPTImporterTest(unittest.TestCase):
         self.assertEqual(len(conversations), 2)
 
         first = conversations[0]
+        self.assertEqual(first.source_provider, "chatgpt")
         self.assertEqual(first.source_conversation_id, "conv-1")
         self.assertEqual(first.title, "Trip planning")
         self.assertEqual([m.role for m in first.messages], ["user", "assistant", "user"])

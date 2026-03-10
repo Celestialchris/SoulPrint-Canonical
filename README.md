@@ -15,18 +15,21 @@ See `docs/MEMORY_PASSPORT_SPEC.md` for the formal v1 Memory Passport package con
 
 ## Current Milestone 1+ importer capability
 
-The repository now includes a first importer path for ChatGPT exports:
+The repository now includes a provider-agnostic importer contract with a current ChatGPT implementation:
 
-- parse ChatGPT `conversations.json`-style data
-- normalize into stable conversation/message records
-- persist normalized records into SQLite (`ImportedConversation`, `ImportedMessage`)
+- contract: normalized provider identity + conversation/message provenance records (`src/importers/contracts.py`)
+- current concrete provider adapter: ChatGPT export parser (`src/importers/chatgpt.py`)
+- persistence remains canonical and source-aware in SQLite (`ImportedConversation`, `ImportedMessage`)
+
+This is an architectural boundary step: importers are provider-agnostic by contract, while implemented providers are still intentionally limited today.
 
 See:
 
-- parser: `src/importers/chatgpt.py`
+- contract: `src/importers/contracts.py`
+- ChatGPT adapter: `src/importers/chatgpt.py`
 - persistence: `src/importers/persistence.py`
 - sample fixture: `sample_data/chatgpt_export_sample.json`
-- tests: `tests/test_chatgpt_importer.py`
+- tests: `tests/test_chatgpt_importer.py`, `tests/test_importer_contract.py`
 
 ## Duplicate import policy (ChatGPT lane)
 

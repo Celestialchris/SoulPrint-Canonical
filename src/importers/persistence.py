@@ -17,7 +17,7 @@ from typing import Iterable
 from src.app.models import ImportedConversation, ImportedMessage
 from src.app.models.db import db
 
-from .chatgpt import NormalizedConversation
+from .contracts import NormalizedConversation, validate_provider_id
 
 
 @dataclass(frozen=True)
@@ -35,12 +35,19 @@ def persist_normalized_conversations(
     """Persist normalized conversations and messages in one transaction."""
 
     conversations_list = list(conversations)
+    provider_id = ""
+    if conversations_list:
+        provider_ids = {validate_provider_id(conversation.source_provider) for conversation in conversations_list}
+        if len(provider_ids) != 1:
+            raise ValueError("persist_normalized_conversations expects a single provider per batch")
+        provider_id = next(iter(provider_ids))
+
     incoming_ids = {conversation.source_conversation_id for conversation in conversations_list}
     existing_ids = {
         row.source_conversation_id
         for row in ImportedConversation.query.with_entities(ImportedConversation.source_conversation_id)
         .filter(
-            ImportedConversation.source == "chatgpt",
+            ImportedConversation.source == provider_id,
             ImportedConversation.source_conversation_id.in_(incoming_ids),
         )
         .all()
@@ -56,7 +63,7 @@ def persist_normalized_conversations(
             continue
 
         db_conversation = ImportedConversation(
-            source="chatgpt",
+            source=provider_id,
             source_conversation_id=conversation.source_conversation_id,
             title=conversation.title,
             created_at_unix=conversation.created_at,
