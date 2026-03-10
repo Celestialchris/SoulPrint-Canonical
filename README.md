@@ -122,6 +122,7 @@ A minimal read-only web inspection surface is also available:
 ```
 
 These routes render recent derived traces and per-trace details with explicit "Derived / non-canonical" labeling.
+When a citation stable ID maps to an existing canonical record surface, the trace detail page includes a direct handoff link (for example, native memory details and imported conversation explorer).
 
 
 ## Minimal Memory Passport export CLI (v1 surface)

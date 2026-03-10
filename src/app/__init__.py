@@ -50,6 +50,22 @@ def _sqlite_path_from_uri(sqlite_uri: str) -> str:
     return sqlite_uri.removeprefix("sqlite:///")
 
 
+def _citation_handoff_href(stable_id: str) -> str | None:
+    """Map a citation stable id to an existing canonical record surface."""
+
+    if stable_id.startswith("memory:"):
+        entry_id = stable_id.split(":", maxsplit=1)[1]
+        if entry_id.isdigit():
+            return f"/memory/{entry_id}"
+
+    if stable_id.startswith("imported_conversation:"):
+        conversation_id = stable_id.split(":", maxsplit=1)[1]
+        if conversation_id.isdigit():
+            return f"/imported/{conversation_id}/explorer"
+
+    return None
+
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -224,9 +240,21 @@ def create_app():
         if trace is None:
             abort(404)
 
+        trace_citations = []
+        for citation in trace.get("citations") or []:
+            stable_id = citation.get("stable_id", "")
+            trace_citations.append(
+                {
+                    **citation,
+                    "handoff_href": _citation_handoff_href(stable_id),
+                    "stable_id": stable_id,
+                }
+            )
+
         return render_template(
             "answer_trace_detail.html",
             trace=trace,
+            trace_citations=trace_citations,
             trace_store=trace_store,
         )
 
