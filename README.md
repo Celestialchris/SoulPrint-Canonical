@@ -122,6 +122,7 @@ A minimal read-only web inspection surface is also available:
 ```
 
 These routes render recent derived traces and per-trace details with explicit "Derived / non-canonical" labeling.
+
 When a citation stable ID maps to an existing canonical record surface, the trace detail page includes a direct handoff link (for example, `memory:<id> -> /memory/<id>` and `imported_conversation:<id> -> /imported/<id>/explorer`).
 If a citation does not map cleanly to an existing surface, SoulPrint keeps it as readable, non-clickable inspection text with explicit "no direct handoff view yet" labeling.
 

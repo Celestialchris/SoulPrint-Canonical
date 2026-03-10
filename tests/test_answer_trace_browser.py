@@ -86,6 +86,7 @@ class AnswerTraceBrowserRouteTest(unittest.TestCase):
         self.assertIn("note one", html)
         self.assertIn("Derived / non-canonical", html)
 
+
     def test_answer_trace_detail_native_memory_handoff_link_renders(self):
         trace_id = self._append_trace(
             question="Memory handoff",
