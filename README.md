@@ -150,6 +150,21 @@ This writes `memory-passport-v1/` under the output directory with:
 
 Use `--no-markdown` to export canonical JSONL + provenance only.
 
+You can also validate an exported passport package without mutating canonical data:
+
+```bash
+python -m src.passport.cli validate exports/passports/memory-passport-v1
+python -m src.passport.cli validate exports/passports/memory-passport-v1 --json
+```
+
+Validation reports one of:
+
+- `valid`
+- `valid_with_warnings`
+- `invalid`
+
+Diagnostics stay provenance-oriented and check manifest shape, canonical lane files, stable IDs, conversation/message coherence, sequence integrity, duplicate/conflicting IDs, and provenance references.
+
 ## Optional mem0 adapter boundary (disabled by default)
 
 A minimal internal mem0 adapter boundary now exists for future integration without changing canonical storage behavior:
