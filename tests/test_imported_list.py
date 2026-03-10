@@ -76,6 +76,26 @@ class ImportedListRouteTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn("No imported conversations found.", html)
 
+
+    def test_imported_list_shows_zero_message_count_for_empty_conversation(self):
+        with self.app.app_context():
+            conversation = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="conv-empty",
+                title="No messages yet",
+                created_at_unix=1710000000.0,
+                updated_at_unix=1710000100.0,
+            )
+            db.session.add(conversation)
+            db.session.commit()
+
+        response = self.client.get("/imported")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("No messages yet", html)
+        self.assertIn("Messages: 0", html)
+
     def test_imported_list_query_filters_by_title_and_message_content(self):
         self._seed_conversation("Lisbon plans", "conv-title", "Talk about travel")
         self._seed_conversation("Untitled", "conv-message", "Need pasta recommendations")

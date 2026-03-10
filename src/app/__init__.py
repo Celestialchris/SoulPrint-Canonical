@@ -72,7 +72,7 @@ def create_app():
         rows_query = (
             db.session.query(
                 ImportedConversation,
-                func.count().label("message_count"),
+                func.count(ImportedMessage.id).label("message_count"),
             )
             .outerjoin(ImportedConversation.messages)
             .group_by(ImportedConversation.id)
