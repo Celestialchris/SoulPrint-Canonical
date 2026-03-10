@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import tempfile
+import shutil
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from uuid import uuid4
 
 from src.app import create_app
 from src.config import Config
@@ -15,8 +16,11 @@ from src.retrieval.federated import FederatedReadResult
 class FederatedBrowserRouteTest(unittest.TestCase):
     def setUp(self):
         self._old_uri = Config.SQLALCHEMY_DATABASE_URI
-        self.tmpdir = tempfile.TemporaryDirectory()
-        sqlite_path = Path(self.tmpdir.name) / "federated_browser_test.db"
+        self._tmp_root = Path.cwd() / ".tmp-tests"
+        self._tmp_root.mkdir(exist_ok=True)
+        self.tmpdir = self._tmp_root / f"federated-browser-{uuid4().hex}"
+        self.tmpdir.mkdir()
+        sqlite_path = self.tmpdir / "federated_browser_test.db"
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{sqlite_path}"
 
         self.app = create_app()
@@ -24,7 +28,7 @@ class FederatedBrowserRouteTest(unittest.TestCase):
 
     def tearDown(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
-        self.tmpdir.cleanup()
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def test_federated_route_renders_successfully(self):
         with patch("src.app.federated_search", return_value=[]):
@@ -93,6 +97,23 @@ class FederatedBrowserRouteTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         self.assertIn('href="/imported/42/explorer"', html)
+
+    def test_native_memory_handoff_link_targets_native_detail_route(self):
+        results = [
+            FederatedReadResult(
+                source_lane="native_memory",
+                stable_id="memory:42",
+                title="Native memory row",
+                timestamp_unix=1710002000.0,
+                source_metadata={"role": "user", "tags": "travel"},
+            )
+        ]
+        with patch("src.app.federated_search", return_value=results):
+            response = self.client.get("/federated?q=travel")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('href="/memory/42?from=federated&amp;q=travel"', html)
 
     def test_empty_result_handling_is_safe(self):
         with patch("src.app.federated_search", return_value=[]):

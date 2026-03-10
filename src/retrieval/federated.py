@@ -14,6 +14,7 @@ from sqlalchemy import func
 
 from src.app.models import ImportedConversation, ImportedMessage, MemoryEntry
 from src.app.models.db import db
+from src.config import sqlite_uri_from_path
 
 from .mem0_adapter import ingest_federated_items, mem0_write_mode
 
@@ -31,7 +32,7 @@ class FederatedReadResult:
 
 def _sqlite_app(sqlite_path: str | Path) -> Flask:
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{Path(sqlite_path).resolve()}"
+    app.config["SQLALCHEMY_DATABASE_URI"] = sqlite_uri_from_path(sqlite_path)
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
     return app

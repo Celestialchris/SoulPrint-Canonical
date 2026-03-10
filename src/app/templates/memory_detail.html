@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ stable_id }} · Native Memory</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --native-border: #bfdbfe;
+      --native-bg: #eff6ff;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+    .nav {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .nav a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.92rem;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--native-border);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    .eyebrow {
+      margin: 0 0 6px 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+    .subtle {
+      margin: 8px 0 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    dl {
+      margin: 18px 0 0 0;
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 10px 14px;
+    }
+    dt {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    dd {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+    .content {
+      margin-top: 20px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--native-bg);
+    }
+    .content h2 {
+      margin: 0 0 10px 0;
+      font-size: 1rem;
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="nav" aria-label="Back navigation">
+      <a href="/chats">Back to native memory list</a>
+      {% if federated_href %}
+        <a href="{{ federated_href }}">Back to federated results</a>
+      {% endif %}
+    </nav>
+
+    <section class="panel">
+      <p class="eyebrow">Native Memory Record</p>
+      <h1>{{ stable_id }}</h1>
+      <p class="subtle">Read-only canonical native-memory detail.</p>
+
+      <dl>
+        <dt>Stable ID</dt>
+        <dd>{{ stable_id }}</dd>
+        <dt>Timestamp</dt>
+        <dd>{{ timestamp_label }}</dd>
+        <dt>Role</dt>
+        <dd>{{ entry.role }}</dd>
+        <dt>Tags</dt>
+        <dd>{{ entry.tags.strip() if entry.tags and entry.tags.strip() else "None" }}</dd>
+      </dl>
+
+      <section class="content" aria-labelledby="memory-content-heading">
+        <h2 id="memory-content-heading">Content</h2>
+        <pre>{{ entry.content }}</pre>
+      </section>
+    </section>
+  </div>
+</body>
+</html>
