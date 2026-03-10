@@ -44,6 +44,12 @@ def _native_memory_entry_id(stable_id: str) -> int | None:
     return int(entry_id)
 
 
+def _sqlite_path_from_uri(sqlite_uri: str) -> str:
+    """Resolve an absolute SQLite file path from app config URI."""
+
+    return sqlite_uri.removeprefix("sqlite:///")
+
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -163,7 +169,7 @@ def create_app():
     def federated_browser():
         keyword = request.args.get("q", "").strip()
         sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
-        sqlite_path = sqlite_uri.removeprefix("sqlite:///")
+        sqlite_path = _sqlite_path_from_uri(sqlite_uri)
         results = federated_search(sqlite_path=sqlite_path, keyword=keyword)
 
         rows = []
@@ -192,6 +198,36 @@ def create_app():
             keyword=keyword,
             rows=rows,
             format_timestamp=format_timestamp,
+        )
+
+    @app.get("/answer-traces")
+    def answer_trace_list():
+        from ..answering.trace import default_trace_store_path, list_answer_traces
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        trace_store = default_trace_store_path(_sqlite_path_from_uri(sqlite_uri))
+        traces = list_answer_traces(trace_store, limit=50)
+
+        return render_template(
+            "answer_trace_list.html",
+            traces=traces,
+            trace_store=trace_store,
+        )
+
+    @app.get("/answer-traces/<path:trace_id>")
+    def answer_trace_detail(trace_id: str):
+        from ..answering.trace import default_trace_store_path, get_answer_trace
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        trace_store = default_trace_store_path(_sqlite_path_from_uri(sqlite_uri))
+        trace = get_answer_trace(trace_store, trace_id)
+        if trace is None:
+            abort(404)
+
+        return render_template(
+            "answer_trace_detail.html",
+            trace=trace,
+            trace_store=trace_store,
         )
 
     return app

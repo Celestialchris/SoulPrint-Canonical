@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ trace.trace_id }} · Answer Trace</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --badge-bg: #fff7ed;
+      --badge-border: #fdba74;
+      --badge-text: #9a3412;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 36px;
+    }
+    .nav {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .nav a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.92rem;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      word-break: break-word;
+    }
+    .subtle {
+      margin: 8px 0 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .derived-badge {
+      display: inline-block;
+      margin-top: 10px;
+      border: 1px solid var(--badge-border);
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      padding: 3px 10px;
+      letter-spacing: 0.01em;
+    }
+    dl {
+      margin: 18px 0 0 0;
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 10px 14px;
+    }
+    dt {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    dd {
+      margin: 0;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .block {
+      margin-top: 18px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fff;
+    }
+    .block h2 {
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+    }
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+    li {
+      margin: 6px 0;
+      font-size: 0.93rem;
+      line-height: 1.45;
+    }
+    code { word-break: break-word; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="nav" aria-label="Back navigation">
+      <a href="/answer-traces">Back to answer traces</a>
+      <a href="/">Home</a>
+    </nav>
+
+    <section class="panel">
+      <h1>{{ trace.trace_id }}</h1>
+      <p class="subtle">Read-only audit inspection for one local answer trace.</p>
+      <p class="derived-badge">Derived / non-canonical</p>
+
+      <dl>
+        <dt>Created</dt>
+        <dd>{{ trace.created_at }}</dd>
+        <dt>Question</dt>
+        <dd>{{ trace.question|default('', true)|trim or "(no question captured)" }}</dd>
+        <dt>Retrieval terms</dt>
+        <dd>{{ trace.retrieval_terms|default('', true)|trim or "(none)" }}</dd>
+        <dt>Answer status</dt>
+        <dd>{{ trace.status }}</dd>
+        <dt>Source lanes</dt>
+        <dd>{{ trace.source_lanes|join(', ') if trace.source_lanes else "none" }}</dd>
+        <dt>Fallback reason</dt>
+        <dd>{{ trace.fallback_reason if trace.fallback_reason else "none" }}</dd>
+      </dl>
+
+      <section class="block" aria-labelledby="answer-text-heading">
+        <h2 id="answer-text-heading">Answer text</h2>
+        <p>{{ trace.answer_text|default('', true)|trim or "(no answer text captured)" }}</p>
+      </section>
+
+      <section class="block" aria-labelledby="citations-heading">
+        <h2 id="citations-heading">Citations / stable IDs</h2>
+        {% if trace.citations %}
+          <ul>
+            {% for citation in trace.citations %}
+              <li>
+                <code>{{ citation.stable_id }}</code>
+                · lane: {{ citation.source_lane }}
+                {% if citation.timestamp %}· timestamp: {{ citation.timestamp }}{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>No citations captured.</p>
+        {% endif %}
+      </section>
+
+      <section class="block" aria-labelledby="notes-heading">
+        <h2 id="notes-heading">Notes</h2>
+        {% if trace.notes %}
+          <ul>
+            {% for note in trace.notes %}
+              <li>{{ note }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>No notes captured.</p>
+        {% endif %}
+      </section>
+
+      <p class="subtle">Trace store: <code>{{ trace_store }}</code></p>
+    </section>
+  </div>
+</body>
+</html>
