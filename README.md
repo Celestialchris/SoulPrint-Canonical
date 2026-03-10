@@ -121,15 +121,23 @@ Feature flags (safe defaults):
 With defaults, baseline retrieval remains canonical-only and mem0 behavior is a no-op.
 
 
-## Imported transcript explorer (read-only, imported lane)
+## Imported conversation browser + transcript explorer (read-only, imported lane)
 
-A minimal transcript explorer UI is available for one imported conversation:
+A minimal imported conversation browser UI is available at:
+
+```
+/imported
+```
+
+This list is server-rendered and read-only. It shows canonical imported conversations in descending canonical ID order, with lightweight metadata and links into the transcript explorer.
+
+One-conversation transcript explorer route:
 
 ```
 /imported/<conversation_id>/explorer
 ```
 
-The page is server-rendered and read-only, with:
+The explorer page is server-rendered and read-only, with:
 
 - prompt-level TOC entries derived from user turns
 - ordered transcript rendering from canonical `ImportedMessage.sequence_index`

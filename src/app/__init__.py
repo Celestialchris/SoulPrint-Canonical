@@ -5,7 +5,8 @@ import os
 from .imported_explorer import anchor_for_message, build_prompt_toc, format_timestamp
 from .models.db import db
 from ..config import Config
-from .models import ImportedConversation, MemoryEntry
+from .models import ImportedConversation, ImportedMessage, MemoryEntry
+from sqlalchemy import func
 
 
 def create_app():
@@ -62,6 +63,36 @@ def create_app():
             toc_entries=toc_entries,
             format_timestamp=format_timestamp,
             anchor_for_message=anchor_for_message,
+        )
+
+    @app.get("/imported")
+    def imported_conversations():
+        keyword = request.args.get("q", "").strip()
+
+        rows_query = (
+            db.session.query(
+                ImportedConversation,
+                func.count().label("message_count"),
+            )
+            .outerjoin(ImportedConversation.messages)
+            .group_by(ImportedConversation.id)
+        )
+
+        if keyword:
+            pattern = f"%{keyword.lower()}%"
+            rows_query = rows_query.filter(
+                (func.lower(ImportedConversation.title).like(pattern))
+                | ImportedConversation.messages.any(
+                    func.lower(ImportedMessage.content).like(pattern)
+                )
+            )
+
+        rows = rows_query.order_by(ImportedConversation.id.desc()).limit(100).all()
+        return render_template(
+            "imported_list.html",
+            rows=rows,
+            keyword=keyword,
+            format_timestamp=format_timestamp,
         )
 
     @app.get("/chats")
