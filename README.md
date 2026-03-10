@@ -114,6 +114,15 @@ python -m src.answering.cli --db instance/soulprint.db --list-traces 5
 
 Answer Traces are append-only derived records that capture question, retrieval terms, answer status, answer text, citations/stable IDs, source lanes, and fallback notes. They are audit residue only and do **not** replace or mutate canonical records.
 
+A minimal read-only web inspection surface is also available:
+
+```
+/answer-traces
+/answer-traces/<trace_id>
+```
+
+These routes render recent derived traces and per-trace details with explicit "Derived / non-canonical" labeling.
+
 
 ## Minimal Memory Passport export CLI (v1 surface)
 
