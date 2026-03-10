@@ -142,6 +142,36 @@ class ImportedExplorerRouteTest(unittest.TestCase):
         self.assertIn("This imported conversation has no messages.", html)
         self.assertIn("No user prompts available.", html)
 
+    def test_imported_explorer_shows_provider_identity_for_non_chatgpt_source(self):
+        with self.app.app_context():
+            conversation = ImportedConversation(
+                source="claude",
+                source_conversation_id="claude-conv-explorer-1",
+                title="Claude explorer conversation",
+                created_at_unix=1710000000.0,
+                updated_at_unix=1710000500.0,
+            )
+            db.session.add(conversation)
+            db.session.flush()
+            db.session.add(
+                ImportedMessage(
+                    conversation_id=conversation.id,
+                    source_message_id="claude-msg-1",
+                    role="user",
+                    content="Provider label check.",
+                    sequence_index=0,
+                    created_at_unix=1710000001.0,
+                )
+            )
+            db.session.commit()
+            conversation_id = conversation.id
+
+        response = self.client.get(f"/imported/{conversation_id}/explorer")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("Provider: claude", html)
+        self.assertIn("Source Conversation ID: claude-conv-explorer-1", html)
+
 
 if __name__ == "__main__":
     unittest.main()

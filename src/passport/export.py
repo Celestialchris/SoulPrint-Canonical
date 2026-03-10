@@ -77,6 +77,12 @@ def _write_jsonl(path: Path, records: list[dict]) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def _imported_provider_export_path(provider_id: str, filename: str) -> str:
+    """Return the provider-scoped imported export path inside a passport."""
+
+    return f"conversations/imported/{provider_id}/{filename}"
+
+
 def _render_native_markdown(entry: MemoryEntry) -> str:
     timestamp_iso = _iso_utc_from_datetime(entry.timestamp)
     lines = [
@@ -182,7 +188,10 @@ def export_memory_passport(
                         "source_record_id": conversation.source_conversation_id,
                         "timestamp_unix": conversation.updated_at_unix or conversation.created_at_unix,
                         "source_metadata": record["source_metadata"],
-                        "path": "conversations/imported/chatgpt/conversations.jsonl",
+                        "path": _imported_provider_export_path(
+                            conversation.source,
+                            "conversations.jsonl",
+                        ),
                     }
                 )
 
@@ -214,7 +223,10 @@ def export_memory_passport(
                             "source_record_id": message.source_message_id,
                             "timestamp_unix": message.created_at_unix,
                             "source_metadata": message_record["source_metadata"],
-                            "path": "conversations/imported/chatgpt/messages.jsonl",
+                            "path": _imported_provider_export_path(
+                                conversation.source,
+                                "messages.jsonl",
+                            ),
                         }
                     )
 
@@ -310,15 +322,36 @@ def export_memory_passport(
                     )
 
             if imported_conversation_records:
-                _write_jsonl(
-                    package_dir / "conversations" / "imported" / "chatgpt" / "conversations.jsonl",
-                    imported_conversation_records,
-                )
+                conversation_records_by_provider: dict[str, list[dict]] = {}
+                for record in imported_conversation_records:
+                    provider_id = str(record["source_provider"])
+                    conversation_records_by_provider.setdefault(provider_id, []).append(record)
+
+                for provider_id, provider_records in conversation_records_by_provider.items():
+                    _write_jsonl(
+                        package_dir
+                        / "conversations"
+                        / "imported"
+                        / provider_id
+                        / "conversations.jsonl",
+                        provider_records,
+                    )
+
             if imported_message_records:
-                _write_jsonl(
-                    package_dir / "conversations" / "imported" / "chatgpt" / "messages.jsonl",
-                    imported_message_records,
-                )
+                message_records_by_provider: dict[str, list[dict]] = {}
+                for record in imported_message_records:
+                    provider_id = str(record["source_provider"])
+                    message_records_by_provider.setdefault(provider_id, []).append(record)
+
+                for provider_id, provider_records in message_records_by_provider.items():
+                    _write_jsonl(
+                        package_dir
+                        / "conversations"
+                        / "imported"
+                        / provider_id
+                        / "messages.jsonl",
+                        provider_records,
+                    )
             if native_memory_records:
                 _write_jsonl(package_dir / "native" / "memory_entries.jsonl", native_memory_records)
 

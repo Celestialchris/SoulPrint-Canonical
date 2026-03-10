@@ -143,9 +143,9 @@
     <aside class="panel sidebar">
       <h2 class="title">Prompt TOC</h2>
       <div class="meta">
-        Source: {{ conversation.source }}<br>
-        Conversation ID: {{ conversation.id }}<br>
-        Canonical Source ID: {{ conversation.source_conversation_id }}
+        Provider: {{ conversation.source }}<br>
+        Canonical ID: {{ conversation.id }}<br>
+        Source Conversation ID: {{ conversation.source_conversation_id }}
       </div>
       <ul class="toc-list">
         {% for entry in toc_entries %}
@@ -161,6 +161,7 @@
         <h1>{{ display_title }}</h1>
         <h1>{{ conversation.title }}</h1>
         <p>
+          Provider: {{ conversation.source }} ·
           Created: {{ format_timestamp(conversation.created_at_unix) }} ·
           Updated: {{ format_timestamp(conversation.updated_at_unix) }} ·
           Messages: {{ messages|length }}

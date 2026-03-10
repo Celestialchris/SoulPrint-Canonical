@@ -26,6 +26,14 @@ class ChatGPTImporter(ConversationImporter):
         return parse_chatgpt_export(payload)
 
 
+def looks_like_chatgpt_export(payload: Any) -> bool:
+    """Return True when payload matches the supported ChatGPT export shape."""
+
+    return isinstance(payload, list) and any(
+        isinstance(item, dict) and "mapping" in item for item in payload
+    )
+
+
 def parse_chatgpt_export_file(path: str | Path) -> list[NormalizedConversation]:
     """Load a ChatGPT conversations export JSON file and normalize it."""
 

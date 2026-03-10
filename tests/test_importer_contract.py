@@ -11,8 +11,11 @@ from flask import Flask
 from src.app.models import ImportedConversation
 from src.app.models.db import db
 from src.importers.chatgpt import ChatGPTImporter, parse_chatgpt_export_file
+from src.importers.claude import ClaudeImporter
 from src.importers.contracts import (
     PROVIDER_CHATGPT,
+    PROVIDER_CLAUDE,
+    PROVIDER_GEMINI,
     ConversationImporter,
     NormalizedConversation,
     validate_provider_id,
@@ -31,6 +34,22 @@ class ImporterContractTest(unittest.TestCase):
 
         self.assertEqual(parsed[0].source_provider, PROVIDER_CHATGPT)
         self.assertEqual(conversations[0].source_provider, PROVIDER_CHATGPT)
+
+    def test_claude_importer_conforms_to_contract(self):
+        importer: ConversationImporter = ClaudeImporter()
+        self.assertEqual(importer.provider_id, PROVIDER_CLAUDE)
+
+        parsed = importer.parse_payload(
+            [
+                {
+                    "uuid": "claude-conv-1",
+                    "name": "Claude test",
+                    "chat_messages": [],
+                }
+            ]
+        )
+
+        self.assertEqual(parsed[0].source_provider, PROVIDER_CLAUDE)
 
     def test_provider_identity_is_preserved_through_persistence(self):
         fixture = Path("sample_data/chatgpt_export_sample.json")
@@ -86,8 +105,10 @@ class ImporterContractTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_provider_id("   ")
 
+        self.assertEqual(validate_provider_id("gemini"), PROVIDER_GEMINI)
+
         with self.assertRaises(ValueError):
-            validate_provider_id("gemini")
+            validate_provider_id("unsupported-provider")
 
 
 if __name__ == "__main__":

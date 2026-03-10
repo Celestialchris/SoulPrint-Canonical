@@ -123,7 +123,7 @@
               <a href="/imported/{{ conversation.id }}/explorer">{{ display_title }}</a>
             </h2>
             <p class="meta">
-              Source: {{ conversation.source }} · Canonical ID: {{ conversation.id }} · Source Conversation ID: {{ conversation.source_conversation_id }}<br>
+              Provider: {{ conversation.source }} · Canonical ID: {{ conversation.id }} · Source Conversation ID: {{ conversation.source_conversation_id }}<br>
               Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
             </p>
           </article>

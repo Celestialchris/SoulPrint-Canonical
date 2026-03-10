@@ -12,7 +12,7 @@ from flask import Flask
 
 from src.app.models import MemoryEntry
 from src.app.models.db import db
-from src.importers.cli import import_chatgpt_export_to_sqlite
+from src.importers.cli import import_chatgpt_export_to_sqlite, import_conversation_export_to_sqlite
 from src.passport.export import export_memory_passport
 
 
@@ -167,6 +167,51 @@ class PassportExportTest(unittest.TestCase):
             self.assertEqual(manifest["counts"]["native_memory_entries"], 0)
             self.assertEqual(manifest["counts"]["provenance_units"], 0)
             self.assertEqual(provenance_path.read_text(encoding="utf-8"), "")
+
+    def test_export_groups_imported_records_under_their_provider_paths(self):
+        fixture = Path("sample_data/claude_export_sample.json")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_root = Path(tmpdir)
+            sqlite_path = temp_root / "passport_claude.db"
+            import_conversation_export_to_sqlite(fixture, sqlite_path, provider="claude")
+
+            result = export_memory_passport(
+                sqlite_path=sqlite_path,
+                output_dir=temp_root / "exports",
+                created_at=datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC),
+                export_id="claude-export-id",
+            )
+
+            package_dir = result.package_dir
+            imported_conversations_path = (
+                package_dir / "conversations" / "imported" / "claude" / "conversations.jsonl"
+            )
+            imported_messages_path = (
+                package_dir / "conversations" / "imported" / "claude" / "messages.jsonl"
+            )
+            provenance_path = package_dir / "provenance" / "index.jsonl"
+
+            self.assertTrue(imported_conversations_path.exists())
+            self.assertTrue(imported_messages_path.exists())
+
+            provenance_rows = [
+                json.loads(line) for line in provenance_path.read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertTrue(
+                any(
+                    row["source_provider"] == "claude"
+                    and row["path"] == "conversations/imported/claude/conversations.jsonl"
+                    for row in provenance_rows
+                )
+            )
+            self.assertTrue(
+                any(
+                    row["source_provider"] == "claude"
+                    and row["path"] == "conversations/imported/claude/messages.jsonl"
+                    for row in provenance_rows
+                )
+            )
 
 
 if __name__ == "__main__":

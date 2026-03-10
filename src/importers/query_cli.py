@@ -13,7 +13,7 @@ from .query import (
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Inspect imported ChatGPT conversations in SQLite.")
+    parser = argparse.ArgumentParser(description="Inspect imported conversations in SQLite.")
     parser.add_argument(
         "--db",
         default="instance/soulprint.db",

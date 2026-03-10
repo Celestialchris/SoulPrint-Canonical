@@ -12,7 +12,15 @@ from typing import Any, Protocol
 
 # Canonical provider identifiers currently supported by importer runtime.
 PROVIDER_CHATGPT = "chatgpt"
-SUPPORTED_IMPORT_PROVIDERS = frozenset({PROVIDER_CHATGPT})
+PROVIDER_CLAUDE = "claude"
+PROVIDER_GEMINI = "gemini"
+SUPPORTED_IMPORT_PROVIDERS = frozenset(
+    {
+        PROVIDER_CHATGPT,
+        PROVIDER_CLAUDE,
+        PROVIDER_GEMINI,
+    }
+)
 
 
 @dataclass(slots=True, frozen=True)

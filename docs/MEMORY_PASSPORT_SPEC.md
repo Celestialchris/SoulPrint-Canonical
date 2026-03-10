@@ -38,7 +38,7 @@ memory-passport-v1/
   manifest.json
   conversations/
     imported/
-      chatgpt/
+      <provider-id>/
         conversations.jsonl
         messages.jsonl
   native/
@@ -56,6 +56,7 @@ Notes:
 
 - `manifest.json` is required.
 - `conversations/`, `native/`, `markdown/`, and `provenance/` are included when data exists for that lane/type.
+- Imported conversation exports are grouped by provider under `conversations/imported/<provider-id>/`.
 - JSON Lines (`.jsonl`) is used for line-addressable records and streaming-friendly export/import.
 - Markdown is included for human-readable continuity, not as canonical structured truth.
 

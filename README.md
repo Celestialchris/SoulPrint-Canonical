@@ -15,40 +15,46 @@ See `docs/MEMORY_PASSPORT_SPEC.md` for the formal v1 Memory Passport package con
 
 ## Current Milestone 1+ importer capability
 
-The repository now includes a provider-agnostic importer contract with a current ChatGPT implementation:
+The repository now includes a provider-agnostic importer contract with concrete imported conversation adapters for:
 
-- contract: normalized provider identity + conversation/message provenance records (`src/importers/contracts.py`)
-- current concrete provider adapter: ChatGPT export parser (`src/importers/chatgpt.py`)
-- persistence remains canonical and source-aware in SQLite (`ImportedConversation`, `ImportedMessage`)
+- ChatGPT bulk exports (`src/importers/chatgpt.py`)
+- Claude conversation exports (`src/importers/claude.py`)
 
-This is an architectural boundary step: importers are provider-agnostic by contract, while implemented providers are still intentionally limited today.
+Gemini is recognized as a provider slot in the importer runtime, but remains explicitly unsupported until the repo carries a real fixture-backed export shape.
+
+Persistence remains canonical and source-aware in SQLite (`ImportedConversation`, `ImportedMessage`).
 
 See:
 
 - contract: `src/importers/contracts.py`
 - ChatGPT adapter: `src/importers/chatgpt.py`
+- Claude adapter: `src/importers/claude.py`
 - persistence: `src/importers/persistence.py`
-- sample fixture: `sample_data/chatgpt_export_sample.json`
-- tests: `tests/test_chatgpt_importer.py`, `tests/test_importer_contract.py`
+- sample fixtures: `sample_data/chatgpt_export_sample.json`, `sample_data/claude_export_sample.json`
+- tests: `tests/test_chatgpt_importer.py`, `tests/test_cross_llm_importers.py`, `tests/test_importer_contract.py`
 
-## Duplicate import policy (ChatGPT lane)
+## Duplicate import policy (imported conversation lane)
 
 To prevent accidental re-imports of the same source conversation, the importer applies a minimal duplicate guard during persistence:
 
 - Identity key: `(source, source_conversation_id)`
-- Current source value for this lane: `chatgpt`
+- Current implemented provider values: `chatgpt`, `claude`
 - If that key already exists, the conversation is **skipped** (no duplicate conversation row and no duplicate message rows)
 - New source conversation IDs are still imported normally
 
 The import path reports both imported and skipped conversation counts.
 
-## Minimal ChatGPT import CLI (local/dev)
+## Minimal import CLI (local/dev)
 
-Use the importer CLI to load one ChatGPT export fixture or file into SQLite:
+Use the importer CLI to load one supported export fixture or file into SQLite:
 
 ```bash
 python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/claude_export_sample.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/claude_export_sample.json --db instance/soulprint.db --provider claude
 ```
+
+The CLI auto-detects `chatgpt` and `claude` payloads. Use `--provider` when you want an explicit provider boundary or a clearer malformed/unsupported error.
 
 
 ## Minimal federated retrieval surface (read-only)
@@ -138,7 +144,7 @@ python -m src.passport.cli exports/passports --db instance/soulprint.db
 This writes `memory-passport-v1/` under the output directory with:
 
 - `manifest.json`
-- canonical lane exports (`conversations/imported/chatgpt/*.jsonl`, `native/memory_entries.jsonl` when data exists)
+- canonical lane exports (`conversations/imported/<provider-id>/*.jsonl`, `native/memory_entries.jsonl` when data exists)
 - derived markdown continuity files (when enabled)
 - `provenance/index.jsonl`
 

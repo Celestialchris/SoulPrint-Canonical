@@ -30,10 +30,17 @@ class ImportedListRouteTest(unittest.TestCase):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
         self.tmpdir.cleanup()
 
-    def _seed_conversation(self, title: str, source_id: str, message: str) -> int:
+    def _seed_conversation(
+        self,
+        title: str,
+        source_id: str,
+        message: str,
+        *,
+        source: str = "chatgpt",
+    ) -> int:
         with self.app.app_context():
             conversation = ImportedConversation(
-                source="chatgpt",
+                source=source,
                 source_conversation_id=source_id,
                 title=title,
                 created_at_unix=1710000000.0,
@@ -111,6 +118,21 @@ class ImportedListRouteTest(unittest.TestCase):
         content_html = content_response.get_data(as_text=True)
         self.assertIn("Untitled", content_html)
         self.assertNotIn("Lisbon plans", content_html)
+
+    def test_imported_list_shows_provider_identity_for_non_chatgpt_source(self):
+        self._seed_conversation(
+            "Claude notes",
+            "claude-conv-1",
+            "Cross-LLM continuity",
+            source="claude",
+        )
+
+        response = self.client.get("/imported")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("Provider: claude", html)
+        self.assertIn("Source Conversation ID: claude-conv-1", html)
 
 
 if __name__ == "__main__":
