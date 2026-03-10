@@ -6,6 +6,7 @@ from .imported_explorer import anchor_for_message, build_prompt_toc, format_time
 from .models.db import db
 from ..config import Config, normalize_sqlite_uri
 from .models import ImportedConversation, ImportedMessage, MemoryEntry
+from .citation_handoff import build_answer_trace_citation_view
 from sqlalchemy import func
 
 
@@ -48,24 +49,6 @@ def _sqlite_path_from_uri(sqlite_uri: str) -> str:
     """Resolve an absolute SQLite file path from app config URI."""
 
     return sqlite_uri.removeprefix("sqlite:///")
-
-
-def _citation_handoff_href(stable_id: str) -> str | None:
-    """Map a citation stable id to an existing canonical record surface."""
-
-    stable_id = stable_id.strip()
-
-    if stable_id.startswith("memory:"):
-        entry_id = stable_id.split(":", maxsplit=1)[1]
-        if entry_id.isdigit():
-            return f"/memory/{entry_id}"
-
-    if stable_id.startswith("imported_conversation:"):
-        conversation_id = stable_id.split(":", maxsplit=1)[1]
-        if conversation_id.isdigit():
-            return f"/imported/{conversation_id}/explorer"
-
-    return None
 
 
 def create_app():
@@ -242,16 +225,10 @@ def create_app():
         if trace is None:
             abort(404)
 
-        trace_citations = []
-        for citation in trace.get("citations") or []:
-            stable_id = citation.get("stable_id", "")
-            trace_citations.append(
-                {
-                    **citation,
-                    "handoff_href": _citation_handoff_href(stable_id),
-                    "stable_id": stable_id,
-                }
-            )
+        trace_citations = [
+            build_answer_trace_citation_view(citation)
+            for citation in trace.get("citations") or []
+        ]
 
         return render_template(
             "answer_trace_detail.html",

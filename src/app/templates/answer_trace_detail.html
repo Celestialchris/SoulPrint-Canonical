@@ -151,8 +151,8 @@
           <ul>
             {% for citation in trace_citations %}
               <li>
-                {% if citation.handoff_href %}
-                  <a class="citation-link" href="{{ citation.handoff_href }}"><code>{{ citation.stable_id }}</code></a>
+                {% if citation.target %}
+                  <a class="citation-link" href="{{ citation.target.href }}"><code>{{ citation.target.label }}</code></a>
                 {% else %}
                   <code>{{ citation.stable_id }}</code>
                   <span class="citation-note">(no direct handoff view yet)</span>
