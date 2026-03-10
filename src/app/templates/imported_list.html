@@ -1,137 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Imported Conversations · SoulPrint</title>
-  <style>
-    :root {
-      --bg: #f7f8fb;
-      --panel: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --accent: #2563eb;
-    }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    .shell {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 24px 16px;
-    }
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    }
-    h1 {
-      margin: 0 0 8px 0;
-      font-size: 1.4rem;
-    }
-    .subtle {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-    form {
-      margin-top: 14px;
-      display: flex;
-      gap: 8px;
-    }
-    input[type="search"] {
-      flex: 1;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 0.95rem;
-    }
-    button {
-      border: 1px solid var(--border);
-      background: #f9fafb;
-      border-radius: 8px;
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-    .list {
-      margin-top: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .row {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      background: #fff;
-    }
-    .row h2 {
-      margin: 0 0 6px 0;
-      font-size: 1rem;
-    }
-    .row h2 a {
-      color: var(--text);
-      text-decoration: none;
-    }
-    .row h2 a:hover { color: var(--accent); }
-    .meta {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.4;
-    }
-    .empty {
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 0.92rem;
-      border: 1px dashed var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      background: #fff;
-    }
-  </style>
-</head>
-<body>
-  <div class="shell">
-    <section class="panel">
-      <h1>Imported Conversations</h1>
-      <p class="subtle">Read-only explorer for imported history.</p>
-      <form method="get" action="/imported">
-        <input
-          type="search"
-          name="q"
-          placeholder="Search title or message text"
-          value="{{ keyword }}"
-          aria-label="Search imported conversations"
-        >
-        <button type="submit">Search</button>
-      </form>
-    </section>
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
 
-    {% if rows %}
-      <div class="list">
-        {% for conversation, message_count in rows %}
-          {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
-          <article class="row">
-            <h2>
+{% block title %}Imported Conversations · SoulPrint{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Canonical imported lane</p>
+    <div class="page-header__row">
+      <h1>Imported Conversations</h1>
+      <div class="page-badges">
+        {{ badge("Canonical", "canonical") }}
+        {{ badge("Imported lane", "imported") }}
+      </div>
+    </div>
+    <p class="page-summary">Read-only explorer for imported history with explicit provider and canonical identity.</p>
+  </section>
+
+  <section class="surface-card filter-panel">
+    <form class="filter-form" method="get" action="/imported">
+      <div>
+        <label class="field-label" for="imported-query">Search imported conversations</label>
+        <div class="filter-row">
+          <input
+            id="imported-query"
+            type="search"
+            name="q"
+            placeholder="Search title or message text"
+            value="{{ keyword }}"
+            aria-label="Search imported conversations"
+          >
+          <button type="submit">Search</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  {% if rows %}
+    <div class="list-stack">
+      {% for conversation, message_count in rows %}
+        {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
+        <article class="record-card record-card--imported">
+          <div class="record-card__header">
+            <h2 class="record-card__title">
               <a href="/imported/{{ conversation.id }}/explorer">{{ display_title }}</a>
             </h2>
-            <p class="meta">
-              Provider: {{ conversation.source }} · Canonical ID: {{ conversation.id }} · Source Conversation ID: {{ conversation.source_conversation_id }}<br>
-              Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
-            </p>
-          </article>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="empty">No imported conversations found.</p>
-    {% endif %}
-  </div>
-</body>
-</html>
+            <div class="metadata-badges">
+              {{ badge("Provider: " ~ conversation.source, "imported") }}
+              {{ badge("Messages: " ~ message_count, "neutral") }}
+            </div>
+          </div>
+          <p class="metadata-line">
+            Provider: {{ conversation.source }} · Canonical ID: {{ conversation.id }} · Source Conversation ID: {{ conversation.source_conversation_id }}
+          </p>
+          <p class="metadata-line">
+            Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
+          </p>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    {{ empty_state(
+      "No imported conversations found.",
+      "Try a different title or message term. Imported and native lanes remain separate until you choose a read-only composed view."
+    ) }}
+  {% endif %}
+{% endblock %}

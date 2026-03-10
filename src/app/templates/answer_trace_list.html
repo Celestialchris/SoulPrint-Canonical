@@ -1,136 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Answer Traces · SoulPrint</title>
-  <style>
-    :root {
-      --bg: #f7f8fb;
-      --panel: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --accent: #2563eb;
-      --trace-bg: #f8fafc;
-      --trace-border: #cbd5e1;
-      --badge-bg: #fff7ed;
-      --badge-border: #fdba74;
-      --badge-text: #9a3412;
-    }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    .shell {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 24px 16px 36px;
-    }
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    }
-    h1 {
-      margin: 0;
-      font-size: 1.35rem;
-    }
-    .subtle {
-      margin: 8px 0 0 0;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-    .derived-badge {
-      display: inline-block;
-      margin-top: 10px;
-      border: 1px solid var(--badge-border);
-      background: var(--badge-bg);
-      color: var(--badge-text);
-      border-radius: 999px;
-      font-size: 0.78rem;
-      padding: 3px 10px;
-      letter-spacing: 0.01em;
-    }
-    .list {
-      margin-top: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .row {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      border: 1px solid var(--trace-border);
-      background: var(--trace-bg);
-      border-radius: 10px;
-      padding: 12px;
-    }
-    .row:hover {
-      border-color: var(--accent);
-    }
-    .meta {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.45;
-    }
-    .question {
-      margin: 8px 0;
-      font-size: 0.96rem;
-    }
-    .empty {
-      margin-top: 14px;
-      border: 1px dashed var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      background: #fff;
-      color: var(--muted);
-      font-size: 0.93rem;
-    }
-    .nav {
-      margin-bottom: 12px;
-    }
-    .nav a {
-      color: var(--accent);
-      text-decoration: none;
-      font-size: 0.92rem;
-    }
-  </style>
-</head>
-<body>
-  <div class="shell">
-    <nav class="nav" aria-label="Back navigation">
-      <a href="/">Back to home</a>
-    </nav>
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
 
-    <section class="panel">
+{% block title %}Answer Traces · SoulPrint{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div class="back-links" aria-label="Back navigation">
+      <a class="back-link" href="/">Back to home</a>
+    </div>
+    <p class="page-eyebrow">Derived inspection surface</p>
+    <div class="page-header__row">
       <h1>Answer Traces</h1>
-      <p class="subtle">Recent read-only audit residue from local answers.</p>
-      <p class="derived-badge">Derived / non-canonical</p>
-      <p class="subtle">Store: <code>{{ trace_store }}</code></p>
-    </section>
-
-    {% if traces %}
-      <div class="list">
-        {% for trace in traces %}
-          <a class="row" href="/answer-traces/{{ trace.trace_id }}">
-            <p class="meta">
-              {{ trace.trace_id }} · {{ trace.created_at }} · Status: {{ trace.status }}
-            </p>
-            <p class="question">{{ trace.question|default('', true)|trim or "(no question captured)" }}</p>
-            <p class="meta">Source lanes: {{ trace.source_lanes|join(', ') if trace.source_lanes else "none" }}</p>
-          </a>
-        {% endfor %}
+      <div class="page-badges">
+        {{ badge("Derived / non-canonical", "derived") }}
       </div>
-    {% else %}
-      <p class="empty">No derived Answer Traces found yet.</p>
-    {% endif %}
-  </div>
-</body>
-</html>
+    </div>
+    <p class="page-summary">Recent read-only audit residue from local answers.</p>
+    <p class="metadata-line">Store: <code>{{ trace_store }}</code></p>
+  </section>
+
+  {% if traces %}
+    <div class="trace-list">
+      {% for trace in traces %}
+        <a class="record-card record-card--link record-card--derived" href="/answer-traces/{{ trace.trace_id }}">
+          <div class="record-card__header">
+            <h2 class="record-card__title">{{ trace.trace_id }}</h2>
+            <div class="metadata-badges">
+              {{ badge("Status: " ~ trace.status, "derived") }}
+            </div>
+          </div>
+          <p class="metadata-line">{{ trace.trace_id }} · {{ trace.created_at }} · Status: {{ trace.status }}</p>
+          <p class="metadata-line">{{ trace.question|default('', true)|trim or "(no question captured)" }}</p>
+          <p class="metadata-line">Source lanes: {{ trace.source_lanes|join(', ') if trace.source_lanes else "none" }}</p>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    {{ empty_state(
+      "No derived Answer Traces found yet.",
+      "Generate a local answer trace to inspect recent answering residue without changing canonical storage."
+    ) }}
+  {% endif %}
+{% endblock %}

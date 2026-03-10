@@ -114,6 +114,8 @@ class ImportedExplorerRouteTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn("<title>Untitled conversation · Transcript Explorer</title>", html)
         self.assertIn("<h1>Untitled conversation</h1>", html)
+        self.assertEqual(html.count("<title>"), 1)
+        self.assertEqual(html.count("<h1>"), 1)
 
     def test_imported_explorer_missing_conversation_returns_404(self):
         response = self.client.get("/imported/9999/explorer")

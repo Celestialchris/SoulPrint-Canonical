@@ -1,14 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>SoulPrint Server</title>
-</head>
-<body>
-    <h1>🧠 SoulPrint is Live</h1>
-    <p>Welcome to the SoulPrint backend server.</p>
-    <p>Use <code>/chats</code> to view native memory.</p>
-    <p>Browse imported conversation history at <a href="/imported"><code>/imported</code></a>.</p>
-    <p>Inspect derived answer traces at <a href="/answer-traces"><code>/answer-traces</code></a>.</p>
-</body>
-</html>
+{% extends "base.html" %}
+{% from "_ui.html" import badge %}
+
+{% block title %}SoulPrint{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Local-first memory passport</p>
+    <div class="page-header__row">
+      <h1>SoulPrint</h1>
+      <div class="page-badges">
+        {{ badge("Canonical ledger", "canonical") }}
+        {{ badge("Read-only surfaces", "neutral") }}
+      </div>
+    </div>
+    <p class="page-summary">
+      Inspect native memory, imported conversation history, mixed-lane retrieval, and answer provenance
+      from one calm local interface. Imported and native lanes stay explicit; federated browsing remains
+      read-only composition.
+    </p>
+  </section>
+
+  <section class="card-grid">
+    <article class="route-card">
+      <div class="route-card__header">
+        <h2>Native Memory</h2>
+        {{ badge("Canonical", "native") }}
+      </div>
+      <p>Browse recent native entries captured directly in SoulPrint and open stable-detail views.</p>
+      <a class="route-card__link" href="{{ url_for('chats') }}">Open /chats</a>
+    </article>
+
+    <article class="route-card">
+      <div class="route-card__header">
+        <h2>Imported Conversations</h2>
+        {{ badge("Imported lane", "imported") }}
+      </div>
+      <p>Inspect imported conversation history with clear provider identity, canonical IDs, and transcript handoff.</p>
+      <a class="route-card__link" href="{{ url_for('imported_conversations') }}">Open /imported</a>
+    </article>
+
+    <article class="route-card">
+      <div class="route-card__header">
+        <h2>Federated Browser</h2>
+        {{ badge("Read-only composition", "accent") }}
+      </div>
+      <p>Search across both canonical lanes without collapsing their provenance or changing their storage.</p>
+      <a class="route-card__link" href="{{ url_for('federated_browser') }}">Open /federated</a>
+    </article>
+
+    <article class="route-card">
+      <div class="route-card__header">
+        <h2>Answer Traces</h2>
+        {{ badge("Derived / non-canonical", "derived") }}
+      </div>
+      <p>Inspect recent answer audit residue and follow routed citations back to canonical surfaces where available.</p>
+      <a class="route-card__link" href="{{ url_for('answer_trace_list') }}">Open /answer-traces</a>
+    </article>
+  </section>
+{% endblock %}

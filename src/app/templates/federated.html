@@ -1,165 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Federated Browser · SoulPrint</title>
-  <style>
-    :root {
-      --bg: #f7f8fb;
-      --panel: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --accent: #2563eb;
-      --native-border: #bfdbfe;
-      --native-bg: #eff6ff;
-      --imported-border: #bbf7d0;
-      --imported-bg: #f0fdf4;
-    }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    .shell {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 24px 16px;
-    }
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    }
-    h1 {
-      margin: 0 0 8px 0;
-      font-size: 1.4rem;
-    }
-    .subtle {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-    form {
-      margin-top: 14px;
-      display: flex;
-      gap: 8px;
-    }
-    input[type="search"] {
-      flex: 1;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 0.95rem;
-    }
-    button {
-      border: 1px solid var(--border);
-      background: #f9fafb;
-      border-radius: 8px;
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-    .list {
-      margin-top: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .row {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      background: #fff;
-    }
-    .row.native-memory {
-      border-color: var(--native-border);
-      background: var(--native-bg);
-    }
-    .row.imported-conversation {
-      border-color: var(--imported-border);
-      background: var(--imported-bg);
-    }
-    .row h2 {
-      margin: 0 0 6px 0;
-      font-size: 1rem;
-      font-weight: 600;
-    }
-    .meta,
-    .metadata {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.45;
-    }
-    .metadata {
-      margin-top: 6px;
-    }
-    .handoff {
-      margin-top: 8px;
-      display: inline-block;
-      font-size: 0.84rem;
-      color: var(--accent);
-      text-decoration: none;
-    }
-    .empty {
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 0.92rem;
-      border: 1px dashed var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      background: #fff;
-    }
-  </style>
-</head>
-<body>
-  <div class="shell">
-    <section class="panel">
-      <h1>Federated Browser</h1>
-      <p class="subtle">Read-only mixed retrieval across native memory and imported conversations.</p>
-      <form method="get" action="/federated">
-        <input
-          type="search"
-          name="q"
-          placeholder="Search across both lanes"
-          value="{{ keyword }}"
-          aria-label="Search federated memory"
-        >
-        <button type="submit">Search</button>
-      </form>
-    </section>
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
 
-    {% if rows %}
-      <div class="list">
-        {% for row in rows %}
-          {% set result = row.result %}
-          {% set lane_class = result.source_lane.replace('_', '-') %}
-          <article class="row {{ lane_class }}">
-            <h2>{{ result.title|default('', true)|trim or "Untitled result" }}</h2>
-            <p class="meta">
-              Lane: {{ result.source_lane }} · Stable ID: {{ result.stable_id }} · Timestamp: {{ format_timestamp(result.timestamp_unix) }}
-            </p>
-            {% if result.source_metadata %}
-              <p class="metadata">
-                Source metadata:
-                {% for key, value in result.source_metadata.items() %}
-                  {{ key }}={{ value if value is not none else "" }}{% if not loop.last %} · {% endif %}
-                {% endfor %}
-              </p>
-            {% endif %}
-            {% if row.handoff_href %}
-              <a class="handoff" href="{{ row.handoff_href }}">Open lane-specific view →</a>
-            {% endif %}
-          </article>
-        {% endfor %}
+{% block title %}Federated Browser · SoulPrint{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Read-only composed view</p>
+    <div class="page-header__row">
+      <h1>Federated Browser</h1>
+      <div class="page-badges">
+        {{ badge("Native lane", "native") }}
+        {{ badge("Imported lane", "imported") }}
       </div>
-    {% else %}
-      <p class="empty">No federated results found.</p>
-    {% endif %}
-  </div>
-</body>
-</html>
+    </div>
+    <p class="page-summary">Read-only mixed retrieval across native memory and imported conversations.</p>
+  </section>
+
+  <section class="surface-card filter-panel">
+    <form class="filter-form" method="get" action="/federated">
+      <div>
+        <label class="field-label" for="federated-query">Search federated memory</label>
+        <div class="filter-row">
+          <input
+            id="federated-query"
+            type="search"
+            name="q"
+            placeholder="Search across both lanes"
+            value="{{ keyword }}"
+            aria-label="Search federated memory"
+          >
+          <button type="submit">Search</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  {% if rows %}
+    <div class="list-stack">
+      {% for row in rows %}
+        {% set result = row.result %}
+        {% set tone = "native" if result.source_lane == "native_memory" else "imported" %}
+        {% set lane_class = "record-card--native" if result.source_lane == "native_memory" else "record-card--imported" %}
+        <article class="record-card {{ lane_class }}">
+          <div class="record-card__header">
+            <h2 class="record-card__title">{{ result.title|default('', true)|trim or "Untitled result" }}</h2>
+            <div class="metadata-badges">
+              {{ badge("Lane: " ~ result.source_lane, tone) }}
+              {{ badge(result.stable_id, "neutral", mono=True) }}
+            </div>
+          </div>
+          <p class="metadata-line">
+            Lane: {{ result.source_lane }} · Stable ID: {{ result.stable_id }} · Timestamp: {{ format_timestamp(result.timestamp_unix) }}
+          </p>
+          {% if result.source_metadata %}
+            <p class="metadata-line">
+              Source metadata:
+              {% for key, value in result.source_metadata.items() %}
+                {{ key }}={{ value if value is not none else "" }}{% if not loop.last %} · {% endif %}
+              {% endfor %}
+            </p>
+          {% endif %}
+          {% if row.handoff_href %}
+            <a class="record-card__link" href="{{ row.handoff_href }}">Open lane-specific view</a>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    {{ empty_state(
+      "No federated results found.",
+      "Try a different search term. This surface keeps native and imported lanes explicit even when results are shown together."
+    ) }}
+  {% endif %}
+{% endblock %}
