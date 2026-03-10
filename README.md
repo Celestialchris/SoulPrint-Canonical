@@ -83,6 +83,24 @@ Developer CLI:
 python -m src.answering.cli --db instance/soulprint.db "What do I have about Lisbon?"
 ```
 
+
+## Minimal Memory Passport export CLI (v1 surface)
+
+You can export an inspectable package from canonical SQLite data:
+
+```bash
+python -m src.passport.cli exports/passports --db instance/soulprint.db
+```
+
+This writes `memory-passport-v1/` under the output directory with:
+
+- `manifest.json`
+- canonical lane exports (`conversations/imported/chatgpt/*.jsonl`, `native/memory_entries.jsonl` when data exists)
+- derived markdown continuity files (when enabled)
+- `provenance/index.jsonl`
+
+Use `--no-markdown` to export canonical JSONL + provenance only.
+
 ## Optional mem0 adapter boundary (disabled by default)
 
 A minimal internal mem0 adapter boundary now exists for future integration without changing canonical storage behavior:
