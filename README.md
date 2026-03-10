@@ -1,5 +1,16 @@
 # SoulPrint-Canonical
-SoulPrint began as a sovereign memory project: an attempt to capture logs, reflections, imports, and symbolic meaning in one auditable system. The early practical form was a Flask + SQLite + Markdown application. The deeper ambition was larger: a memory engine that could hold lived experience, agent reflections, long-term retrieval, and later multi-agent orchestration through an Obsidian-friendly vault.
+SoulPrint is a local-first memory passport for AI users. It helps users bring, unify, search, inspect, and carry AI conversation history across platforms with clear provenance and exportable continuity.
+
+SoulPrint is **not** a hosted memory SaaS, and it is **not** a replacement for canonical user ownership. The local canonical ledger (SQLite, with exportable markdown continuity) remains authoritative; optional systems are downstream and non-authoritative.
+
+
+## Product positioning
+
+- **Local-first memory passport:** SoulPrint focuses on user-owned continuity across AI tools.
+- **Not hosted memory SaaS:** the core product is local canonical storage and portability, not a managed memory platform.
+- **Not a replacement for canonical ownership:** derived layers (including optional adapters) must trace back to canonical IDs/timestamps rather than replace them.
+
+See `POSITIONING.md` for the practical doctrine and boundaries.
 
 ## Current Milestone 1+ importer capability
 
