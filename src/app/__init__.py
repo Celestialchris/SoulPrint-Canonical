@@ -50,9 +50,7 @@ def create_app():
 
     @app.get("/imported/<int:conversation_id>/explorer")
     def imported_explorer(conversation_id: int):
-        conversation = ImportedConversation.query.filter_by(id=conversation_id).first()
-        if conversation is None:
-            abort(404)
+        conversation = ImportedConversation.query.filter_by(id=conversation_id).first_or_404()
 
         messages = sorted(conversation.messages, key=lambda m: m.sequence_index)
         toc_entries = build_prompt_toc(messages)

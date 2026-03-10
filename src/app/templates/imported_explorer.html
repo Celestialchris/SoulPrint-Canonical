@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
+  <title>{{ display_title }} · Transcript Explorer</title>
   <title>{{ conversation.title }} · Transcript Explorer</title>
   <style>
     :root {
@@ -156,6 +158,7 @@
 
     <main class="panel main" id="transcriptPane">
       <header class="conversation-header">
+        <h1>{{ display_title }}</h1>
         <h1>{{ conversation.title }}</h1>
         <p>
           Created: {{ format_timestamp(conversation.created_at_unix) }} ·

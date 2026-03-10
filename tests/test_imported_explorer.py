@@ -99,6 +99,26 @@ class ImportedExplorerRouteTest(unittest.TestCase):
         self.assertIn("[2] Third prompt asks to add food recommendations.", html)
         self.assertNotIn("[1]", html)
 
+
+    def test_imported_explorer_falls_back_for_blank_title(self):
+        with self.app.app_context():
+            conversation = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="conv-no-title",
+                title="   ",
+                created_at_unix=None,
+                updated_at_unix=None,
+            )
+            db.session.add(conversation)
+            db.session.commit()
+            conversation_id = conversation.id
+
+        response = self.client.get(f"/imported/{conversation_id}/explorer")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("<title>Untitled conversation · Transcript Explorer</title>", html)
+        self.assertIn("<h1>Untitled conversation</h1>", html)
+
     def test_imported_explorer_missing_conversation_returns_404(self):
         response = self.client.get("/imported/9999/explorer")
         self.assertEqual(response.status_code, 404)
