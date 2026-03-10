@@ -21,3 +21,21 @@ __all__ = [
     "extract_query_terms",
     "retrieval_keyword_from_question",
 ]
+
+from .trace import (
+    AnswerTrace,
+    append_answer_trace,
+    create_answer_trace,
+    default_trace_store_path,
+    get_answer_trace,
+    list_answer_traces,
+)
+
+__all__.extend([
+    "AnswerTrace",
+    "create_answer_trace",
+    "append_answer_trace",
+    "list_answer_traces",
+    "get_answer_trace",
+    "default_trace_store_path",
+])

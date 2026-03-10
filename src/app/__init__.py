@@ -6,8 +6,15 @@ from .imported_explorer import anchor_for_message, build_prompt_toc, format_time
 from .models.db import db
 from ..config import Config, normalize_sqlite_uri
 from .models import ImportedConversation, ImportedMessage, MemoryEntry
-from ..retrieval.federated import federated_search
 from sqlalchemy import func
+
+
+def federated_search(*args, **kwargs):
+    """Lazy import wrapper to avoid retrieval/app circular imports."""
+
+    from ..retrieval.federated import federated_search as _federated_search
+
+    return _federated_search(*args, **kwargs)
 
 
 def _memory_timestamp_to_unix(entry: MemoryEntry) -> float | None:
