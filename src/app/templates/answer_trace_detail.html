@@ -103,6 +103,14 @@
       line-height: 1.45;
     }
     code { word-break: break-word; }
+    .citation-link {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .citation-note {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
@@ -139,11 +147,16 @@
 
       <section class="block" aria-labelledby="citations-heading">
         <h2 id="citations-heading">Citations / stable IDs</h2>
-        {% if trace.citations %}
+        {% if trace_citations %}
           <ul>
-            {% for citation in trace.citations %}
+            {% for citation in trace_citations %}
               <li>
-                <code>{{ citation.stable_id }}</code>
+                {% if citation.handoff_href %}
+                  <a class="citation-link" href="{{ citation.handoff_href }}"><code>{{ citation.stable_id }}</code></a>
+                {% else %}
+                  <code>{{ citation.stable_id }}</code>
+                  <span class="citation-note">(no direct handoff view yet)</span>
+                {% endif %}
                 · lane: {{ citation.source_lane }}
                 {% if citation.timestamp %}· timestamp: {{ citation.timestamp }}{% endif %}
               </li>
