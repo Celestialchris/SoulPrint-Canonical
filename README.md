@@ -75,6 +75,14 @@ A minimal read-only federated browser surface is also available in the web app:
 
 It reuses the same `federated_search(...)` behavior and renders mixed lane results with explicit provenance plus lane-specific handoff links when available.
 
+Native memory now also has a small read-only detail surface:
+
+```
+/memory/<entry_id>
+```
+
+This page renders one canonical `MemoryEntry` with its stable ID (`memory:<id>`), timestamp, role, tags, and content, plus clear navigation back to `/chats` and federated results when opened from `/federated`.
+
 
 ## Minimal local answering prototype (grounded, read-only)
 
