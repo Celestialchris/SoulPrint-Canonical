@@ -14,4 +14,4 @@ src/.env
 .env
 *.egg-info/
 .DS_Store
-.tmp/
+.tmp-tests
