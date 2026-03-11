@@ -1,4 +1,6 @@
-# CLAUDE.md — SoulPrint Canonical Project Intelligence
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What is SoulPrint
 
@@ -80,11 +82,21 @@ A local-first memory passport for AI users. Import conversation history from Cha
 
 ## Commands
 ```bash
+# Setup (first time)
+py -3.12 -m venv .venv && .venv\Scripts\activate  # Windows
+pip install -r requirements-minimal.txt
+
 # Run the app
 python -m src.run
 
 # Run tests
 python -m pytest tests/ -v
+
+# Run a single test file
+python -m pytest tests/test_chatgpt_importer.py -v
+
+# Run a single test by name
+python -m pytest tests/test_chatgpt_importer.py::ChatGPTImporterTest::test_parse_sample -v
 
 # Import conversations
 python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
