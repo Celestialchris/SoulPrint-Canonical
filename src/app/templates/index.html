@@ -20,6 +20,47 @@
     </p>
   </section>
 
+  {# ── Dashboard stats (Layer 2: read-only aggregates) ── #}
+  <section class="dash-stats" aria-label="Memory passport summary">
+
+    <div class="dash-tiles">
+      <div class="dash-tile dash-tile--native">
+        <p class="dash-tile__label">Native Entries</p>
+        <p class="dash-tile__value">{{ native_count }}</p>
+      </div>
+      <div class="dash-tile dash-tile--imported">
+        <p class="dash-tile__label">Imported Conversations</p>
+        <p class="dash-tile__value">{{ imported_conv_count }}</p>
+      </div>
+      <div class="dash-tile dash-tile--imported">
+        <p class="dash-tile__label">Imported Messages</p>
+        <p class="dash-tile__value">{{ imported_msg_count }}</p>
+      </div>
+      <div class="dash-tile dash-tile--derived">
+        <p class="dash-tile__label">Answer Traces</p>
+        <p class="dash-tile__value">{{ trace_count }}</p>
+      </div>
+    </div>
+
+    {% if provider_chart %}
+      <div class="dash-provider-chart" aria-label="Imported conversations by provider">
+        <p class="dash-chart__label">By Provider</p>
+        <ul class="dash-bar-list">
+          {% for entry in provider_chart %}
+            <li class="dash-bar-row">
+              <span class="dash-bar__name">{{ entry.name }}</span>
+              <span class="dash-bar__track" aria-hidden="true">
+                <span class="dash-bar__fill" style="width: {{ entry.pct }}%"></span>
+              </span>
+              <span class="dash-bar__count">{{ entry.count }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+  </section>
+
   <section class="card-grid">
     <article class="route-card">
       <div class="route-card__header">
