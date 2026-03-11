@@ -18,7 +18,6 @@ from src.importers.claude import parse_claude_export_file
 from src.importers.errors import (
     ImportProviderDetectionError,
     MalformedImportFileError,
-    UnsupportedImportFormatError,
 )
 from src.importers.registry import parse_import_file
 from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
@@ -140,15 +139,29 @@ class GeminiBoundaryTest(unittest.TestCase):
 
         self.assertIn("Could not detect import provider", str(error.exception))
 
-    def test_gemini_provider_slot_is_recognized_but_unsupported(self):
-        workdir = make_test_temp_dir(self, "provider-detection")
-        export_path = workdir / "gemini.json"
-        export_path.write_text(json.dumps({"conversations": []}), encoding="utf-8")
+    def test_gemini_takeout_fixture_auto_detects_and_imports(self):
+        fixture = Path("sample_data/gemini_takeout_sample.json")
 
-        with self.assertRaises(UnsupportedImportFormatError) as error:
-            parse_import_file(export_path, provider_hint="gemini")
+        workdir = make_test_temp_dir(self, "gemini-cross-llm")
+        sqlite_path = workdir / "gemini_auto.db"
 
-        self.assertIn("Gemini provider is recognized", str(error.exception))
+        result = import_conversation_export_to_sqlite(fixture, sqlite_path)
+
+        self.assertEqual(result.provider_id, "gemini")
+        self.assertEqual(result.imported_conversations, 4)
+        self.assertEqual(result.imported_messages, 4)
+
+    def test_gemini_conversations_fixture_auto_detects_and_imports(self):
+        fixture = Path("sample_data/gemini_conversations_sample.json")
+
+        workdir = make_test_temp_dir(self, "gemini-cross-llm")
+        sqlite_path = workdir / "gemini_conv_auto.db"
+
+        result = import_conversation_export_to_sqlite(fixture, sqlite_path)
+
+        self.assertEqual(result.provider_id, "gemini")
+        self.assertEqual(result.imported_conversations, 2)
+        self.assertEqual(result.imported_messages, 6)
 
 
 class ClaudeImportedBrowserIntegrationTest(unittest.TestCase):

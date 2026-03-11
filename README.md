@@ -19,8 +19,9 @@ The repository now includes a provider-agnostic importer contract with concrete 
 
 - ChatGPT bulk exports (`src/importers/chatgpt.py`)
 - Claude conversation exports (`src/importers/claude.py`)
+- Gemini exports (`src/importers/gemini.py`) — supports both Google Takeout MyActivity.json and conversational JSON from Chrome extensions
 
-Gemini is recognized as a provider slot in the importer runtime, but remains explicitly unsupported until the repo carries a real fixture-backed export shape.
+All three providers are auto-detected from payload shape and fully backed by fixture data and tests.
 
 Persistence remains canonical and source-aware in SQLite (`ImportedConversation`, `ImportedMessage`).
 
@@ -29,16 +30,17 @@ See:
 - contract: `src/importers/contracts.py`
 - ChatGPT adapter: `src/importers/chatgpt.py`
 - Claude adapter: `src/importers/claude.py`
+- Gemini adapter: `src/importers/gemini.py`
 - persistence: `src/importers/persistence.py`
-- sample fixtures: `sample_data/chatgpt_export_sample.json`, `sample_data/claude_export_sample.json`
-- tests: `tests/test_chatgpt_importer.py`, `tests/test_cross_llm_importers.py`, `tests/test_importer_contract.py`
+- sample fixtures: `sample_data/chatgpt_export_sample.json`, `sample_data/claude_export_sample.json`, `sample_data/gemini_takeout_sample.json`, `sample_data/gemini_conversations_sample.json`
+- tests: `tests/test_chatgpt_importer.py`, `tests/test_gemini_importer.py`, `tests/test_cross_llm_importers.py`, `tests/test_importer_contract.py`
 
 ## Duplicate import policy (imported conversation lane)
 
 To prevent accidental re-imports of the same source conversation, the importer applies a minimal duplicate guard during persistence:
 
 - Identity key: `(source, source_conversation_id)`
-- Current implemented provider values: `chatgpt`, `claude`
+- Current implemented provider values: `chatgpt`, `claude`, `gemini`
 - If that key already exists, the conversation is **skipped** (no duplicate conversation row and no duplicate message rows)
 - New source conversation IDs are still imported normally
 
@@ -51,10 +53,14 @@ Use the importer CLI to load one supported export fixture or file into SQLite:
 ```bash
 python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
 python -m src.importers.cli sample_data/claude_export_sample.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/gemini_takeout_sample.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/gemini_conversations_sample.json --db instance/soulprint.db
 python -m src.importers.cli sample_data/claude_export_sample.json --db instance/soulprint.db --provider claude
 ```
 
-The CLI auto-detects `chatgpt` and `claude` payloads. Use `--provider` when you want an explicit provider boundary or a clearer malformed/unsupported error.
+The CLI auto-detects `chatgpt`, `claude`, and `gemini` payloads. Use `--provider` when you want an explicit provider boundary or a clearer malformed/unsupported error.
+
+Gemini supports two export shapes: Google Takeout MyActivity.json (activity-log format, user prompts only) and conversational JSON from Chrome extensions like AI Chat Exporter (full user+model turns). Both are auto-detected.
 
 
 ## Minimal federated retrieval surface (read-only)

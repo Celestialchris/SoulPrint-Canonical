@@ -23,10 +23,10 @@ from .errors import (
     MalformedImportFileError,
     UnsupportedImportFormatError,
 )
-from .gemini import GeminiImporter
+from .gemini import GeminiImporter, DEFAULT_TITLE as GEMINI_DEFAULT_TITLE, looks_like_gemini_export
 
 
-_DEFAULT_TITLES = frozenset({CHATGPT_DEFAULT_TITLE, CLAUDE_DEFAULT_TITLE})
+_DEFAULT_TITLES = frozenset({CHATGPT_DEFAULT_TITLE, CLAUDE_DEFAULT_TITLE, GEMINI_DEFAULT_TITLE})
 
 
 @dataclass(frozen=True)
@@ -61,7 +61,7 @@ _PROVIDER_SPECS: dict[str, ImportProviderSpec] = {
     PROVIDER_GEMINI: ImportProviderSpec(
         provider_id=PROVIDER_GEMINI,
         importer=GeminiImporter(),
-        detector=None,
+        detector=looks_like_gemini_export,
     ),
 }
 
@@ -127,7 +127,7 @@ def _resolve_provider_spec(
             "Import provider detection matched multiple providers; rerun with --provider."
         )
     raise ImportProviderDetectionError(
-        "Could not detect import provider from JSON. Supported auto-detect formats: chatgpt and claude. "
+        "Could not detect import provider from JSON. Supported auto-detect formats: chatgpt, claude, and gemini. "
         "Use --provider to force a recognized provider."
     )
 

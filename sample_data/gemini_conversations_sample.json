@@ -1,0 +1,40 @@
+[
+  {
+    "title": "Hiking trails near Bucharest",
+    "url": "https://gemini.google.com/app/abc123def456",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What are the best hiking trails near Bucharest?"
+      },
+      {
+        "role": "model",
+        "content": "There are several great options within an hour of the city. Piatra Craiului ridge is a full-day commitment but stunning. For something shorter, try the trails around Busteni leading to Caraiman Cross."
+      },
+      {
+        "role": "user",
+        "content": "Which one is best for beginners?"
+      },
+      {
+        "role": "model",
+        "content": "The Busteni to Caraiman Cross trail is well-marked and manageable for beginners. Allow about 3-4 hours round trip and bring water."
+      }
+    ],
+    "exportedAt": "2024-11-15T10:00:00Z"
+  },
+  {
+    "title": "React vs Vue comparison",
+    "url": "https://gemini.google.com/app/xyz789ghi012",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Compare React and Vue for a small dashboard project."
+      },
+      {
+        "role": "model",
+        "content": "For a small dashboard, Vue has a gentler learning curve and built-in state management with Pinia. React gives you more ecosystem choice but requires more decisions upfront. Both are solid picks for dashboards."
+      }
+    ],
+    "exportedAt": "2024-11-15T11:00:00Z"
+  }
+]

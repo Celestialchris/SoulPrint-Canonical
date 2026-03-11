@@ -51,6 +51,26 @@ class ImporterContractTest(unittest.TestCase):
 
         self.assertEqual(parsed[0].source_provider, PROVIDER_CLAUDE)
 
+    def test_gemini_importer_conforms_to_contract(self):
+        from src.importers.gemini import GeminiImporter
+
+        importer: ConversationImporter = GeminiImporter()
+        self.assertEqual(importer.provider_id, PROVIDER_GEMINI)
+
+        parsed = importer.parse_payload(
+            [
+                {
+                    "title": "Gemini test",
+                    "messages": [
+                        {"role": "user", "content": "Hello"},
+                        {"role": "model", "content": "Hi"},
+                    ],
+                }
+            ]
+        )
+
+        self.assertEqual(parsed[0].source_provider, PROVIDER_GEMINI)
+
     def test_provider_identity_is_preserved_through_persistence(self):
         fixture = Path("sample_data/chatgpt_export_sample.json")
         conversations = parse_chatgpt_export_file(fixture)
