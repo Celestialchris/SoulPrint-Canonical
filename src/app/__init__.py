@@ -1,6 +1,8 @@
 from flask import Flask, abort, render_template, request, jsonify, url_for
 from datetime import datetime, timezone
 import os
+import tempfile
+from pathlib import Path
 
 from .imported_explorer import anchor_for_message, build_prompt_toc, format_timestamp
 from .models.db import db
@@ -9,6 +11,12 @@ from .models import ImportedConversation, ImportedMessage, MemoryEntry
 from .citation_handoff import build_answer_trace_citation_view
 from .viewmodels import build_workspace_summary
 from sqlalchemy import func
+from ..importers.cli import import_conversation_export_to_sqlite
+from ..importers.errors import (
+    ImportProviderDetectionError,
+    MalformedImportFileError,
+    UnsupportedImportFormatError,
+)
 
 
 def federated_search(*args, **kwargs):
@@ -145,6 +153,54 @@ def create_app():
             rows=rows,
             keyword=keyword,
             format_timestamp=format_timestamp,
+        )
+
+    @app.route("/import", methods=["GET", "POST"])
+    def import_conversations():
+        error_message = None
+        result = None
+
+        if request.method == "POST":
+            upload = request.files.get("export_file")
+            if upload is None or upload.filename == "":
+                error_message = "Choose an export JSON file before importing."
+            else:
+                temp_path: Path | None = None
+                try:
+                    with tempfile.NamedTemporaryFile(
+                        mode="wb",
+                        suffix=".json",
+                        delete=False,
+                    ) as handle:
+                        upload.save(handle)
+                        temp_path = Path(handle.name)
+
+                    sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+                    sqlite_path = _sqlite_path_from_uri(sqlite_uri)
+                    import_result = import_conversation_export_to_sqlite(temp_path, sqlite_path)
+                    result = {
+                        "provider_id": import_result.provider_id,
+                        "imported_conversations": import_result.imported_conversations,
+                        "skipped_conversations": import_result.skipped_conversations,
+                        "imported_messages": import_result.imported_messages,
+                        "warnings": import_result.warnings,
+                    }
+                except ImportProviderDetectionError:
+                    error_message = (
+                        "We could not recognize this export format. Supported imports are ChatGPT, Claude, and Gemini conversation exports."
+                    )
+                except UnsupportedImportFormatError as exc:
+                    error_message = f"This export format is not supported yet: {exc}"
+                except MalformedImportFileError as exc:
+                    error_message = str(exc)
+                finally:
+                    if temp_path is not None and temp_path.exists():
+                        temp_path.unlink()
+
+        return render_template(
+            "import.html",
+            error_message=error_message,
+            result=result,
         )
 
     @app.get("/chats")

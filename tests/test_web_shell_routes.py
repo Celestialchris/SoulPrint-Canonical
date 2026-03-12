@@ -36,6 +36,7 @@ class WebShellRouteTest(unittest.TestCase):
         self.assertIn("Workspace", html)
         self.assertIn('href="/chats"', html)
         self.assertIn('href="/imported"', html)
+        self.assertIn('href="/import"', html)
         self.assertIn('href="/federated"', html)
         self.assertIn('href="/answer-traces"', html)
 
