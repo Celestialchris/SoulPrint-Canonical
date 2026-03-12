@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -l \"def test_\" tests/*.py | wc -l)",
-      "Bash(grep \"def test_\" tests/*.py | wc -l)"
-    ]
-  }
-}
