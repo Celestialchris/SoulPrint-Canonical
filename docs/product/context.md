@@ -10,7 +10,7 @@ This file is project history and architectural rationale. For commands and codin
 Defined SoulPrint's identity: a **local-first memory passport for AI users**. Explicitly not SaaS, not a mem0 clone, not generic RAG, not an enterprise AI dashboard. The core insight: users own their AI conversation history; SoulPrint makes it portable, browsable, and auditable without cloud dependency.
 
 ### Phase 1 — Memory Passport
-Defined the export contract in `docs/MEMORY_PASSPORT_SPEC.md`. A memory passport is:
+Defined the export contract in `docs/specs/memory-passport-spec.md`. A memory passport is:
 - `manifest.json` — schema version, export metadata, lane inventory
 - JSONL lanes — one file per lane (native, imported)
 - Markdown — human-readable snapshot
