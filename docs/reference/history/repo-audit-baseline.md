@@ -10,8 +10,8 @@ Top-level files/folders relevant to Milestone 1:
 - `tests/` (smoke tests)
 - `sample_data/` (reserved for future sample imports)
 - `docs/reference/` (reserved for reference documentation)
-- `SETUP.md` (cross-platform setup/run guide)
-- `REPO_AUDIT.md` (this file)
+- `docs/getting-started.md` (cross-platform setup/run guide, formerly `SETUP.md`)
+- `docs/reference/history/repo-audit-baseline.md` (this file, formerly `REPO_AUDIT.md`)
 - `requirements-minimal.txt` (Flask + Flask-SQLAlchemy)
 - `requirements.txt` (minimal + optional broader dependencies)
 
