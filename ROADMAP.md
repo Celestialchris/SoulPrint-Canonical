@@ -1,21 +1,26 @@
 # Roadmap
 
-## Completed Foundation
+## Completed
 
-- Repo face cleanup
-- Two-layer doctrine split
+- Phase 1: Repo face cleanup
+- Phase 2: README/docs truth alignment
+- Phase 3: Canonical workspace on `/`
+- Phase 4: Import lifecycle UI
+- Phase 5: In-app Ask
+- Phase 6: Passport surface and integrity UX
 
-## Current Active Sequence
+## Current Hygiene Focus
 
-1. README and docs truth alignment
-2. Canonical Workspace on `/`
-3. Import lifecycle UI
-4. In-app Ask
-5. Passport surface
+One bounded consolidation pass focused on:
+
+- truth-surface alignment across README/ROADMAP/CONTRIBUTING
+- naming consistency (`workspace` over legacy `home/dashboard` residue)
+- archive/reference quarantine clarity
+- test and CI command alignment
 
 ## Deferred
 
-- Derived intelligence
+- Derived intelligence expansion
 - Product polish
 - Growth experiments
 
@@ -25,5 +30,4 @@
 - Hosted sync
 - Vector database expansion or broader RAG build-out
 - Mobile app development
-- Directory-packaged distribution concepts
 - Desktop packaging as a current priority
