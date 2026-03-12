@@ -1,3 +1,21 @@
+---
+status: archive-only
+authority: non-authoritative
+active_truth:
+  - README.md
+  - ROADMAP.md
+  - docs/product/
+  - docs/specs/
+---
+
+# Future Directions (Archived Ideation)
+
+> [!NOTE]
+> **Archive-only ideation — non-authoritative.**
+> This file preserves speculative product thinking for traceability.
+> It is not current roadmap or doctrine.
+> Active truth lives in `README.md`, `ROADMAP.md`, `docs/product/*`, and `docs/specs/*`.
+
 Good — you're thinking about the right thing. Let me break down both pieces honestly, because one is straightforward and the other has a real architectural decision you need to make carefully.
 
 ---
