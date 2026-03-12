@@ -1,17 +1,32 @@
+---
+status: historical
+authority: non-authoritative
+active_truth:
+  - README.md
+  - ROADMAP.md
+  - docs/product/
+  - docs/specs/
+---
+
 # SoulPrint Project Status Checkpoint (2026-03-09)
+
+> [!NOTE]
+> **Historical reference — non-authoritative.**
+> This document captures a past project state and should not be used as current product doctrine.
+> Active truth lives in `README.md`, `ROADMAP.md`, `docs/product/*`, and `docs/specs/*`.
 
 ## Scope of this checkpoint
 
-This document captures the **current** model/storage and retrieval/query implementation in the canonical repository, without proposing runtime refactors in this pass.
+This document captures the model/storage and retrieval/query implementation in the canonical repository **at the time of this checkpoint**, without proposing runtime refactors in this pass.
 
-Primary loop in code today:
+Primary loop in code at checkpoint time:
 
 1. import ChatGPT export JSON
 2. normalize to stable conversation/message records
 3. persist to SQLite
 4. retrieve via list/search/show/export-markdown query paths
 
-## What currently works
+## What worked at checkpoint time
 
 ### 1) Native memory capture path (app runtime)
 
@@ -19,7 +34,7 @@ Primary loop in code today:
 - `POST /save` inserts one `MemoryEntry` row.
 - `GET /chats` retrieves up to 100 `MemoryEntry` rows (optionally filtered by tag substring) ordered newest first.
 
-This is the native in-app memory stream and is currently independent from imported conversation tables.
+This is the native in-app memory stream and was independent from imported conversation tables at checkpoint time.
 
 ### 2) Imported conversation path (importer runtime)
 
@@ -39,7 +54,7 @@ This is the native in-app memory stream and is currently independent from import
 
 ## What is intentionally parallel
 
-The repository currently maintains **two parallel but valid SQLite-backed memory lanes**:
+At the time of this checkpoint, the repository maintained **two parallel but valid SQLite-backed memory lanes**:
 
 1. **Native lane (`MemoryEntry`)**
    - origin: app-originated messages saved through `/save`
@@ -51,11 +66,11 @@ The repository currently maintains **two parallel but valid SQLite-backed memory
    - primary UX: importer query CLI (`list`, `search`, `show`, `export-md`)
    - shape: normalized conversation/message graph with source IDs and sequence index
 
-This parallelism is currently useful: it separates direct app capture from external import normalization while Milestone 1 stabilizes.
+This parallelism was useful at checkpoint time: it separated direct app capture from external import normalization while Milestone 1 stabilized.
 
 ## What is duplicated
 
-Current duplication is mostly in retrieval interface and storage intent:
+This baseline captured duplication mostly in retrieval interface and storage intent:
 
 - Both lanes store conversational text in SQLite but in different schemas.
 - Both lanes have read surfaces, but split by interface:
@@ -75,9 +90,9 @@ The following are intentionally deferred in this checkpoint:
 - replacing canonical SQLite + markdown traceability with derived memory layers
 - merging interpretive/archetypal context into runtime persistence contracts
 
-## Current retrieval surface (checkpoint summary)
+## Retrieval surface at this checkpoint (summary)
 
-Current retrieval surface is **narrow and explicit**:
+At this checkpoint, the retrieval surface was **narrow and explicit**:
 
 - Native lane:
   - `GET /chats` (recent `MemoryEntry` retrieval, optional tag filter)
@@ -88,7 +103,7 @@ Current retrieval surface is **narrow and explicit**:
   - `export_imported_conversation_markdown()`
   - CLI wrapper in `src/importers/query_cli.py`
 
-No cross-lane retrieval abstraction currently exists; callers choose one lane explicitly.
+No cross-lane retrieval abstraction existed at checkpoint time; callers chose one lane explicitly.
 
 ## Recommended next engineering steps (bounded)
 
