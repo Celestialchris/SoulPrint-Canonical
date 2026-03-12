@@ -18,7 +18,7 @@ No route, schema, or architecture expansion was introduced.
 - Added explicit `instance/` directory creation in `src/app/__init__.py` before DB initialization
 - Added `requirements-minimal.txt` for Flask + SQLite runtime dependencies only
 - Updated `requirements.txt` to include `requirements-minimal.txt` plus optional/future deps
-- Rewrote `SETUP.md` to match what was actually validated
+- Rewrote `docs/getting-started.md` (formerly `SETUP.md`) to match what was actually validated
 
 ## Validation actually performed
 
