@@ -17,3 +17,8 @@ src/.env
 .tmp/
 .tmp-tests/
 .claude/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
