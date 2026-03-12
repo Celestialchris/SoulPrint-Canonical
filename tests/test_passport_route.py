@@ -40,9 +40,9 @@ class PassportRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("Artifact inspection in web app:", html)
+        self.assertIn("Current web inspection:", html)
         self.assertIn("not active", html)
-        self.assertIn("not currently inspecting a specific passport artifact path", html)
+        self.assertIn("No specific passport artifact is currently being inspected in the web app.", html)
 
 
 if __name__ == "__main__":

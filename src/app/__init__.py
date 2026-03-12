@@ -99,8 +99,8 @@ def create_app():
             "artifact_detected": False,
             "message": (
                 "Export and validation capabilities are available through the existing "
-                "CLI surface. This web page is not currently inspecting a specific "
-                "passport artifact path."
+                "CLI surface. No specific passport artifact is currently being "
+                "inspected in the web app."
             ),
         }
 
