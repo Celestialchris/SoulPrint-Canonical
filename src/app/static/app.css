@@ -960,3 +960,50 @@ button:hover {
     justify-content: center;
   }
 }
+
+.ask-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ask-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ask-form__row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ask-form__row input[type="text"] {
+  flex: 1 1 420px;
+}
+
+.ask-feedback {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.ask-feedback--warning {
+  color: #8b5e34;
+}
+
+.ask-traces-residue {
+  padding: 14px 16px;
+  border-style: dashed;
+  box-shadow: none;
+  background: rgba(255, 253, 248, 0.78);
+}
+
+.ask-traces-residue h2 {
+  font-size: 0.95rem;
+}
+
+.ask-traces-residue__note {
+  margin-top: 0;
+  font-size: 0.85rem;
+}

@@ -38,6 +38,7 @@ class WebShellRouteTest(unittest.TestCase):
         self.assertIn('href="/imported"', html)
         self.assertIn('href="/import"', html)
         self.assertIn('href="/federated"', html)
+        self.assertIn('href="/ask"', html)
         self.assertIn('href="/answer-traces"', html)
 
     def test_chats_route_renders_shared_shell_and_memory_detail_links(self):

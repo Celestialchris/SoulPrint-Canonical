@@ -190,7 +190,7 @@ def answer_from_federated_hits(question: str, federated_hits: list[FederatedRead
             answer_text=format_grounded_answer(context.question, [], "insufficient_evidence"),
             status="insufficient_evidence",
             citations=[],
-            notes=["No federated retrieval hits were found."],
+            notes=["No matching records were found yet. Try different keywords or add more context."],
         )
 
     terms = extract_query_terms(context.question)
@@ -222,7 +222,7 @@ def answer_from_federated_hits(question: str, federated_hits: list[FederatedRead
             ),
             status="insufficient_evidence",
             citations=citations,
-            notes=["Question terms were too short or ambiguous for lexical grounding."],
+            notes=["Try a more specific question with a few distinctive keywords."],
         )
 
     strongest_overlap = _hit_overlap_count(top_hits[0], terms)
@@ -236,7 +236,7 @@ def answer_from_federated_hits(question: str, federated_hits: list[FederatedRead
             ),
             status="insufficient_evidence",
             citations=citations,
-            notes=["Retrieved items did not lexically match the question terms."],
+            notes=["The closest records did not clearly match your wording. Try rephrasing with different terms."],
         )
 
     second_overlap = _hit_overlap_count(top_hits[1], terms) if len(top_hits) > 1 else 0

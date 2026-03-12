@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge %}
+
+{% block title %}Ask · SoulPrint{% endblock %}
+
+{% block content %}
+  {% set status_labels = {
+    "grounded": "Grounded",
+    "ambiguous": "Ambiguous",
+    "insufficient_evidence": "Insufficient evidence",
+  } %}
+  <section class="page-header">
+    <p class="page-eyebrow">Grounded local answers</p>
+    <div class="page-header__row">
+      <h1>Ask SoulPrint</h1>
+      <div class="page-badges">
+        {{ badge("Derived / non-canonical", "derived") }}
+      </div>
+    </div>
+    <p class="page-summary">Ask one question at a time against local canonical records. Answers are grounded from native and imported lanes and may return ambiguous or insufficient evidence when support is weak.</p>
+  </section>
+
+  <section class="surface-card ask-panel">
+    <form method="post" class="ask-form" novalidate>
+      <label class="field-label" for="question">Question</label>
+      <div class="ask-form__row">
+        <input
+          id="question"
+          name="question"
+          type="text"
+          value="{{ question }}"
+          placeholder="What should I ask from my local records?"
+          autocomplete="off"
+        >
+        <button type="submit">Ask</button>
+      </div>
+    </form>
+
+    {% if validation_error %}
+      <p class="ask-feedback ask-feedback--warning">{{ validation_error }}</p>
+    {% endif %}
+
+    {% if runtime_error %}
+      <p class="ask-feedback ask-feedback--warning">{{ runtime_error }}</p>
+    {% endif %}
+  </section>
+
+  {% if result %}
+    <section class="content-block" aria-labelledby="ask-answer-heading">
+      <div class="page-header__row">
+        <h2 id="ask-answer-heading">Answer</h2>
+        <div class="page-badges">
+          {{ badge(status_labels.get(result.status, result.status), "neutral") }}
+        </div>
+      </div>
+      <p>{{ result.answer_text }}</p>
+      <p><a class="ghost-link" href="{{ result.trace_href }}">View full trace</a></p>
+
+      {% if result.notes %}
+        <ul class="content-list">
+          {% for note in result.notes %}
+            <li>{{ note }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+
+    <section class="content-block" aria-labelledby="ask-citations-heading">
+      <h2 id="ask-citations-heading">Citations</h2>
+      {% if result.citations %}
+        <ul class="content-list">
+          {% for citation in result.citations %}
+            <li>
+              {% if citation.target %}
+                <a class="citation-link" href="{{ citation.target.href }}"><code>{{ citation.target.label }}</code></a>
+              {% else %}
+                <code>{{ citation.stable_id }}</code>
+                <span class="citation-note">(no direct handoff view yet)</span>
+              {% endif %}
+              · lane: {{ citation.source_lane }}
+              {% if citation.timestamp %}· timestamp: {{ citation.timestamp }}{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No citation records were captured for this answer.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if recent_traces %}
+    <section class="content-block ask-traces-residue" aria-labelledby="ask-recent-traces-heading">
+      <h2 id="ask-recent-traces-heading">Recent answer traces</h2>
+      <p class="metadata-note ask-traces-residue__note">Lightweight audit residue from recent one-shot Ask runs.</p>
+      <ul class="content-list">
+        {% for trace in recent_traces %}
+          <li>
+            <a class="citation-link" href="{{ url_for('answer_trace_detail', trace_id=trace.trace_id) }}">{{ trace.trace_id }}</a>
+            · status: {{ status_labels.get(trace.status, trace.status)|lower }}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+{% endblock %}

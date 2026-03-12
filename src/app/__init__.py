@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from flask import Flask, abort, render_template, request, jsonify, url_for
 from datetime import datetime, timezone
 import os
@@ -298,6 +299,72 @@ def create_app():
             trace=trace,
             trace_citations=trace_citations,
             trace_store=trace_store,
+        )
+
+    @app.route("/ask", methods=["GET", "POST"])
+    def ask():
+        from ..answering.local import answer_from_federated_hits, retrieval_keyword_from_question
+        from ..answering.trace import (
+            append_answer_trace,
+            create_answer_trace,
+            default_trace_store_path,
+            list_answer_traces,
+        )
+
+        question = ""
+        validation_error = None
+        runtime_error = None
+        result = None
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        sqlite_path = _sqlite_path_from_uri(sqlite_uri)
+        trace_store = default_trace_store_path(sqlite_path)
+
+        if request.method == "POST":
+            question = request.form.get("question", "").strip()
+            if not question:
+                validation_error = "Enter a question before asking."
+            else:
+                try:
+                    retrieval_terms = retrieval_keyword_from_question(question)
+                    hits = federated_search(
+                        sqlite_path=sqlite_path,
+                        keyword=retrieval_terms,
+                        limit_per_lane=10,
+                    )
+                    answer = answer_from_federated_hits(question, hits)
+
+                    trace = create_answer_trace(
+                        question=question,
+                        retrieval_terms=retrieval_terms,
+                        answer=answer,
+                    )
+                    append_answer_trace(trace_store, trace)
+
+                    result = {
+                        "answer_text": answer.answer_text,
+                        "status": answer.status,
+                        "notes": answer.notes,
+                        "trace_id": trace.trace_id,
+                        "trace_href": url_for("answer_trace_detail", trace_id=trace.trace_id),
+                        "citations": [
+                            build_answer_trace_citation_view(asdict(citation))
+                            for citation in answer.citations
+                        ],
+                    }
+                except Exception:
+                    runtime_error = (
+                        "Ask could not complete right now. Please try again in a moment."
+                    )
+
+        recent_traces = list_answer_traces(trace_store, limit=5)
+        return render_template(
+            "ask.html",
+            question=question,
+            validation_error=validation_error,
+            runtime_error=runtime_error,
+            result=result,
+            recent_traces=recent_traces,
         )
 
     return app
