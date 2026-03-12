@@ -26,7 +26,7 @@ SoulPrint is not a hosted SaaS product. It is not a mem0 clone. It is not an AI 
 
 The code kept moving. The presentation did not consolidate at the same speed.
 
-The repo's problem is not broken architecture — it is unstratified truth. Nine markdown files compete at root level. Historical docs still describe a Milestone-1 baseline. There is no LICENSE, CI, or contributor guide. The product is real; the front door does not yet reflect it.
+The repo's problem is not broken architecture — it is unstratified truth. Nine markdown files compete at root level. Historical docs still describe a Milestone-1 baseline, and active doctrine can still lag product reality if not maintained. The product is real; the front door must continue reflecting it.
 
 **The current problem is not missing capability breadth. The current problem is product coherence.**
 
