@@ -38,6 +38,7 @@ class WebShellRouteTest(unittest.TestCase):
         self.assertIn('href="/imported"', html)
         self.assertIn('href="/import"', html)
         self.assertIn('href="/federated"', html)
+        self.assertIn('href="/passport"', html)
         self.assertIn('href="/ask"', html)
         self.assertIn('href="/answer-traces"', html)
 
