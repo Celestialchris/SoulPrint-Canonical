@@ -60,4 +60,4 @@ Product coherence, not capability breadth. The immediate focus is aligning the s
 
 ## License / Contributing
 
-SoulPrint is available under the [MIT License](LICENSE). For contribution rules and review expectations, see [CONTRIBUTING.md](CONTRIBUTING.md).
+SoulPrint is available under the Apache License 2.0. See [LICENSE](LICENSE). For contribution rules and review expectations, see [CONTRIBUTING.md](CONTRIBUTING.md).
