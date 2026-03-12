@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Import Conversations | SoulPrint{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Import Pipeline</p>
+    <h1>Import conversation exports</h1>
+    <p class="page-summary">
+      Upload one supported provider export JSON file to run the existing normalization and persistence pipeline.
+      Duplicate conversations are safely skipped.
+    </p>
+  </section>
+
+  <section class="surface-card content-block">
+    <h2>Supported providers</h2>
+    <p>ChatGPT, Claude, and Gemini exports are supported through provider auto-detection.</p>
+
+    <form method="post" enctype="multipart/form-data" class="filter-panel">
+      <div>
+        <label class="field-label" for="export_file">Export JSON file</label>
+        <input id="export_file" name="export_file" type="file" accept="application/json,.json" required>
+      </div>
+      <div>
+        <button type="submit">Import now</button>
+      </div>
+    </form>
+  </section>
+
+  {% if error_message %}
+    <section class="empty-state" role="alert">
+      <h2 class="empty-state__title">Import could not be completed</h2>
+      <p class="empty-state__text">{{ error_message }}</p>
+    </section>
+  {% endif %}
+
+  {% if result %}
+    <section class="surface-card content-block">
+      <h2>Import result</h2>
+      <div class="metadata-badges">
+        <span class="badge badge--imported">Provider: {{ result.provider_id }}</span>
+        <span class="badge">Conversations imported: {{ result.imported_conversations }}</span>
+        <span class="badge">Duplicates skipped: {{ result.skipped_conversations }}</span>
+        <span class="badge">Messages imported: {{ result.imported_messages }}</span>
+      </div>
+
+      {% if result.imported_conversations == 0 and result.skipped_conversations > 0 %}
+        <p class="metadata-note">No new conversations were imported because all records were already present.</p>
+      {% endif %}
+
+      {% if result.warnings %}
+        <div>
+          <p class="metadata-line"><strong>Warnings</strong></p>
+          <ul class="content-list">
+            {% for warning in result.warnings %}
+              <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <p class="metadata-line">Next step: review imported conversations in the imported lane.</p>
+      <a class="route-card__link" href="{{ url_for('imported_conversations') }}">Go to Imported conversations</a>
+    </section>
+  {% endif %}
+{% endblock %}
