@@ -14,10 +14,6 @@ src/.env
 .env
 *.egg-info/
 .DS_Store
+.tmp/
 .tmp-tests/
-
 .claude/
-
-
-.claude/
-
