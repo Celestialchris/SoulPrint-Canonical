@@ -124,7 +124,7 @@ class AnsweringBoundaryTest(unittest.TestCase):
         result = answer_from_federated_hits("NYC?", hits)
 
         self.assertEqual(result.status, "insufficient_evidence")
-        self.assertIn("too short or ambiguous", " ".join(result.notes))
+        self.assertIn("more specific question", " ".join(result.notes))
 
     def test_empty_retrieval_returns_safe_fallback(self):
         result = answer_from_federated_hits("Any notes about Porto?", [])
