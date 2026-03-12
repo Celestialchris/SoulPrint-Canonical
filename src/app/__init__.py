@@ -18,6 +18,7 @@ from ..importers.errors import (
     MalformedImportFileError,
     UnsupportedImportFormatError,
 )
+from ..passport import export_memory_passport, validate_memory_passport
 
 
 def federated_search(*args, **kwargs):
@@ -85,6 +86,29 @@ def create_app():
         workspace = build_workspace_summary(trace_store_path=trace_store)
 
         return render_template("index.html", workspace=workspace)
+
+    @app.get("/passport")
+    def passport_surface():
+        capability = {
+            "export_available": callable(export_memory_passport),
+            "validation_available": callable(validate_memory_passport),
+        }
+
+        status = {
+            "inspection_available": False,
+            "artifact_detected": False,
+            "message": (
+                "Export and validation capabilities are available through the existing "
+                "CLI surface. This web page is not currently inspecting a specific "
+                "passport artifact path."
+            ),
+        }
+
+        return render_template(
+            "passport.html",
+            capability=capability,
+            status=status,
+        )
 
     @app.post("/save")
     def save():
