@@ -13,9 +13,9 @@ from src.config import Config
 from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
 
 
-class HomeDashboardTest(unittest.TestCase):
+class WorkspaceHomeTest(unittest.TestCase):
     def setUp(self):
-        self.workdir = make_test_temp_dir(self, "home-dashboard")
+        self.workdir = make_test_temp_dir(self, "workspace-home")
         self._old_uri = Config.SQLALCHEMY_DATABASE_URI
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.workdir}/test.db"
         self.addCleanup(self._restore_sqlite_uri)
@@ -26,7 +26,7 @@ class HomeDashboardTest(unittest.TestCase):
     def _restore_sqlite_uri(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
 
-    def _get_home_html(self) -> str:
+    def _get_workspace_html(self) -> str:
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         return response.get_data(as_text=True)
@@ -61,8 +61,8 @@ class HomeDashboardTest(unittest.TestCase):
                 }
                 f.write(json.dumps(record) + "\n")
 
-    def test_home_renders_workspace_blocks_empty_db(self):
-        html = self._get_home_html()
+    def test_workspace_renders_workspace_blocks_empty_db(self):
+        html = self._get_workspace_html()
         self.assertIn("Continuity Status", html)
         self.assertIn("Provider Coverage", html)
         self.assertIn("Resume Recent Work", html)
@@ -71,7 +71,7 @@ class HomeDashboardTest(unittest.TestCase):
         self.assertIn("Next Actions", html)
         self.assertIn("Your workspace is ready.", html)
 
-    def test_home_continuity_counts_reflect_seeded_data(self):
+    def test_workspace_continuity_counts_reflect_seeded_data(self):
         with self.app.app_context():
             conv = self._seed_conv("chatgpt", "WithMessages")
             for i in range(2):
@@ -96,7 +96,7 @@ class HomeDashboardTest(unittest.TestCase):
             db.session.commit()
 
         self._write_traces(4)
-        html = self._get_home_html()
+        html = self._get_workspace_html()
 
         self.assertIn("You have 1 imported conversations across 1 providers and 2 native memory entries.", html)
         self.assertIn("Native entries</span><strong>2</strong>", html)
@@ -104,17 +104,17 @@ class HomeDashboardTest(unittest.TestCase):
         self.assertIn("Imported messages</span><strong>3</strong>", html)
         self.assertIn("Answer traces</span><strong>4</strong>", html)
 
-    def test_home_provider_coverage_renders_provider_badges(self):
+    def test_workspace_provider_coverage_renders_provider_badges(self):
         with self.app.app_context():
             self._seed_conv("chatgpt", "C1")
             self._seed_conv("claude", "C2")
             db.session.commit()
 
-        html = self._get_home_html()
+        html = self._get_workspace_html()
         self.assertIn("chatgpt · 1", html)
         self.assertIn("claude · 1", html)
 
-    def test_home_resume_recent_work_renders_links(self):
+    def test_workspace_resume_recent_work_renders_links(self):
         with self.app.app_context():
             conv = self._seed_conv("gemini", "Recent import")
             db.session.add(
@@ -129,7 +129,7 @@ class HomeDashboardTest(unittest.TestCase):
             conv_id = conv.id
 
         self._write_traces(1)
-        html = self._get_home_html()
+        html = self._get_workspace_html()
         self.assertIn(f'href="/imported/{conv_id}/explorer"', html)
         self.assertIn('href="/memory/1"', html)
         self.assertIn('href="/answer-traces/trace-0"', html)

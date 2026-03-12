@@ -12,6 +12,8 @@ All tests must pass before submitting a PR:
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
+CI uses the same command in `.github/workflows/tests.yml`.
+
 ## Rules
 
 ### Test coverage
@@ -24,6 +26,20 @@ python -m unittest discover -s tests -p "test_*.py"
 - No route sprawl, no dashboard bloat
 - Derived layers must never mutate canonical records
 - Keep lanes separate — compose federated retrieval read-only, never merge structurally
+
+### Truth-surface hygiene (required)
+When behavior or product surfaces change, update active truth docs in the same PR:
+- `README.md`
+- `ROADMAP.md`
+- `CONTRIBUTING.md` (if expectations changed)
+
+### Review checklist (required)
+Every PR description should confirm:
+- Canonical ledger remains authoritative
+- Native/imported lane boundaries remain explicit
+- Derived outputs remain non-canonical and provenance-bound
+- No portability/USB/capsule framing is introduced in active docs or UI copy
+- Test command run locally matches CI command
 
 ### Code style
 - Smallest working implementation over speculative architecture

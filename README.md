@@ -33,7 +33,7 @@ Import -> Inspect -> Search -> Answer -> Export / Validate
 
 | Surface | Purpose |
 | --- | --- |
-| `/` | Shared home surface with ledger and activity overview |
+| `/` | Shared workspace surface with ledger and activity overview |
 | `/chats` | Native memory lane browser |
 | `/imported` | Imported conversation list and search |
 | `/imported/<id>/explorer` | Transcript explorer for one imported conversation |
