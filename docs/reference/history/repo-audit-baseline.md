@@ -65,5 +65,5 @@ Repo-level smoke coverage now exists in `tests/test_milestone1_smoke.py` for:
 
 ## Notes
 
-- This audit intentionally treated the then-current main branch as source of truth at checkpoint time.
+- This audit intentionally treated the main branch at checkpoint time as source of truth.
 - The repository is structured for incremental next-phase implementation while preserving Milestone 1 behavior.

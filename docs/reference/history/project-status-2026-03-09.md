@@ -19,7 +19,7 @@ active_truth:
 
 This document captures the model/storage and retrieval/query implementation in the canonical repository **at the time of this checkpoint**, without proposing runtime refactors in this pass.
 
-Primary loop in code today:
+Primary loop in code at checkpoint time:
 
 1. import ChatGPT export JSON
 2. normalize to stable conversation/message records
@@ -103,7 +103,7 @@ At this checkpoint, the retrieval surface was **narrow and explicit**:
   - `export_imported_conversation_markdown()`
   - CLI wrapper in `src/importers/query_cli.py`
 
-No cross-lane retrieval abstraction currently exists; callers choose one lane explicitly.
+No cross-lane retrieval abstraction existed at checkpoint time; callers chose one lane explicitly.
 
 ## Recommended next engineering steps (bounded)
 
