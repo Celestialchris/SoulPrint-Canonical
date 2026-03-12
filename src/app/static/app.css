@@ -991,3 +991,15 @@ button:hover {
 .ask-feedback--warning {
   color: #8b5e34;
 }
+
+.passport-command {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: rgba(248, 244, 236, 0.7);
+}
+
+.passport-status-note {
+  margin-top: 10px;
+}
