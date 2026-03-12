@@ -16,7 +16,7 @@
         <p class="brand-block__note">Local-first memory passport</p>
       </div>
       <nav class="app-nav" aria-label="Primary">
-        {{ nav_link(url_for('home'), 'Home', request.path == url_for('home')) }}
+        {{ nav_link(url_for('home'), 'Workspace', request.path == url_for('home')) }}
         {{ nav_link(url_for('chats'), 'Native Memory', request.path.startswith(url_for('chats')) or request.path.startswith('/memory/')) }}
         {{ nav_link(url_for('imported_conversations'), 'Imported', request.path.startswith('/imported')) }}
         {{ nav_link(url_for('federated_browser'), 'Federated', request.path.startswith('/federated')) }}

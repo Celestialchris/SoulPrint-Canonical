@@ -677,6 +677,115 @@ button:hover {
   pointer-events: none;
 }
 
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.workspace-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.workspace-block--wide {
+  grid-column: 1 / -1;
+}
+
+.workspace-block h2 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.workspace-block h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.workspace-summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.workspace-counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.workspace-counts div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 253, 248, 0.78);
+}
+
+.workspace-counts span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.workspace-counts strong {
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.provider-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workspace-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.resume-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.resume-grid section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resume-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resume-list li {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 253, 248, 0.75);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resume-list li span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
 /* ═══════════════════════════════════════════
    Dashboard stats section — home page only
    ═══════════════════════════════════════════ */
@@ -801,6 +910,14 @@ button:hover {
 }
 
 @media (max-width: 1080px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .resume-grid {
+    grid-template-columns: 1fr;
+  }
+
   .explorer-layout {
     grid-template-columns: 1fr;
   }

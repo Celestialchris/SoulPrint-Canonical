@@ -7,6 +7,7 @@ from .models.db import db
 from ..config import Config, normalize_sqlite_uri
 from .models import ImportedConversation, ImportedMessage, MemoryEntry
 from .citation_handoff import build_answer_trace_citation_view
+from .viewmodels import build_workspace_summary
 from sqlalchemy import func
 
 
@@ -68,49 +69,13 @@ def create_app():
 
     @app.get("/")
     def home():
-        from ..answering.trace import default_trace_store_path, list_answer_traces
-
-        native_count = db.session.query(func.count(MemoryEntry.id)).scalar() or 0
-
-        imported_conv_count = (
-            db.session.query(func.count(ImportedConversation.id)).scalar() or 0
-        )
-
-        imported_msg_count = (
-            db.session.query(func.count(ImportedMessage.id)).scalar() or 0
-        )
-
-        provider_rows = (
-            db.session.query(
-                ImportedConversation.source,
-                func.count(ImportedConversation.id).label("conv_count"),
-            )
-            .group_by(ImportedConversation.source)
-            .order_by(func.count(ImportedConversation.id).desc())
-            .all()
-        )
-        max_provider_count = provider_rows[0][1] if provider_rows else 1
-        provider_chart = [
-            {
-                "name": row[0],
-                "count": row[1],
-                "pct": round((row[1] / max_provider_count) * 100),
-            }
-            for row in provider_rows
-        ]
+        from ..answering.trace import default_trace_store_path
 
         sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
         trace_store = default_trace_store_path(_sqlite_path_from_uri(sqlite_uri))
-        trace_count = len(list_answer_traces(trace_store, limit=500))
+        workspace = build_workspace_summary(trace_store_path=trace_store)
 
-        return render_template(
-            "index.html",
-            native_count=native_count,
-            imported_conv_count=imported_conv_count,
-            imported_msg_count=imported_msg_count,
-            provider_chart=provider_chart,
-            trace_count=trace_count,
-        )
+        return render_template("index.html", workspace=workspace)
 
     @app.post("/save")
     def save():
