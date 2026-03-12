@@ -33,6 +33,7 @@ class WebShellRouteTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         self.assertIn("app-topbar", html)
+        self.assertIn("Workspace", html)
         self.assertIn('href="/chats"', html)
         self.assertIn('href="/imported"', html)
         self.assertIn('href="/federated"', html)
