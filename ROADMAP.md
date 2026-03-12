@@ -1,29 +1,29 @@
 # Roadmap
 
-## Active
+## Completed Foundation
 
-### Phase 1 — Repo Face Cleanup
-Stratify docs, add LICENSE/CONTRIBUTING/CHANGELOG, CI workflow. No runtime changes.
+- Repo face cleanup
+- Two-layer doctrine split
 
-### Phase 2 — README & Docs Alignment
-Rewrite README to reflect current product state. Update docs to match post-cleanup paths.
+## Current Active Sequence
 
-### Phase 3 — Workspace Polish
-Import UI surface, empty state refinements, visual polish pass.
-
-### Phase 4 — Import UI
-Web-based import flow for supported providers (ChatGPT, Claude, Gemini).
+1. README and docs truth alignment
+2. Canonical Workspace on `/`
+3. Import lifecycle UI
+4. In-app Ask
+5. Passport surface
 
 ## Deferred
 
-- **In-app Ask** — web answering surface (currently CLI-only)
-- **Passport surface** — web UI for export/validate (currently CLI-only)
-- **Derived intelligence** — topic clustering, conversation summaries, "what have I explored?" views
-- **UI polish** — spacing, typography, mobile-friendliness
-- **Growth** — additional provider importers, community contributions
+- Derived intelligence
+- Product polish
+- Growth experiments
 
-## Explicitly removed
+## Explicitly Deferred / Removed From Current Implementation
 
-- Portable data-root / USB / capsule framing
-- Desktop packaging (Tauri, Electron, PyWebView)
-- mem0 activation (adapter exists, gated off by design)
+- `mem0` activation
+- Hosted sync
+- Vector database expansion or broader RAG build-out
+- Mobile app development
+- Directory-packaged distribution concepts
+- Desktop packaging as a current priority

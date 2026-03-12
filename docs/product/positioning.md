@@ -1,53 +1,49 @@
 # SoulPrint Positioning
 
-## One-sentence definition
-SoulPrint is a local-first memory passport for AI users: it helps you bring, unify, search, inspect, and carry your conversation history across tools with clear provenance and exportable continuity.
+## One-Sentence Definition
 
-## Why SoulPrint exists
-People now create valuable context across multiple AI products, but that memory is fragmented by platform silos. SoulPrint exists so users can keep durable, user-owned continuity instead of starting over whenever they switch tools.
+SoulPrint is local-first continuity infrastructure for AI users: it brings conversation history from multiple providers into a canonical ledger you can inspect, search, answer from conservatively, and export with provenance.
 
-## What SoulPrint does today
-- Imports user-authorized AI conversation exports (currently ChatGPT export lane).
-- Normalizes conversations/messages into stable, queryable records.
-- Persists canonical records in local SQLite as the source of truth.
-- Provides federated retrieval across native and imported lanes.
-- Provides minimal local answering that is read-only and grounded in retrieved records.
-- Supports markdown export for portable continuity.
-- Keeps an optional mem0 adapter boundary available but disabled by default.
+## Why SoulPrint Exists
 
-## What SoulPrint may become later
-- Broader import lanes for additional platforms.
-- Better local retrieval and inspection tools.
-- Optional downstream working-memory integrations (for example mem0) that accelerate recall without replacing canonical storage.
-- Optional document-QA style workflows over user-controlled exports.
+AI users now build valuable context across multiple assistants, but that context is fragmented by provider boundaries and weak export paths. SoulPrint exists to preserve continuity without handing ownership of that memory back to another platform.
 
-## What SoulPrint is not
-- Not a hosted memory SaaS platform.
-- Not a replacement for user-owned canonical storage.
-- Not an attempt to outbuild mem0 as infrastructure.
-- Not an agent orchestration product at its core.
-- Not a mythology-heavy "archive of humanity" pitch in active product docs.
+## What SoulPrint Does Today
 
-## Who SoulPrint is for
-- AI power users who work across multiple assistants and want continuity.
-- Builders and researchers who need traceable memory with stable IDs/timestamps.
-- Privacy-conscious users who prefer local-first control and exportability.
+- Imports user-authorized conversation exports from ChatGPT, Claude, and Gemini with provider auto-detection
+- Normalizes those records into a canonical SQLite ledger with explicit native and imported lanes
+- Provides transcript exploration for imported conversations, including prompt-level navigation and a minimap rail
+- Composes federated retrieval across lanes without collapsing their provenance boundaries
+- Supports grounded local answering with explicit citations and derived answer traces
+- Exports a Memory Passport package from canonical records and validates that package against the current contract
 
-## Core product loop (user-facing)
-1. **Import** your conversation exports.
-2. **Normalize** into consistent records.
-3. **Store** in a local canonical ledger (SQLite).
-4. **Retrieve/inspect/export** with provenance so memory is reusable anywhere.
+## What SoulPrint Is Not
 
-## Product principles
-1. **Canonical ledger is authoritative.** SQLite records are the baseline truth layer.
-2. **Derived layers are downstream.** Any adapter or summary layer must point back to canonical IDs/timestamps.
-3. **Answering is read-only and grounded.** Retrieval and responses should never silently rewrite source records.
-4. **Local-first by default.** Users can run and inspect the system without hosted dependencies.
-5. **Portable continuity matters.** Markdown and stable records reduce lock-in and preserve user agency.
+- Not a hosted SaaS
+- Not a mem0 clone
+- Not an AI dashboard or general memory platform
+- Not a system that hides canonical records behind opaque derived memory
 
-## Relationship to optional systems
-- **mem0:** Optional downstream adapter for working-memory acceleration. It is not authoritative storage and is disabled by default.
-- **Local RAG / document QA:** Optional subsystem for question answering over exported/user-owned material; separate from canonical ingestion and storage.
-- **Obsidian/vault workflows:** Useful export and reflection destinations, not canonical runtime infrastructure.
+## Product Priorities
 
+SoulPrint is optimized for:
+
+- Continuity across providers, tools, and time
+- Local ownership of canonical records
+- Provenance that stays attached to every retrieval and export path
+- Inspectability at the record, transcript, and trace level
+- Exportability and interoperability without cloud dependency
+
+## Product Principles
+
+1. The canonical ledger is authoritative.
+2. Native and imported lanes stay explicit unless composed read-only.
+3. Grounded answering is read-only and must cite source records.
+4. Derived traces, summaries, and exports never overwrite canonical truth.
+5. Export and validation matter because continuity is only useful when it can be inspected and moved without losing provenance.
+
+## Relationship to Optional Systems
+
+- `mem0` remains an optional downstream adapter boundary and is disabled by default.
+- Document-QA or RAG-style systems remain separate from canonical ingestion and storage.
+- Visual-direction guidance lives in `docs/product/visual-direction.md`; it does not redefine product architecture or storage truth.
