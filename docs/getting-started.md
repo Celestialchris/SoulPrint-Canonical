@@ -1,108 +1,85 @@
-# Setup (Milestone 1 Baseline)
+# Getting Started
 
-This repository is currently stabilized around the verified Milestone 1 runtime:
-- app boot
-- `POST /save`
-- `GET /chats`
+This guide covers the smallest practical path to running SoulPrint locally, loading sample data, and exercising the Memory Passport flow against the current repo.
 
-No mem0, RAG, agent orchestration, or importer expansion is included in this baseline.
+## Minimal Setup
 
-## 1) Create and activate a virtual environment
-
-### Windows PowerShell
+Create a Python 3.12 virtual environment and install the project dependencies:
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-```
-
-### Linux/macOS (bash/zsh)
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-## 2) Install dependencies
-
-For Milestone 1 runtime (Flask + SQLite only):
-
-```bash
-pip install -r requirements-minimal.txt
-```
-
-Optional broader dependency set (not required for Milestone 1 smoke runtime):
-
-```bash
 pip install -r requirements.txt
 ```
 
-## 3) Run the app
+On Linux or macOS:
 
-### Windows PowerShell
-
-```powershell
-python -m src.run
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### Linux/macOS
+## Run the App
+
+Start the local app:
 
 ```bash
 python -m src.run
 ```
 
-On first boot, the app ensures `instance/` exists and initializes SQLite at `instance/soulprint.db`.
+On first boot, SoulPrint creates `instance/` if needed and initializes the canonical ledger at `instance/soulprint.db`.
 
-## 4) Run the Milestone 1 smoke test
+## Run Tests
+
+Run the current unit test suite:
 
 ```bash
-python -m unittest tests.test_milestone1_smoke
+python -m unittest discover -s tests -p "test_*.py"
 ```
 
-The smoke test verifies:
-- app import path works
-- app factory boots
-- Flask route map includes `/`, `/save`, and `/chats`
+## Import Sample Data
 
-## Import duplicate policy
-
-ChatGPT imports are deduplicated by `(source, source_conversation_id)` during persistence.
-Re-importing the same export will skip already-imported conversations and report skip counts in CLI output.
-
-## 5) Import one ChatGPT export into SQLite (local/dev)
+Import any of the real sample exports already included in `sample_data/`:
 
 ```bash
 python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/claude_export_sample.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/gemini_takeout_sample.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/gemini_conversations_sample.json --db instance/soulprint.db
 ```
 
-Quick verification:
+The importer auto-detects supported providers from payload shape. Use `--provider` only when you need to force a provider boundary with one of the supported values.
+
+After import, the main read surfaces are available at `/imported`, `/imported/<id>/explorer`, `/federated`, and `/answer-traces`.
+
+## Export a Memory Passport
+
+Export a Memory Passport package from the current canonical ledger:
 
 ```bash
-python - <<'PY'
-import sqlite3
-conn = sqlite3.connect('instance/soulprint.db')
-print(conn.execute('select count(*) from imported_conversation').fetchone()[0])
-print(conn.execute('select count(*) from imported_message').fetchone()[0])
-PY
+python -m src.passport.cli export exports/passports --db instance/soulprint.db
 ```
 
+This writes `memory-passport-v1/` under `exports/passports/`.
 
-## 6) Export one imported conversation to markdown (local/dev)
+## Validate a Memory Passport
+
+Validate an exported package:
 
 ```bash
-python -m src.importers.query_cli --db instance/soulprint.db export-md 1 exports/conversation-1.md
+python -m src.passport.cli validate exports/passports/memory-passport-v1
 ```
 
-## 7) Query federated retrieval across both lanes (local/dev)
+For machine-readable validation output:
 
 ```bash
-python -m src.retrieval.cli --db instance/soulprint.db
-python -m src.retrieval.cli --db instance/soulprint.db "trip"
+python -m src.passport.cli validate exports/passports/memory-passport-v1 --json
 ```
 
+## Notes
 
-## 8) Ask a minimal grounded question over federated retrieval (local/dev)
-
-```bash
-python -m src.answering.cli --db instance/soulprint.db "What did I note about trip planning?"
-```
+- SoulPrint is local-first. The default workflow runs against local files and a local SQLite ledger.
+- The canonical ledger is authoritative. Exports, traces, and other derived artifacts do not replace SQLite truth.
+- Native and imported lanes remain explicit unless they are composed read-only through retrieval or browsing surfaces.
+- Derived layers never overwrite canonical truth. Answers, traces, and exports must stay traceable back to stable IDs and timestamps.

@@ -9,7 +9,7 @@ See [docs/getting-started.md](docs/getting-started.md) for setup instructions.
 All tests must pass before submitting a PR:
 
 ```bash
-python -m pytest tests/ -v
+python -m unittest discover -s tests -p "test_*.py"
 ```
 
 ## Rules
@@ -34,7 +34,7 @@ python -m pytest tests/ -v
 
 The following are explicitly out of scope for contributions:
 
-- Portability/USB/capsule framing or language
+- Product framing that treats SoulPrint as hosted memory or as packaging-first software instead of a canonical local ledger
 - mem0 activation (adapter exists but is gated off by design)
 - Desktop packaging (Tauri, Electron, etc.)
 - Mobile apps

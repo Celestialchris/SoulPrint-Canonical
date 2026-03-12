@@ -1,110 +1,145 @@
 # CONTEXT.md — SoulPrint Project History & Decisions
 
-This file is project history and architectural rationale. For commands and coding conventions, see `CLAUDE.md`.
+This file records project history and architectural rationale. For commands and contribution rules, see `CONTRIBUTING.md` and `docs/getting-started.md`.
 
 ---
 
 ## Project Timeline
 
 ### Phase 0 — Doctrine
-Defined SoulPrint's identity: a **local-first memory passport for AI users**. Explicitly not SaaS, not a mem0 clone, not generic RAG, not an enterprise AI dashboard. The core insight: users own their AI conversation history; SoulPrint makes it portable, browsable, and auditable without cloud dependency.
+SoulPrint began as a local-first memory continuity system for AI users. It was defined against a clear set of negatives: not SaaS, not a mem0 clone, not generic RAG, and not an AI dashboard. The central premise was user ownership of conversation history, with continuity preserved through canonical storage, provenance, and export.
 
 ### Phase 1 — Memory Passport
-Defined the export contract in `docs/specs/memory-passport-spec.md`. A memory passport is:
-- `manifest.json` — schema version, export metadata, lane inventory
-- JSONL lanes — one file per lane (native, imported)
-- Markdown — human-readable snapshot
-- Provenance — full audit trail back to canonical stable IDs
+The Memory Passport contract was defined in `docs/specs/memory-passport-spec.md`. A passport is:
+- `manifest.json` for package metadata and lane inventory
+- JSONL lane exports for canonical records
+- markdown snapshots for human-readable continuity
+- provenance records that point back to stable IDs and timestamps
 
-Key decision: the passport is a **portability contract**, not a replacement for the SQLite ledger. Export = snapshot. Canonical truth stays local.
+Key decision: the passport is a provenance-and-validation export contract layered over canonical truth. Export is a snapshot of the ledger, not a replacement for the ledger.
 
 ### Phase 2 — Browsing & Navigation
-Built the read-only browsing layer:
-- `/imported` — imported conversation list with search
-- `/imported/<id>/explorer` — transcript explorer with TOC + minimap rail
-- `/federated` — cross-lane search composing native + imported read-only
-- `/memory/<id>` — native memory detail page
+The first read surfaces focused on inspection rather than transformation:
+- `/imported` for imported conversation listing and search
+- `/imported/<id>/explorer` for transcript exploration with prompt-level TOC and minimap rail
+- `/federated` for cross-lane retrieval over native and imported records
+- `/memory/<id>` for native memory detail
 
-UI doctrine: Apple-like calm, warm parchment palette, low-clutter, no scrolling walls. Lane-colored badges (native=blue, imported=green, derived=amber).
+The app shell and visual treatment are documented separately in `docs/product/visual-direction.md` so visual guidance does not redefine Layer 1 product truth.
 
-### Phase 3 — Answering with Trust
-Added grounded local answering with full audit residue:
-- Answer Trace JSONL — append-only derived records, never canonical
-- `/answer-traces` + `/answer-traces/<id>` detail with citation handoff
-- Status enums: `grounded`, `ambiguous`, `insufficient_evidence` (not probability scores)
-- Citations resolve via `memory:<id>` → `/memory/<id>` and `imported_conversation:<id>` → `/imported/<id>/explorer`
+### Phase 3 — Answering With Trust
+Grounded local answering was added on top of federated retrieval:
+- Answer Trace JSONL as append-only derived audit residue
+- `/answer-traces` and `/answer-traces/<id>` for trace inspection
+- status values of `grounded`, `ambiguous`, and `insufficient_evidence`
+- citation handoff from trace records back to canonical views
 
-Core rule: derived output is always labeled "Derived / non-canonical." It never mutates Layer 1.
+Core rule: derived output is always labeled non-canonical and never mutates Layer 1.
 
-### Phase 4 — Cross-LLM Providers
-Made the importer layer provider-agnostic:
+### Phase 4 — Cross-Provider Imports
+The importer layer was generalized into a provider-aware boundary:
 - `ConversationImporter` protocol in `src/importers/contracts.py`
-- Auto-detection via `parse_import_file()` in `registry.py`
-- Providers: `chatgpt`, `claude`, `gemini`
-- Each provider has: adapter, `looks_like_*` detector, fixture in `sample_data/`, registry entry, tests
-- Duplicate guard on `(source, source_conversation_id)` prevents re-import corruption
+- auto-detection through `parse_import_file()` in `src/importers/registry.py`
+- supported providers: `chatgpt`, `claude`, `gemini`
+- duplicate protection on `(source, source_conversation_id)` during persistence
+
+This completed the current three-provider continuity baseline without collapsing lane boundaries.
+
+---
+
+## Current State
+
+SoulPrint currently has:
+
+- a canonical SQLite ledger with explicit native and imported lanes
+- three-provider import with sample fixtures and test coverage
+- transcript exploration for imported conversations
+- federated retrieval across explicit lanes
+- grounded local answering with derived trace inspection
+- Memory Passport export and validation
+
+The product already supports continuity, inspection, and provenance-preserving export without requiring hosted infrastructure.
 
 ---
 
 ## Major Repairs & Pivots
 
 ### mem0 Boundary Redesign
-Risk identified: mem0 summarization and graph storage could silently replace or corrupt canonical truth. Resolution:
-- mem0 is downstream-only, optional, feature-gated via `SOULPRINT_MEM0_ENABLED=false`
-- Never authoritative — all mem0 items carry pointers back to canonical stable IDs
-- Layer 4 (Optional Extensions) can never write to Layer 1
+Risk identified: a future working-memory adapter could drift into hidden authority. Resolution:
+- `mem0` remains downstream-only and feature-gated via `SOULPRINT_MEM0_ENABLED=false`
+- all adapter payloads preserve pointers back to canonical stable IDs
+- optional extensions cannot replace Layer 1 truth
 
 ### Lane Separation Discipline
-Resisted early pressure to merge native and imported schema into a single unified table. Decision: keep lanes separate, compose federated retrieval read-only via `FederatedReadResult`. This preserves provenance and makes each lane independently auditable.
+There was early pressure to merge native and imported records into a single structural lane. The project kept them separate and composed them read-only through federated retrieval instead. That decision preserves provenance, source semantics, and independent auditability.
 
 ### Answering Layer Precision
-Strict lexical matching only. No semantic inference that could over-claim. Safe fallbacks return `insufficient_evidence` rather than hallucinating from partial matches. Grounded-only = the answer cites specific records or says so.
+Grounded answering stays deliberately conservative. Weak or ambiguous evidence returns `insufficient_evidence` or `ambiguous` instead of over-claiming from partial matches.
+
+### Docs Split Clarification
+The docs were split into Layer 1 product/doctrine/implementation truth and Layer 2 visual-direction guidance. This prevents aesthetic guidance from being treated as architecture and keeps historical/product docs aligned with runtime reality.
 
 ---
 
 ## Architectural Decisions
 
 ### Four Layers (never break)
-```
+```text
 Layer 1 — Canonical Ledger:     SQLite, stable IDs, source truth. Read-only from above.
-Layer 2 — Browsing/Retrieval:   Read-only views. No writes to Layer 1.
-Layer 3 — Answering/Audit:      Derived. JSONL traces. Never canonical.
-Layer 4 — Optional Extensions:  mem0, RAG, Obsidian mirror. Never replace Layer 1.
+Layer 2 — Browsing/Retrieval:   Read-only views and retrieval over explicit lanes.
+Layer 3 — Answering/Audit:      Derived traces and grounded responses. Never canonical.
+Layer 4 — Optional Extensions:  Working-memory or document-QA adapters. Never replace Layer 1.
 ```
 
 ### Trust Chain
-```
-record → retrieve → browse → answer → trace → inspect
+```text
+record -> retrieve -> browse -> answer -> trace -> inspect
 ```
 Every derived output must trace back to a canonical stable ID. No orphan answers.
 
 ### Stable Record Shape
-Every canonical record carries: `stable_id`, `source_lane`, `timestamp_unix`, `source_metadata`. This shape is immutable once written.
+Every canonical record carries `stable_id`, `source_lane`, `timestamp_unix`, and `source_metadata`. Derived layers depend on that shape; they do not redefine it.
 
 ### Federated Retrieval Contract
-Single `FederatedReadResult` shape across all lanes. Retrieval composes lanes; it never merges them structurally.
+Retrieval composes lanes through a single read result shape. It does not merge lane schemas or erase source boundaries.
 
 ### Minimal Dependencies
-Python 3.12, Flask, Flask-SQLAlchemy, SQLite, Jinja2, vanilla CSS. No vector DBs, no heavy RAG pipeline, no cloud services. Complexity is introduced only when the feature requires it.
+Python 3.12, Flask, Flask-SQLAlchemy, SQLite, Jinja2, and a small optional set of downstream packages. Complexity is added only when a current feature requires it.
 
 ---
 
-## Operating Rules (from prompts and repair logs)
+## Operating Rules
 
-These rules governed every implementation decision:
-- **Smallest working implementation** over speculative architecture
-- **Preserve existing behavior** unless the task explicitly changes it
-- **Flag uncertainty** instead of inventing hidden structure
-- **Keep lanes separate** unless the task explicitly composes read-only
-- **No route without tests** — every new route requires browser integration tests
-- **No import without duplicate guards** — re-imports must be idempotent
+These rules continue to shape implementation:
+
+- Smallest working implementation over speculative architecture
+- Preserve existing behavior unless the task explicitly changes it
+- Flag uncertainty instead of inventing hidden structure
+- Keep lanes separate unless a task explicitly composes them read-only
+- No route without tests
+- No import without duplicate guards
 
 ---
 
-## Next Priorities
+## Current Active Sequence
 
-From archive planning notes, in rough priority order:
-1. **Desktop app packaging** — Tauri or PyWebView wrapper for local-first UX without a browser tab
-2. **UI polish pass** — spacing, typography, mobile-friendliness
-3. **Derived intelligence layer** — NotebookLLM-style summaries, topic clustering, "what have I explored?" views
-4. **Passport validation / integrity checks** — `validator.py` hardening, checksum verification
+1. README and docs truth alignment
+2. Canonical Workspace on `/`
+3. Import lifecycle UI
+4. In-app Ask
+5. Passport surface
+
+## Deferred
+
+- Derived intelligence
+- Product polish
+- Growth experiments
+
+## Explicitly Deferred From Current Implementation
+
+- `mem0` activation
+- Hosted sync
+- Vector database expansion or broad RAG build-out
+- Mobile app development
+- Directory-packaged distribution concepts
+- Desktop packaging as a current priority

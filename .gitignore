@@ -16,3 +16,8 @@ src/.env
 .DS_Store
 .tmp-tests/
 
+.claude/
+
+
+.claude/
+
