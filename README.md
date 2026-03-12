@@ -11,6 +11,8 @@ SoulPrint is a local-first memory continuity system for AI users. It imports con
 - Not an AI dashboard
 
 ## Product Loop
+See `docs/product/positioning.md` for the practical doctrine and boundaries.
+See `docs/specs/memory-passport-spec.md` for the formal v1 Memory Passport package contract.
 
 Import -> Inspect -> Search -> Answer -> Export / Validate
 
