@@ -1,9 +1,24 @@
-# SoulPrint Canonical Repo Audit (Current Main Baseline)
+---
+status: historical
+authority: non-authoritative
+active_truth:
+  - README.md
+  - ROADMAP.md
+  - docs/product/
+  - docs/specs/
+---
+
+# SoulPrint Canonical Repo Audit (Main Baseline Snapshot)
+
+> [!NOTE]
+> **Historical reference — non-authoritative.**
+> This document captures a past project state and should not be used as current product doctrine.
+> Active truth lives in `README.md`, `ROADMAP.md`, `docs/product/*`, and `docs/specs/*`.
 
 ## Audit intent
-This audit reflects the **current** repository state after Milestone 1 stabilization work. It is focused on baseline runtime reality and repo structure readiness for the next implementation phase.
+This audit reflects the repository state **at the time of this baseline checkpoint** after Milestone 1 stabilization work. It is focused on runtime reality and repo structure readiness for the next implementation phase.
 
-## Current repository structure
+## Repository structure at this baseline
 
 Top-level files/folders relevant to Milestone 1:
 - `src/` (active Flask runtime code)
@@ -21,7 +36,7 @@ Runtime package structure:
 - `src/app/models/` contains SQLAlchemy `db` and `MemoryEntry`
 - `src/app/templates/` contains UI templates for `/` and `/chats`
 
-## Milestone 1 runtime baseline (current truth)
+## Milestone 1 runtime baseline (baseline truth at checkpoint time)
 
 Implemented and in scope:
 - App boot path via `python -m src.run`
@@ -50,5 +65,5 @@ Repo-level smoke coverage now exists in `tests/test_milestone1_smoke.py` for:
 
 ## Notes
 
-- This audit intentionally treats the current main branch as source of truth.
+- This audit intentionally treated the main branch at checkpoint time as source of truth.
 - The repository is structured for incremental next-phase implementation while preserving Milestone 1 behavior.
