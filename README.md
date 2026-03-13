@@ -34,6 +34,9 @@ Import -> Inspect -> Search -> Answer -> Export / Validate
 | Surface | Purpose |
 | --- | --- |
 | `/` | Shared workspace surface with ledger and activity overview |
+| `/import` | Live web import surface for supported conversation export JSON files |
+| `/ask` | Live in-app Ask surface for grounded answers with trace and citation handoff |
+| `/passport` | Live capability/status surface for Memory Passport export and validation; current web scope does not inspect a specific artifact |
 | `/chats` | Native memory lane browser |
 | `/imported` | Imported conversation list and search |
 | `/imported/<id>/explorer` | Transcript explorer for one imported conversation |

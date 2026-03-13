@@ -30,6 +30,13 @@ python -m src.run
 
 On first boot, SoulPrint creates `instance/` if needed and initializes the canonical ledger at `instance/soulprint.db`.
 
+The current web surfaces are available locally after boot:
+
+- `/` for the workspace
+- `/import` for the live web import surface
+- `/ask` for the live in-app Ask surface
+- `/passport` for the current capability/status surface around Memory Passport export and validation
+
 ## Run Tests
 
 Run the current unit test suite:
@@ -51,7 +58,7 @@ python -m src.importers.cli sample_data/gemini_conversations_sample.json --db in
 
 The importer auto-detects supported providers from payload shape. Use `--provider` only when you need to force a provider boundary with one of the supported values.
 
-After import, the main read surfaces are available at `/imported`, `/imported/<id>/explorer`, `/federated`, and `/answer-traces`.
+The current read and inspection surfaces include `/imported`, `/imported/<id>/explorer`, `/federated`, and `/answer-traces`. The web import surface remains available at `/import`, the in-app Ask surface remains available at `/ask`, and `/passport` remains a bounded capability/status surface rather than a full artifact-inspection workflow.
 
 ## Export a Memory Passport
 
