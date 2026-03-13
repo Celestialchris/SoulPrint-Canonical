@@ -136,12 +136,42 @@ def create_app():
 
     @app.get("/imported/<int:conversation_id>/explorer")
     def imported_explorer(conversation_id: int):
+        from ..intelligence.continuity.lineage import ConversationSummary, suggest_lineage
         from ..intelligence.provider import is_llm_configured
 
         conversation = ImportedConversation.query.filter_by(id=conversation_id).first_or_404()
 
         messages = sorted(conversation.messages, key=lambda m: m.sequence_index)
         toc_entries = build_prompt_toc(messages)
+
+        # Lineage suggestions (derived, best-effort)
+        other_convs = (
+            ImportedConversation.query
+            .filter(ImportedConversation.id != conversation_id)
+            .order_by(ImportedConversation.id.desc())
+            .limit(50)
+            .all()
+        )
+        source_previews = [m.content for m in messages[:5]]
+        source_summary = ConversationSummary(
+            id=conversation.id,
+            title=conversation.title or "",
+            created_at_unix=conversation.created_at_unix,
+            message_previews=source_previews,
+        )
+        candidate_summaries = [
+            ConversationSummary(
+                id=c.id,
+                title=c.title or "",
+                created_at_unix=c.created_at_unix,
+                message_previews=[
+                    m.content
+                    for m in sorted(c.messages, key=lambda m: m.sequence_index)[:3]
+                ],
+            )
+            for c in other_convs
+        ]
+        lineage_suggestions = suggest_lineage(source_summary, candidate_summaries, limit=3)
 
         return render_template(
             "imported_explorer.html",
@@ -151,6 +181,7 @@ def create_app():
             format_timestamp=format_timestamp,
             anchor_for_message=anchor_for_message,
             llm_configured=is_llm_configured(),
+            lineage_suggestions=lineage_suggestions,
         )
 
     @app.get("/imported")
