@@ -54,7 +54,74 @@ Import -> Inspect -> Search -> Answer -> Export / Validate
 
 ## Current Priority
 
-Product coherence, not capability breadth. The immediate focus is aligning the shared workspace, import lifecycle, in-app Ask, and Passport surface around the canonical ledger that already exists.
+Browse it, search it, ask questions from it, discover themes across it, and export it as a verifiable Memory Passport. Everything stays on your machine.
+
+---
+
+## Current State — March 13, 2026
+
+- 216 passing tests
+- 3 provider importers (ChatGPT, Claude, Gemini) with auto-detection
+- 9 web surfaces (Workspace, Import, Ask, Notes, Passport, Imported, Federated, Native Memory, Answer Traces)
+- Intelligence layer: per-conversation summaries, cross-conversation topic detection, digest synthesis
+- Memory Passport export + validation
+- Grounded answering with citation handoff and trace audit
+- Design system: "Torchlit Vault" — dark warm palette, Forum/Cormorant Garamond/JetBrains Mono typography, hierarchy through opacity
+
+## Architecture
+
+```
+Layer A — Truth         Canonical SQLite ledger. Explicit lanes. Stable provenance.
+Layer B — Legibility    Browse, search, inspect, trace, export. Read-only over truth.
+Layer C — Intelligence  Summaries, topics, digests, continuity packets. All derived. All traceable.
+Layer D — Distribution  Desktop app, landing page, installer, freemium gate.
+```
+
+Build sequence: truth → legibility → intelligence → distribution.
+Current position: Layer C (continuity packets), then Layer D.
+
+## Next Milestone
+
+**Continuity Packet MVP** — convert finished conversations into structured handoff packets that can seed the next chat without dragging 100k tokens forward. See `ROADMAP.md` for the full sequence.
+
+---
+
+## Project Knowledge Index
+
+### Root
+
+| File | Purpose |
+|------|---------|
+| `README.md` | This file. Project map and current state. |
+| `DECISIONS.md` | Frozen decisions log. What has been decided and should not be revisited. |
+| `ROADMAP.md` | Sequenced build plan with phases and priorities. |
+
+### `roadmap/` — Planning Documents
+
+| File | Purpose |
+|------|---------|
+| `30-DAY-VISION.md` | Full 30-day product vision: brand, landing page, desktop, freemium, wrapped summary. |
+| `UPGRADE-CONTINUITY.md` | Continuity packet architecture: session handoff, lineage model, bridge assembly, engine choice. |
+| `BRAND-PROMPTS.md` | 5 sequential Claude Code prompts for distribution features. Execute in order after continuity MVP. |
+
+### `design/` — Visual Direction
+
+| File | Purpose |
+|------|---------|
+| `TORCHLIT-VAULT-SPEC.md` | Canonical design system specification. Colors, typography, components, 9 surface layouts. **This is the design contract.** |
+| `DESIGN-MARKET-ANALYSIS.md` | Marketability analysis. Two-personality brand (public lucid / inner glow), commercial positioning. |
+| `UX-REVIEW.md` | Senior PM review. Hierarchy critique, nav grouping, glow grammar, provenance components. |
+| `heritage/thraenix-reference.html` | Single consolidated Thraenix design DNA file. Source of Forum font, dark gradient, gold glow treatment. Reference only. |
+
+---
+
+## Doctrine
+
+Canonical records stay authoritative. Derived intelligence is always labeled, traceable, and rebuildable from stable IDs and timestamps. Local-first means no data leaves the machine. The product is calm before clever.
+
+See `DECISIONS.md` for the full list of frozen architectural and design decisions.
+
+---
 
 ## Docs
 
