@@ -128,9 +128,9 @@ Turn the homepage into the center of gravity. Not a dashboard — a foyer.
 ### Phase 4 — Import lifecycle UI
 Surface the existing import pipeline in the web app. Import is the first gate of value.
 
-**Create:** `/import` route with drag-and-drop zone, auto-detection, result display, error handling.
+**Create:** `/import` route with upload form, provider auto-detection, result display, and bounded error handling.
 
-**Key engineering change:** add `parse_import_payload()` to `registry.py` that accepts pre-parsed JSON (for web upload). Refactor `parse_import_file()` to call it internally.
+**Current implementation note:** the web route reuses the existing import pipeline and hands the uploaded JSON through the current file-based importer path. No `parse_import_payload()` helper is part of the landed implementation.
 
 **Definition of done:** user can import from the browser, auto-detection works for all three providers, CLI still works.
 
@@ -150,9 +150,9 @@ Surface grounded answering as a first-class product experience.
 ### Phase 6 — Passport surface / integrity UX
 Make the "memory passport" promise visible and inspectable inside the product.
 
-**Create:** a calm surface that shows: what a passport is, whether export is available, whether validation passed, what continuity means, and where the artifact lives.
+**Create:** a calm capability/status surface that shows what a passport is, whether export and validation are available, and what continuity means without replacing canonical local records.
 
-Not necessarily full in-browser export execution on day one. But a first-class visible place in the product.
+**Current implementation note:** the web surface is live and first-class, but bounded. Export and validation remain existing CLI-backed capabilities, and the current web scope does not inspect a specific artifact.
 
 **Definition of done:** Memory Passport is no longer basement-only. Users can see and understand it.
 
@@ -269,17 +269,15 @@ When planning implementation, Claude Code should read `docs/product/execution-gu
 
 ## Current Active Stretch
 
-**Phase:** Coherence and control
+**Phase:** Active surface truth alignment
 
-**Active tasks:**
-1. Repo face cleanup
-2. README and docs alignment
-3. Canonical workspace on `/`
-4. Import lifecycle UI
+**Current live surfaces in code:**
+1. Workspace on `/`
+2. Import web surface on `/import`
+3. In-app Ask on `/ask`
+4. Passport capability/status surface on `/passport`
 
 **Frozen:**
-- In-app Ask
-- Passport surface
 - Derived intelligence
 - Polish / onboarding
 - Growth experiments
@@ -376,8 +374,8 @@ Task:
 Create strict current-phase guide.
 
 Do:
-1. Active sequence: repo cleanup, README/docs, workspace, import UI
-2. Frozen: Ask, intelligence, polish, growth, desktop, portability
+1. Active sequence: active-surface truth alignment across workspace, import, Ask, and Passport wording
+2. Freeze only what is still outside the live surface set: intelligence, polish, growth, desktop, portability
 3. No future-phase planning beyond active stretch
 
 Definition of done:
