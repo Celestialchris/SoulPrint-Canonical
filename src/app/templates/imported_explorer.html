@@ -36,6 +36,20 @@
     {% endif %}
   </section>
 
+  {% if lineage_suggestions %}
+    <section class="surface-card content-block" style="margin-bottom: 1.5rem;">
+      <p class="metadata-line" style="margin-bottom: 0.5rem;">This conversation may relate to: <em>(derived suggestion)</em></p>
+      <ul class="toc-list">
+        {% for suggestion in lineage_suggestions %}
+          <li>
+            <a href="/imported/{{ suggestion.target_conversation_id }}/explorer">{{ suggestion.target_title }}</a>
+            <span class="metadata-line"> · {{ suggestion.relation_type }} · {{ (suggestion.confidence * 100)|int }}%</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
   <section class="explorer-layout">
     <aside class="rail-panel">
       <h2 class="rail-panel__title">Prompt TOC</h2>
