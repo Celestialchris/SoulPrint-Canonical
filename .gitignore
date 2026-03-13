@@ -14,8 +14,7 @@ src/.env
 .env
 *.egg-info/
 .DS_Store
-.tmp/
-.tmp-tests/
+.tmp-*/
 .claude/
 .pytest_cache/
 .coverage
