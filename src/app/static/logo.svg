@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#3f5f73" stroke-width="3" stroke-linecap="round">
+  <!-- Fingerprint-inspired concentric arcs suggesting layered memory -->
+  <!-- Inner arc — the core identity -->
+  <path d="M28 38c0-4 3.5-7 8-7"/>
+  <!-- Second arc -->
+  <path d="M24 42c0-8 6-14 14-14"/>
+  <!-- Third arc -->
+  <path d="M20 46c0-12 8.5-21 20-21"/>
+  <!-- Fourth arc — outer boundary -->
+  <path d="M16 50c0-16 11-28 26-28"/>
+  <!-- Fifth arc — widest sweep -->
+  <path d="M12 54c0-20 13.5-35 32-35"/>
+</svg>
