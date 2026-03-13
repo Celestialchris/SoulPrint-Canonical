@@ -23,6 +23,7 @@
         {{ nav_link(url_for('federated_browser'), 'Federated', request.path.startswith('/federated')) }}
         {{ nav_link(url_for('passport_surface'), 'Passport', request.path.startswith('/passport')) }}
         {{ nav_link(url_for('ask'), 'Ask', request.path.startswith('/ask')) }}
+        {{ nav_link(url_for('intelligence'), 'Notes', request.path.startswith('/intelligence')) }}
         {{ nav_link(url_for('answer_trace_list'), 'Answer Traces', request.path.startswith('/answer-traces')) }}
       </nav>
     </header>
