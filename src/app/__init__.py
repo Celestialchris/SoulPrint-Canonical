@@ -397,17 +397,32 @@ def create_app():
     @app.get("/intelligence")
     def intelligence():
         from ..intelligence.provider import is_llm_configured
-        from ..intelligence.store import default_summary_store_path, list_summaries
+        from ..intelligence.store import (
+            default_digest_store_path,
+            default_summary_store_path,
+            default_topic_store_path,
+            list_digests,
+            list_summaries,
+            list_topic_scans,
+        )
 
         sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
-        summary_store = default_summary_store_path(_sqlite_path_from_uri(sqlite_uri))
+        sqlite_path = _sqlite_path_from_uri(sqlite_uri)
         configured = is_llm_configured()
-        summaries = list_summaries(summary_store) if configured else []
+
+        summaries = list_summaries(default_summary_store_path(sqlite_path)) if configured else []
+
+        topic_scans = list_topic_scans(default_topic_store_path(sqlite_path))
+        latest_scan = topic_scans[0] if topic_scans else None
+
+        digests = list_digests(default_digest_store_path(sqlite_path))
 
         return render_template(
             "intelligence.html",
             llm_configured=configured,
             summaries=summaries,
+            latest_scan=latest_scan,
+            digests=digests,
         )
 
     @app.post("/intelligence/summarize/<int:conversation_id>")
@@ -426,6 +441,76 @@ def create_app():
 
         summary = summarize_conversation(conversation, provider)
         append_summary(summary_store, summary)
+
+        return redirect(url_for("intelligence"))
+
+    @app.post("/intelligence/scan-topics")
+    def intelligence_scan_topics():
+        from ..intelligence.provider import provider_from_config
+        from ..intelligence.store import append_topic_scan, default_topic_store_path
+        from ..intelligence.topics import extract_topics
+
+        provider = provider_from_config()
+        conversations = (
+            ImportedConversation.query
+            .order_by(ImportedConversation.id.desc())
+            .limit(50)
+            .all()
+        )
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        topic_store = default_topic_store_path(_sqlite_path_from_uri(sqlite_uri))
+
+        scan = extract_topics(conversations, provider)
+        append_topic_scan(topic_store, scan)
+
+        return redirect(url_for("intelligence"))
+
+    @app.post("/intelligence/digest/<int:topic_index>")
+    def intelligence_digest(topic_index: int):
+        from ..intelligence.digest import generate_digest
+        from ..intelligence.provider import provider_from_config
+        from ..intelligence.store import (
+            append_digest,
+            default_digest_store_path,
+            default_topic_store_path,
+            list_topic_scans,
+        )
+
+        provider = provider_from_config()
+        if provider is None:
+            abort(400)
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        sqlite_path = _sqlite_path_from_uri(sqlite_uri)
+
+        topic_scans = list_topic_scans(default_topic_store_path(sqlite_path))
+        if not topic_scans:
+            abort(404)
+
+        latest_scan = topic_scans[0]
+        clusters = latest_scan.get("clusters", [])
+        if topic_index < 0 or topic_index >= len(clusters):
+            abort(404)
+
+        cluster = clusters[topic_index]
+
+        # Resolve conversation IDs from stable IDs
+        conv_ids = []
+        for sid in cluster["conversation_stable_ids"]:
+            parts = sid.split(":", 1)
+            if len(parts) == 2 and parts[1].isdigit():
+                conv_ids.append(int(parts[1]))
+
+        conversations = ImportedConversation.query.filter(
+            ImportedConversation.id.in_(conv_ids)
+        ).all()
+
+        if not conversations:
+            abort(404)
+
+        digest = generate_digest(cluster["topic_label"], conversations, provider)
+        append_digest(default_digest_store_path(sqlite_path), digest)
 
         return redirect(url_for("intelligence"))
 
