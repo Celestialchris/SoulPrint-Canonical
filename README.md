@@ -37,6 +37,7 @@ Import -> Inspect -> Search -> Answer -> Export / Validate
 | `/import` | Live web import surface for supported conversation export JSON files |
 | `/ask` | Live in-app Ask surface for grounded answers with trace and citation handoff |
 | `/passport` | Live capability/status surface for Memory Passport export and validation; current web scope does not inspect a specific artifact |
+| `/intelligence` | Intelligence surface (currently labeled "Notes" in navigation) for summaries, topic scans, and digests |
 | `/chats` | Native memory lane browser |
 | `/imported` | Imported conversation list and search |
 | `/imported/<id>/explorer` | Transcript explorer for one imported conversation |
@@ -52,11 +53,11 @@ Import -> Inspect -> Search -> Answer -> Export / Validate
 - `src/passport/` Memory Passport export and validation
 - `docs/` product doctrine, operator guides, and specifications
 
-## Current State — March 13, 2026
+## Current Snapshot — March 13, 2026
 
-- 216 passing tests
+- 216 passing tests (current snapshot)
 - 3 provider importers (ChatGPT, Claude, Gemini) with auto-detection
-- 9 web surfaces (Workspace, Import, Ask, Notes, Passport, Imported, Federated, Native Memory, Answer Traces)
+- Current web surfaces include Workspace, Import, Ask, Intelligence (`/intelligence`, labeled Notes in nav), Passport, Imported, Federated, Native Memory, and Answer Traces
 - Intelligence layer: per-conversation summaries, cross-conversation topic detection, digest synthesis
 - Memory Passport export + validation
 - Grounded answering with citation handoff and trace audit
@@ -74,9 +75,17 @@ Layer D — Distribution  Desktop app, landing page, installer, freemium gate.
 Build sequence: truth → legibility → intelligence → distribution.
 Current position: Layer C (continuity packets), then Layer D.
 
-## Next Milestone
+## Current Priority
 
-**Continuity Packet MVP** — convert finished conversations into structured handoff packets that can seed the next chat without dragging 100k tokens forward. See `ROADMAP.md` for the full sequence.
+The next engineering milestone is **Continuity Packet MVP**. Continuity packets are derived artifacts generated from canonical conversations, stored with provenance, and used as compact handoffs for the next chat.
+
+Execution order:
+- Continuity packet generation first
+- Bridge assembly second
+- Lineage suggestions after packet generation
+- Design and distribution work after the continuity spine is in place
+
+See `ROADMAP.md` for the canonical sequencing and `roadmap/Soulprint_Upgrade.md` for detailed continuity implementation planning.
 
 ---
 
@@ -94,24 +103,23 @@ Current position: Layer C (continuity packets), then Layer D.
 
 | File | Purpose |
 |------|---------|
-| `30-DAY-VISION.md` | Full 30-day product vision: brand, landing page, desktop, freemium, wrapped summary. |
-| `UPGRADE-CONTINUITY.md` | Continuity packet architecture: session handoff, lineage model, bridge assembly, engine choice. |
-| `BRAND-PROMPTS.md` | 5 sequential Claude Code prompts for distribution features. Execute in order after continuity MVP. |
+| `SOULPRINT-30-DAY-VISION.md` | Full 30-day product vision: brand, landing page, desktop, freemium, wrapped summary. |
+| `Soulprint_Upgrade.md` | Continuity packet architecture: session handoff, lineage model, bridge assembly, engine choice. |
+| `SOULPRINT-BRAND-PROMPTS.md` | 5 sequential Claude Code prompts for distribution features. Execute in order after continuity MVP. |
 
-### `design/` — Visual Direction
+### `docs/product/` — Visual Direction
 
 | File | Purpose |
 |------|---------|
-| `TORCHLIT-VAULT-SPEC.md` | Canonical design system specification. Colors, typography, components, 9 surface layouts. **This is the design contract.** |
-| `DESIGN-MARKET-ANALYSIS.md` | Marketability analysis. Two-personality brand (public lucid / inner glow), commercial positioning. |
-| `UX-REVIEW.md` | Senior PM review. Hierarchy critique, nav grouping, glow grammar, provenance components. |
-| `heritage/thraenix-reference.html` | Single consolidated Thraenix design DNA file. Source of Forum font, dark gradient, gold glow treatment. Reference only. |
+| `visual-direction.md` | Visual direction constraints: aesthetics can polish, but cannot override product architecture and provenance rules. |
+| `brand.md` | Brand system and tone guidance used for distribution-facing materials. |
+| `30-day-vision.md` | Product packaging and launch-direction companion to the roadmap vision docs. |
 
 ---
 
 ## Doctrine
 
-Canonical records stay authoritative. Derived intelligence is always labeled, traceable, and rebuildable from stable IDs and timestamps. Local-first means no data leaves the machine. The product is calm before clever.
+Canonical records stay authoritative. Derived intelligence is always labeled, traceable, and rebuildable from stable IDs and timestamps. Local-first means canonical storage and provenance stay on your machine. Optional BYOK intelligence providers may process selected text only when you enable them. The product is calm before clever.
 
 See `DECISIONS.md` for the full list of frozen architectural and design decisions.
 
