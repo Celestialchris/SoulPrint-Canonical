@@ -28,7 +28,17 @@ A local-first memory continuity system for AI users. It lets a person import AI 
 4. **Optional Extensions**: mem0, RAG, Obsidian, semantic layers. Never replace ledger.
 
 ### Core Rules
-
+AGENT RULES — apply to every task:
+- Work on ONE task only.
+- Do NOT begin the next phase.
+- Do NOT widen scope.
+- Do NOT change unrelated files.
+- Keep canonical truth and derived intelligence clearly separated.
+- If blocked, state the blocker and stop.
+- Run relevant tests before finishing.
+- End with a concise summary of changed files, tests run, and anything deferred.
+- Read src/app/static/app-mock.html as the canonical visual reference for all UI work.
+- /
 - Canonical SQLite-backed local ledger remains authoritative
 - Native and imported lanes remain explicit unless composed read-only
 - Browsing/retrieval layers are read-only
