@@ -24,7 +24,7 @@
 | 2026-03 | Engine choice: BYOK over existing provider boundary. `SOULPRINT_LLM_PROVIDER` + `SOULPRINT_LLM_API_KEY`. OpenAI for speed/cost, Anthropic for quality. | Same pattern already working for summaries, topics, digests. |
 | 2026-03 | Continuity artifacts are typed: summary, decisions, open loops, entity map, bridge packet. Not one generic blob. | Different memory shapes for different jobs. Generic summaries become graveyards. |
 | 2026-03 | Lineage links (continuation/fork/revisit/supersede) are derived, not canonical. The canonical ledger is never mutated by lineage inference. | Silent continuity is dangerous. Inspectable continuity is SoulPrint. |
-| 2026-03 | Topic scan has a keyword fallback when no LLM is configured. Continuity should follow the same pattern where possible. | Product stays useful before the user configures an API key. |
+| 2026-03 | Topic scan has a keyword fallback when no LLM is configured. Continuity Packet MVP itself is LLM-backed structured synthesis; continuity-adjacent heuristics may add fallbacks in later phases. | Product stays useful before the user configures an API key. |
 
 ## Design
 
@@ -44,5 +44,5 @@
 | 2026-03 | Freemium split: import/browse/passport/traces = free. Ask/intelligence = paid. Summary/Wrapped = free (growth hook). | Free tier must feel complete, not crippled. Intelligence is the natural upgrade. |
 | 2026-03 | License validation is local-only. Key file at `instance/license.key`, prefix `SP-`. No server auth. No accounts. No login flow. | Local-first means local-first. |
 | 2026-03 | Brand has two faces: public (lucid, premium, immediate) and inner (SoulPrint glow concentrated in meaning-bearing moments). | Market viability without killing the soul. |
-| 2026-03 | Nav grouping: Sanctum (Workspace, Ask) · Memory (Imported, Native, Federated) · Interpretation (Notes, Traces) · Continuity (Import, Passport). | Reduces taxonomy parsing. Makes the product feel authored, not listed. |
+| 2026-03 | Nav grouping: Sanctum (Workspace, Ask) · Memory (Imported, Native, Federated) · Interpretation (Intelligence/Notes, Traces) · Continuity (Import, Passport). | Reduces taxonomy parsing. Makes the product feel authored, not listed. |
 | 2026-03 | The "wow" moment is the Summary/Wrapped page. Dark, premium, cinematic, share-ready. This carries the strongest glow in the system. | The regular app stays calm and trustworthy. The summary page earns distribution. |
