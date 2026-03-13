@@ -4,13 +4,13 @@
 
 Every person should own their AI memory.
 
-## Tagline
+### One-liner
 
 Your AI conversations are scattered everywhere. SoulPrint brings them home.
 
-## Voice
+## Product Voice
 
-- Calm, confident, technical but not cold
+- Warm, confident, technical but never cold
 - Trustworthy — we handle people's conversation history
 - Never corporate, never salesy
 - Direct without being terse
@@ -22,6 +22,148 @@ Your AI conversations are scattered everywhere. SoulPrint brings them home.
 **SoulPrint** — one word, capital S, capital P.
 Never: Soul Print, soul print, SOULPRINT, SP.
 
+## Warm Nav Labels
+
+Sidebar nav text and page heading text adopt warmer labels.
+Routes are unchanged — only the visible text changes.
+
+| Route             | Old Label          | Warm Label                  |
+|-------------------|--------------------|-----------------------------|
+| `/`               | Workspace          | Workspace                   |
+| `/chats`          | Native Memory      | Your own notes              |
+| `/imported`       | Imported           | What you've discussed       |
+| `/import`         | Import             | Import                      |
+| `/federated`      | Federated          | Everything, together        |
+| `/passport`       | Passport           | Take it with you            |
+| `/ask`            | Ask                | Ask                         |
+| `/intelligence`   | Notes              | Themes & patterns           |
+| `/answer-traces`  | Answer Traces      | How answers were found      |
+
+## Color Palettes
+
+### Dark — "Torchlit Vault" (default)
+
+| Token         | Value                          | Usage                            |
+|---------------|--------------------------------|----------------------------------|
+| --bg          | #0e0d0b                        | Page background                  |
+| --surface     | #161513                        | Panel background                 |
+| --raised      | #1d1b18                        | Elevated surface                 |
+| --wine        | #6b3a3a                        | Primary accent                   |
+| --wine-soft   | #8a5050                        | Hover / soft accent              |
+| --gold        | #c9a84c                        | Bright highlight accent          |
+| --gold-dim    | #a08848                        | Logo, active nav, subtle gold    |
+| --t1          | rgba(210, 200, 185, 0.90)      | Primary text                     |
+| --t2          | rgba(210, 200, 185, 0.55)      | Secondary text                   |
+| --t3          | rgba(210, 200, 185, 0.30)      | Muted text, labels               |
+| --t4          | rgba(210, 200, 185, 0.12)      | Ghost text, disabled             |
+| --line        | rgba(210, 200, 185, 0.06)      | Borders, dividers                |
+
+### Light — "Parchment Observatory"
+
+| Token         | Value                          | Usage                            |
+|---------------|--------------------------------|----------------------------------|
+| --bg          | #f2f0e9                        | Page background                  |
+| --surface     | rgba(255, 253, 248, 0.94)      | Panel background                 |
+| --raised      | #ffffff                        | Elevated surface                 |
+| --wine        | #6b3a3a                        | Primary accent                   |
+| --wine-soft   | #8a5050                        | Hover / soft accent              |
+| --gold        | #8a7230                        | Bright highlight accent          |
+| --gold-dim    | #7a6528                        | Logo, active nav, subtle gold    |
+| --t1          | #1f2933                        | Primary text                     |
+| --t2          | #3d4f5f                        | Secondary text                   |
+| --t3          | #667085                        | Muted text, labels               |
+| --t4          | #a0a8b4                        | Ghost text, disabled             |
+| --line        | #d7d0c2                        | Borders, dividers                |
+
+## Provider Lane Colors
+
+### Dark mode
+
+| Lane     | Value     |
+|----------|-----------|
+| ChatGPT  | #5a8a6a   |
+| Claude   | #a08848   |
+| Gemini   | #5a7a9a   |
+| Native   | #5a7a9a   |
+
+### Light mode
+
+| Lane     | Value     |
+|----------|-----------|
+| ChatGPT  | #3a6a4a   |
+| Claude   | #7a6528   |
+| Gemini   | #3a5a7a   |
+| Native   | #3a5a7a   |
+
+## Accent Rules
+
+- Wine (#6b3a3a) and gold (#c9a84c / #a08848) are the only accent colors
+- Wine is the primary accent — used for interactive elements, selection highlights
+- Gold is the secondary accent — used for logo, active nav states, subtle highlights
+- Never mix accents with lane colors
+- Never use accents as background fills on large areas
+
+## Typography
+
+### Font Stack
+
+| Role       | Family                          | Weight | Usage                    |
+|------------|--------------------------------|--------|--------------------------|
+| Wordmark   | Forum, serif                   | 400    | "SoulPrint" brand text   |
+| Body       | Cormorant Garamond, serif      | 400–500| All reading text, nav    |
+| Mono       | JetBrains Mono, monospace      | 400    | IDs, timestamps, labels  |
+
+### Base Size
+
+`font-size: 17px` on `html`.
+
+### Scale
+
+| Element         | Size       | Weight | Letter-spacing |
+|-----------------|------------|--------|----------------|
+| Page heading    | 1.35rem    | 400    | 0              |
+| Section label   | 0.6rem     | 400    | 0.18em         |
+| Nav link        | 0.92rem    | 500    | 0              |
+| Body text       | 1rem       | 400    | 0              |
+| Mono label      | 0.6rem     | 400    | 0.04em         |
+
+## Hero Wordmark
+
+In dark mode, the "SoulPrint" wordmark uses:
+- Font: Forum, serif
+- Color: var(--gold-dim) / #a08848
+- Letter-spacing: 1.5px
+- Weight: 400
+
+No glow, gradient, or text-shadow in light mode.
+
+## Body Atmosphere
+
+### Dark mode
+
+Background is layered radial gradients over --bg:
+- Gold warmth at top-left (opacity ~0.02)
+- Wine warmth at top-right (opacity ~0.015)
+- Dark vignette at center-bottom (opacity ~0.58)
+- Amber warmth at bottom-left (opacity ~0.03)
+
+Grain overlay: fractal noise SVG at opacity 0.018, fixed position.
+Vignette: vertical linear gradient fading to black at top (0.16) and bottom (0.22).
+
+### Light mode
+
+No grain, no vignette. Clean, flat parchment background.
+
+## Selection Colors
+
+```css
+/* Dark */
+::selection { background: rgba(107, 58, 58, 0.30); }
+
+/* Light */
+::selection { background: rgba(107, 58, 58, 0.18); }
+```
+
 ## Logo
 
 The SoulPrint logo is a stylized fingerprint mark composed of concentric
@@ -29,82 +171,21 @@ arcs that suggest both identity (fingerprint) and conversation (speech
 bubble rhythm). It works at favicon size (16px) and hero size (200px+).
 
 ### Usage Rules
-- Primary color: accent blue-grey (#3f5f73)
-- Monochrome variant: var(--text) for dark contexts
+- Primary color: gold-dim (#a08848)
+- Monochrome variant: var(--t1) for high-contrast contexts
 - Minimum clear space: equal to the logo's width on all sides
 - Never stretch, rotate, or apply effects to the logo
 - Always pair with the wordmark "SoulPrint" in body text — the mark alone
   is for favicons and compact contexts only
 
-## Color Palette
+## Critical Rules
 
-### Core
-| Token             | Value                        | Usage                        |
-|-------------------|------------------------------|------------------------------|
-| --bg              | #f2f0e9                      | Page background              |
-| --surface         | rgba(255, 253, 248, 0.94)    | Card/panel background        |
-| --text            | #1f2933                      | Primary text                 |
-| --text-secondary  | #3d4f5f                      | Secondary body text          |
-| --muted           | #667085                      | Metadata, labels, timestamps |
-| --accent          | #3f5f73                      | Links, primary actions, logo |
-| --accent-hover    | #2e4d5f                      | Hover state for accent       |
-| --accent-soft     | #e8eef2                      | Active nav pill, light accent bg |
-
-### Lane Colors
-| Lane     | Background | Border   | Text    |
-|----------|------------|----------|---------|
-| Native   | #eef5fa    | #c2d6e3  | #2e5068 |
-| Imported | #eff6f0    | #c4d8c4  | #3a5a3a |
-| Derived  | #f9f2e8    | #e0c6a5  | #6d5030 |
-
-### Surfaces
-| Token        | Value                                              |
-|--------------|----------------------------------------------------|
-| --border     | #d7d0c2                                            |
-| --border-strong | #c4bcae                                         |
-| --shadow     | 0 1px 3px rgba(54,61,66,0.04), 0 6px 16px rgba(54,61,66,0.05) |
-| --shadow-hover | 0 2px 6px rgba(54,61,66,0.06), 0 12px 28px rgba(54,61,66,0.1) |
-
-## Typography
-
-### App (all surfaces)
-```
-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
-             "Segoe UI", system-ui, sans-serif;
-```
-
-### Monospace (code blocks, IDs)
-```
-font-family: "SF Mono", ui-monospace, SFMono-Regular, Consolas,
-             "Liberation Mono", monospace;
-```
-
-### Scale
-| Element        | Size           | Weight | Letter-spacing |
-|----------------|----------------|--------|----------------|
-| Page title     | clamp(1.5-2.1rem) | 700 | -0.02em       |
-| Section heading | 1.05rem       | 600    | -0.01em        |
-| Card title     | 1rem           | 600    | 0              |
-| Body text      | 0.92rem        | 400    | 0              |
-| Eyebrow/label  | 0.72rem        | 600    | 0.1em          |
-| Badge          | 0.72rem        | 600    | 0.02em         |
-
-## Iconography
-
-- No icon library — keep surfaces text-driven
-- Arrow glyphs (unicode) for navigation: <- back, -> forward
-- Minimal decorative elements
-
-## Photography & Imagery
-
+- No card components — use flat rows with line dividers
+- No badge components — use inline mono labels
+- No box-shadows — use border-bottom or var(--line) dividers only
+- No icons in nav — text only
+- No font-weight above 500
+- No decorative borders or dividers beyond 1px var(--line)
 - No stock photos
-- Screenshots should show real (or realistic) conversation data
-- Landing page hero: workspace with populated data, not empty states
-
-## Do Not
-
-- Use gradients on text
-- Use drop shadows heavier than the defined tokens
-- Add decorative borders or dividers between sections
-- Use emoji in the UI (unless user-generated content contains them)
-- Use "AI" as a visual motif (no robot icons, no brain icons, no sparkles)
+- No emoji in the UI (unless user-generated content contains them)
+- No "AI" as a visual motif (no robot icons, no brain icons, no sparkles)
