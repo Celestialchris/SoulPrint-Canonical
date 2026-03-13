@@ -1,5 +1,5 @@
 from dataclasses import asdict
-from flask import Flask, abort, render_template, request, jsonify, url_for
+from flask import Flask, abort, redirect, render_template, request, jsonify, url_for
 from datetime import datetime, timezone
 import os
 import tempfile
@@ -136,6 +136,8 @@ def create_app():
 
     @app.get("/imported/<int:conversation_id>/explorer")
     def imported_explorer(conversation_id: int):
+        from ..intelligence.provider import is_llm_configured
+
         conversation = ImportedConversation.query.filter_by(id=conversation_id).first_or_404()
 
         messages = sorted(conversation.messages, key=lambda m: m.sequence_index)
@@ -148,6 +150,7 @@ def create_app():
             toc_entries=toc_entries,
             format_timestamp=format_timestamp,
             anchor_for_message=anchor_for_message,
+            llm_configured=is_llm_configured(),
         )
 
     @app.get("/imported")
@@ -390,5 +393,40 @@ def create_app():
             result=result,
             recent_traces=recent_traces,
         )
+
+    @app.get("/intelligence")
+    def intelligence():
+        from ..intelligence.provider import is_llm_configured
+        from ..intelligence.store import default_summary_store_path, list_summaries
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        summary_store = default_summary_store_path(_sqlite_path_from_uri(sqlite_uri))
+        configured = is_llm_configured()
+        summaries = list_summaries(summary_store) if configured else []
+
+        return render_template(
+            "intelligence.html",
+            llm_configured=configured,
+            summaries=summaries,
+        )
+
+    @app.post("/intelligence/summarize/<int:conversation_id>")
+    def intelligence_summarize(conversation_id: int):
+        from ..intelligence.provider import provider_from_config
+        from ..intelligence.store import append_summary, default_summary_store_path
+        from ..intelligence.summarizer import summarize_conversation
+
+        conversation = ImportedConversation.query.filter_by(id=conversation_id).first_or_404()
+        provider = provider_from_config()
+        if provider is None:
+            abort(400)
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        summary_store = default_summary_store_path(_sqlite_path_from_uri(sqlite_uri))
+
+        summary = summarize_conversation(conversation, provider)
+        append_summary(summary_store, summary)
+
+        return redirect(url_for("intelligence"))
 
     return app
