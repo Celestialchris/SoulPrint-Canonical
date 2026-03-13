@@ -82,44 +82,17 @@ Current position: Layer C (continuity packets), then Layer D.
 
 ## Next Milestone
 
-**Continuity Packet MVP** — convert finished conversations into structured handoff packets that can seed the next chat without dragging 100k tokens forward. See `ROADMAP.md` for the full sequence.
+## Current Priority
 
----
+Continuity Packet MVP.
 
-## Project Knowledge Index
+The next engineering milestone is to generate compact, provenance-bound continuity packets from canonical conversations. These packets will act as derived handoff artifacts for starting fresh chats without dragging full long-context history forward.
 
-### Root
-
-| File | Purpose |
-|------|---------|
-| `README.md` | This file. Project map and current state. |
-| `DECISIONS.md` | Frozen decisions log. What has been decided and should not be revisited. |
-| `ROADMAP.md` | Sequenced build plan with phases and priorities. |
-
-### `roadmap/` — Planning Documents
-
-| File | Purpose |
-|------|---------|
-| `30-DAY-VISION.md` | Full 30-day product vision: brand, landing page, desktop, freemium, wrapped summary. |
-| `UPGRADE-CONTINUITY.md` | Continuity packet architecture: session handoff, lineage model, bridge assembly, engine choice. |
-| `BRAND-PROMPTS.md` | 5 sequential Claude Code prompts for distribution features. Execute in order after continuity MVP. |
-
-### `design/` — Visual Direction
-
-| File | Purpose |
-|------|---------|
-| `TORCHLIT-VAULT-SPEC.md` | Canonical design system specification. Colors, typography, components, 9 surface layouts. **This is the design contract.** |
-| `DESIGN-MARKET-ANALYSIS.md` | Marketability analysis. Two-personality brand (public lucid / inner glow), commercial positioning. |
-| `UX-REVIEW.md` | Senior PM review. Hierarchy critique, nav grouping, glow grammar, provenance components. |
-| `heritage/thraenix-reference.html` | Single consolidated Thraenix design DNA file. Source of Forum font, dark gradient, gold glow treatment. Reference only. |
-
----
-
-## Doctrine
-
-Canonical records stay authoritative. Derived intelligence is always labeled, traceable, and rebuildable from stable IDs and timestamps. Local-first means no data leaves the machine. The product is calm before clever.
-
-See `DECISIONS.md` for the full list of frozen architectural and design decisions.
+Sequence:
+- Continuity packet generation
+- Bridge assembly for next-chat handoff
+- Lineage suggestions between related threads
+- Design and distribution work after the continuity spine is in place
 
 ---
 
