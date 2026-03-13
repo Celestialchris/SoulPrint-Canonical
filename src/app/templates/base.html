@@ -13,7 +13,7 @@
   <div class="app-shell {% block shell_modifier %}app-shell--standard{% endblock %}">
     <header class="app-topbar">
       <div class="brand-block">
-        <a class="brand-block__mark" href="{{ url_for('home') }}">
+        <a class="brand-block__mark" href="{{ url_for('home') }}" style="font-family: 'Forum', serif; color: #a08848; letter-spacing: 1.5px;">
           <img class="brand-block__logo" src="{{ url_for('static', filename='logo.svg') }}" alt="" width="22" height="22">
           SoulPrint
         </a>
@@ -21,14 +21,14 @@
       </div>
       <nav class="app-nav" aria-label="Primary">
         {{ nav_link(url_for('home'), 'Workspace', request.path == url_for('home')) }}
-        {{ nav_link(url_for('chats'), 'Native Memory', request.path.startswith(url_for('chats')) or request.path.startswith('/memory/')) }}
-        {{ nav_link(url_for('imported_conversations'), 'Imported', request.path.startswith('/imported')) }}
+        {{ nav_link(url_for('chats'), 'Your own notes', request.path.startswith(url_for('chats')) or request.path.startswith('/memory/')) }}
+        {{ nav_link(url_for('imported_conversations'), 'What you\u2019ve discussed', request.path.startswith('/imported')) }}
         {{ nav_link(url_for('import_conversations'), 'Import', request.path == url_for('import_conversations')) }}
-        {{ nav_link(url_for('federated_browser'), 'Federated', request.path.startswith('/federated')) }}
-        {{ nav_link(url_for('passport_surface'), 'Passport', request.path.startswith('/passport')) }}
+        {{ nav_link(url_for('federated_browser'), 'Everything, together', request.path.startswith('/federated')) }}
+        {{ nav_link(url_for('passport_surface'), 'Take it with you', request.path.startswith('/passport')) }}
         {{ nav_link(url_for('ask'), 'Ask', request.path.startswith('/ask')) }}
-        {{ nav_link(url_for('intelligence'), 'Notes', request.path.startswith('/intelligence')) }}
-        {{ nav_link(url_for('answer_trace_list'), 'Answer Traces', request.path.startswith('/answer-traces')) }}
+        {{ nav_link(url_for('intelligence'), 'Themes & patterns', request.path.startswith('/intelligence')) }}
+        {{ nav_link(url_for('answer_trace_list'), 'How answers were found', request.path.startswith('/answer-traces')) }}
       </nav>
     </header>
 
