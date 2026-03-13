@@ -1,4 +1,4 @@
-from .models.db import db   # aceeași instanță
+from .models.db import db
 
 class ChatLog(db.Model):
     id        = db.Column(db.Integer, primary_key=True)
