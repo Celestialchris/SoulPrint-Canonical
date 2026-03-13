@@ -82,8 +82,6 @@ Current position: Layer C (continuity packets), then Layer D.
 
 ## Next Milestone
 
-## Current Priority
-
 Continuity Packet MVP.
 
 The next engineering milestone is to generate compact, provenance-bound continuity packets from canonical conversations. These packets will act as derived handoff artifacts for starting fresh chats without dragging full long-context history forward.
