@@ -9,7 +9,7 @@ See [docs/getting-started.md](docs/getting-started.md) for setup instructions.
 All tests must pass before submitting a PR:
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+python -m pytest tests/ -v
 ```
 
 CI uses the same command in `.github/workflows/tests.yml`.
