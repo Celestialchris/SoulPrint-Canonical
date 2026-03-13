@@ -30,6 +30,9 @@
       <form method="post" action="/intelligence/summarize/{{ conversation.id }}" class="inline-action">
         <button type="submit" class="ghost-link">Summarize</button>
       </form>
+      <form method="post" action="/intelligence/continuity/{{ conversation.id }}" class="inline-action">
+        <button type="submit" class="ghost-link">Generate continuity packet</button>
+      </form>
     {% endif %}
   </section>
 

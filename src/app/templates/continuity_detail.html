@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% block title %}Continuity · {{ conversation.title }}{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div class="back-links" aria-label="Back navigation">
+      <a class="back-link" href="/imported/{{ conversation.id }}/explorer">Back to explorer</a>
+      <a class="back-link" href="/imported">Back to imported</a>
+      <a class="back-link" href="/">Back to home</a>
+    </div>
+    <p class="page-eyebrow">Derived continuity surface</p>
+    <div class="page-header__row">
+      <h1>{{ conversation.title }}</h1>
+      <div class="page-badges">
+        {{ badge("Derived / non-canonical", "derived") }}
+      </div>
+    </div>
+    <p class="page-summary">Continuity artifacts derived from one canonical conversation. Not canonical.</p>
+    <p class="metadata-line">
+      Source: {{ conversation.source }} · Conversation ID: {{ conversation.id }}
+    </p>
+  </section>
+
+  {% if not artifacts %}
+    {% if not llm_configured %}
+      {{ empty_state(
+        "No continuity packet yet",
+        "Set SOULPRINT_LLM_PROVIDER to enable continuity generation."
+      ) }}
+    {% else %}
+      <section class="empty-state">
+        <h2 class="empty-state__title">No continuity packet yet</h2>
+        <p class="empty-state__text">Generate a continuity packet to extract summary, decisions, open loops, and entity map.</p>
+        <form method="post" action="/intelligence/continuity/{{ conversation.id }}" class="inline-action">
+          <button type="submit" class="ghost-link">Generate continuity packet</button>
+        </form>
+      </section>
+    {% endif %}
+  {% else %}
+    {% if artifacts.summary %}
+      <section class="surface-card content-block">
+        <div class="content-block__header">
+          <h2>Summary</h2>
+          {{ badge("Derived / non-canonical", "derived") }}
+        </div>
+        <p>{{ artifacts.summary.content_text }}</p>
+        <p class="metadata-line">
+          Provider: {{ artifacts.summary.llm_provider_used }} ·
+          Prompt: {{ artifacts.summary.prompt_template_version }} ·
+          Generated: {{ artifacts.summary.generation_timestamp }}
+        </p>
+      </section>
+    {% endif %}
+
+    {% if artifacts.decisions %}
+      <section class="surface-card content-block">
+        <div class="content-block__header">
+          <h2>Decisions</h2>
+          {{ badge("Derived / non-canonical", "derived") }}
+        </div>
+        <pre class="content-block__pre">{{ artifacts.decisions.content_text }}</pre>
+        <p class="metadata-line">
+          Provider: {{ artifacts.decisions.llm_provider_used }} ·
+          Prompt: {{ artifacts.decisions.prompt_template_version }} ·
+          Generated: {{ artifacts.decisions.generation_timestamp }}
+        </p>
+      </section>
+    {% endif %}
+
+    {% if artifacts.open_loops %}
+      <section class="surface-card content-block">
+        <div class="content-block__header">
+          <h2>Open Loops</h2>
+          {{ badge("Derived / non-canonical", "derived") }}
+        </div>
+        <pre class="content-block__pre">{{ artifacts.open_loops.content_text }}</pre>
+        <p class="metadata-line">
+          Provider: {{ artifacts.open_loops.llm_provider_used }} ·
+          Prompt: {{ artifacts.open_loops.prompt_template_version }} ·
+          Generated: {{ artifacts.open_loops.generation_timestamp }}
+        </p>
+      </section>
+    {% endif %}
+
+    {% if artifacts.entity_map %}
+      <section class="surface-card content-block">
+        <div class="content-block__header">
+          <h2>Entity Map</h2>
+          {{ badge("Derived / non-canonical", "derived") }}
+        </div>
+        <p>{{ artifacts.entity_map.content_text }}</p>
+        <p class="metadata-line">
+          Provider: {{ artifacts.entity_map.llm_provider_used }} ·
+          Prompt: {{ artifacts.entity_map.prompt_template_version }} ·
+          Generated: {{ artifacts.entity_map.generation_timestamp }}
+        </p>
+      </section>
+    {% endif %}
+
+    <section class="surface-card content-block">
+      <div class="content-block__header">
+        <h2>Copy for New Chat</h2>
+      </div>
+      <textarea id="copy-payload" class="copy-payload" readonly rows="12">{{ copy_payload }}</textarea>
+      <button type="button" class="ghost-link" onclick="navigator.clipboard.writeText(document.getElementById('copy-payload').value)">
+        Copy to clipboard
+      </button>
+    </section>
+  {% endif %}
+{% endblock %}

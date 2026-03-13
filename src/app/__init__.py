@@ -514,4 +514,72 @@ def create_app():
 
         return redirect(url_for("intelligence"))
 
+    # ------------------------------------------------------------------
+    # Continuity packet routes
+    # ------------------------------------------------------------------
+
+    @app.post("/intelligence/continuity/<int:conversation_id>")
+    def intelligence_continuity_generate(conversation_id: int):
+        from ..intelligence.continuity.service import generate_continuity_packet
+        from ..intelligence.continuity.store import default_continuity_store_path
+        from ..intelligence.provider import provider_from_config
+
+        conversation = ImportedConversation.query.filter_by(id=conversation_id).first_or_404()
+        provider = provider_from_config()
+        if provider is None:
+            abort(400)
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        store_path = default_continuity_store_path(_sqlite_path_from_uri(sqlite_uri))
+
+        result = generate_continuity_packet(conversation, provider, store_path)
+        if result.error:
+            abort(500)
+
+        return redirect(url_for("intelligence_continuity_view", conversation_id=conversation_id))
+
+    @app.get("/intelligence/continuity/<int:conversation_id>")
+    def intelligence_continuity_view(conversation_id: int):
+        from ..intelligence.continuity.store import (
+            default_continuity_store_path,
+            list_artifacts_for_conversation,
+        )
+        from ..intelligence.provider import is_llm_configured
+
+        conversation = ImportedConversation.query.filter_by(id=conversation_id).first_or_404()
+        configured = is_llm_configured()
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        store_path = default_continuity_store_path(_sqlite_path_from_uri(sqlite_uri))
+        stable_id = f"imported_conversation:{conversation_id}"
+
+        all_artifacts = list_artifacts_for_conversation(store_path, stable_id)
+
+        # Group by type
+        artifacts_by_type = {}
+        for a in all_artifacts:
+            atype = a.get("artifact_type", "")
+            if atype not in artifacts_by_type:
+                artifacts_by_type[atype] = a
+
+        # Build copy payload
+        copy_lines = []
+        if "summary" in artifacts_by_type:
+            copy_lines.append("## Summary\n" + artifacts_by_type["summary"]["content_text"])
+        if "decisions" in artifacts_by_type:
+            copy_lines.append("## Decisions\n" + artifacts_by_type["decisions"]["content_text"])
+        if "open_loops" in artifacts_by_type:
+            copy_lines.append("## Open Loops\n" + artifacts_by_type["open_loops"]["content_text"])
+        if "entity_map" in artifacts_by_type:
+            copy_lines.append("## Entity Map\n" + artifacts_by_type["entity_map"]["content_text"])
+        copy_payload = "\n\n".join(copy_lines) if copy_lines else ""
+
+        return render_template(
+            "continuity_detail.html",
+            conversation=conversation,
+            artifacts=artifacts_by_type,
+            copy_payload=copy_payload,
+            llm_configured=configured,
+        )
+
     return app
