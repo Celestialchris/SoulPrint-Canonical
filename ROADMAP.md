@@ -9,26 +9,43 @@
 - Phase 5: In-app Ask
 - Phase 6: Passport capability/status surface on `/passport`
 
-## Current Hygiene Focus
+## Current Milestone
 
-One bounded consolidation pass focused on:
+### Phase 0 — Project spine freeze
+- Align README and ROADMAP with the current strategy
+- Freeze the next milestone and execution order
 
-- truth-surface alignment across README/ROADMAP/CONTRIBUTING
-- naming consistency (`workspace` over legacy `home/dashboard` residue)
-- archive/reference quarantine clarity
-- test and CI command alignment
-- passport web scope wording stays capability/status-oriented; artifact inspection remains outside the current web surface
+### Phase 1 — Continuity Packet MVP
+- Define typed continuity artifacts
+- Persist them locally as derived artifacts with provenance
+- Generate them through the existing intelligence provider boundary
+- Expose a minimal UI to generate, inspect, and copy a next-chat handoff
 
-## Deferred
+### Phase 2 — Bridge assembly
+- Build compact next-chat bridges from continuity artifacts
+- Keep handoff size bounded and operational
 
-- Derived intelligence expansion
-- Product polish
-- Growth experiments
+### Phase 3 — Lineage suggestions
+- Propose inspectable continue / fork / revisit / supersede links
+- Keep lineage derived and non-authoritative
 
-## Explicitly Deferred / Removed From Current Implementation
+### Phase 4 — Distribution
+- Brand identity
+- Landing page
+- Desktop wrapper
+- Freemium gate
+- Wrapped summary page
 
-- `mem0` activation
+### Phase 5 — Soft launch
+- Release tag
+- Screenshots
+- Landing page live
+- Signup / feedback loop
+
+## Not In Current Milestone
+
+- mem0 activation
 - Hosted sync
-- Vector database expansion or broader RAG build-out
-- Mobile app development
-- Desktop packaging as a current priority
+- Vector DB expansion
+- Mobile app
+- Large-scale design overhaul before continuity ships
