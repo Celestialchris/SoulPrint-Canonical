@@ -48,28 +48,6 @@ Avoid:
 - ornamental AI gimmicks
 - scroll-scroll-scroll transcript hell
 
-## algorithmic-art rule
-
-Algorithmic-art may be used only as a secondary aesthetic lens.
-
-Use it for:
-
-- restrained generative texture
-- subtle background systems
-- motion language
-- gradient rhythm
-- premium atmosphere
-
-Do not use it to drive:
-
-- route structure
-- layout doctrine
-- provenance rules
-- workflow logic
-- product architecture
-
-**Treat it as lighting and atmosphere, not as the house.**
-
 ## The two-layer principle
 
 **Layer 1** (doctrine, architecture, execution) always wins.
