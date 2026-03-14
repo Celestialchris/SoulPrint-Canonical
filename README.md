@@ -102,7 +102,7 @@ src/
 ├── passport/       Memory Passport export and validation
 └── tools/          CLI utilities
 
-tests/              42 test files, 287 passing
+tests/              42 test files, 367 passing
 sample_data/        Synthetic provider fixtures
 docs/               Architecture, specs, product docs
 landing/            Static landing page
@@ -114,7 +114,7 @@ landing/            Static landing page
 pytest
 ```
 
-287 passing. Covers parsing, persistence, retrieval, intelligence, continuity, passport, CLI, and browser integration.
+367 passing. Covers parsing, persistence, retrieval, intelligence, continuity, passport, CLI, and browser integration.
 
 ## Project Status
 
