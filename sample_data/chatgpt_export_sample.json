@@ -1,0 +1,84 @@
+[
+  {
+    "id": "conv-1",
+    "title": "Trip planning",
+    "create_time": 1710000000,
+    "update_time": 1710000300,
+    "mapping": {
+      "root": {
+        "id": "root",
+        "parent": null,
+        "children": ["m1"]
+      },
+      "m1": {
+        "id": "m1",
+        "parent": "root",
+        "children": ["m2"],
+        "message": {
+          "id": "msg-user-1",
+          "author": {"role": "user"},
+          "create_time": 1710000001,
+          "content": {
+            "content_type": "text",
+            "parts": ["Plan me a 2-day trip to Lisbon."]
+          }
+        }
+      },
+      "m2": {
+        "id": "m2",
+        "parent": "m1",
+        "children": ["m3"],
+        "message": {
+          "id": "msg-assistant-1",
+          "author": {"role": "assistant"},
+          "create_time": 1710000002,
+          "content": {
+            "content_type": "text",
+            "parts": ["Day 1: Alfama and Baixa.", "Day 2: Belém and LX Factory."]
+          }
+        }
+      },
+      "m3": {
+        "id": "m3",
+        "parent": "m2",
+        "children": [],
+        "message": {
+          "id": "msg-user-2",
+          "author": {"role": "user"},
+          "create_time": 1710000003,
+          "content": {
+            "content_type": "text",
+            "parts": ["Add food suggestions."]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "conv-2",
+    "title": "",
+    "create_time": 1711000000,
+    "update_time": 1711000100,
+    "mapping": {
+      "root2": {
+        "id": "root2",
+        "parent": null,
+        "children": ["x1"]
+      },
+      "x1": {
+        "id": "x1",
+        "parent": "root2",
+        "children": [],
+        "message": {
+          "id": "msg-user-x1",
+          "author": {"role": "user"},
+          "create_time": 1711000001,
+          "content": {
+            "content_type": "text",
+            "parts": ["No title conversation."]
+          }
+        }
+      }
+    }
+  }
+]

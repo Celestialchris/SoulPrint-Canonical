@@ -1,0 +1,23 @@
+{% macro nav_link(href, label, active=False) -%}
+  <a
+    class="app-nav__link{% if active %} app-nav__link--active{% endif %}"
+    href="{{ href }}"
+    {% if active %}aria-current="page"{% endif %}
+  >
+    {{ label }}
+  </a>
+{%- endmacro %}
+
+{% macro badge(label, tone="neutral", mono=False) -%}
+  <span class="badge badge--{{ tone }}{% if mono %} badge--mono{% endif %}">{{ label }}</span>
+{%- endmacro %}
+
+{% macro empty_state(title, message, action_href=None, action_label=None) -%}
+  <section class="empty-state">
+    <h2 class="empty-state__title">{{ title }}</h2>
+    <p class="empty-state__text">{{ message }}</p>
+    {% if action_href and action_label %}
+      <a class="ghost-link" href="{{ action_href }}">{{ action_label }}</a>
+    {% endif %}
+  </section>
+{%- endmacro %}

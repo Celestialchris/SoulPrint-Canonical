@@ -1,0 +1,30 @@
+[
+  {
+    "header": "Gemini Apps",
+    "title": "What are the best hiking trails near Bucharest?",
+    "time": "2024-11-15T08:30:00.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"]
+  },
+  {
+    "header": "Gemini Apps",
+    "title": "Compare React and Vue for a small dashboard project",
+    "time": "2024-11-15T09:12:00.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"]
+  },
+  {
+    "header": "Gemini Apps",
+    "title": "Draft a short email to my landlord about a broken heater",
+    "time": "2024-11-16T14:05:00.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"]
+  },
+  {
+    "header": "Gemini Apps",
+    "title": "Explain the difference between TCP and UDP in simple terms",
+    "time": "2024-11-16T14:20:00.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"]
+  }
+]

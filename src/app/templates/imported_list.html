@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% block title %}Imported Conversations · SoulPrint{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Canonical imported lane</p>
+    <div class="page-header__row">
+      <h1>Imported Conversations</h1>
+      <div class="page-badges">
+        {{ badge("Canonical", "canonical") }}
+        {{ badge("Imported lane", "imported") }}
+      </div>
+    </div>
+    <p class="page-summary">Read-only explorer for imported history with explicit provider and canonical identity.</p>
+  </section>
+
+  <section class="surface-card filter-panel">
+    <form class="filter-form" method="get" action="/imported">
+      <div>
+        <label class="field-label" for="imported-query">Search imported conversations</label>
+        <div class="filter-row">
+          <input
+            id="imported-query"
+            type="search"
+            name="q"
+            placeholder="Search title or message text"
+            value="{{ keyword }}"
+            aria-label="Search imported conversations"
+          >
+          <button type="submit">Search</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  {% if rows %}
+    <div class="list-stack">
+      {% for conversation, message_count in rows %}
+        {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
+        <article class="record-card record-card--imported">
+          <div class="record-card__header">
+            <h2 class="record-card__title">
+              <a href="/imported/{{ conversation.id }}/explorer">{{ display_title }}</a>
+            </h2>
+            <div class="metadata-badges">
+              {{ badge("Provider: " ~ conversation.source, "imported") }}
+              {{ badge("Messages: " ~ message_count, "neutral") }}
+            </div>
+          </div>
+          <p class="metadata-line">
+            Provider: {{ conversation.source }} · Canonical ID: {{ conversation.id }} · Source Conversation ID: {{ conversation.source_conversation_id }}
+          </p>
+          <p class="metadata-line">
+            Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
+          </p>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    {{ empty_state(
+      "No imported conversations found.",
+      "Try a different title or message term. Imported and native lanes remain separate until you choose a read-only composed view."
+    ) }}
+  {% endif %}
+{% endblock %}

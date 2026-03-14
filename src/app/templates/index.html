@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge %}
+
+{% block title %}SoulPrint Workspace{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Canonical Workspace</p>
+    <div class="page-header__row">
+      <h1>Workspace</h1>
+      <div class="page-badges">
+        {{ badge("Canonical ledger", "canonical") }}
+        {{ badge("Read-only retrieval", "neutral") }}
+      </div>
+    </div>
+    <p class="page-summary">
+      This workspace is the center of your continuity loop: inspect what is present, resume recent work,
+      search across explicit lanes, and hand off to provenance and validation surfaces.
+    </p>
+  </section>
+
+  <section class="workspace-grid">
+    <article class="surface-card workspace-block" aria-label="Continuity Status">
+      <h2>Continuity Status</h2>
+      <p class="workspace-summary">{{ workspace.continuity_sentence }}</p>
+      <div class="workspace-counts">
+        <div><span>Native entries</span><strong>{{ workspace.native_count }}</strong></div>
+        <div><span>Imported conversations</span><strong>{{ workspace.imported_conversation_count }}</strong></div>
+        <div><span>Imported messages</span><strong>{{ workspace.imported_message_count }}</strong></div>
+        <div><span>Answer traces</span><strong>{{ workspace.trace_count }}</strong></div>
+      </div>
+    </article>
+
+    <article class="surface-card workspace-block" aria-label="Provider Coverage">
+      <h2>Provider Coverage</h2>
+      {% if workspace.providers %}
+        <p class="workspace-summary">Imported conversation providers currently present in the local ledger:</p>
+        <div class="provider-badges">
+          {% for provider in workspace.providers %}
+            <span class="badge badge--imported">{{ provider.name }} · {{ provider.conversation_count }}</span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="workspace-summary">No imported providers yet. Start with an import, then provider coverage will appear here.</p>
+      {% endif %}
+    </article>
+
+    <article class="surface-card workspace-block workspace-block--wide" aria-label="Resume Recent Work">
+      <div class="workspace-block__head">
+        <h2>Resume Recent Work</h2>
+        <a class="ghost-link" href="{{ url_for('federated_browser') }}">Open federated browser</a>
+      </div>
+      <div class="resume-grid">
+        <section>
+          <h3>Imported conversations</h3>
+          {% if workspace.recent_imported %}
+            <ul class="resume-list">
+              {% for item in workspace.recent_imported %}
+                <li>
+                  <a href="{{ url_for('imported_explorer', conversation_id=item.id) }}">{{ item.title }}</a>
+                  <span>{{ item.source }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="empty-note">No imported conversations yet.</p>
+          {% endif %}
+        </section>
+
+        <section>
+          <h3>Native memory</h3>
+          {% if workspace.recent_native %}
+            <ul class="resume-list">
+              {% for item in workspace.recent_native %}
+                <li>
+                  <a href="{{ url_for('memory_detail', entry_id=item.id) }}">Entry #{{ item.id }} · {{ item.role }}</a>
+                  <span>{{ item.preview }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="empty-note">No native entries yet.</p>
+          {% endif %}
+        </section>
+
+        <section>
+          <h3>Answer traces</h3>
+          {% if workspace.recent_traces %}
+            <ul class="resume-list">
+              {% for item in workspace.recent_traces %}
+                <li>
+                  <a href="{{ url_for('answer_trace_detail', trace_id=item.trace_id) }}">{{ item.question or item.trace_id }}</a>
+                  <span>{{ item.status }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="empty-note">No answer traces yet.</p>
+          {% endif %}
+        </section>
+      </div>
+    </article>
+
+    <article class="surface-card workspace-block" aria-label="Search Handoff">
+      <h2>Search Handoff</h2>
+      <p class="workspace-summary">Move into federated search to browse native and imported records in one read-only flow.</p>
+      <a class="route-card__link" href="{{ url_for('federated_browser') }}">Search across lanes in /federated</a>
+    </article>
+
+    <article class="surface-card workspace-block" aria-label="Passport and Integrity Status">
+      <h2>Passport / Integrity Status</h2>
+      <p class="workspace-summary">
+        Memory Passport export and validation are available for provenance continuity. Execution remains
+        grounded in the existing CLI and validation surfaces.
+      </p>
+      <ul class="content-list">
+        <li>Export canonical records and metadata snapshots through current passport tooling.</li>
+        <li>Validate passport artifacts to confirm ledger integrity and traceable provenance.</li>
+      </ul>
+    </article>
+
+    <article class="surface-card workspace-block" aria-label="Next Actions">
+      <h2>Next Actions</h2>
+      {% if workspace.has_any_data %}
+        <ul class="content-list">
+          <li><a href="{{ url_for('imported_conversations') }}">Browse imported history</a> to inspect provider-specific transcripts.</li>
+          <li><a href="{{ url_for('chats') }}">Open native memory</a> and continue local-first entries.</li>
+          <li><a href="{{ url_for('federated_browser') }}">Search across lanes</a> in read-only federated view.</li>
+          <li><a href="{{ url_for('answer_trace_list') }}">Inspect answer traces</a> for derived answer provenance.</li>
+        </ul>
+      {% else %}
+        <p class="workspace-summary">
+          Your workspace is ready. Start by importing a conversation export, then use federated search and trace inspection
+          to validate continuity across lanes.
+        </p>
+        <ul class="content-list">
+          <li><a href="{{ url_for('imported_conversations') }}">Open imported history</a> to confirm the lane and add your first export.</li>
+          <li><a href="{{ url_for('chats') }}">Open native memory</a> to create local entries while imports are still empty.</li>
+        </ul>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

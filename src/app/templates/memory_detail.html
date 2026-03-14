@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge %}
+
+{% block title %}{{ stable_id }} · Native Memory{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div class="back-links" aria-label="Back navigation">
+      <a class="back-link" href="/chats">Back to native memory list</a>
+      {% if federated_href %}
+        <a class="back-link" href="{{ federated_href }}">Back to federated results</a>
+      {% endif %}
+    </div>
+    <p class="page-eyebrow">Native Memory Record</p>
+    <div class="page-header__row">
+      <h1>{{ stable_id }}</h1>
+      <div class="page-badges">
+        {{ badge("Canonical", "canonical") }}
+        {{ badge("Native lane", "native") }}
+      </div>
+    </div>
+    <p class="page-summary">Read-only canonical native-memory detail.</p>
+  </section>
+
+  <section class="surface-card record-card--native">
+    <dl class="detail-grid">
+      <div class="detail-grid__item">
+        <dt>Stable ID</dt>
+        <dd><code>{{ stable_id }}</code></dd>
+      </div>
+      <div class="detail-grid__item">
+        <dt>Timestamp</dt>
+        <dd>{{ timestamp_label }}</dd>
+      </div>
+      <div class="detail-grid__item">
+        <dt>Role</dt>
+        <dd>{{ entry.role }}</dd>
+      </div>
+      <div class="detail-grid__item">
+        <dt>Tags</dt>
+        <dd>{{ entry.tags.strip() if entry.tags and entry.tags.strip() else "None" }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="content-block" aria-labelledby="memory-content-heading">
+    <h2 id="memory-content-heading">Content</h2>
+    <pre class="content-pre">{{ entry.content }}</pre>
+  </section>
+{% endblock %}

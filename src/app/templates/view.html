@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% block title %}Native Memory · SoulPrint{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Canonical native lane</p>
+    <div class="page-header__row">
+      <h1>Native Memory</h1>
+      <div class="page-badges">
+        {{ badge("Canonical", "canonical") }}
+        {{ badge("Native lane", "native") }}
+      </div>
+    </div>
+    <p class="page-summary">Read-only recent memory entries captured directly in SoulPrint.</p>
+  </section>
+
+  <section class="surface-card filter-panel">
+    <form class="filter-form" method="get" action="{{ url_for('chats') }}">
+      <div>
+        <label class="field-label" for="tag-filter">Filter by tag</label>
+        <div class="filter-row">
+          <input id="tag-filter" name="tag" placeholder="Filter by tag" value="{{ request.args.get('tag', '') }}">
+          <button type="submit">Search</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  {% if entries %}
+    <div class="list-stack">
+      {% for e in entries %}
+        <article class="record-card record-card--native">
+          <div class="record-card__header">
+            <h2 class="record-card__title">
+              <a href="{{ url_for('memory_detail', entry_id=e.id) }}">memory:{{ e.id }}</a>
+            </h2>
+            <div class="metadata-badges">
+              {{ badge("Role: " ~ e.role, "native") }}
+              {% if e.tags and e.tags.strip() %}
+                {{ badge("Tagged", "neutral") }}
+              {% endif %}
+            </div>
+          </div>
+          <p class="metadata-line">Timestamp: {{ e.timestamp }}</p>
+          <p class="metadata-line">Role: {{ e.role }} · Tags: {{ e.tags if e.tags and e.tags.strip() else "None" }}</p>
+          <pre class="record-pre">{{ e.content }}</pre>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    {{ empty_state(
+      "No native memory entries found.",
+      "Try a different tag or save a memory from the app to populate the canonical native lane."
+    ) }}
+  {% endif %}
+{% endblock %}

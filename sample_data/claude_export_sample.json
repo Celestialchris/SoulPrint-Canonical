@@ -1,0 +1,126 @@
+[
+  {
+    "uuid": "claude-conv-1",
+    "name": "Bakery planning",
+    "created_at": "2024-12-01T10:00:00Z",
+    "updated_at": "2024-12-01T10:15:00Z",
+    "account": {
+      "uuid": "test-account-1"
+    },
+    "chat_messages": [
+      {
+        "uuid": "claude-msg-1",
+        "index": 0,
+        "sender": "human",
+        "content": [
+          {
+            "type": "text",
+            "text": "Help me plan a bakery opening checklist."
+          }
+        ],
+        "text": "Help me plan a bakery opening checklist.",
+        "created_at": "2024-12-01T10:00:00Z",
+        "updated_at": "2024-12-01T10:00:00Z",
+        "truncated": false,
+        "attachments": [],
+        "files": []
+      },
+      {
+        "uuid": "claude-msg-2",
+        "index": 1,
+        "sender": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "Start with permits, suppliers, equipment checks, and launch-day staffing."
+          }
+        ],
+        "text": "Start with permits, suppliers, equipment checks, and launch-day staffing.",
+        "created_at": "2024-12-01T10:01:00Z",
+        "updated_at": "2024-12-01T10:01:00Z",
+        "truncated": false,
+        "attachments": [],
+        "files": []
+      }
+    ]
+  },
+  {
+    "uuid": "claude-conv-2",
+    "name": "Python sorting",
+    "created_at": "2024-12-02T14:00:00Z",
+    "updated_at": "2024-12-02T14:30:00Z",
+    "account": {
+      "uuid": "test-account-1"
+    },
+    "chat_messages": [
+      {
+        "uuid": "claude-msg-3",
+        "index": 0,
+        "sender": "human",
+        "content": [
+          {
+            "type": "text",
+            "text": "Can you help me write a function that sorts a list?"
+          }
+        ],
+        "text": "Can you help me write a function that sorts a list?",
+        "created_at": "2024-12-02T14:00:00Z",
+        "updated_at": "2024-12-02T14:00:00Z",
+        "truncated": false,
+        "attachments": [],
+        "files": []
+      },
+      {
+        "uuid": "claude-msg-4",
+        "index": 1,
+        "sender": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "Use Python's built-in sorted() when you want a new sorted list."
+          }
+        ],
+        "text": "Use Python's built-in sorted() when you want a new sorted list.",
+        "created_at": "2024-12-02T14:01:00Z",
+        "updated_at": "2024-12-02T14:01:00Z",
+        "truncated": false,
+        "attachments": [],
+        "files": []
+      },
+      {
+        "uuid": "claude-msg-5",
+        "index": 2,
+        "sender": "human",
+        "content": [
+          {
+            "type": "text",
+            "text": "Show me the code."
+          }
+        ],
+        "text": "Show me the code.",
+        "created_at": "2024-12-02T14:15:00Z",
+        "updated_at": "2024-12-02T14:15:00Z",
+        "truncated": false,
+        "attachments": [],
+        "files": []
+      },
+      {
+        "uuid": "claude-msg-6",
+        "index": 3,
+        "sender": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "def sort_list(items):\n    return sorted(items)"
+          }
+        ],
+        "text": "def sort_list(items):\n    return sorted(items)",
+        "created_at": "2024-12-02T14:16:00Z",
+        "updated_at": "2024-12-02T14:16:00Z",
+        "truncated": false,
+        "attachments": [],
+        "files": []
+      }
+    ]
+  }
+]

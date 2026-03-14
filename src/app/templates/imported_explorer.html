@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
+
+{% block title %}{{ display_title }} · Transcript Explorer{% endblock %}
+{% block shell_modifier %}app-shell--wide{% endblock %}
+{% block page_class %}page--explorer{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div class="back-links" aria-label="Back navigation">
+      <a class="back-link" href="/imported">Back to imported conversations</a>
+    </div>
+    <p class="page-eyebrow">Imported transcript explorer</p>
+    <div class="page-header__row">
+      <h1>{{ display_title }}</h1>
+      <div class="page-badges">
+        {{ badge("Imported lane", "imported") }}
+        {{ badge("Read-only", "neutral") }}
+      </div>
+    </div>
+    <p class="page-summary">Read-only imported conversation detail with prompt TOC and transcript overview.</p>
+    <p class="metadata-line">
+      Created: {{ format_timestamp(conversation.created_at_unix) }} ·
+      Updated: {{ format_timestamp(conversation.updated_at_unix) }} ·
+      Messages: {{ messages|length }}
+    </p>
+    {% if llm_configured|default(false) %}
+      <form method="post" action="/intelligence/summarize/{{ conversation.id }}" class="inline-action">
+        <button type="submit" class="ghost-link">Summarize</button>
+      </form>
+      <form method="post" action="/intelligence/continuity/{{ conversation.id }}" class="inline-action">
+        <button type="submit" class="ghost-link">Generate continuity packet</button>
+      </form>
+    {% endif %}
+  </section>
+
+  {% if lineage_suggestions %}
+    <section class="surface-card content-block" style="margin-bottom: 1.5rem;">
+      <p class="metadata-line" style="margin-bottom: 0.5rem;">This conversation may relate to: <em>(derived suggestion)</em></p>
+      <ul class="toc-list">
+        {% for suggestion in lineage_suggestions %}
+          <li>
+            <a href="/imported/{{ suggestion.target_conversation_id }}/explorer">{{ suggestion.target_title }}</a>
+            <span class="metadata-line"> · {{ suggestion.relation_type }} · {{ (suggestion.confidence * 100)|int }}%</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <section class="explorer-layout">
+    <aside class="rail-panel">
+      <h2 class="rail-panel__title">Prompt TOC</h2>
+      <p class="metadata-line">Provider: {{ conversation.source }}</p>
+      <p class="metadata-line">Canonical ID: {{ conversation.id }}</p>
+      <p class="metadata-line">Source Conversation ID: {{ conversation.source_conversation_id }}</p>
+      <ul class="toc-list">
+        {% for entry in toc_entries %}
+          <li><a href="#{{ anchor_for_message(entry.message_id) }}">[{{ entry.sequence_index }}] {{ entry.label }}</a></li>
+        {% else %}
+          <li class="empty-note">No user prompts available.</li>
+        {% endfor %}
+      </ul>
+    </aside>
+
+    <section class="transcript-panel" id="transcriptPane">
+      {% for message in messages %}
+        <article class="message {{ message.role }}" id="{{ anchor_for_message(message.id) }}">
+          <div class="message-header">
+            <span>#{{ message.sequence_index }} · {{ message.role }}</span>
+            <span>{{ format_timestamp(message.created_at_unix) }}</span>
+          </div>
+          <pre>{{ message.content }}</pre>
+        </article>
+      {% else %}
+        {{ empty_state(
+          "This imported conversation has no messages.",
+          "The imported record is present, but no transcript messages were stored for this conversation."
+        ) }}
+      {% endfor %}
+    </section>
+
+    <aside class="rail-panel">
+      <h2 class="rail-panel__title">Overview</h2>
+      <div class="overview-track" id="overviewTrack" aria-label="Transcript overview map">
+        <div class="viewport-indicator" id="viewportIndicator"></div>
+        {% set total = messages|length %}
+        {% for message in messages %}
+          {% set top = ((loop.index0 / total) * 100) if total else 0 %}
+          {% set height = (100 / total) if total else 100 %}
+          {% set css_role = message.role if message.role in ['user', 'assistant', 'system'] else 'other' %}
+          <div class="overview-node {{ css_role }}" style="top: {{ top }}%; height: {{ [height, 3]|max }}%;" data-anchor="{{ anchor_for_message(message.id) }}"></div>
+        {% endfor %}
+      </div>
+      <p class="metadata-note">Click or drag to scrub.</p>
+    </aside>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    (function () {
+      const pane = document.getElementById("transcriptPane");
+      const track = document.getElementById("overviewTrack");
+      const viewport = document.getElementById("viewportIndicator");
+      if (!pane || !track || !viewport) return;
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function syncViewport() {
+        const maxScroll = Math.max(1, pane.scrollHeight - pane.clientHeight);
+        const topRatio = pane.scrollTop / maxScroll;
+        const heightRatio = pane.clientHeight / Math.max(1, pane.scrollHeight);
+        viewport.style.top = (topRatio * 100) + "%";
+        viewport.style.height = Math.max(8, heightRatio * 100) + "%";
+      }
+
+      function scrollToRatio(ratio) {
+        const maxScroll = Math.max(0, pane.scrollHeight - pane.clientHeight);
+        pane.scrollTop = clamp(ratio, 0, 1) * maxScroll;
+      }
+
+      function ratioFromEvent(event) {
+        const rect = track.getBoundingClientRect();
+        return (event.clientY - rect.top) / rect.height;
+      }
+
+      let dragging = false;
+      track.addEventListener("mousedown", (event) => {
+        dragging = true;
+        scrollToRatio(ratioFromEvent(event));
+      });
+      window.addEventListener("mousemove", (event) => {
+        if (!dragging) return;
+        scrollToRatio(ratioFromEvent(event));
+      });
+      window.addEventListener("mouseup", () => { dragging = false; });
+
+      track.querySelectorAll(".overview-node").forEach((node) => {
+        node.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const target = document.getElementById(node.dataset.anchor);
+          if (!target) return;
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+
+      pane.addEventListener("scroll", syncViewport);
+      window.addEventListener("resize", syncViewport);
+      syncViewport();
+    })();
+  </script>
+{% endblock %}

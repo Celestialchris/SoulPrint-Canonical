@@ -1,0 +1,5 @@
+-r requirements-minimal.txt
+python-dotenv
+cryptography
+chromadb
+sentence-transformers
