@@ -123,7 +123,30 @@ landing/            Static landing page
 
 ## Packaging
 
-For a Windows executable build, see [`docs/executable-packaging-overview.md`](docs/executable-packaging-overview.md).
+### Windows executable
+
+Build a standalone Windows executable from the repo:
+
+```powershell
+cmd /c "scripts\build_windows.bat"
+```
+
+This runs the test suite, then packages the app with PyInstaller.
+Output lands in `dist\SoulPrint\`:
+
+```
+dist/
+├── SoulPrint/
+│   ├── SoulPrint.exe    ← double-click to launch
+│   └── _internal/
+└── SoulPrint-windows.zip
+```
+
+The exe starts the local server and opens your browser to
+`http://127.0.0.1:5678` automatically.
+
+For the full packaging overview, see
+[`docs/executable-packaging-overview.md`](docs/executable-packaging-overview.md).
 
 ---
 

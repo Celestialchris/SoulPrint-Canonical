@@ -91,6 +91,27 @@ For machine-readable validation output:
 python -m src.passport.cli validate exports/passports/memory-passport-v1 --json
 ```
 
+## Windows Executable
+
+To build a standalone Windows executable:
+
+```powershell
+cmd /c "scripts\build_windows.bat"
+```
+
+Prerequisites:
+- Python 3.12 installed and on PATH
+- The build script creates its own venv if `.venv` doesn't exist
+
+The script will:
+1. Install dependencies
+2. Run the full test suite (build aborts if any test fails)
+3. Package the app with PyInstaller
+4. Create `dist\SoulPrint-windows.zip`
+
+Double-click `dist\SoulPrint\SoulPrint.exe` to launch.
+The app opens your browser automatically.
+
 ## Notes
 
 - SoulPrint is local-first. The default workflow runs against local files and a local SQLite ledger.
