@@ -17,6 +17,7 @@ src/.env
 .tmp-*/
 .tmp/
 .claude/
+\#For-Claude_Code/
 .pytest_cache/
 .coverage
 htmlcov/

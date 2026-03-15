@@ -2,6 +2,55 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## Coherence Pass (2026-03-15)
+- Fixed `src/run.py` entrypoint: `python -m src.run` now actually starts the server
+- Added `roadmap/` directory with 30-day vision and continuity architecture docs
+- Updated ROADMAP.md to reflect completed continuity phases and fix broken references
+- Removed phantom `chromadb` and `sentence-transformers` from requirements.txt
+- Aligned CI to pytest (matching README, CONTRIBUTING, CLAUDE.md)
+
+## Lineage Suggestions (2026-03-14)
+- Implemented inspectable lineage suggestions: continuation, fork, revisit, supersede
+- Lineage links are derived and non-authoritative — canonical ledger never mutated
+- Added lineage surface in conversation detail views
+
+## Bridge Assembly (2026-03-14)
+- Bridge assembly for next-chat handoff from continuity packets and cited canonical snippets
+- Bounded handoff payload size for real chat restarts
+- Copy-to-clipboard workflow for pasting into next conversation
+
+## Continuity Packet MVP (2026-03-13)
+- Typed continuity artifacts: summary, decisions, open loops, entity map, bridge packet
+- JSONL append-only persistence with full provenance metadata
+- Generation through existing intelligence/provider boundary (BYOK)
+- Continuity service with store, models, and generation pipeline
+- POST endpoint for generation + GET for inspection + copy handoff
+
+## Continuity Surface (2026-03-13)
+- Added continuity detail page at conversation level
+- Generation trigger, artifact inspection, and clipboard handoff
+
+## Landing Page (2026-03-13)
+- Static landing page in `landing/` directory
+- Hero section, product loop visual, positioning sections
+- GitHub Pages / Netlify ready
+
+## CSS Restyle (2026-03-12)
+- Full UI restyle: "Torchlit Vault" design system
+- Dark warm palette, Forum/Cormorant Garamond/JetBrains Mono typography
+- Hierarchy through opacity, wine and gold accents
+- All 10 surfaces covered
+
+## Repo Governance (2026-03-12)
+- Added DECISIONS.md with frozen architectural, engineering, design, and product decisions
+- Design system specification locked
+
+## Intelligence Layer (2026-03-11)
+- Per-conversation summaries via BYOK LLM provider
+- Cross-conversation topic detection with keyword fallback
+- Multi-conversation digest synthesis
+- Intelligence routes and CLI tools
+
 ## Two-Layer Doctrine (2026-03-11)
 - Rewrote CLAUDE.md with two-layer operator instructions (product/doctrine + visual direction)
 - Added execution guide and visual direction docs

@@ -1,5 +1,4 @@
 -r requirements-minimal.txt
+-r requirements-intelligence.txt
 python-dotenv
 cryptography
-chromadb
-sentence-transformers

@@ -1,5 +1,9 @@
 # SoulPrint
 
+[![Tests](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml/badge.svg)](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 **Your AI conversations are scattered everywhere. SoulPrint brings them home.**
 
 A local-first memory continuity system. Import your AI conversation history from ChatGPT, Claude, and Gemini. Browse, search, discover themes, ask questions, and export a verifiable Memory Passport. Everything stays on your machine. Nothing is hosted. The canonical ledger is yours.
@@ -42,6 +46,14 @@ python -m src.run
 ```
 
 Drop an export file on the Import page. Your conversations appear in seconds.
+
+## Why I Built This
+
+I've been using ChatGPT, Claude, and Gemini daily for over a year. My conversation history — ideas, decisions, research threads, creative work — is scattered across three platforms that don't talk to each other. Their exports are barely usable zip files that sit dead on disk.
+
+Nobody was building a tool to bring all of that together locally, with provenance, intelligence, and real exportability. So I built one.
+
+SoulPrint is not a hosted service that wants to hold your data. It's a local tool that treats your AI memory the way it should be treated: as yours.
 
 ## Intelligence (BYOK)
 
@@ -102,7 +114,7 @@ src/
 ├── passport/       Memory Passport export and validation
 └── tools/          CLI utilities
 
-tests/              42 test files, 367 passing
+tests/              41 test files
 sample_data/        Synthetic provider fixtures
 docs/               Architecture, specs, product docs
 landing/            Static landing page
@@ -114,7 +126,26 @@ landing/            Static landing page
 pytest
 ```
 
-367 passing. Covers parsing, persistence, retrieval, intelligence, continuity, passport, CLI, and browser integration.
+41 test files covering parsing, persistence, retrieval, intelligence, continuity, passport, CLI, and browser integration.
+
+## CLI Tools
+
+```bash
+# Import conversations
+python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
+
+# Federated search
+python -m src.retrieval.cli --db instance/soulprint.db "search term"
+
+# Grounded answering
+python -m src.answering.cli --db instance/soulprint.db "What do I have about Lisbon?"
+
+# Export Memory Passport
+python -m src.passport.cli exports/passports --db instance/soulprint.db
+
+# Validate a passport
+python -m src.passport.cli validate exports/passports/memory-passport-v1
+```
 
 ## Project Status
 
@@ -143,6 +174,7 @@ See [`ROADMAP.md`](ROADMAP.md) for the sequenced build plan and [`DECISIONS.md`]
 - [Memory Passport spec](docs/specs/memory-passport-spec.md)
 - [Answering boundary](docs/architecture/answering-boundary.md)
 - [Brand guide](docs/product/brand.md)
+- [Visual direction](docs/product/visual-direction.md)
 
 ## Contributing
 
