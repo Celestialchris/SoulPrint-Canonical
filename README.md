@@ -26,6 +26,22 @@ A local-first memory continuity system. Import your AI conversation history from
 
 **Export** — Memory Passport with checksums and provenance. Verifiable against the canonical record.
 
+---
+
+## Screenshots
+
+**Workspace** — your continuity dashboard with provider coverage and recent activity
+![Workspace](docs/screenshots/workspace.png)
+
+**Transcript Explorer** — prompt-level navigation with TOC and minimap
+![Transcript Explorer](docs/screenshots/explorer.png)
+
+**Federated Browser** — cross-provider view with explicit provenance
+![Federated Browser](docs/screenshots/federated.png)
+
+**Memory Passport** — export and validate your canonical archive
+![Passport](docs/screenshots/passport.png)
+
 ## What SoulPrint Is Not
 
 - **Not a hosted SaaS** — your data never leaves your machine
