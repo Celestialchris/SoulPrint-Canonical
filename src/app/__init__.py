@@ -8,6 +8,7 @@ from pathlib import Path
 from .imported_explorer import anchor_for_message, build_prompt_toc, format_timestamp
 from .models.db import db
 from ..config import Config, normalize_sqlite_uri
+from ..runtime import default_instance_dir, static_dir, templates_dir
 from .models import ImportedConversation, ImportedMessage, MemoryEntry
 from .citation_handoff import build_answer_trace_citation_view
 from .viewmodels import build_workspace_summary
@@ -63,14 +64,19 @@ def _sqlite_path_from_uri(sqlite_uri: str) -> str:
 
 
 def create_app():
-    app = Flask(__name__)
+    instance_dir = default_instance_dir()
+    app = Flask(
+        __name__,
+        template_folder=str(templates_dir()),
+        static_folder=str(static_dir()),
+        instance_path=str(instance_dir),
+    )
     app.config.from_object(Config)
     app.config["SQLALCHEMY_DATABASE_URI"] = normalize_sqlite_uri(
         app.config.get("SQLALCHEMY_DATABASE_URI", "")
     )
 
-    db_path = os.path.abspath(os.path.join(app.root_path, "..", "..", "instance"))
-    os.makedirs(db_path, exist_ok=True)
+    os.makedirs(app.instance_path, exist_ok=True)
 
     db.init_app(app)
 

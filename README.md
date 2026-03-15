@@ -40,9 +40,10 @@ git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
 cd SoulPrint-Canonical
 
 pip install -r requirements-minimal.txt
+pip install -e .
 
-python -m src.run
-# Open http://127.0.0.1:5678
+soulprint
+# Opens http://127.0.0.1:5678
 ```
 
 Drop an export file on the Import page. Your conversations appear in seconds.
@@ -119,6 +120,12 @@ sample_data/        Synthetic provider fixtures
 docs/               Architecture, specs, product docs
 landing/            Static landing page
 ```
+
+## Packaging
+
+For a Windows executable build, see [`docs/executable-packaging-overview.md`](docs/executable-packaging-overview.md).
+
+---
 
 ## Tests
 

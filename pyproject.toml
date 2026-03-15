@@ -1,7 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "soulprint"
 version = "0.1.0"
 requires-python = ">=3.12"
+description = "Local-first AI memory continuity system"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "Cristian Popescu" }
+]
+dependencies = [
+  "flask",
+  "flask-sqlalchemy"
+]
 
-[tool.pytest.ini_options]
-pythonpath = ["."]
+[project.optional-dependencies]
+full = [
+  "python-dotenv",
+  "cryptography"
+]
+intelligence = [
+  "anthropic>=0.39.0",
+  "openai>=1.0.0"
+]
+dev = [
+  "pytest>=8.0"
+]
+build = [
+  "pyinstaller>=6.0,<7"
+]
+
+[project.scripts]
+soulprint = "src.main:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["src", "src.*"]
+
+[tool.setuptools.package-data]
+"src.app" = ["templates/*.html", "static/*"]

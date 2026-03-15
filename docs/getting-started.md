@@ -25,6 +25,13 @@ pip install -r requirements.txt
 Start the local app:
 
 ```bash
+pip install -e .
+soulprint
+```
+
+Alternatively, for development without installing:
+
+```bash
 python -m src.run
 ```
 
@@ -42,7 +49,7 @@ The current web surfaces are available locally after boot:
 Run the current unit test suite:
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+python -m pytest tests/ -v
 ```
 
 ## Import Sample Data

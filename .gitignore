@@ -26,3 +26,6 @@ roadmap/UPGRADE-CONTINUITY.md
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+dist/
+build/
+*.spec.bak

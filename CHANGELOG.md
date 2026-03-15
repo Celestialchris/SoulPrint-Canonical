@@ -2,6 +2,17 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## Packaging Infrastructure (2026-03-15)
+- Added `src/runtime.py` for centralized resource-path resolution (dev, editable install, frozen build)
+- Added `src/main.py` as production launcher with browser auto-open
+- Updated `src/config.py` and `src/app/__init__.py` to use runtime path resolution
+- Full `pyproject.toml` with build-system, optional dependencies, and `soulprint` entry point
+- Added `tests/conftest.py` and `pytest.ini` for stable test imports
+- PyInstaller spec file (`SoulPrint.spec`) and Windows build script (`scripts/build_windows.bat`)
+- Added `docs/executable-packaging-overview.md`
+- Fixed ROADMAP.md dead references to gitignored files
+- Fixed docs/getting-started.md test command (unittest → pytest)
+
 ## Coherence Pass (2026-03-15)
 - Fixed `src/run.py` entrypoint: `python -m src.run` now actually starts the server
 - Added `roadmap/` directory with 30-day vision and continuity architecture docs

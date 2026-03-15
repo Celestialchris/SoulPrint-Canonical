@@ -13,6 +13,9 @@
 - [Retrieval surface](architecture/retrieval-surface.md)
 - [mem0 boundary](architecture/mem0-boundary.md) *(optional, not active)*
 
+## Packaging
+- [Executable packaging](executable-packaging-overview.md)
+
 ## Specs
 - [Memory Passport v1](specs/memory-passport-spec.md)
 
