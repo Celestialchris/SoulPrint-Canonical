@@ -1,6 +1,6 @@
 from __future__ import annotations
 import os, threading, webbrowser
-from .app import create_app
+from src.app import create_app
 
 def _should_open_browser() -> bool:
     raw = os.getenv("SOULPRINT_OPEN_BROWSER", "1").strip().lower()

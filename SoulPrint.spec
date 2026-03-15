@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
 
-project_root = Path(SPECPATH).resolve().parent
+project_root = Path(SPECPATH).resolve()
 
 datas = [
     (str(project_root / "src" / "app" / "templates"), "src/app/templates"),
