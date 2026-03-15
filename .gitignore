@@ -18,6 +18,9 @@ src/.env
 .tmp/
 .claude/
 \#For-Claude_Code/
+roadmap/LAUNCH-PLAYBOOK.md
+roadmap/SOULPRINT-30-DAY-VISION.md
+roadmap/UPGRADE-CONTINUITY.md
 .pytest_cache/
 .coverage
 htmlcov/
