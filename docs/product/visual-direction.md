@@ -4,6 +4,12 @@ Doctrine files are not aesthetic playgrounds.
 
 Do not alter product architecture, lane honesty, provenance display rules, or workflow structure in the name of style.
 
+## Canonical design reference
+
+All color tokens, typography specs, glow specifications, and component rules live in [`brand.md`](brand.md). This document governs *where* aesthetic work applies and *where* it must not. For *what* the design system actually is, defer to brand.md.
+
+Wordmark glow specification: see "Embers in Velvet Darkness" in [`brand.md`](brand.md).
+
 ## Where aesthetic prompting applies
 
 Use aesthetic prompting only for:

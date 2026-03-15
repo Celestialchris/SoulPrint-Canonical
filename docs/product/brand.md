@@ -189,3 +189,46 @@ bubble rhythm). It works at favicon size (16px) and hero size (200px+).
 - No stock photos
 - No emoji in the UI (unless user-generated content contains them)
 - No "AI" as a visual motif (no robot icons, no brain icons, no sparkles)
+
+## Wordmark Glow — "Embers in Velvet Darkness"
+
+The SoulPrint wordmark glow is not a neon effect. It is a controlled incandescent bloom with typographic anchor.
+
+### Why it works
+
+The glow is multi-radius and decaying. The innermost shadow gives the ember edge. The middle layers create atmospheric bloom. The outermost dark shadow anchors the letters so they do not dissolve. Without the black under-shadow, the text looks cheap.
+
+The color sits in burnt amber / furnace spectrum, not pure orange. It matches the palette: near-black background, dim gold, muted wine, soft bone text. The glow reads as heat in darkness, not a UI gimmick.
+
+Forum does half the work. Its high-contrast serif forms catch the glow on thin-thick transitions, producing a "sacred manuscript in firelight" quality. A sans-serif with the same shadow would not produce the same effect.
+
+The page background completes the illusion. The glow sits over layered radial gradients, grain, and vignette — not flat black. The light belongs to an environment, which is why the word looks lit from within rather than simply blurred.
+
+### CSS specification
+
+```css
+.hero-name {
+  color: var(--t1);                              /* warm white, NOT gold */
+  font-family: var(--font-display);              /* Forum */
+  text-shadow:
+    0 0 30px rgba(200, 120, 60, 0.28),           /* ember edge */
+    0 0 60px rgba(200, 100, 50, 0.16),           /* atmospheric bloom */
+    0 0 120px rgba(180, 80, 40, 0.08),           /* ambient warmth */
+    0 2px 4px rgba(0, 0, 0, 0.4);                /* typographic anchor */
+}
+```
+
+### Constraint language for any model or contributor
+
+Keep the title glow subtle and aristocratic, like heated metal or candlelit amber in a dark chapel. Avoid neon, avoid cyberpunk blue/orange, avoid blur-heavy haze. The letters must stay crisp at the core, with a soft layered bloom and a faint dark anchor shadow underneath.
+
+### What to never do
+
+- Never increase blur radius beyond 120px on the outermost layer
+- Never raise opacity above 0.30 on any single shadow layer
+- Never use pure orange, pure red, or any blue-spectrum glow
+- Never remove the dark anchor shadow (the `0 2px 4px rgba(0,0,0,0.4)`)
+- Never apply this glow to body text, nav items, or any element besides the hero wordmark and the app workspace heading
+- Never use a sans-serif font with this shadow stack
+
+The glow works because it is disciplined. It is not shouting. It is smoldering.

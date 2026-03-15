@@ -57,15 +57,16 @@ body[data-theme="dark"] {
 }
 ```
 
-Hero wordmark text-shadow (dark only):
+Hero wordmark text-shadow (dark only — see brand.md "Embers in Velvet Darkness"):
 ```css
 [data-theme="dark"] .hero-wordmark {
-  color: #f5f0ea;
+  color: var(--t1);                              /* warm white, NOT gold */
+  font-family: var(--font-display);              /* Forum */
   text-shadow:
-    0 0 1px rgba(245, 240, 234, 0.82),
-    0 0 6px rgba(255, 69, 0, 0.88),
-    0 0 16px rgba(255, 69, 0, 0.48),
-    0 0 34px rgba(255, 69, 0, 0.18);
+    0 0 30px rgba(200, 120, 60, 0.28),           /* ember edge */
+    0 0 60px rgba(200, 100, 50, 0.16),           /* atmospheric bloom */
+    0 0 120px rgba(180, 80, 40, 0.08),           /* ambient warmth */
+    0 2px 4px rgba(0, 0, 0, 0.4);                /* typographic anchor */
 }
 ```
 

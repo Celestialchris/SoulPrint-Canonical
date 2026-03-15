@@ -56,9 +56,7 @@ git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
 cd SoulPrint-Canonical
 
 pip install -r requirements-minimal.txt
-pip install -e .
-
-soulprint
+python -m src.run
 # Opens http://127.0.0.1:5678
 ```
 
