@@ -192,7 +192,11 @@ def create_app():
 
     @app.get("/imported")
     def imported_conversations():
+        PER_PAGE = 50
         keyword = request.args.get("q", "").strip()
+        page = request.args.get("page", 1, type=int)
+        if page < 1:
+            page = 1
 
         rows_query = (
             db.session.query(
@@ -212,12 +216,27 @@ def create_app():
                 )
             )
 
-        rows = rows_query.order_by(ImportedConversation.id.desc()).limit(100).all()
+        total = rows_query.count()
+        total_pages = max(1, (total + PER_PAGE - 1) // PER_PAGE)
+        if page > total_pages:
+            page = total_pages
+
+        rows = (
+            rows_query
+            .order_by(ImportedConversation.id.desc())
+            .offset((page - 1) * PER_PAGE)
+            .limit(PER_PAGE)
+            .all()
+        )
+
         return render_template(
             "imported_list.html",
             rows=rows,
             keyword=keyword,
             format_timestamp=format_timestamp,
+            page=page,
+            total_pages=total_pages,
+            total=total,
         )
 
     @app.route("/import", methods=["GET", "POST"])

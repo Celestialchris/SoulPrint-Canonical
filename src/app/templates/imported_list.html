@@ -3,6 +3,53 @@
 
 {% block title %}Imported Conversations · SoulPrint{% endblock %}
 
+{% block head_extra %}
+<style>
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    justify-content: center;
+    margin: 1.5rem 0 0.5rem;
+    flex-wrap: wrap;
+  }
+  .pagination__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    color: var(--text-secondary, #b0a89a);
+    background: var(--surface-card, rgba(255,255,255,0.03));
+    border: 1px solid var(--border-subtle, rgba(255,255,255,0.06));
+    transition: background 0.15s, color 0.15s;
+  }
+  .pagination__link:hover {
+    background: var(--surface-hover, rgba(255,255,255,0.07));
+    color: var(--text-primary, #e8e0d4);
+  }
+  .pagination__link--current {
+    background: var(--accent-ember, #c8713a);
+    color: #fff;
+    border-color: var(--accent-ember, #c8713a);
+    font-weight: 600;
+  }
+  .pagination__link--disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+  }
+  .pagination__ellipsis {
+    padding: 0.35rem 0.3rem;
+    color: var(--text-tertiary, #6b6560);
+    font-size: 0.85rem;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
   <section class="page-header">
     <p class="page-eyebrow">Canonical imported lane</p>
@@ -36,6 +83,10 @@
   </section>
 
   {% if rows %}
+    <p class="metadata-line" style="margin-bottom:0.5rem;">
+      Showing {{ (page - 1) * 50 + 1 }}–{{ (page - 1) * 50 + rows|length }} of {{ total }} conversations · Page {{ page }} of {{ total_pages }}
+    </p>
+
     <div class="list-stack">
       {% for conversation, message_count in rows %}
         {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
@@ -58,6 +109,34 @@
         </article>
       {% endfor %}
     </div>
+
+    {% if total_pages > 1 %}
+      <nav class="pagination" aria-label="Pagination">
+        {% if page > 1 %}
+          <a class="pagination__link" href="/imported?page={{ page - 1 }}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">← Previous</a>
+        {% else %}
+          <span class="pagination__link pagination__link--disabled">← Previous</span>
+        {% endif %}
+
+        {% for p in range(1, total_pages + 1) %}
+          {% if p == page %}
+            <span class="pagination__link pagination__link--current">{{ p }}</span>
+          {% elif p <= 3 or p > total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+            <a class="pagination__link" href="/imported?page={{ p }}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">{{ p }}</a>
+          {% elif p == 4 and page > 5 %}
+            <span class="pagination__ellipsis">…</span>
+          {% elif p == total_pages - 2 and page < total_pages - 4 %}
+            <span class="pagination__ellipsis">…</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %}
+          <a class="pagination__link" href="/imported?page={{ page + 1 }}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Next →</a>
+        {% else %}
+          <span class="pagination__link pagination__link--disabled">Next →</span>
+        {% endif %}
+      </nav>
+    {% endif %}
   {% else %}
     {{ empty_state(
       "No imported conversations found.",
