@@ -27,11 +27,16 @@ class ChatGPTImporter(ConversationImporter):
 
 
 def looks_like_chatgpt_export(payload: Any) -> bool:
-    """Return True when payload matches the supported ChatGPT export shape."""
+    """Return True when payload matches the supported ChatGPT export shape.
 
-    return isinstance(payload, list) and any(
-        isinstance(item, dict) and "mapping" in item for item in payload
-    )
+    Supports both the standard list format and the rescue dict format
+    (``{"_meta": ..., "conversations": {...}}``).
+    """
+
+    items = _unwrap_rescue_payload(payload)
+    if items is None:
+        return False
+    return any(isinstance(item, dict) and "mapping" in item for item in items)
 
 
 def parse_chatgpt_export_file(path: str | Path) -> list[NormalizedConversation]:
@@ -43,13 +48,17 @@ def parse_chatgpt_export_file(path: str | Path) -> list[NormalizedConversation]:
 
 
 def parse_chatgpt_export(payload: Any) -> list[NormalizedConversation]:
-    """Normalize the ChatGPT export payload into conversation/message records."""
+    """Normalize the ChatGPT export payload into conversation/message records.
 
-    if not isinstance(payload, list):
-        raise ValueError("ChatGPT export payload must be a list of conversations")
+    Accepts both the standard list format and the rescue dict format.
+    """
+
+    items = _unwrap_rescue_payload(payload)
+    if items is None:
+        raise ValueError("ChatGPT export payload must be a list of conversations or a rescue dict")
 
     normalized: list[NormalizedConversation] = []
-    for idx, raw_conversation in enumerate(payload):
+    for idx, raw_conversation in enumerate(items):
         if not isinstance(raw_conversation, dict):
             continue
 
@@ -73,6 +82,18 @@ def parse_chatgpt_export(payload: Any) -> list[NormalizedConversation]:
         )
 
     return normalized
+
+
+def _unwrap_rescue_payload(payload: Any) -> list[Any] | None:
+    """Return a list of conversation dicts from either format, or None."""
+
+    if isinstance(payload, list):
+        return payload
+    if isinstance(payload, dict) and "conversations" in payload:
+        convos = payload["conversations"]
+        if isinstance(convos, dict):
+            return list(convos.values())
+    return None
 
 
 def _extract_ordered_messages(mapping: Any) -> list[NormalizedMessage]:

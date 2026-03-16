@@ -8,6 +8,7 @@ from flask import Flask
 from src.app.models import ImportedConversation, ImportedMessage
 from src.app.models.db import db
 from src.importers import parse_chatgpt_export_file, persist_normalized_conversations
+from src.importers.chatgpt import looks_like_chatgpt_export, parse_chatgpt_export
 from src.importers.cli import import_chatgpt_export_to_sqlite
 from src.importers.query import (
     export_imported_conversation_markdown,
@@ -261,6 +262,50 @@ Add food suggestions.
 
         missing = export_imported_conversation_markdown(sqlite_path, 999999, output_path)
         self.assertIsNone(missing)
+
+    def test_rescue_format_detection_and_parsing(self):
+        """Rescue format (dict with _meta + conversations) is detected and parsed."""
+        rescue_payload = {
+            "_meta": {"rescued_at": "2026-03-16"},
+            "conversations": {
+                "conv-abc": {
+                    "id": "conv-abc",
+                    "title": "Rescue test",
+                    "create_time": 1710000000.0,
+                    "update_time": 1710000300.0,
+                    "mapping": {
+                        "root": {
+                            "id": "root",
+                            "parent": None,
+                            "children": ["msg-1"],
+                            "message": None,
+                        },
+                        "msg-1": {
+                            "id": "msg-1",
+                            "parent": "root",
+                            "children": [],
+                            "message": {
+                                "id": "msg-1",
+                                "author": {"role": "user"},
+                                "content": {"parts": ["Hello from rescue"]},
+                                "create_time": 1710000001.0,
+                            },
+                        },
+                    },
+                }
+            },
+        }
+
+        # Detection
+        self.assertTrue(looks_like_chatgpt_export(rescue_payload))
+
+        # Parsing
+        conversations = parse_chatgpt_export(rescue_payload)
+        self.assertEqual(len(conversations), 1)
+        self.assertEqual(conversations[0].source_conversation_id, "conv-abc")
+        self.assertEqual(conversations[0].title, "Rescue test")
+        self.assertEqual(len(conversations[0].messages), 1)
+        self.assertEqual(conversations[0].messages[0].content, "Hello from rescue")
 
 if __name__ == "__main__":
     unittest.main()
