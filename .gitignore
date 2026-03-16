@@ -29,3 +29,6 @@ htmlcov/
 dist/
 build/
 *.spec.bak
+chatgpt-rescue-*.json
+convert_rescue.py
+import_rescue.py
