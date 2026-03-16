@@ -9,9 +9,6 @@ from pathlib import Path
 from flask import Flask
 from sqlalchemy import func
 
-from src.app.models import ImportedConversation, ImportedMessage
-from src.app.models.db import db
-
 
 @dataclass(frozen=True)
 class ImportedConversationSummary:
@@ -122,7 +119,18 @@ def export_imported_conversation_markdown(
     return output_file
 
 
+def _db():
+    from src.app.models.db import db
+    return db
+
+
+def _models():
+    from src.app.models import ImportedConversation, ImportedMessage
+    return ImportedConversation, ImportedMessage
+
+
 def _sqlite_app(sqlite_path: str | Path) -> Flask:
+    db = _db()
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{Path(sqlite_path).resolve()}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -136,6 +144,8 @@ def list_imported_conversations(
 ) -> list[ImportedConversationSummary]:
     """Return imported conversation metadata ordered by newest first."""
 
+    ImportedConversation, ImportedMessage = _models()
+    db = _db()
     app = _sqlite_app(sqlite_path)
     with app.app_context():
         try:
@@ -166,6 +176,8 @@ def get_imported_conversation(
 ) -> ImportedConversationDetail | None:
     """Return one imported conversation with messages ordered by sequence."""
 
+    ImportedConversation, ImportedMessage = _models()
+    db = _db()
     app = _sqlite_app(sqlite_path)
     with app.app_context():
         try:
@@ -218,6 +230,8 @@ def search_imported_conversations(
     if not cleaned:
         return []
 
+    ImportedConversation, ImportedMessage = _models()
+    db = _db()
     pattern = f"%{cleaned.lower()}%"
     app = _sqlite_app(sqlite_path)
     with app.app_context():

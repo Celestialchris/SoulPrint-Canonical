@@ -14,9 +14,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
-from src.app.models import ImportedConversation, ImportedMessage
-from src.app.models.db import db
-
 from .contracts import NormalizedConversation, validate_provider_id
 
 
@@ -33,6 +30,9 @@ def persist_normalized_conversations(
     conversations: Iterable[NormalizedConversation],
 ) -> PersistResult:
     """Persist normalized conversations and messages in one transaction."""
+
+    from src.app.models import ImportedConversation, ImportedMessage
+    from src.app.models.db import db
 
     conversations_list = list(conversations)
     provider_id = ""
