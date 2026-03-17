@@ -1,19 +1,23 @@
 {% from "_ui.html" import nav_link %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}SoulPrint{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Forum&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <script>
+    (function(){var t=localStorage.getItem('soulprint-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)})();
+  </script>
   {% block head_extra %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <div class="app-shell {% block shell_modifier %}app-shell--standard{% endblock %}">
     <header class="app-topbar">
       <div class="brand-block">
-        <a class="brand-block__mark" href="{{ url_for('home') }}" style="font-family: 'Forum', serif; color: #a08848; letter-spacing: 1.5px;">
+        <a class="brand-block__mark" href="{{ url_for('home') }}">
           <img class="brand-block__logo" src="{{ url_for('static', filename='logo.svg') }}" alt="" width="22" height="22">
           SoulPrint
         </a>
@@ -29,6 +33,7 @@
         {{ nav_link(url_for('ask'), 'Ask', request.path.startswith('/ask')) }}
         {{ nav_link(url_for('intelligence'), 'Themes & patterns', request.path.startswith('/intelligence')) }}
         {{ nav_link(url_for('answer_trace_list'), 'How answers were found', request.path.startswith('/answer-traces')) }}
+        <button class="theme-toggle" type="button" aria-label="Toggle theme" onclick="(function(){var h=document.documentElement,t=h.getAttribute('data-theme')==='light'?'dark':'light';h.setAttribute('data-theme',t);localStorage.setItem('soulprint-theme',t);this.textContent=t}).call(this)">dark</button>
       </nav>
     </header>
 
@@ -37,6 +42,9 @@
     </main>
   </div>
 
+  <script>
+    (function(){var b=document.querySelector('.theme-toggle');if(b)b.textContent=document.documentElement.getAttribute('data-theme')||'dark'})();
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

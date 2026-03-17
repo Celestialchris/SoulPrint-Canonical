@@ -3,52 +3,6 @@
 
 {% block title %}Imported Conversations · SoulPrint{% endblock %}
 
-{% block head_extra %}
-<style>
-  .pagination {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    justify-content: center;
-    margin: 1.5rem 0 0.5rem;
-    flex-wrap: wrap;
-  }
-  .pagination__link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2rem;
-    padding: 0.35rem 0.6rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    text-decoration: none;
-    color: var(--text-secondary, #b0a89a);
-    background: var(--surface-card, rgba(255,255,255,0.03));
-    border: 1px solid var(--border-subtle, rgba(255,255,255,0.06));
-    transition: background 0.15s, color 0.15s;
-  }
-  .pagination__link:hover {
-    background: var(--surface-hover, rgba(255,255,255,0.07));
-    color: var(--text-primary, #e8e0d4);
-  }
-  .pagination__link--current {
-    background: var(--accent-ember, #c8713a);
-    color: #fff;
-    border-color: var(--accent-ember, #c8713a);
-    font-weight: 600;
-  }
-  .pagination__link--disabled {
-    opacity: 0.35;
-    cursor: default;
-    pointer-events: none;
-  }
-  .pagination__ellipsis {
-    padding: 0.35rem 0.3rem;
-    color: var(--text-tertiary, #6b6560);
-    font-size: 0.85rem;
-  }
-</style>
-{% endblock %}
 
 {% block content %}
   <section class="page-header">
