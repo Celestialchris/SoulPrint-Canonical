@@ -160,7 +160,7 @@ The exe starts the local server and opens your browser to
 `http://127.0.0.1:5678` automatically.
 
 For the full packaging overview, see
-[`docs/executable-packaging-overview.md`](docs/executable-packaging-overview.md).
+[`docs/reference/ideas/executable-packaging-overview.md`](docs/reference/ideas/executable-packaging-overview.md).
 
 ---
 
