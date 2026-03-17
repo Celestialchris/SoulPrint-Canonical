@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Go deeper · SoulPrint{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">SoulPrint Pro</p>
+    <h1 style="font-family: var(--font-display); color: var(--gold);">Go deeper</h1>
+    <p class="page-summary">
+      Your imported conversations, browsing, passport, traces, and summary are yours to keep — always free.
+      A Pro license unlocks Ask and Intelligence: grounded answers from your own records, conversation summaries,
+      topic threads, digests, and continuity packets.
+    </p>
+  </section>
+
+  <section class="content-block">
+    <h2>What Pro unlocks</h2>
+    <ul class="content-list">
+      <li>Ask SoulPrint — grounded answers from your local canonical records</li>
+      <li>Conversation summaries — LLM-generated summaries with provenance</li>
+      <li>Topic scanning and digests — cross-conversation pattern detection</li>
+      <li>Continuity packets — structured memory handoff between sessions</li>
+    </ul>
+  </section>
+
+  <section class="content-block">
+    <h2>Activate your license</h2>
+    <p>Place your license key in a file at:</p>
+    <p><code style="font-size: 0.85rem;">instance/license.key</code></p>
+    <p class="t2" style="margin-top: 0.5rem;">
+      The file should contain your key, starting with <code>SP-</code>. One line, nothing else.
+    </p>
+  </section>
+
+  <section class="content-block">
+    <p class="t2">
+      Everything you have already imported stays yours. The free tier is complete, not a trial.
+    </p>
+  </section>
+{% endblock %}

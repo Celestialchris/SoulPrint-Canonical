@@ -11,6 +11,7 @@ from ..config import Config, normalize_sqlite_uri
 from ..runtime import default_instance_dir, static_dir, templates_dir
 from .models import ImportedConversation, ImportedMessage, MemoryEntry
 from .citation_handoff import build_answer_trace_citation_view
+from .licensing import get_license_status, is_licensed
 from .viewmodels import build_workspace_summary
 from sqlalchemy import func
 from ..importers.cli import import_conversation_export_to_sqlite
@@ -91,7 +92,8 @@ def create_app():
         trace_store = default_trace_store_path(_sqlite_path_from_uri(sqlite_uri))
         workspace = build_workspace_summary(trace_store_path=trace_store)
 
-        return render_template("index.html", workspace=workspace)
+        license_status = get_license_status(instance_dir=app.instance_path)
+        return render_template("index.html", workspace=workspace, license_status=license_status)
 
     @app.get("/passport")
     def passport_surface():
@@ -187,6 +189,7 @@ def create_app():
             format_timestamp=format_timestamp,
             anchor_for_message=anchor_for_message,
             llm_configured=is_llm_configured(),
+            licensed=is_licensed(instance_dir=app.instance_path),
             lineage_suggestions=lineage_suggestions,
         )
 
@@ -403,6 +406,11 @@ def create_app():
             list_answer_traces,
         )
 
+        if not is_licensed(instance_dir=app.instance_path):
+            if request.method == "POST":
+                abort(403)
+            return render_template("upgrade.html")
+
         question = ""
         validation_error = None
         runtime_error = None
@@ -492,6 +500,9 @@ def create_app():
 
     @app.post("/intelligence/summarize/<int:conversation_id>")
     def intelligence_summarize(conversation_id: int):
+        if not is_licensed(instance_dir=app.instance_path):
+            abort(403)
+
         from ..intelligence.provider import provider_from_config
         from ..intelligence.store import append_summary, default_summary_store_path
         from ..intelligence.summarizer import summarize_conversation
@@ -511,6 +522,9 @@ def create_app():
 
     @app.post("/intelligence/scan-topics")
     def intelligence_scan_topics():
+        if not is_licensed(instance_dir=app.instance_path):
+            abort(403)
+
         from ..intelligence.provider import provider_from_config
         from ..intelligence.store import append_topic_scan, default_topic_store_path
         from ..intelligence.topics import extract_topics
@@ -533,6 +547,9 @@ def create_app():
 
     @app.post("/intelligence/digest/<int:topic_index>")
     def intelligence_digest(topic_index: int):
+        if not is_licensed(instance_dir=app.instance_path):
+            abort(403)
+
         from ..intelligence.digest import generate_digest
         from ..intelligence.provider import provider_from_config
         from ..intelligence.store import (
@@ -614,6 +631,9 @@ def create_app():
 
     @app.post("/intelligence/continuity/<int:conversation_id>")
     def intelligence_continuity_generate(conversation_id: int):
+        if not is_licensed(instance_dir=app.instance_path):
+            abort(403)
+
         from ..intelligence.continuity.service import generate_continuity_packet
         from ..intelligence.continuity.store import default_continuity_store_path
         from ..intelligence.provider import provider_from_config

@@ -11,6 +11,12 @@
       <div class="page-badges">
         {{ badge("Canonical ledger", "canonical") }}
         {{ badge("Read-only retrieval", "neutral") }}
+        {% if license_status is defined and license_status.licensed %}
+          <span style="font-family: var(--font-mono); font-size: 0.6rem; color: var(--gold-dim); letter-spacing: 0.04em;">Pro</span>
+        {% else %}
+          <span style="font-family: var(--font-mono); font-size: 0.6rem; color: var(--t3); letter-spacing: 0.04em;">Free</span>
+          <a href="{{ url_for('ask') }}" style="font-family: var(--font-mono); font-size: 0.6rem; color: var(--t3); text-decoration: none; margin-left: 0.5rem;">Go deeper &rarr;</a>
+        {% endif %}
       </div>
     </div>
     <p class="page-summary">
