@@ -123,6 +123,7 @@
       <h2>Next Actions</h2>
       {% if workspace.has_any_data %}
         <ul class="content-list">
+          <li><a href="{{ url_for('summary') }}">View your summary</a> — your AI memory at a glance.</li>
           <li><a href="{{ url_for('imported_conversations') }}">Browse imported history</a> to inspect provider-specific transcripts.</li>
           <li><a href="{{ url_for('chats') }}">Open native memory</a> and continue local-first entries.</li>
           <li><a href="{{ url_for('federated_browser') }}">Search across lanes</a> in read-only federated view.</li>

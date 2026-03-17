@@ -245,6 +245,9 @@ def create_app():
         result = None
 
         if request.method == "POST":
+            # Capture count before import for first-import redirect
+            count_before = ImportedConversation.query.count()
+
             upload = request.files.get("export_file")
             if upload is None or upload.filename == "":
                 error_message = "Choose an export JSON file before importing."
@@ -262,12 +265,18 @@ def create_app():
                     sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
                     sqlite_path = _sqlite_path_from_uri(sqlite_uri)
                     import_result = import_conversation_export_to_sqlite(temp_path, sqlite_path)
+
+                    # First import: redirect to summary page
+                    if count_before == 0 and import_result.imported_conversations > 0:
+                        return redirect(url_for("summary"))
+
                     result = {
                         "provider_id": import_result.provider_id,
                         "imported_conversations": import_result.imported_conversations,
                         "skipped_conversations": import_result.skipped_conversations,
                         "imported_messages": import_result.imported_messages,
                         "warnings": import_result.warnings,
+                        "show_summary_link": import_result.imported_conversations > 0,
                     }
                 except ImportProviderDetectionError:
                     error_message = (

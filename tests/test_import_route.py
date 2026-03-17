@@ -51,11 +51,9 @@ class ImportRouteTest(unittest.TestCase):
             content_type="multipart/form-data",
         )
 
-        self.assertEqual(response.status_code, 200)
-        html = response.get_data(as_text=True)
-        self.assertIn("Provider: chatgpt", html)
-        self.assertIn("Conversations imported: 2", html)
-        self.assertIn("Duplicates skipped: 0", html)
+        # First import on empty DB redirects to /summary
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/summary", response.headers.get("Location", ""))
 
         with self.app.app_context():
             self.assertEqual(ImportedConversation.query.count(), 2)
