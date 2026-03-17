@@ -129,7 +129,7 @@ src/
 ├── passport/       Memory Passport export and validation
 └── tools/          CLI utilities
 
-tests/              41 test files
+tests/              44 test files
 sample_data/        Synthetic provider fixtures
 docs/               Architecture, specs, product docs
 landing/            Static landing page
@@ -170,7 +170,7 @@ For the full packaging overview, see
 pytest
 ```
 
-41 test files covering parsing, persistence, retrieval, intelligence, continuity, passport, CLI, and browser integration.
+44 test files covering parsing, persistence, retrieval, intelligence, continuity, passport, CLI, and browser integration.
 
 ## CLI Tools
 
