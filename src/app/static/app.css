@@ -1608,6 +1608,22 @@ button:active {
 }
 
 
+/* ── Brand Wordmark Glow — dark only ────────────────────── */
+
+[data-theme="dark"] .brand-block__mark {
+  text-shadow:
+    0 0 7px rgba(220, 140, 70, 0.50),
+    0 0 20px rgba(210, 120, 60, 0.35),
+    0 0 50px rgba(200, 100, 50, 0.18),
+    0 0 100px rgba(180, 80, 40, 0.07),
+    0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .brand-block__mark {
+  text-shadow: none;
+}
+
+
 /* ── Theme Transition ────────────────────────────────────── */
 
 html {

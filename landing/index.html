@@ -10,232 +10,42 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Forum&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0e0d0b;--surface:#161513;--raised:#1d1b18;--wine:#6b3a3a;--wine-soft:#8a5050;--gold:#c9a84c;--gold-dim:#a08848;--t1:rgba(210,200,185,0.90);--t2:rgba(210,200,185,0.55);--t3:rgba(210,200,185,0.30);--t4:rgba(210,200,185,0.12);--line:rgba(210,200,185,0.06);--lane-chatgpt:#5a8a6a;--lane-claude:#a08848;--lane-gemini:#5a7a9a;--font-display:'Forum',serif;--font-body:'Cormorant Garamond',serif;--font-mono:'JetBrains Mono',monospace}
+:root{--bg:#0a0908;--wine:#6b3a3a;--wine-soft:#8a5050;--gold-dim:#a08848;--t1:rgba(210,200,185,0.90);--t2:rgba(210,200,185,0.55);--t3:rgba(210,200,185,0.30);--t4:rgba(210,200,185,0.12);--font-display:'Forum',serif;--font-body:'Cormorant Garamond',serif;--font-mono:'JetBrains Mono',monospace}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{font-size:17px;scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-body{background:radial-gradient(ellipse at 35% 20%,rgba(201,168,76,0.025) 0%,transparent 50%),radial-gradient(ellipse at 70% 18%,rgba(107,58,58,0.018) 0%,transparent 45%),radial-gradient(ellipse at 55% 65%,rgba(30,28,24,0.55) 0%,transparent 65%),radial-gradient(ellipse at 25% 80%,rgba(107,74,58,0.030) 0%,transparent 38%),var(--bg);color:var(--t1);font-family:var(--font-body);font-weight:400;line-height:1.65;overflow-x:hidden;min-height:100vh;position:relative}
+html{font-size:17px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{background:radial-gradient(ellipse at 35% 20%,rgba(201,168,76,0.025) 0%,transparent 50%),radial-gradient(ellipse at 70% 18%,rgba(107,58,58,0.018) 0%,transparent 45%),radial-gradient(ellipse at 55% 65%,rgba(30,28,24,0.55) 0%,transparent 65%),radial-gradient(ellipse at 25% 80%,rgba(107,74,58,0.030) 0%,transparent 38%),var(--bg);color:var(--t1);font-family:var(--font-body);font-weight:400;line-height:1.65;height:100vh;overflow:hidden;position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
 ::selection{background:rgba(107,58,58,0.30)}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");opacity:0.018}
 body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;background:linear-gradient(180deg,rgba(0,0,0,0.16) 0%,transparent 18%,transparent 82%,rgba(0,0,0,0.22) 100%)}
-.page{max-width:860px;margin:0 auto;padding:0 2rem;position:relative;z-index:1}
-section{padding:6rem 0}
-.divider{height:1px;background:var(--line);border:none}
-.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.7s cubic-bezier(0.25,0.46,0.45,0.94),transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94)}
-.reveal.visible{opacity:1;transform:translateY(0)}
-.d1{transition-delay:0.1s}.d2{transition-delay:0.2s}.d3{transition-delay:0.3s}.d4{transition-delay:0.4s}
-.label{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--t3);margin-bottom:2.5rem}
-
-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.3rem 2.5rem;display:flex;justify-content:space-between;align-items:center;transition:background 0.5s ease,backdrop-filter 0.5s ease}
-nav.scrolled{background:rgba(14,13,11,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
-.nav-mark{font-family:var(--font-display);font-size:1rem;color:var(--gold-dim);letter-spacing:1.5px;text-decoration:none}
-.nav-links{display:flex;gap:2rem;list-style:none}
-.nav-links a{font-family:var(--font-body);font-size:0.88rem;font-weight:500;color:var(--t3);text-decoration:none;transition:color 0.3s ease}
-.nav-links a:hover{color:var(--t1)}
-
-.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:6rem 2rem 4rem;position:relative}
-.hero-logo{width:48px;height:48px;color:var(--gold-dim);margin-bottom:2rem;opacity:0;animation:logoIn 1.2s cubic-bezier(0.25,0.46,0.45,0.94) 0.2s forwards}
-.hero-logo svg{width:100%;height:100%}
-.hero-name{font-family:var(--font-display);font-size:clamp(3.5rem,10vw,6rem);font-weight:400;color:var(--t1);letter-spacing:3px;line-height:1;text-shadow:0 0 7px rgba(220,140,70,0.5),0 0 20px rgba(210,120,60,0.35),0 0 50px rgba(200,100,50,0.18),0 0 100px rgba(180,80,40,0.07),0 2px 4px rgba(0,0,0,0.4);opacity:0;animation:nameIn 1.4s cubic-bezier(0.25,0.46,0.45,0.94) 0.4s forwards}
-.hero-line{width:40px;height:1px;background:var(--t4);margin:2.5rem auto;opacity:0;animation:fadeUp 0.8s ease 0.8s forwards}
-.hero-tag{font-size:1.2rem;color:var(--t2);max-width:440px;line-height:1.7;font-style:italic;opacity:0;animation:fadeUp 0.8s ease 1.0s forwards}
-.hero-ctas{margin-top:3rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeUp 0.8s ease 1.2s forwards}
-.hero-scroll{position:absolute;bottom:2.5rem;font-family:var(--font-mono);font-size:0.55rem;color:var(--t4);letter-spacing:0.2em;text-transform:uppercase;opacity:0;animation:fadeUp 0.8s ease 1.6s forwards}
-@keyframes logoIn{from{opacity:0;transform:translateY(12px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes nameIn{from{opacity:0;transform:translateY(16px);letter-spacing:8px}to{opacity:1;transform:translateY(0);letter-spacing:3px}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-
+.landing{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;padding:0 2rem}
+.logo{width:48px;height:48px;color:var(--gold-dim);margin-bottom:2rem}
+.logo svg{width:100%;height:100%}
+.wordmark{font-family:var(--font-display);font-size:clamp(3.5rem,10vw,6rem);font-weight:400;color:var(--t1);letter-spacing:3px;line-height:1;text-shadow:0 0 7px rgba(220,140,70,0.50),0 0 20px rgba(210,120,60,0.35),0 0 50px rgba(200,100,50,0.18),0 0 100px rgba(180,80,40,0.07),0 2px 4px rgba(0,0,0,0.4)}
+.line{width:40px;height:1px;background:var(--t4);margin:2.5rem 0}
+.tagline{font-size:1.2rem;color:var(--t2);max-width:440px;line-height:1.7;font-style:italic}
+.ctas{margin-top:3rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;justify-content:center}
 .btn-primary{display:inline-block;padding:0.7rem 2.2rem;border:1px solid var(--wine);color:var(--wine-soft);font-family:var(--font-display);font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;transition:all 0.5s ease}
 .btn-primary:hover{background:var(--wine);color:var(--t1)}
 .btn-ghost{font-family:var(--font-body);font-size:0.9rem;font-weight:500;color:var(--t3);text-decoration:none;transition:color 0.3s ease}
 .btn-ghost:hover{color:var(--t2)}
-
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;padding:3rem 0}
-.stat-num{font-family:var(--font-display);font-size:2.4rem;color:var(--t1);line-height:1}
-.stat-num.gold{color:var(--gold)}.stat-num.wine{color:var(--wine-soft)}
-.stat-lbl{font-family:var(--font-mono);font-size:0.55rem;color:var(--t3);text-transform:uppercase;letter-spacing:0.12em;margin-top:0.35rem}
-
-.loop-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem 4rem;margin-top:1rem}
-.loop-step{padding-left:1rem;border-left:1px solid var(--line);transition:border-color 0.4s ease}
-.loop-step:hover{border-left-color:var(--t4)}
-.loop-num{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.1em;color:var(--t4);margin-bottom:0.4rem}
-.loop-step h3{font-family:var(--font-display);font-size:1.2rem;font-weight:400;color:var(--gold-dim);margin-bottom:0.5rem}
-.loop-step p{font-size:0.95rem;color:var(--t2);line-height:1.65}
-
-.app-preview{background:var(--surface);border:1px solid var(--line);overflow:hidden;margin-top:1rem}
-.app-bar{display:flex;align-items:center;gap:0.5rem;padding:0.7rem 1rem;border-bottom:1px solid var(--line)}
-.app-dot{width:8px;height:8px;border-radius:50%;background:var(--t4)}
-.app-body{display:grid;grid-template-columns:150px 1fr;min-height:340px}
-.app-side{background:linear-gradient(180deg,rgba(22,21,19,0.72) 0%,rgba(14,13,11,0.90) 100%);border-right:1px solid var(--line);padding:1.4rem 0}
-.app-side-brand{font-family:var(--font-display);font-size:0.85rem;color:var(--gold-dim);letter-spacing:1.2px;padding:0 1.1rem;margin-bottom:1.4rem;text-shadow:0 0 30px rgba(160,136,72,0.12)}
-.app-nav{display:block;padding:0.28rem 1.1rem;font-size:0.78rem;color:var(--t3);font-weight:500}
-.app-nav.on{color:var(--wine-soft)}
-.app-main{padding:1.5rem 2rem}
-.app-h{font-family:var(--font-display);font-size:1.5rem;color:var(--gold-dim);letter-spacing:0.5px;margin-bottom:0.15rem;text-shadow:0 0 40px rgba(160,136,72,0.08)}
-.app-heading-sub{font-family:var(--font-display);font-size:1.1rem;color:var(--gold-dim);opacity:0.7;margin-bottom:0.4rem}
-.app-sub{font-size:0.82rem;color:var(--t3);margin-bottom:0.6rem}
-.app-desc{font-size:0.88rem;color:var(--t2);line-height:1.6;margin-bottom:1.4rem;max-width:480px}
-.app-stats{display:flex;gap:2rem;margin-bottom:1.5rem}
-.app-sn{font-family:var(--font-display);font-size:1.6rem;line-height:1}
-.app-sl{font-family:var(--font-mono);font-size:0.5rem;color:var(--t3);text-transform:uppercase;letter-spacing:0.1em;margin-top:0.2rem}
-.app-stance{padding:0.7rem 0 0.7rem 0.7rem;border-left:2px solid var(--gold-dim);margin-bottom:0.8rem}
-.app-stance-label{font-family:var(--font-mono);font-size:0.5rem;color:var(--wine-soft);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:0.25rem}
-.app-stance-text{font-size:0.82rem;color:var(--t2);line-height:1.5}
-.app-stance-meta{font-family:var(--font-mono);font-size:0.48rem;color:var(--t4);margin-top:0.2rem}
-.app-row{display:flex;gap:0.6rem;padding:0.6rem 0;border-bottom:1px solid var(--line);align-items:flex-start}
-.app-row:last-child{border-bottom:none}
-.app-lane{width:2px;min-height:24px;border-radius:1px;flex-shrink:0;margin-top:0.15rem}
-.app-title{font-size:0.82rem;font-weight:500;color:var(--t1);line-height:1.3}
-.app-meta{font-family:var(--font-mono);font-size:0.5rem;color:var(--t3);margin-top:0.15rem;display:flex;gap:0.6rem}
-
-.providers{display:flex;gap:3rem;flex-wrap:wrap;margin-top:1rem}
-.provider{display:flex;align-items:center;gap:0.75rem}
-.pstripe{width:2px;height:28px;border-radius:1px}
-.ps-gpt{background:var(--lane-chatgpt)}.ps-cl{background:var(--lane-claude)}.ps-gem{background:var(--lane-gemini)}
-.pname{font-family:var(--font-body);font-size:1rem;font-weight:500;color:var(--t2)}
-.pfmt{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.06em;color:var(--t3);margin-left:0.2rem}
-
-.not-list{display:grid;gap:1.4rem;margin-top:1rem}
-.not-item{display:flex;gap:1rem;align-items:baseline}
-.not-dash{font-family:var(--font-mono);font-size:0.7rem;color:var(--wine);flex-shrink:0}
-.not-item p{font-size:1rem;color:var(--t2);line-height:1.6}
-.not-item strong{font-weight:500;color:var(--t1)}
-
-.arch{display:grid;grid-template-columns:110px 1fr;gap:1.5rem;padding:1.1rem 0;border-bottom:1px solid var(--line);align-items:baseline}
-.arch:last-child{border-bottom:none}
-.arch-n{font-family:var(--font-display);font-size:1rem;color:var(--gold-dim)}
-.arch-d{font-size:0.95rem;color:var(--t2)}
-
-.manifesto{padding:8rem 0;text-align:center}
-.manifesto blockquote{font-family:var(--font-display);font-size:clamp(1.4rem,3.5vw,2.1rem);font-weight:400;color:var(--t1);line-height:1.45;max-width:26ch;margin:0 auto}
-.manifesto blockquote em{font-style:normal;color:var(--gold-dim);text-shadow:0 0 40px rgba(160,136,72,0.08)}
-.manifesto-a{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--t4);margin-top:2rem}
-
-.code{background:var(--surface);border-bottom:1px solid var(--line);padding:1.4rem 1.6rem;font-family:var(--font-mono);font-size:0.75rem;line-height:2;color:var(--t2);overflow-x:auto;margin-top:1rem}
-.code .c{color:var(--t4)}.code .v{color:var(--t1)}
-.note{margin-top:1.2rem;font-size:0.92rem;color:var(--t3);line-height:1.7}
-
-.cta{text-align:center;padding:8rem 0}
-.cta h2{font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.2rem);font-weight:400;color:var(--t1);margin-bottom:1rem}
-.cta p{font-size:1rem;color:var(--t2);max-width:32ch;margin:0 auto 2.5rem;line-height:1.7}
-.cta-acts{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap}
-
-footer{padding:3rem 0;border-top:1px solid var(--line)}
-.foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-.foot-l{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.1em;color:var(--t4)}
-.foot-r{display:flex;gap:1.5rem}
-.foot-r a{font-family:var(--font-body);font-size:0.85rem;color:var(--t3);text-decoration:none;transition:color 0.3s ease}
-.foot-r a:hover{color:var(--t2)}
-
-@media(max-width:768px){.page{padding:0 1.5rem}section{padding:4rem 0}.hero{min-height:90vh;padding-top:5rem}.loop-grid{grid-template-columns:1fr;gap:2rem}.stats{grid-template-columns:repeat(2,1fr);gap:1.5rem}.nav-links{display:none}.providers{gap:2rem}.arch{grid-template-columns:85px 1fr;gap:1rem}.app-body{grid-template-columns:1fr}.app-side{display:none}}
-@media(max-width:480px){.page{padding:0 1.2rem}.hero-name{font-size:3rem}.hero-ctas{flex-direction:column}.foot{flex-direction:column;align-items:flex-start}}
+.promise{margin-top:2.5rem;font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.12em;color:var(--t3)}
+footer{position:fixed;bottom:0;left:0;right:0;padding:1.5rem 2rem;text-align:center;z-index:1}
+footer span{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.1em;color:var(--t4)}
+@media(max-width:480px){.wordmark{font-size:3rem}.ctas{flex-direction:column}}
 </style>
 </head>
 <body>
-<nav id="nav"><a href="/" class="nav-mark">SoulPrint</a><ul class="nav-links"><li><a href="#how-it-works">How it works</a></li><li><a href="#providers">Providers</a></li><li><a href="#architecture">Architecture</a></li><li><a href="https://github.com/Celestialchris/SoulPrint-Canonical">GitHub</a></li></ul></nav>
-
-<section class="hero">
-  <div class="hero-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M28 38c0-4 3.5-7 8-7"/><path d="M24 42c0-8 6-14 14-14"/><path d="M20 46c0-12 8.5-21 20-21"/><path d="M16 50c0-16 11-28 26-28"/><path d="M12 54c0-20 13.5-35 32-35"/></svg></div>
-  <div class="hero-name">SoulPrint</div>
-  <div class="hero-line"></div>
-  <p class="hero-tag">Your AI conversations are scattered everywhere.<br>SoulPrint brings them home.</p>
-  <div class="hero-ctas"><a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases" class="btn-primary">Download</a><a href="https://github.com/Celestialchris/SoulPrint-Canonical" class="btn-ghost">View on GitHub</a></div>
-  <div class="hero-scroll">Scroll</div>
-</section>
-
-<div class="page">
-<hr class="divider">
-<section><div class="stats">
-  <div class="reveal"><div class="stat-num gold">3</div><div class="stat-lbl">Providers</div></div>
-  <div class="reveal d1"><div class="stat-num">10</div><div class="stat-lbl">Surfaces</div></div>
-  <div class="reveal d2"><div class="stat-num wine">390</div><div class="stat-lbl">Tests</div></div>
-  <div class="reveal d3"><div class="stat-num">Apache-2.0</div><div class="stat-lbl">License</div></div>
-</div></section>
-<hr class="divider">
-
-<section id="how-it-works"><div class="label reveal">The product loop</div>
-<div class="loop-grid">
-  <div class="loop-step reveal"><div class="loop-num">01</div><h3>Import</h3><p>Drop your ChatGPT .zip, Claude .json, or Gemini Takeout. Provider auto-detected. Normalized into one canonical ledger.</p></div>
-  <div class="loop-step reveal d1"><div class="loop-num">02</div><h3>Browse</h3><p>Workspace overview, transcript explorer with prompt-level TOC and minimap, federated cross-provider view.</p></div>
-  <div class="loop-step reveal d2"><div class="loop-num">03</div><h3>Search &amp; Ask</h3><p>Full-text across all providers. Grounded answering that cites your specific conversations. Every answer has an auditable trace.</p></div>
-  <div class="loop-step reveal d3"><div class="loop-num">04</div><h3>Discover</h3><p>Cross-conversation topics. Per-conversation summaries. Multi-conversation digests. All derived, all traceable.</p></div>
-  <div class="loop-step reveal"><div class="loop-num">05</div><h3>Continue</h3><p>Generate a compact continuity packet from any conversation. Copy a structured bridge into your next chat.</p></div>
-  <div class="loop-step reveal d1"><div class="loop-num">06</div><h3>Export</h3><p>Memory Passport with manifest, canonical JSONL lanes, provenance index, and checksums. Verifiable.</p></div>
-</div></section>
-<hr class="divider">
-
-<section><div class="label reveal">What it looks like</div>
-<div class="app-preview reveal d1">
-  <div class="app-bar"><div class="app-dot"></div><div class="app-dot"></div><div class="app-dot"></div></div>
-  <img src="assets/workspace.png" alt="SoulPrint workspace showing imported conversations" style="width:100%;display:block">
-</div></section>
-<hr class="divider">
-
-<section id="providers"><div class="label reveal">Supported providers</div>
-<div class="providers reveal d1">
-  <div class="provider"><div class="pstripe ps-gpt"></div><span class="pname">ChatGPT</span><span class="pfmt">.zip</span></div>
-  <div class="provider"><div class="pstripe ps-cl"></div><span class="pname">Claude</span><span class="pfmt">.json</span></div>
-  <div class="provider"><div class="pstripe ps-gem"></div><span class="pname">Gemini</span><span class="pfmt">takeout</span></div>
+<div class="landing">
+  <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M28 38c0-4 3.5-7 8-7"/><path d="M24 42c0-8 6-14 14-14"/><path d="M20 46c0-12 8.5-21 20-21"/><path d="M16 50c0-16 11-28 26-28"/><path d="M12 54c0-20 13.5-35 32-35"/></svg></div>
+  <div class="wordmark">SoulPrint</div>
+  <div class="line"></div>
+  <p class="tagline">Your AI conversations are scattered everywhere.<br>SoulPrint brings them home.</p>
+  <div class="ctas">
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases" class="btn-primary">Download</a>
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical" class="btn-ghost">View on GitHub</a>
+  </div>
+  <p class="promise">Local-first &middot; Open source &middot; Your data stays on your machine</p>
 </div>
-<p class="note reveal d2">Adding a provider is bounded work: adapter, detector, registry entry, fixture, tests. The architecture supports unlimited providers.</p>
-</section>
-<hr class="divider">
-
-<section class="manifesto">
-  <blockquote class="reveal">A memory weapon built by someone who knows what <em>forgetting</em> costs.</blockquote>
-  <div class="manifesto-a reveal d1">From the manifesto</div>
-</section>
-<hr class="divider">
-
-<section><div class="label reveal">What SoulPrint is not</div>
-<div class="not-list">
-  <div class="not-item reveal"><span class="not-dash">&mdash;</span><p><strong>Not a hosted SaaS.</strong> Your data never leaves your machine.</p></div>
-  <div class="not-item reveal d1"><span class="not-dash">&mdash;</span><p><strong>Not a mem0 clone.</strong> SoulPrint is for users, not developer infrastructure.</p></div>
-  <div class="not-item reveal d2"><span class="not-dash">&mdash;</span><p><strong>Not an AI dashboard.</strong> No metrics theater. No admin-panel energy.</p></div>
-  <div class="not-item reveal d3"><span class="not-dash">&mdash;</span><p><strong>Not a generic wrapper.</strong> SoulPrint has its own canonical ledger and trust chain.</p></div>
-</div></section>
-<hr class="divider">
-
-<section id="architecture"><div class="label reveal">Architecture</div>
-<div>
-  <div class="arch reveal"><span class="arch-n">Truth</span><span class="arch-d">Canonical SQLite ledger. Explicit lanes. Stable provenance.</span></div>
-  <div class="arch reveal d1"><span class="arch-n">Legibility</span><span class="arch-d">Browse, search, inspect, trace, export. Read-only over truth.</span></div>
-  <div class="arch reveal d2"><span class="arch-n">Intelligence</span><span class="arch-d">Summaries, topics, digests, continuity. All derived. All traceable.</span></div>
-  <div class="arch reveal d3"><span class="arch-n">Distribution</span><span class="arch-d">Desktop app, landing page, freemium gate.</span></div>
-</div>
-<p class="note reveal d4" style="margin-top:1.5rem">Every derived artifact stores source conversation IDs, generation timestamp, LLM provider, and prompt template version. Derived never impersonates canonical.</p>
-</section>
-<hr class="divider">
-
-<section id="quickstart"><div class="label reveal">Quick start</div>
-<div class="code reveal d1">
-  <span class="c"># Clone and run in 60 seconds</span><br>
-  <span class="v">git clone https://github.com/Celestialchris/SoulPrint-Canonical.git</span><br>
-  <span class="v">cd SoulPrint-Canonical</span><br><br>
-  <span class="v">pip install -r requirements-minimal.txt</span><br>
-  <span class="v">python -m src.run</span><br><br>
-  <span class="c"># Open http://127.0.0.1:5678</span><br>
-  <span class="c"># Drop an export file on the Import page</span>
-</div>
-<p class="note reveal d2">Intelligence features (summaries, topics, ask) use your own API key. Without a key, import, browse, search, and export all work fully.</p>
-</section>
-<hr class="divider">
-
-<section class="cta">
-  <h2 class="reveal">Your memory, under your custody.</h2>
-  <p class="reveal d1">Local-first. Open source. Provenance attached to every record.</p>
-  <div class="cta-acts reveal d2"><a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases" class="btn-primary">Download SoulPrint</a><a href="https://github.com/Celestialchris/SoulPrint-Canonical" class="btn-ghost">View source</a></div>
-</section>
-
-<footer><div class="foot"><div class="foot-l">SoulPrint &middot; Apache-2.0 &middot; Local-first AI memory</div><div class="foot-r"><a href="https://github.com/Celestialchris/SoulPrint-Canonical">GitHub</a><a href="https://github.com/Celestialchris/SoulPrint-Canonical/blob/main/docs/getting-started.md">Docs</a></div></div></footer>
-</div>
-
-<script>
-const reveals=document.querySelectorAll('.reveal');
-const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
-reveals.forEach(el=>obs.observe(el));
-const nav=document.getElementById('nav');
-window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scrollY>60)},{passive:true});
-document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{const t=document.querySelector(a.getAttribute('href'));if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}})});
-</script>
+<footer><span>Apache-2.0 &middot; soulprint.dev</span></footer>
 </body>
 </html>
