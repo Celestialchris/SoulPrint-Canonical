@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoulPrint — Your AI Memory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Forum&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --t1: rgba(210,200,185,0.90);
+      --t2: rgba(210,200,185,0.55);
+      --t3: rgba(210,200,185,0.30);
+      --t4: rgba(210,200,185,0.12);
+      --wine: #6b3a3a;
+      --wine-soft: #8a5050;
+      --gold: #c9a84c;
+      --gold-dim: #a08848;
+      --line: rgba(210,200,185,0.06);
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      background: #0a0908;
+      font-size: 17px;
+    }
+
+    body {
+      background:
+        radial-gradient(ellipse at 20% 14%, rgba(201,168,76,0.025) 0%, transparent 46%),
+        radial-gradient(ellipse at 78% 22%, rgba(107,58,58,0.018) 0%, transparent 42%),
+        radial-gradient(ellipse at 62% 70%, rgba(30,28,24,0.58) 0%, transparent 68%),
+        radial-gradient(ellipse at 32% 84%, rgba(107,74,58,0.035) 0%, transparent 34%),
+        #0a0908;
+      color: var(--t1);
+      font-family: "Cormorant Garamond", serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.018;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.20) 0%, transparent 18%, transparent 82%, rgba(0,0,0,0.28) 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .wrapped-container {
+      position: relative;
+      z-index: 3;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    /* ---- Hero ---- */
+
+    .hero {
+      text-align: center;
+      padding-bottom: 2.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-wordmark {
+      color: var(--t1);
+      font-family: "Forum", serif;
+      font-size: 1.8rem;
+      letter-spacing: 1.5px;
+      text-shadow:
+        0 0 7px rgba(220,140,70,0.50),
+        0 0 20px rgba(210,120,60,0.35),
+        0 0 50px rgba(200,100,50,0.18),
+        0 0 100px rgba(180,80,40,0.07),
+        0 2px 4px rgba(0,0,0,0.4);
+      margin-bottom: 0.4rem;
+    }
+
+    .hero-subtitle {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 1.15rem;
+      color: var(--t2);
+      font-weight: 400;
+      font-style: italic;
+    }
+
+    .hero-dates {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--t3);
+      margin-top: 0.6rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* ---- Headline stat ---- */
+
+    .headline-stat {
+      text-align: center;
+      padding: 2.5rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .headline-number {
+      font-family: "Forum", serif;
+      font-size: clamp(4rem, 10vw, 8rem);
+      color: var(--gold);
+      line-height: 1.1;
+    }
+
+    .headline-label {
+      color: var(--t2);
+      font-size: 1.1rem;
+      margin-top: 0.3rem;
+    }
+
+    /* ---- Supporting stats grid ---- */
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .stat-cell-number {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--t1);
+    }
+
+    .stat-cell-label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 0.25rem;
+    }
+
+    /* ---- Provider breakdown ---- */
+
+    .providers-section {
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-heading {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--t2);
+      margin-bottom: 1.2rem;
+    }
+
+    .provider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .provider-name {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--t2);
+      min-width: 5.5rem;
+      text-align: right;
+    }
+
+    .provider-bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--line);
+      position: relative;
+    }
+
+    .provider-bar-fill {
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .provider-count {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+      color: var(--t3);
+      min-width: 3rem;
+    }
+
+    /* ---- Mid section (active month + longest thread) ---- */
+
+    .mid-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    @media (max-width: 500px) {
+      .mid-section {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+    }
+
+    .mid-block-label {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 0.35rem;
+    }
+
+    .mid-block-value {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 1.15rem;
+      color: var(--t1);
+    }
+
+    .mid-block-sub {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+      color: var(--t3);
+      margin-top: 0.15rem;
+    }
+
+    /* ---- topic-highlights ---- */
+
+    .topics-section {
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topic-list {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.8rem;
+    }
+
+    .topic-item {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--t2);
+      padding: 0.25rem 0;
+    }
+
+    .topic-item::before {
+      content: "\b7 ";
+      color: var(--t3);
+    }
+
+    /* ---- Unfinished threads ---- */
+
+    .unfinished-section {
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .unfinished-count {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.2rem;
+      color: var(--t1);
+      margin-bottom: 0.5rem;
+    }
+
+    .unfinished-list {
+      list-style: none;
+      margin-bottom: 0.7rem;
+    }
+
+    .unfinished-list li {
+      font-size: 0.95rem;
+      color: var(--t2);
+      padding: 0.2rem 0;
+    }
+
+    .unfinished-list li::before {
+      content: "\2013  ";
+      color: var(--t3);
+    }
+
+    .unfinished-cta {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--wine);
+      text-decoration: none;
+    }
+
+    .unfinished-cta:hover {
+      color: var(--wine-soft);
+    }
+
+    .unfinished-clear {
+      font-size: 0.95rem;
+      color: var(--t2);
+    }
+
+    /* ---- Watermark ---- */
+
+    .watermark {
+      text-align: center;
+      padding: 2.5rem 0 1.5rem;
+    }
+
+    .watermark-line {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+      color: var(--t3);
+    }
+
+    .watermark-url {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.65rem;
+      color: var(--t4);
+      margin-top: 0.2rem;
+    }
+
+    /* ---- Footer ---- */
+
+    .footer {
+      text-align: center;
+      padding: 1rem 0 0;
+    }
+
+    .footer-back {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--wine);
+      text-decoration: none;
+    }
+
+    .footer-back:hover {
+      color: var(--wine-soft);
+    }
+
+    .footer-share {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 0.85rem;
+      color: var(--t3);
+      margin-top: 0.5rem;
+    }
+
+    /* ---- Empty state ---- */
+
+    .empty-state {
+      text-align: center;
+      padding: 6rem 0;
+    }
+
+    .empty-message {
+      font-size: 1.1rem;
+      color: var(--t2);
+      margin: 1.5rem 0;
+    }
+
+    .empty-cta {
+      display: inline-block;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--t1);
+      background: var(--wine);
+      padding: 0.6rem 1.6rem;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+
+    .empty-cta:hover {
+      background: var(--wine-soft);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapped-container">
+    {% if not wrapped.has_data %}
+    {# ---- Empty State ---- #}
+    <div class="empty-state">
+      <div class="hero-wordmark">SoulPrint</div>
+      <p class="empty-message">Import your first conversation</p>
+      <a href="/import" class="empty-cta">Import</a>
+    </div>
+    {% else %}
+    {# ---- Hero ---- #}
+    <div class="hero">
+      <div class="hero-wordmark">SoulPrint</div>
+      <div class="hero-subtitle">Your AI Memory</div>
+      <div class="hero-dates">{{ date_range_start }} &mdash; {{ date_range_end }}</div>
+    </div>
+
+    {# ---- Headline Stat ---- #}
+    <div class="headline-stat">
+      <div class="headline-number">{{ wrapped.total_messages }}</div>
+      <div class="headline-label">messages across your AI history</div>
+    </div>
+
+    {# ---- Supporting Stats Grid ---- #}
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <div class="stat-cell-number">{{ wrapped.providers|length }}</div>
+        <div class="stat-cell-label">providers</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-number">{{ wrapped.average_messages_per_conversation }}</div>
+        <div class="stat-cell-label">msgs / conversation</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-number">{{ wrapped.total_conversations }}</div>
+        <div class="stat-cell-label">conversations</div>
+      </div>
+    </div>
+
+    {# ---- Provider Breakdown ---- #}
+    <div class="providers-section">
+      <div class="section-heading">Your providers</div>
+      {%- set lane_colors = {"chatgpt": "#5a8a6a", "claude": "#a08848", "gemini": "#5a7a9a", "native": "#5a7a9a"} -%}
+      {% for provider in wrapped.providers %}
+      <div class="provider-row">
+        <span class="provider-name">{{ provider.name }}</span>
+        <div class="provider-bar-track">
+          <div class="provider-bar-fill" style="width: {{ provider.percentage }}%; background: {{ lane_colors.get(provider.name, '#5a7a9a') }};"></div>
+        </div>
+        <span class="provider-count">{{ provider.count }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    {# ---- Most Active Month + Longest Thread ---- #}
+    <div class="mid-section">
+      <div class="mid-block">
+        <div class="mid-block-label">Most active month</div>
+        <div class="mid-block-value">{{ wrapped.most_active_month or "\u2014" }}</div>
+      </div>
+      <div class="mid-block">
+        <div class="mid-block-label">Longest conversation</div>
+        <div class="mid-block-value">{{ wrapped.longest_conversation.title or "\u2014" }}</div>
+        {% if wrapped.longest_conversation.message_count %}
+        <div class="mid-block-sub">{{ wrapped.longest_conversation.message_count }} messages</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ---- Topics (conditional) ---- #}
+    {% if wrapped.topic_highlights %}
+    <div class="topics-section">
+      <div class="section-heading">Topics you explored</div>
+      <ul class="topic-list">
+        {% for topic in wrapped.topic_highlights[:5] %}
+        <li class="topic-item">{{ topic }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {# ---- Unfinished Threads ---- #}
+    <div class="unfinished-section">
+      <div class="section-heading">Unfinished threads</div>
+      <div class="unfinished-count">{{ wrapped.unfinished_threads.count }}</div>
+      {% if wrapped.unfinished_threads.count > 0 %}
+      <ul class="unfinished-list">
+        {% for title in wrapped.unfinished_threads.titles %}
+        <li>{{ title }}</li>
+        {% endfor %}
+      </ul>
+      <a href="/imported" class="unfinished-cta">Continue one &rarr;</a>
+      {% else %}
+      <p class="unfinished-clear">All caught up.</p>
+      {% endif %}
+    </div>
+
+    {# ---- Watermark ---- #}
+    <div class="watermark">
+      <div class="watermark-line">Generated by SoulPrint</div>
+      <div class="watermark-url">soulprint.dev</div>
+    </div>
+
+    {# ---- Footer ---- #}
+    <div class="footer">
+      <a href="/" class="footer-back">Back to Workspace</a>
+      <p class="footer-share">Share your AI memory story</p>
+    </div>
+    {% endif %}
+  </div>
+</body>
+</html>

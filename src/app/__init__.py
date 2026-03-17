@@ -571,6 +571,35 @@ def create_app():
         return redirect(url_for("intelligence"))
 
     # ------------------------------------------------------------------
+    # Wrapped summary route
+    # ------------------------------------------------------------------
+
+    @app.get("/summary")
+    def summary():
+        from .viewmodels.wrapped import build_wrapped_summary
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        sqlite_path = _sqlite_path_from_uri(sqlite_uri)
+        wrapped = build_wrapped_summary(sqlite_path=sqlite_path)
+
+        # Pre-format date range for the template
+        def _format_unix_date(ts):
+            if ts is None:
+                return "\u2014"
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+            return dt.strftime("%b %Y")
+
+        date_range_start = _format_unix_date(wrapped.date_range.get("earliest"))
+        date_range_end = _format_unix_date(wrapped.date_range.get("latest"))
+
+        return render_template(
+            "wrapped.html",
+            wrapped=wrapped,
+            date_range_start=date_range_start,
+            date_range_end=date_range_end,
+        )
+
+    # ------------------------------------------------------------------
     # Continuity packet routes
     # ------------------------------------------------------------------
 
