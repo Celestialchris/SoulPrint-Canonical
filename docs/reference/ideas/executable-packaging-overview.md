@@ -1,4 +1,10 @@
+---
+status: speculative
+---
+
 # SoulPrint executable packaging overview
+
+> **Status: Not yet shipped. Speculative reference.**
 
 This document defines the shortest sane path from the current working Flask repo to a downloadable Windows build.
 

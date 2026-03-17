@@ -16,64 +16,52 @@ active_truth:
 > It is not current roadmap or doctrine.
 > Active truth lives in `README.md`, `ROADMAP.md`, `docs/product/*`, and `docs/specs/*`.
 
-Good — you're thinking about the right thing. Let me break down both pieces honestly, because one is straightforward and the other has a real architectural decision you need to make carefully.
+---
+
+## Desktop Packaging
+
+The Flask + SQLite stack is straightforward to package as a desktop application. Three viable options, ordered by fit:
+
+**Tauri** — Lightweight, uses the system's native webview, runs the Python backend as a sidecar process. Smallest bundle size. Aligns with the local-first, minimal-footprint identity.
+
+**PyWebView** — Wraps the Flask app in a native window with minimal code. Less polished than Tauri but fastest to prototype. Suitable as a stepping stone.
+
+**Electron** — Functional but heavy. Conflicts with the product identity of lightweight local-first tooling. Not recommended unless Tauri proves insufficient.
+
+The drag-and-drop import flow is a UI layer over the existing CLI pipeline. The auto-detection system already handles all three providers. The desktop app would call `import_conversation_export_to_sqlite()` directly from a drop zone.
 
 ---
 
-**The desktop app packaging — this is solvable and not scary**
+## Derived Intelligence Layer
 
-Your backend is already Flask + SQLite. That's actually one of the easiest stacks to package into a desktop app. You have a few realistic options:
+The core architectural question: generate derived notes, summaries, topic extractions, and insights that live alongside canonical records — without replacing them.
 
-**Tauri** is the modern pick. It's lightweight (way smaller than Electron), uses the system's native webview, and you'd run your Python backend as a sidecar process. The user opens the app, Tauri spawns Flask in the background, the UI is your existing templates (or a new React frontend) talking to localhost. SQLite stays local. Everything stays local. This matches your doctrine perfectly.
+This maps onto Layer C (Intelligence) extended into additional derived output types. The constraint already in doctrine: **derived content never replaces canonical records.**
 
-**PyWebView** is the simpler option — it's literally a Python library that wraps your Flask app in a native window. Five lines of code and your current app becomes a desktop app. Less polished than Tauri but you could ship a working prototype in a day.
+### Derived artifact types
 
-**Electron** works but it's heavy and feels wrong for a product whose identity is "lightweight, local-first, trustworthy." Tauri is the better fit for what SoulPrint claims to be.
+- **Per-conversation summaries** — Single-conversation distillation with key decisions and topics.
+- **Cross-conversation topic threads** — Multi-conversation arcs across providers and time ranges.
+- **Personal knowledge notes** — Synthesized preferences and decisions from multiple conversations.
+- **Periodic digests** — Weekly or monthly rollups of conversation activity and substance.
 
-The drag-and-drop import flow is just a UI layer over your existing CLI pipeline. Right now you run `python -m src.importers.cli file.json`. In the desktop app, you'd have a drop zone that calls the same `import_conversation_export_to_sqlite()` function directly. The auto-detection already works for all three providers. Someone drops their ChatGPT zip, their Claude JSON, their Gemini Takeout — it all flows through the same pipe into the same canonical ledger. That's already built.
+### Provenance requirements
 
----
+Every derived artifact carries: source conversation stable IDs, generation timestamp, LLM provider, prompt template version, and output text. Non-canonical. Clearly labeled. Traceable to source records. Same pattern as Answer Traces.
 
-**The NotebookLLM-style layer — this is the interesting architectural question**
+### LLM integration options
 
-What you're describing is essentially: "take my canonical conversation history, run it through an LLM, and produce derived notes, summaries, topic extractions, and insights that live *alongside* the original records."
+**Option A — Local models only (Ollama, llama.cpp).** Purest local-first choice. Nothing leaves the machine. Lower quality ceiling and hardware requirements limit audience.
 
-This is absolutely possible and it fits your architecture cleanly — but only if you build it the right way. Here's why it matters:
+**Option B — User-provided API key.** User connects their OpenAI/Anthropic/Google key. Conversation chunks sent to API, summaries stored locally as derived artifacts. Pragmatic middle ground. Requires transparency about data leaving the machine.
 
-NotebookLLM works because it treats your uploaded sources as ground truth and generates *derived artifacts* from them. That's exactly your Layer 3 (Answering and Audit) extended into a new derived output type. The critical rule, which you already have in your doctrine, is: **derived content never replaces canonical records**.
+**Option C — Hybrid.** Local models for lightweight operations (topic extraction, keyword tagging), external API for heavy operations (long summaries, cross-conversation synthesis). User controls the boundary.
 
-Here's how it would map onto what you already have:
-
-**Canonical Ledger (Layer 1)** — unchanged. Your imported conversations from ChatGPT, Claude, Gemini. The source of truth. Untouched.
-
-**Browsing (Layer 2)** — unchanged. The user can always go read the original conversations.
-
-**Derived Intelligence (Layer 3, extended)** — this is the new piece. It would produce things like:
-
-- Per-conversation summaries ("This was a 47-message conversation about setting up a bakery in Bucharest. Key decisions: location in Floreasca, sourdough focus, target opening March 2025.")
-- Cross-conversation topic threads ("You discussed Python sorting in 3 conversations across ChatGPT and Claude between December 2024 and January 2025. Here's the arc.")
-- Personal knowledge notes ("Based on 12 conversations, here are your established preferences and decisions about your bakery project.")
-- Weekly/monthly digests ("Last week you had 23 AI conversations. Here are the 5 most substantive threads.")
-
-Every single one of these would be a **derived artifact** with explicit provenance — which conversations it was generated from, which LLM generated it, when, and with what prompt. Just like your Answer Traces already work. The user can always click through from a summary to the original canonical conversation.
-
-**The architectural decision you need to make is about the LLM itself.**
-
-You have three options and they have very different implications:
-
-**Option A — Local models only (Ollama, llama.cpp).** This is the purest "local-first" choice. Summaries are generated on the user's machine. Nothing leaves. But the quality ceiling is lower and it requires the user to have decent hardware. This matches the sovereignty doctrine perfectly but limits the audience.
-
-**Option B — User brings their own API key.** The user connects their OpenAI/Anthropic/Google key. SoulPrint sends conversation chunks to the API, gets summaries back, stores them locally as derived artifacts. The user controls cost and provider choice. This is the pragmatic middle ground — it's how most serious tools work today. The conversation data does leave the machine temporarily, so you need to be transparent about that.
-
-**Option C — Hybrid.** Local models for lightweight stuff (topic extraction, keyword tagging), external API for heavy stuff (long summaries, cross-conversation synthesis). User can toggle what they're comfortable with.
-
-My recommendation: **start with Option B** because it's the fastest to build and gives the best results. Your Phase 7 (connected preferred LLM) was already planning for this. The NotebookLLM-style features are just the most compelling *reason* to connect an LLM, which gives Phase 7 a concrete use case instead of being abstract.
+Recommendation: Option B as the starting point. Fastest to build, best result quality, and aligns with the existing BYOK configuration pattern.
 
 ---
 
-**How it would actually work in the codebase:**
-
-You'd add a new derived layer alongside your existing answering system. Something like:
+## Codebase Structure for Intelligence Layer
 
 ```
 src/
@@ -83,38 +71,19 @@ src/
     threads.py         # cross-conversation topic detection
     digest.py          # periodic rollups
     notes.py           # user-facing derived notes
-    store.py           # derived artifact persistence (JSONL or SQLite table)
+    store.py           # derived artifact persistence
 ```
 
-Each derived artifact would carry: source conversation stable IDs, generation timestamp, LLM provider used, prompt template version, and the output text. Non-canonical. Clearly labeled. Always traceable back to source records. Exactly the same pattern as your Answer Traces, just broader.
-
-The UI would show these as a parallel surface — you browse your conversations on one side, and the derived intelligence appears alongside it. A "Notes" tab or sidebar that says "Generated from 4 conversations" with clickable links back to each source. The user always knows what's canonical (their actual conversation history) and what's derived (the AI's interpretation of it).
+This structure already exists in the codebase. Future expansion follows the same pattern.
 
 ---
 
-**What the product experience looks like when you put it all together:**
+## Suggested Build Sequence
 
-1. User downloads SoulPrint desktop app
-2. Drags in their ChatGPT export zip, their Claude JSON, their Gemini Takeout
-3. Instantly sees a beautiful timeline of all their AI conversations, searchable, browseable, with provider badges
-4. A "Memory Summary" dashboard shows: total conversations, topics, activity over time, most-discussed themes
-5. They connect their preferred LLM (paste an API key)
-6. SoulPrint generates derived notes: per-conversation summaries, topic threads, a personal knowledge digest
-7. They can search across everything, read original transcripts, or read the AI-generated notes
-8. They can export a Memory Passport — portable, verifiable, carrying both canonical records and derived notes with clear provenance separation
+**Phase A** — Desktop wrapper. Wrap current Flask app in PyWebView or Tauri. Add drag-and-drop import UI. Add visual summary dashboard.
 
-That's a product people would use. That's a product people would share. And the architecture you already have supports it without breaking the canonical ledger doctrine.
+**Phase B** — Intelligence layer. API key connection. Per-conversation summarizer. Derived artifact storage with provenance. UI integration alongside transcripts.
 
----
+**Phase C** — Cross-conversation synthesis. Topic threads, periodic digests, personal knowledge extraction.
 
-**The realistic build order I'd suggest:**
-
-Phase A (ship the "wow" fast): Wrap current Flask app in PyWebView or Tauri. Add drag-and-drop import UI. Add a visual summary dashboard. This gets you a demo-able desktop app.
-
-Phase B (the intelligence layer): Add API key connection. Build per-conversation summarizer. Store summaries as derived artifacts with provenance. Show them in the UI alongside original transcripts.
-
-Phase C (the NotebookLLM moment): Cross-conversation topic threads, periodic digests, personal knowledge extraction. This is where it starts feeling magical.
-
-Phase D (polish and ship): Installer packages, landing page, onboarding flow, the "Your AI conversations are scattered everywhere" pitch.
-
-Want to start working on any of these?
+**Phase D** — Distribution polish. Installer packages, landing page, onboarding flow.
