@@ -26,7 +26,7 @@
       Updated: {{ format_timestamp(conversation.updated_at_unix) }} ·
       Messages: {{ messages|length }}
     </p>
-    {% if llm_configured|default(false) %}
+    {% if llm_configured|default(false) and licensed|default(false) %}
       <form method="post" action="/intelligence/summarize/{{ conversation.id }}" class="inline-action">
         <button type="submit" class="ghost-link">Summarize</button>
       </form>
