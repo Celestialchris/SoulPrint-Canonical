@@ -26,6 +26,8 @@ A local-first memory continuity system. Import your AI conversation history from
 
 **Export** — Memory Passport with checksums and provenance. Verifiable against the canonical record.
 
+**Your AI Memory Wrapped** — A cinematic summary of your entire AI history. Total conversations, provider breakdown, top themes, unfinished threads. Screenshot it. Share it.
+
 ---
 
 ## Screenshots
@@ -104,6 +106,7 @@ Adding a provider is bounded work: adapter, detector, registry entry, fixture, t
 | `/federated` | Cross-provider view with provenance |
 | `/chats` | Native memory — notes created directly in SoulPrint |
 | `/passport` | Export and validate your Memory Passport |
+| `/summary` | Your AI Memory Wrapped — visual summary and shareable stats |
 | `/answer-traces` | Audit trail for every generated answer |
 
 ## Architecture
@@ -133,6 +136,7 @@ tests/              44 test files
 sample_data/        Synthetic provider fixtures
 docs/               Architecture, specs, product docs
 landing/            Static landing page
+scripts/            Windows build script
 ```
 
 ## Packaging
@@ -204,8 +208,11 @@ python -m src.passport.cli validate exports/passports/memory-passport-v1
 | Grounded answering + traces | ✓ Stable |
 | Bridge assembly | ✓ Stable |
 | Lineage suggestions | ✓ Stable |
-| Desktop wrapper | Planned |
-| Freemium gate | Planned |
+| Desktop wrapper | ✓ Shipped (PyInstaller) |
+| Freemium gate | ✓ Shipped |
+| Wrapped summary page | ✓ Shipped |
+| Landing page | ✓ Shipped |
+| Brand system (Torchlit Vault) | ✓ Frozen |
 
 ## Roadmap
 

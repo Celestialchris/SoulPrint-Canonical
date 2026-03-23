@@ -17,6 +17,7 @@
 
 ## Specs
 - [Memory Passport v1](specs/memory-passport-spec.md)
+- [Obsidian Bridge spec](specs/obsidian-bridge-spec.md)
 
 ## Reference
 - [Project status (2026-03-09)](reference/history/project-status-2026-03-09.md)

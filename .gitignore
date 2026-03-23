@@ -9,7 +9,7 @@ instance/
 src/instance/
 chroma_db/
 uploads/
-obsidian/
+/obsidian/
 src/.env
 .env
 *.egg-info/

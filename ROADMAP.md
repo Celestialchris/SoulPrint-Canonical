@@ -11,21 +11,20 @@
 - Phase 7: Continuity Packet MVP — typed artifacts with provenance
 - Phase 8: Bridge assembly — bounded next-chat handoff
 - Phase 9: Lineage suggestions — inspectable continuation/fork/revisit/supersede links
+- Coherence pass — unified surfaces, fixed entrypoint, closed documentation gaps
+- Phase 10 — Distribution (brand, landing, desktop, freemium, wrapped)
+- Phase 10.5 — Packaging Infrastructure (PyInstaller, pyproject.toml)
 
 ## Current Milestone
 
-### Coherence pass
-- Make all surfaces feel like one product, not adjacent subsystems
-- Fix entrypoint (`python -m src.run` must start the server)
-- Close documentation gaps between actual capability and public-facing docs
-
-### Phase 10 — Distribution (brand, landing, desktop, freemium, wrapped)
-- Execute brand and launch packaging now that the continuity spine is stable
-- Sequence: landing page → desktop wrapper → freemium gate → wrapped summary
-
 ### Phase 11 — Soft launch
-- Cut release tag and publish launch assets
-- Activate feedback loop from real users
+- Execute launch playbook (staggered platform posts)
+- Capture fresh screenshots with real imported data
+- Verify /imported route with 882+ conversation database
+
+### Phase 12 — Obsidian Bridge
+- One-way export from canonical ledger to Obsidian vault
+- See `docs/specs/obsidian-bridge-spec.md`
 
 ## Not In Current Milestone
 
@@ -33,9 +32,10 @@
 - hosted sync
 - vector DB expansion
 - mobile app
-- broad design overhaul before distribution ships
 
 ## Detail References
 
 - Release notes: `roadmap/RELEASE-v0.1.0.md`
 - Frozen decisions: `DECISIONS.md`
+- Launch playbook: see `LAUNCH-PLAYBOOK.md` in project files
+- Obsidian Bridge spec: `docs/specs/obsidian-bridge-spec.md`
