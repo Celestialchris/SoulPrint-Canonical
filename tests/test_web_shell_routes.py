@@ -32,7 +32,7 @@ class WebShellRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("app-topbar", html)
+        self.assertIn("sidebar", html)
         self.assertIn("Workspace", html)
         self.assertIn('href="/chats"', html)
         self.assertIn('href="/imported"', html)
@@ -58,7 +58,7 @@ class WebShellRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("app-topbar", html)
+        self.assertIn("sidebar", html)
         self.assertIn("Your own notes", html)
         self.assertIn('href="/memory/{}"'.format(entry_id), html)
         self.assertIn("Filter by tag", html)
