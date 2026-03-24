@@ -63,10 +63,10 @@ Hero wordmark text-shadow (dark only — see brand.md "Embers in Velvet Darkness
   color: var(--t1);                              /* warm white, NOT gold */
   font-family: var(--font-display);              /* Forum */
   text-shadow:
-    0 0 7px rgba(220, 140, 70, 0.50),            /* white-hot edge */
-    0 0 20px rgba(210, 120, 60, 0.35),           /* close ember bloom */
-    0 0 50px rgba(200, 100, 50, 0.18),           /* medium atmospheric */
-    0 0 100px rgba(180, 80, 40, 0.07),           /* ambient warmth */
+    0 0 1px rgba(245, 240, 234, 0.82),           /* white-hot edge */
+    0 0 6px rgba(255, 69, 0, 0.88),              /* close incandescent bloom */
+    0 0 16px rgba(255, 69, 0, 0.48),             /* medium atmospheric */
+    0 0 34px rgba(255, 69, 0, 0.18),             /* ambient warmth */
     0 2px 4px rgba(0, 0, 0, 0.4);                /* typographic anchor */
 }
 ```

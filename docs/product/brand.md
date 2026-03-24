@@ -196,9 +196,9 @@ The SoulPrint wordmark glow is not a neon effect. It is a controlled incandescen
 
 ### Why it works
 
-The glow is five-layer and decaying. The innermost shadow (7px, high opacity) creates a white-hot edge hugging the letterforms — this is what produces the "heated from within" look. Without it, the text has a distant haze instead of radiating heat. The middle layers create atmospheric bloom at increasing distance. The outermost dark shadow anchors the letters so they do not dissolve. Without the black under-shadow, the text looks cheap.
+The glow is five-layer and decaying. The innermost shadow (1px, high opacity warm white) creates a white-hot edge hugging the letterforms — this is what produces the "heated from within" look. Without it, the text has a distant haze instead of radiating heat. The second layer (6px, bright incandescent orange) is the primary visible bloom; it must be tight and hot. The middle layers create atmospheric spread at increasing distance. The outermost dark shadow anchors the letters so they do not dissolve. Without the black under-shadow, the text looks cheap.
 
-The color sits in burnt amber / furnace spectrum, not pure orange. It matches the palette: near-black background, dim gold, muted wine, soft bone text. The glow reads as heat in darkness, not a UI gimmick.
+The close bloom uses incandescent orange — the same spectrum as heated metal. On the near-black background, this reads as furnace heat, not neon. The tight blur radius (6px) keeps the glow hugging the letterforms rather than floating free.
 
 Forum does half the work. Its high-contrast serif forms catch the glow on thin-thick transitions, producing a "sacred manuscript in firelight" quality. A sans-serif with the same shadow would not produce the same effect.
 
@@ -211,11 +211,11 @@ The page background completes the illusion. The glow sits over layered radial gr
   color: var(--t1);                              /* warm white, NOT gold */
   font-family: var(--font-display);              /* Forum */
   text-shadow:
-    0 0 7px rgba(220, 140, 70, 0.50),            /* white-hot edge */
-    0 0 20px rgba(210, 120, 60, 0.35),           /* close ember bloom */
-    0 0 50px rgba(200, 100, 50, 0.18),           /* medium atmospheric */
-    0 0 100px rgba(180, 80, 40, 0.07),           /* ambient warmth */
-    0 2px 4px rgba(0, 0, 0, 0.4);                /* typographic anchor */
+    0 0 1px rgba(245, 240, 234, 0.82),           /* white-hot edge — crisp incandescent core */
+    0 0 6px rgba(255, 69, 0, 0.88),              /* close bloom — tight, hot, hugs letterforms */
+    0 0 16px rgba(255, 69, 0, 0.48),             /* medium atmospheric — visible spread */
+    0 0 34px rgba(255, 69, 0, 0.18),             /* ambient warmth — soft outer haze */
+    0 2px 4px rgba(0, 0, 0, 0.4);                /* typographic anchor — keeps letters grounded */
 }
 ```
 
@@ -225,11 +225,12 @@ Keep the title glow subtle and aristocratic, like heated metal or candlelit ambe
 
 ### What to never do
 
-- Never increase blur radius beyond 120px on the outermost layer
-- Never raise opacity above 0.50 on any single shadow layer (only the 7px white-hot edge may reach 0.50; all others stay below 0.35)
-- Never use pure orange, pure red, or any blue-spectrum glow
+- Never increase blur radius beyond 40px on the outermost color layer
+- Never widen the close bloom beyond 8px blur — the glow must hug the letterforms
+- Never use blue-spectrum, green-spectrum, or cool-toned glow colors
 - Never remove the dark anchor shadow (the `0 2px 4px rgba(0,0,0,0.4)`)
 - Never apply this glow to body text, nav items, or any element besides the hero wordmark and the app workspace heading
 - Never use a sans-serif font with this shadow stack
+- Never add more than five shadow layers — the stack is tuned, not additive
 
 The glow works because it is disciplined. It is not shouting. It is smoldering.

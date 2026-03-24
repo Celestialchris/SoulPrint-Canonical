@@ -1598,13 +1598,13 @@ button:active {
   font-family: var(--font-display);
   font-size: clamp(2.4rem, 5vw, 3.5rem);
   font-weight: 400;
-  letter-spacing: 0.02em;
+  letter-spacing: 1.5px;
   line-height: 1;
   text-shadow:
-    0 0 7px rgba(220, 140, 70, 0.50),
-    0 0 20px rgba(210, 120, 60, 0.35),
-    0 0 50px rgba(200, 100, 50, 0.18),
-    0 0 100px rgba(180, 80, 40, 0.07),
+    0 0 1px rgba(245, 240, 234, 0.82),
+    0 0 6px rgba(255, 69, 0, 0.88),
+    0 0 16px rgba(255, 69, 0, 0.48),
+    0 0 34px rgba(255, 69, 0, 0.18),
     0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
