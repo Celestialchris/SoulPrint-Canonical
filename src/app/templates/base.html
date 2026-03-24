@@ -16,36 +16,72 @@
   {% block head_extra %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
-  <div class="app-shell {% block shell_modifier %}app-shell--standard{% endblock %}">
-    <header class="app-topbar">
-      <div class="brand-block">
-        <a class="brand-block__mark" href="{{ url_for('home') }}">
-          <img class="brand-block__logo" src="{{ url_for('static', filename='logo.svg') }}" alt="" width="22" height="22">
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__header">
+        <a class="sidebar__brand" href="{{ url_for('home') }}">
+          <img class="sidebar__logo" src="{{ url_for('static', filename='logo.svg') }}" alt="" width="20" height="20">
           SoulPrint
         </a>
-        <p class="brand-block__note">Local-first memory continuity</p>
       </div>
-      <nav class="app-nav" aria-label="Primary">
+
+      <nav class="sidebar__nav" aria-label="Primary">
+        {# ── Sanctum ── #}
+        <span class="nav-group-label">Sanctum</span>
         {{ nav_link(url_for('home'), 'Workspace', request.path == url_for('home')) }}
-        {{ nav_link(url_for('chats'), 'Your own notes', request.path.startswith(url_for('chats')) or request.path.startswith('/memory/')) }}
-        {{ nav_link(url_for('imported_conversations'), 'What you\u2019ve discussed', request.path.startswith('/imported')) }}
-        {{ nav_link(url_for('import_conversations'), 'Import', request.path == url_for('import_conversations')) }}
-        {{ nav_link(url_for('federated_browser'), 'Everything, together', request.path.startswith('/federated')) }}
-        {{ nav_link(url_for('passport_surface'), 'Take it with you', request.path.startswith('/passport')) }}
         {{ nav_link(url_for('ask'), 'Ask your memory', request.path.startswith('/ask')) }}
+
+        {# ── Memory ── #}
+        <span class="nav-group-label">Memory</span>
+        {{ nav_link(url_for('imported_conversations'), 'What you\u2019ve discussed', request.path.startswith('/imported')) }}
+        {{ nav_link(url_for('chats'), 'Your own notes', request.path.startswith(url_for('chats')) or request.path.startswith('/memory/')) }}
+        {{ nav_link(url_for('federated_browser'), 'Everything, together', request.path.startswith('/federated')) }}
+
+        {# ── Interpretation ── #}
+        <span class="nav-group-label">Interpretation</span>
         {{ nav_link(url_for('intelligence'), 'Themes & patterns', request.path.startswith('/intelligence')) }}
+        {{ nav_link(url_for('distill'), 'Distill', request.path.startswith('/distill')) }}
         {{ nav_link(url_for('answer_trace_list'), 'How answers were found', request.path.startswith('/answer-traces')) }}
-        <button class="theme-toggle" type="button" aria-label="Toggle theme" onclick="(function(){var h=document.documentElement,t=h.getAttribute('data-theme')==='light'?'dark':'light';h.setAttribute('data-theme',t);localStorage.setItem('soulprint-theme',t);this.textContent=t}).call(this)">dark</button>
+
+        {# ── Continuity ── #}
+        <span class="nav-group-label">Continuity</span>
+        {{ nav_link(url_for('import_conversations'), 'Import', request.path == url_for('import_conversations')) }}
+        {{ nav_link(url_for('passport_surface'), 'Take it with you', request.path.startswith('/passport')) }}
       </nav>
+
+      <div class="sidebar__footer">
+        <button class="theme-toggle" type="button" aria-label="Toggle theme" onclick="(function(){var h=document.documentElement,t=h.getAttribute('data-theme')==='light'?'dark':'light';h.setAttribute('data-theme',t);localStorage.setItem('soulprint-theme',t);this.textContent=t==='light'?'light':'dark'}).call(this)">dark</button>
+        <span class="sidebar__version">v0.1.0 · local-first</span>
+      </div>
+    </aside>
+
+    {# Mobile nav toggle #}
+    <header class="mobile-bar">
+      <a class="mobile-bar__brand" href="{{ url_for('home') }}">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="" width="18" height="18">
+        SoulPrint
+      </a>
+      <button class="mobile-bar__toggle" type="button" aria-label="Toggle navigation" onclick="document.getElementById('sidebar').classList.toggle('sidebar--open')">
+        <span></span><span></span><span></span>
+      </button>
     </header>
 
-    <main class="page {% block page_class %}{% endblock %}">
+    <main class="main-content {% block page_class %}{% endblock %}">
       {% block content %}{% endblock %}
     </main>
   </div>
 
   <script>
-    (function(){var b=document.querySelector('.theme-toggle');if(b)b.textContent=document.documentElement.getAttribute('data-theme')||'dark'})();
+    (function(){
+      var b=document.querySelector('.theme-toggle');
+      if(b) b.textContent=document.documentElement.getAttribute('data-theme')||'dark';
+      // Close sidebar on mobile nav click
+      document.querySelectorAll('.sidebar__nav .app-nav__link').forEach(function(a){
+        a.addEventListener('click', function(){
+          document.getElementById('sidebar').classList.remove('sidebar--open');
+        });
+      });
+    })();
   </script>
   {% block scripts %}{% endblock %}
 </body>

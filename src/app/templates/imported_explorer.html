@@ -4,7 +4,6 @@
 {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
 
 {% block title %}{{ display_title }} · Transcript Explorer{% endblock %}
-{% block shell_modifier %}app-shell--wide{% endblock %}
 {% block page_class %}page--explorer{% endblock %}
 
 {% block content %}

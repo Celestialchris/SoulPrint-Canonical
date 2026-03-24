@@ -696,4 +696,75 @@ def create_app():
             llm_configured=configured,
         )
 
+    # ------------------------------------------------------------------
+    # Multi-conversation distillation routes
+    # ------------------------------------------------------------------
+
+    @app.route("/distill", methods=["GET", "POST"])
+    def distill():
+        if not is_licensed(instance_dir=app.instance_path):
+            return render_template("upgrade.html"), 200
+
+        from ..intelligence.provider import provider_from_config
+
+        provider = provider_from_config()
+
+        if request.method == "GET":
+            conversations = (
+                ImportedConversation.query
+                .order_by(ImportedConversation.id.desc())
+                .all()
+            )
+            return render_template(
+                "distill.html",
+                conversations=conversations,
+                llm_configured=provider is not None,
+                result=None,
+            )
+
+        # POST: run distillation on selected conversations
+        if provider is None:
+            abort(400)
+
+        selected_ids = request.form.getlist("conversation_ids", type=int)
+        if not selected_ids:
+            conversations = (
+                ImportedConversation.query
+                .order_by(ImportedConversation.id.desc())
+                .all()
+            )
+            return render_template(
+                "distill.html",
+                conversations=conversations,
+                llm_configured=True,
+                result=None,
+                error_message="Select at least one conversation to distill.",
+            )
+
+        from ..intelligence.distill import distill_conversations
+        from ..intelligence.store import (
+            append_distillation,
+            default_distillation_store_path,
+        )
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        sqlite_path = _sqlite_path_from_uri(sqlite_uri)
+
+        conversations = ImportedConversation.query.filter(
+            ImportedConversation.id.in_(selected_ids)
+        ).all()
+
+        if not conversations:
+            abort(404)
+
+        result = distill_conversations(conversations, provider)
+        append_distillation(
+            default_distillation_store_path(sqlite_path), result
+        )
+
+        return render_template(
+            "distill_result.html",
+            result=result,
+        )
+
     return app

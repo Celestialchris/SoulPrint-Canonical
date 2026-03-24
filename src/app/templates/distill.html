@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% block title %}Distill · SoulPrint{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div class="back-links" aria-label="Back navigation">
+      <a class="back-link" href="/">Back to home</a>
+    </div>
+    <p class="page-eyebrow">Distill</p>
+    <div class="page-header__row">
+      <h1>Distill conversations</h1>
+      <div class="page-badges">
+        {{ badge("Pro", "accent") }}
+      </div>
+    </div>
+    <p class="page-summary">
+      Select conversations to condense into a single paste-ready handoff.
+      The result is a compact markdown document you can paste into a new AI chat
+      so it never starts from zero.
+    </p>
+  </section>
+
+  {% if error_message %}
+    <section class="empty-state" role="alert">
+      <h2 class="empty-state__title">Cannot distill</h2>
+      <p class="empty-state__text">{{ error_message }}</p>
+    </section>
+  {% endif %}
+
+  {% if not llm_configured %}
+    {{ empty_state(
+      "LLM provider not configured",
+      "Distillation requires an LLM. Set SOULPRINT_LLM_PROVIDER and SOULPRINT_LLM_API_KEY before starting SoulPrint."
+    ) }}
+  {% elif not conversations %}
+    {{ empty_state(
+      "No conversations to distill",
+      "Import some conversations first, then come back here.",
+      url_for('import_conversations'),
+      "Go to Import"
+    ) }}
+  {% else %}
+    <form method="post" action="{{ url_for('distill') }}" id="distill-form">
+      <section class="distill-controls">
+        <div class="distill-controls__row">
+          <label class="distill-controls__select-all">
+            <input type="checkbox" id="select-all"> Select all
+          </label>
+          <span class="distill-controls__count" id="selected-count">0 selected</span>
+          <button type="submit" class="distill-controls__submit" id="distill-btn" disabled>
+            Distill selected
+          </button>
+        </div>
+      </section>
+
+      <section class="distill-list">
+        {% for conv in conversations %}
+          <label class="distill-item">
+            <input type="checkbox" name="conversation_ids" value="{{ conv.id }}" class="conv-checkbox">
+            <div class="distill-item__body">
+              <span class="distill-item__title">{{ conv.title or "Untitled" }}</span>
+              <span class="distill-item__meta">
+                {{ conv.source }} · {{ conv.messages | length }} messages
+              </span>
+            </div>
+          </label>
+        {% endfor %}
+      </section>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var boxes = document.querySelectorAll('.conv-checkbox');
+  var selectAll = document.getElementById('select-all');
+  var countEl = document.getElementById('selected-count');
+  var btn = document.getElementById('distill-btn');
+  if (!boxes.length) return;
+
+  function update() {
+    var n = 0;
+    boxes.forEach(function(b) { if (b.checked) n++; });
+    countEl.textContent = n + ' selected';
+    btn.disabled = n === 0;
+  }
+
+  boxes.forEach(function(b) { b.addEventListener('change', update); });
+  if (selectAll) {
+    selectAll.addEventListener('change', function() {
+      boxes.forEach(function(b) { b.checked = selectAll.checked; });
+      update();
+    });
+  }
+})();
+</script>
+{% endblock %}
