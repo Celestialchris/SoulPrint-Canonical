@@ -61,15 +61,11 @@ class WorkspaceHomeTest(unittest.TestCase):
                 }
                 f.write(json.dumps(record) + "\n")
 
-    def test_workspace_renders_workspace_blocks_empty_db(self):
+    def test_workspace_renders_welcome_on_empty_db(self):
         html = self._get_workspace_html()
-        self.assertIn("Continuity Status", html)
-        self.assertIn("Provider Coverage", html)
-        self.assertIn("Resume Recent Work", html)
-        self.assertIn("Search Handoff", html)
-        self.assertIn("Passport / Integrity Status", html)
-        self.assertIn("Next Actions", html)
-        self.assertIn("Your workspace is ready.", html)
+        self.assertIn("SoulPrint", html)
+        self.assertIn("Bring your first conversation home", html)
+        self.assertIn("Everything stays on your machine", html)
 
     def test_workspace_continuity_counts_reflect_seeded_data(self):
         with self.app.app_context():

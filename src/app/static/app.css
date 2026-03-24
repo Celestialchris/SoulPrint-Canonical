@@ -1137,6 +1137,56 @@ button:active {
 }
 
 
+/* ── Workspace Welcome ───────────────────────────────────── */
+
+.workspace-welcome {
+  padding: 3rem 0 2.5rem;
+  text-align: center;
+}
+
+.workspace-welcome--compact {
+  padding: 1rem 0 1.5rem;
+}
+
+.workspace-welcome__tagline {
+  color: var(--t2);
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-style: italic;
+  line-height: 1.7;
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.workspace-welcome__cta {
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 0.8rem 2.2rem;
+  border: 1px solid var(--wine);
+  color: var(--wine-soft);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.workspace-welcome__cta:hover {
+  background: var(--wine);
+  color: var(--t1);
+}
+
+.workspace-welcome__trust {
+  margin-top: 1.5rem;
+  color: var(--t3);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+}
+
+
 /* ── Workspace ───────────────────────────────────────────── */
 
 .workspace-grid {

@@ -1,30 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Import Conversations | SoulPrint{% endblock %}
+{% block title %}Import · SoulPrint{% endblock %}
 
 {% block content %}
   <section class="page-header">
     <p class="page-eyebrow">Import</p>
     <h1>Bring conversations home</h1>
     <p class="page-summary">
-      Upload an export file from any supported provider. Your conversations are added to your local archive.
-      Duplicates are safely skipped.
+      Upload a conversation export from ChatGPT, Claude, or Gemini.
+      Your history is added to your local archive. Duplicates are safely skipped.
     </p>
   </section>
 
   <section class="surface-card content-block">
-    <h2>Supported providers</h2>
-    <p>ChatGPT, Claude, and Gemini exports are supported through provider auto-detection.</p>
-
     <form method="post" enctype="multipart/form-data" class="filter-panel">
       <div>
-        <label class="field-label" for="export_file">Export JSON file</label>
+        <label class="field-label" for="export_file">Choose your export file</label>
         <input id="export_file" name="export_file" type="file" accept="application/json,.json" required>
       </div>
       <div>
         <button type="submit">Import now</button>
       </div>
     </form>
+    <p class="workspace-welcome__trust">Your file is processed locally. Nothing leaves your machine.</p>
   </section>
 
   {% if error_message %}
@@ -36,7 +34,7 @@
 
   {% if result %}
     <section class="surface-card content-block">
-      <h2>Import result</h2>
+      <h2>Import complete</h2>
       <div class="metadata-badges">
         <span class="badge badge--imported">Provider: {{ result.provider_id }}</span>
         <span class="badge">Conversations imported: {{ result.imported_conversations }}</span>
@@ -59,11 +57,14 @@
         </div>
       {% endif %}
 
-      <p class="metadata-line">Next step: review your imported conversations.</p>
-      <a class="route-card__link" href="{{ url_for('imported_conversations') }}">See what you've discussed</a>
-      {% if result.show_summary_link %}
-        <a class="route-card__link" href="{{ url_for('summary') }}">See your updated summary &rarr;</a>
-      {% endif %}
+      <p class="workspace-summary">Your conversations are home. Here's what to do next:</p>
+      <ul class="content-list">
+        <li><a href="{{ url_for('imported_conversations') }}">Browse what you've discussed</a> — see your imported history.</li>
+        {% if result.show_summary_link %}
+          <li><a href="{{ url_for('summary') }}">View your summary</a> — your AI memory at a glance.</li>
+        {% endif %}
+        <li><a href="{{ url_for('import_conversations') }}">Import another provider</a> — bring more conversations in.</li>
+      </ul>
     </section>
   {% endif %}
 {% endblock %}
