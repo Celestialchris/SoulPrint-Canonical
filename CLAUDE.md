@@ -97,6 +97,8 @@ Before starting work, silently check for these failure patterns:
 - Answer traces: JSONL append-only, non-canonical, always labeled "Derived"
 - Citation handoff: `memory:<id>` → `/memory/<id>`, `imported_conversation:<id>` → `/imported/<id>/explorer`
 - Continuity packets: typed artifacts (summary, decisions, open loops, entity map, bridge packet) stored with provenance
+- Obsidian bridge: one-way derived export in `src/obsidian/`. Exporter, renderer, config, CLI. Same authority rules as Memory Passport — SoulPrint stays canonical, Obsidian is the thinking interface.
+- Distillation: multi-conversation condensation in `src/intelligence/distill.py`. Select N conversations → one paste-ready markdown handoff. JSONL store, Pro-gated, derived/non-canonical.
 - Design reference: `src/app/static/app-mock.html` is the canonical visual reference for all UI work
 
 ## Commands
@@ -122,6 +124,9 @@ python -m src.retrieval.cli --db instance/soulprint.db "search term"
 
 # Answering
 python -m src.answering.cli --db instance/soulprint.db "question"
+
+# Export to Obsidian vault
+python -m src.obsidian.cli --db instance/soulprint.db --vault ~/my-obsidian-vault
 ```
 
 ## Anti-Patterns

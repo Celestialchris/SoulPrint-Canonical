@@ -22,9 +22,13 @@ A local-first memory continuity system. Import your AI conversation history from
 
 **Discover** — Cross-conversation topic detection. Per-conversation summaries. Multi-conversation digests. All derived, all traceable.
 
+**Distill** — Select any set of conversations and condense them into a single paste-ready markdown handoff. Paste it into a new AI chat so the model has your full context without starting from zero. The core differentiator.
+
 **Continue** — Generate compact continuity packets from any conversation. Copy a structured handoff into your next chat so you never start from zero.
 
 **Export** — Memory Passport with checksums and provenance. Verifiable against the canonical record.
+
+**Obsidian Bridge** — One-way export to an Obsidian vault. Conversations become structured markdown notes with frontmatter, wiki-links, theme notes, and daily-note anchors. If the vault is deleted, rebuild it from SoulPrint.
 
 **Your AI Memory Wrapped** — A cinematic summary of your entire AI history. Total conversations, provider breakdown, top themes, unfinished threads. Screenshot it. Share it.
 
@@ -117,6 +121,7 @@ Adding a provider is bounded work: adapter, detector, registry entry, fixture, t
 | `/answer-traces/<id>` | Individual trace detail with citations |
 | `/memory/<id>` | Native memory entry detail |
 | `/intelligence/continuity/<id>` | Continuity packet view |
+| `/distill` | Multi-conversation distillation — condense N conversations into one handoff |
 
 ## Architecture
 
@@ -139,6 +144,7 @@ src/
 ├── answering/      Grounded answering and trace audit
 ├── intelligence/   Summaries, topics, digests, continuity engine
 ├── passport/       Memory Passport export and validation
+├── obsidian/       Obsidian vault bridge (one-way export)
 └── tools/          CLI utilities
 
 tests/              47 test files
@@ -185,7 +191,7 @@ For the full packaging overview, see
 pytest
 ```
 
-47 test files, 486 test methods covering parsing, persistence, retrieval, intelligence, continuity, passport, CLI, and browser integration.
+47 test files, 484 test methods covering parsing, persistence, retrieval, intelligence, continuity, distillation, passport, Obsidian bridge, CLI, and browser integration.
 
 ## CLI Tools
 
@@ -204,6 +210,9 @@ python -m src.passport.cli exports/passports --db instance/soulprint.db
 
 # Validate a passport
 python -m src.passport.cli validate exports/passports/memory-passport-v1
+
+# Export to Obsidian vault
+python -m src.obsidian.cli --db instance/soulprint.db --vault ~/my-obsidian-vault
 ```
 
 ## Project Status
@@ -212,13 +221,15 @@ python -m src.passport.cli validate exports/passports/memory-passport-v1
 |-----------|-------|
 | Canonical ledger | ✓ Stable |
 | 3-provider import | ✓ Stable |
-| 14 web surfaces | ✓ Stable |
+| 15 web surfaces | ✓ Stable |
 | Intelligence layer | ✓ Stable |
 | Continuity engine | ✓ Stable |
 | Memory Passport | ✓ Stable |
 | Grounded answering + traces | ✓ Stable |
 | Bridge assembly | ✓ Stable |
 | Lineage suggestions | ✓ Stable |
+| Obsidian Bridge | ✓ Stable |
+| Multi-conversation distillation | ✓ Stable |
 | Desktop wrapper | ✓ Shipped (PyInstaller) |
 | Freemium gate | ✓ Shipped |
 | Wrapped summary page | ✓ Shipped |
@@ -234,6 +245,7 @@ See [`ROADMAP.md`](ROADMAP.md) for the sequenced build plan and [`DECISIONS.md`]
 - [Getting started](docs/getting-started.md)
 - [Product positioning](docs/product/positioning.md)
 - [Memory Passport spec](docs/specs/memory-passport-spec.md)
+- [Obsidian Bridge spec](docs/specs/obsidian-bridge-spec.md)
 - [Answering boundary](docs/architecture/answering-boundary.md)
 - [Brand guide](docs/product/brand.md)
 - [Visual direction](docs/product/visual-direction.md)

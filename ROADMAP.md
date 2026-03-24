@@ -14,6 +14,7 @@
 - Coherence pass — unified surfaces, fixed entrypoint, closed documentation gaps
 - Phase 10 — Distribution (brand, landing, desktop, freemium, wrapped)
 - Phase 10.5 — Packaging Infrastructure (PyInstaller, pyproject.toml)
+- Phase 12 — Obsidian Bridge — one-way export to Obsidian vault with structured notes, themes, and daily anchors
 
 ## Current Milestone
 
@@ -21,10 +22,6 @@
 - Execute launch playbook (staggered platform posts)
 - Capture fresh screenshots with real imported data
 - Verify /imported route with 882+ conversation database
-
-### Phase 12 — Obsidian Bridge
-- One-way export from canonical ledger to Obsidian vault
-- See `docs/specs/obsidian-bridge-spec.md`
 
 ## Not In Current Milestone
 

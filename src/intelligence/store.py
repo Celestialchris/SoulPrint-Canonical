@@ -139,3 +139,32 @@ def get_digest(store_path: str | Path, digest_id: str) -> dict | None:
     """Lookup one digest by id."""
 
     return _get_jsonl(Path(store_path), "digest_id", digest_id)
+
+
+# ---------------------------------------------------------------------------
+# Distillations (multi-conversation distillation)
+# ---------------------------------------------------------------------------
+
+def default_distillation_store_path(sqlite_path: str) -> Path:
+    """Store distillations beside SQLite."""
+
+    db_path = Path(sqlite_path)
+    return db_path.parent / "derived_distillations.jsonl"
+
+
+def append_distillation(store_path: str | Path, distillation) -> None:
+    """Append one derived distillation to the on-disk JSONL store."""
+
+    _append_jsonl(Path(store_path), asdict(distillation))
+
+
+def list_distillations(store_path: str | Path, limit: int = 50) -> list[dict]:
+    """Return newest-first distillations from JSONL store."""
+
+    return _list_jsonl(Path(store_path), limit)
+
+
+def get_distillation(store_path: str | Path, distillation_id: str) -> dict | None:
+    """Lookup one distillation by id."""
+
+    return _get_jsonl(Path(store_path), "distillation_id", distillation_id)
