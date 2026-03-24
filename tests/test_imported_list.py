@@ -128,7 +128,7 @@ class ImportedListRouteTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         self.assertIn("Provider: claude", html)
-        self.assertIn("Source Conversation ID: claude-conv-1", html)
+        self.assertIn("Source ID: claude-conv-1", html)
 
 
 if __name__ == "__main__":

@@ -32,7 +32,7 @@ class ImportRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("Import conversation exports", html)
+        self.assertIn("Bring conversations home", html)
         self.assertIn('name="export_file"', html)
 
     def test_submit_no_file_shows_validation_error(self):

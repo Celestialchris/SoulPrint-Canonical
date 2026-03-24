@@ -34,7 +34,7 @@ class AskRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("Ask SoulPrint", html)
+        self.assertIn("Ask your memory", html)
         self.assertIn('name="question"', html)
 
     def test_submit_empty_question_shows_validation_error(self):

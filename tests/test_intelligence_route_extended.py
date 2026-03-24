@@ -257,7 +257,7 @@ class IntelligenceExtendedRouteTest(unittest.TestCase):
         self.assertIn("Synthesized from 2 conversations", html)
         self.assertIn(f"/imported/{conv1_id}/explorer", html)
         self.assertIn(f"/imported/{conv2_id}/explorer", html)
-        self.assertIn("Derived / non-canonical", html)
+        self.assertIn("Generated", html)
 
     def test_digest_without_llm_returns_400(self):
         """Digest requires an LLM provider."""

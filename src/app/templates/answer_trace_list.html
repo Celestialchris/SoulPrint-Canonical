@@ -8,14 +8,14 @@
     <div class="back-links" aria-label="Back navigation">
       <a class="back-link" href="/">Back to home</a>
     </div>
-    <p class="page-eyebrow">Derived inspection surface</p>
+    <p class="page-eyebrow">Answer audit</p>
     <div class="page-header__row">
-      <h1>Answer Traces</h1>
+      <h1>How answers were found</h1>
       <div class="page-badges">
-        {{ badge("Derived / non-canonical", "derived") }}
+        {{ badge("Generated", "derived") }}
       </div>
     </div>
-    <p class="page-summary">Recent read-only audit residue from local answers.</p>
+    <p class="page-summary">Audit trail showing how each answer was generated and what it cited.</p>
     <p class="metadata-line">Store: <code>{{ trace_store }}</code></p>
   </section>
 
@@ -31,14 +31,14 @@
           </div>
           <p class="metadata-line">{{ trace.trace_id }} · {{ trace.created_at }} · Status: {{ trace.status }}</p>
           <p class="metadata-line">{{ trace.question|default('', true)|trim or "(no question captured)" }}</p>
-          <p class="metadata-line">Source lanes: {{ trace.source_lanes|join(', ') if trace.source_lanes else "none" }}</p>
+          <p class="metadata-line">Sources: {{ trace.source_lanes|join(', ') if trace.source_lanes else "none" }}</p>
         </a>
       {% endfor %}
     </div>
   {% else %}
     {{ empty_state(
-      "No derived Answer Traces found yet.",
-      "Generate a local answer trace to inspect recent answering residue without changing canonical storage."
+      "No answer traces yet.",
+      "Ask a question from your conversations — the trace showing how it was answered will appear here."
     ) }}
   {% endif %}
 {% endblock %}

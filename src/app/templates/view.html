@@ -5,15 +5,15 @@
 
 {% block content %}
   <section class="page-header">
-    <p class="page-eyebrow">Canonical native lane</p>
+    <p class="page-eyebrow">Your notes</p>
     <div class="page-header__row">
-      <h1>Native Memory</h1>
+      <h1>Your own notes</h1>
       <div class="page-badges">
-        {{ badge("Canonical", "canonical") }}
-        {{ badge("Native lane", "native") }}
+        {{ badge("Your archive", "canonical") }}
+        {{ badge("Your notes", "native") }}
       </div>
     </div>
-    <p class="page-summary">Read-only recent memory entries captured directly in SoulPrint.</p>
+    <p class="page-summary">Notes and entries you've created directly in SoulPrint.</p>
   </section>
 
   <section class="surface-card filter-panel">
@@ -51,8 +51,8 @@
     </div>
   {% else %}
     {{ empty_state(
-      "No native memory entries found.",
-      "Try a different tag or save a memory from the app to populate the canonical native lane."
+      "No notes found.",
+      "Try a different tag, or create a note to get started."
     ) }}
   {% endif %}
 {% endblock %}

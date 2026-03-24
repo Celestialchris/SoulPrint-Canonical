@@ -5,14 +5,14 @@
 
 {% block content %}
   <section class="page-header">
-    <p class="page-eyebrow">Grounded local answers</p>
+    <p class="page-eyebrow">Answers from your conversations</p>
     <div class="page-header__row">
-      <h1>Ask SoulPrint</h1>
+      <h1>Ask your memory</h1>
       <div class="page-badges">
-        {{ badge("Derived / non-canonical", "derived") }}
+        {{ badge("Generated", "derived") }}
       </div>
     </div>
-    <p class="page-summary">Ask one question at a time against local canonical records. Answers are grounded from native and imported lanes and may return ambiguous or insufficient evidence when support is weak.</p>
+    <p class="page-summary">Ask a question and get an answer drawn from your own conversations, with citations. Results may be ambiguous when evidence is thin.</p>
     <p class="t2" style="margin-top: 0.5rem;">
       Tip: use short, specific keywords that appear in your conversations
       — like "crypto trading" or "front-end design" — rather than
@@ -29,7 +29,7 @@
           name="question"
           type="text"
           value="{{ question }}"
-          placeholder="What should I ask from my local records?"
+          placeholder="What do you want to find in your conversations?"
           autocomplete="off"
         >
         <button type="submit">Ask</button>
@@ -77,13 +77,13 @@
                 <code>{{ citation.stable_id }}</code>
                 <span class="citation-note">(no direct handoff view yet)</span>
               {% endif %}
-              · lane: {{ citation.source_lane }}
+              · source: {{ citation.source_lane }}
               {% if citation.timestamp %}· timestamp: {{ citation.timestamp }}{% endif %}
             </li>
           {% endfor %}
         </ul>
       {% else %}
-        <p>No citation records were captured for this answer.</p>
+        <p>No citations were captured for this answer.</p>
       {% endif %}
     </section>
   {% endif %}

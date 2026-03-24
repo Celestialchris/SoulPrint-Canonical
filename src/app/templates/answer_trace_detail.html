@@ -9,14 +9,14 @@
       <a class="back-link" href="/answer-traces">Back to answer traces</a>
       <a class="back-link" href="/">Back to home</a>
     </div>
-    <p class="page-eyebrow">Derived inspection surface</p>
+    <p class="page-eyebrow">Answer audit</p>
     <div class="page-header__row">
       <h1>{{ trace.trace_id }}</h1>
       <div class="page-badges">
-        {{ badge("Derived / non-canonical", "derived") }}
+        {{ badge("Generated", "derived") }}
       </div>
     </div>
-    <p class="page-summary">Read-only audit inspection for one local answer trace.</p>
+    <p class="page-summary">How this answer was found — sources, citations, and reasoning.</p>
   </section>
 
   <section class="surface-card">
@@ -38,7 +38,7 @@
         <dd>{{ trace.status }}</dd>
       </div>
       <div class="detail-grid__item">
-        <dt>Source lanes</dt>
+        <dt>Sources</dt>
         <dd>{{ trace.source_lanes|join(', ') if trace.source_lanes else "none" }}</dd>
       </div>
       <div class="detail-grid__item">
@@ -55,7 +55,7 @@
     </section>
 
     <section class="content-block" aria-labelledby="citations-heading">
-      <h2 id="citations-heading">Citations / stable IDs</h2>
+      <h2 id="citations-heading">Citations</h2>
       {% if trace_citations %}
         <ul class="content-list">
           {% for citation in trace_citations %}
@@ -66,7 +66,7 @@
                 <code>{{ citation.stable_id }}</code>
                 <span class="citation-note">(no direct handoff view yet)</span>
               {% endif %}
-              · lane: {{ citation.source_lane }}
+              · source: {{ citation.source_lane }}
               {% if citation.timestamp %}· timestamp: {{ citation.timestamp }}{% endif %}
             </li>
           {% endfor %}

@@ -63,7 +63,7 @@ class AnswerTraceBrowserRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("No derived Answer Traces found yet.", html)
+        self.assertIn("No answer traces yet.", html)
 
     def test_answer_trace_detail_route_renders_fields_and_derived_label(self):
         trace_id = self._append_trace(question="What do I have about Lisbon?")
@@ -79,7 +79,7 @@ class AnswerTraceBrowserRouteTest(unittest.TestCase):
         self.assertIn("memory:7", html)
         self.assertIn("native_memory", html)
         self.assertIn("note one", html)
-        self.assertIn("Derived / non-canonical", html)
+        self.assertIn("Generated", html)
 
 
     def test_answer_trace_detail_native_memory_handoff_link_renders(self):

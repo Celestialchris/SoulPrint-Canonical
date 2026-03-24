@@ -75,7 +75,7 @@ class IntelligenceRouteTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn("This is a test summary for display.", html)
         self.assertIn("My Test Chat", html)
-        self.assertIn("Derived / non-canonical", html)
+        self.assertIn("Generated", html)
         self.assertIn("/imported/1/explorer", html)
 
     def test_post_summarize_creates_artifact_and_redirects(self):
@@ -178,7 +178,7 @@ class IntelligenceRouteTest(unittest.TestCase):
             response = self.client.get("/intelligence")
 
         html = response.get_data(as_text=True)
-        self.assertIn("Derived / non-canonical", html)
+        self.assertIn("Generated", html)
 
 
 if __name__ == "__main__":

@@ -74,8 +74,8 @@ class FederatedBrowserRouteTest(unittest.TestCase):
             response = self.client.get("/federated")
 
         html = response.get_data(as_text=True)
-        self.assertIn("Lane: imported_conversation", html)
-        self.assertIn("Stable ID: imported_conversation:9", html)
+        self.assertIn("Source: imported_conversation", html)
+        self.assertIn("ID: imported_conversation:9", html)
 
     def test_imported_conversation_handoff_link_renders_when_possible(self):
         results = [
@@ -117,7 +117,7 @@ class FederatedBrowserRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("No federated results found.", html)
+        self.assertIn("No results found.", html)
 
 
 if __name__ == "__main__":

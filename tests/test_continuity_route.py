@@ -148,7 +148,7 @@ class ContinuityRouteTest(unittest.TestCase):
             response = self.client.get(f"/intelligence/continuity/{conv_id}")
 
         html = response.get_data(as_text=True)
-        self.assertIn("Derived / non-canonical", html)
+        self.assertIn("Generated", html)
 
     def test_copy_payload_present(self):
         conv_id = self._create_conversation()
@@ -177,7 +177,7 @@ class ContinuityRouteTest(unittest.TestCase):
             response = self.client.get(f"/imported/{conv_id}/explorer")
 
         html = response.get_data(as_text=True)
-        self.assertIn("Generate continuity packet", html)
+        self.assertIn("Continue this thread", html)
         self.assertIn(f"/intelligence/continuity/{conv_id}", html)
 
     def test_explorer_hides_continuity_button_when_not_configured(self):
@@ -186,7 +186,7 @@ class ContinuityRouteTest(unittest.TestCase):
             response = self.client.get(f"/imported/{conv_id}/explorer")
 
         html = response.get_data(as_text=True)
-        self.assertNotIn("Generate continuity packet", html)
+        self.assertNotIn("Continue this thread", html)
 
     # -- canonical immutability --
 

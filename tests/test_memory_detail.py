@@ -46,7 +46,7 @@ class MemoryDetailRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("Native Memory Record", html)
+        self.assertIn("Your note", html)
         self.assertIn(f"memory:{entry_id}", html)
 
     def test_missing_memory_entry_returns_404(self):

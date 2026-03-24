@@ -12,15 +12,15 @@
     <div class="back-links" aria-label="Back navigation">
       <a class="back-link" href="/imported">Back to imported conversations</a>
     </div>
-    <p class="page-eyebrow">Imported transcript explorer</p>
+    <p class="page-eyebrow">Transcript explorer</p>
     <div class="page-header__row">
       <h1>{{ display_title }}</h1>
       <div class="page-badges">
-        {{ badge("Imported lane", "imported") }}
+        {{ badge("Imported", "imported") }}
         {{ badge("Read-only", "neutral") }}
       </div>
     </div>
-    <p class="page-summary">Read-only imported conversation detail with prompt TOC and transcript overview.</p>
+    <p class="page-summary">Full conversation transcript with prompt navigation and overview.</p>
     <p class="metadata-line">
       Created: {{ format_timestamp(conversation.created_at_unix) }} ·
       Updated: {{ format_timestamp(conversation.updated_at_unix) }} ·
@@ -31,14 +31,14 @@
         <button type="submit" class="ghost-link">Summarize</button>
       </form>
       <form method="post" action="/intelligence/continuity/{{ conversation.id }}" class="inline-action">
-        <button type="submit" class="ghost-link">Generate continuity packet</button>
+        <button type="submit" class="ghost-link">Continue this thread</button>
       </form>
     {% endif %}
   </section>
 
   {% if lineage_suggestions %}
     <section class="surface-card content-block" style="margin-bottom: 1.5rem;">
-      <p class="metadata-line" style="margin-bottom: 0.5rem;">This conversation may relate to: <em>(derived suggestion)</em></p>
+      <p class="metadata-line" style="margin-bottom: 0.5rem;">This conversation may relate to: <em>(suggested connection)</em></p>
       <ul class="toc-list">
         {% for suggestion in lineage_suggestions %}
           <li>
@@ -54,7 +54,7 @@
     <aside class="rail-panel">
       <h2 class="rail-panel__title">Prompt TOC</h2>
       <p class="metadata-line">Provider: {{ conversation.source }}</p>
-      <p class="metadata-line">Canonical ID: {{ conversation.id }}</p>
+      <p class="metadata-line">ID: {{ conversation.id }}</p>
       <p class="metadata-line">Source Conversation ID: {{ conversation.source_conversation_id }}</p>
       <ul class="toc-list">
         {% for entry in toc_entries %}

@@ -1,33 +1,33 @@
 {% extends "base.html" %}
 {% from "_ui.html" import badge, empty_state %}
 
-{% block title %}Federated Browser · SoulPrint{% endblock %}
+{% block title %}Everything, together · SoulPrint{% endblock %}
 
 {% block content %}
   <section class="page-header">
-    <p class="page-eyebrow">Read-only composed view</p>
+    <p class="page-eyebrow">All providers</p>
     <div class="page-header__row">
-      <h1>Federated Browser</h1>
+      <h1>Everything, together</h1>
       <div class="page-badges">
-        {{ badge("Native lane", "native") }}
-        {{ badge("Imported lane", "imported") }}
+        {{ badge("Your notes", "native") }}
+        {{ badge("Imported", "imported") }}
       </div>
     </div>
-    <p class="page-summary">Read-only mixed retrieval across native memory and imported conversations.</p>
+    <p class="page-summary">Search across all your conversations — your notes and imported history — in one view.</p>
   </section>
 
   <section class="surface-card filter-panel">
     <form class="filter-form" method="get" action="/federated">
       <div>
-        <label class="field-label" for="federated-query">Search federated memory</label>
+        <label class="field-label" for="federated-query">Search everything</label>
         <div class="filter-row">
           <input
             id="federated-query"
             type="search"
             name="q"
-            placeholder="Search across both lanes"
+            placeholder="Search across all your conversations"
             value="{{ keyword }}"
-            aria-label="Search federated memory"
+            aria-label="Search everything"
           >
           <button type="submit">Search</button>
         </div>
@@ -45,12 +45,12 @@
           <div class="record-card__header">
             <h2 class="record-card__title">{{ result.title|default('', true)|trim or "Untitled result" }}</h2>
             <div class="metadata-badges">
-              {{ badge("Lane: " ~ result.source_lane, tone) }}
+              {{ badge("Source: " ~ result.source_lane, tone) }}
               {{ badge(result.stable_id, "neutral", mono=True) }}
             </div>
           </div>
           <p class="metadata-line">
-            Lane: {{ result.source_lane }} · Stable ID: {{ result.stable_id }} · Timestamp: {{ format_timestamp(result.timestamp_unix) }}
+            Source: {{ result.source_lane }} · ID: {{ result.stable_id }} · Timestamp: {{ format_timestamp(result.timestamp_unix) }}
           </p>
           {% if result.source_metadata %}
             <p class="metadata-line">
@@ -61,15 +61,15 @@
             </p>
           {% endif %}
           {% if row.handoff_href %}
-            <a class="record-card__link" href="{{ row.handoff_href }}">Open lane-specific view</a>
+            <a class="record-card__link" href="{{ row.handoff_href }}">Open full view</a>
           {% endif %}
         </article>
       {% endfor %}
     </div>
   {% else %}
     {{ empty_state(
-      "No federated results found.",
-      "Try a different search term. This surface keeps native and imported lanes explicit even when results are shown together."
+      "No results found.",
+      "Try a different search term. Results from all providers appear here together, each showing its source."
     ) }}
   {% endif %}
 {% endblock %}

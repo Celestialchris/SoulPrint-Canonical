@@ -10,14 +10,14 @@
       <a class="back-link" href="/imported">Back to imported</a>
       <a class="back-link" href="/">Back to home</a>
     </div>
-    <p class="page-eyebrow">Derived continuity surface</p>
+    <p class="page-eyebrow">Continuity</p>
     <div class="page-header__row">
       <h1>{{ conversation.title }}</h1>
       <div class="page-badges">
-        {{ badge("Derived / non-canonical", "derived") }}
+        {{ badge("Generated", "derived") }}
       </div>
     </div>
-    <p class="page-summary">Continuity artifacts derived from one canonical conversation. Not canonical.</p>
+    <p class="page-summary">Summary, decisions, open loops, and key entities extracted from this conversation — ready to hand off.</p>
     <p class="metadata-line">
       Source: {{ conversation.source }} · Conversation ID: {{ conversation.id }}
     </p>
@@ -43,7 +43,7 @@
       <section class="surface-card content-block">
         <div class="content-block__header">
           <h2>Summary</h2>
-          {{ badge("Derived / non-canonical", "derived") }}
+          {{ badge("Generated", "derived") }}
         </div>
         <p>{{ artifacts.summary.content_text }}</p>
         <p class="metadata-line">
@@ -58,7 +58,7 @@
       <section class="surface-card content-block">
         <div class="content-block__header">
           <h2>Decisions</h2>
-          {{ badge("Derived / non-canonical", "derived") }}
+          {{ badge("Generated", "derived") }}
         </div>
         <pre class="content-block__pre">{{ artifacts.decisions.content_text }}</pre>
         <p class="metadata-line">
@@ -73,7 +73,7 @@
       <section class="surface-card content-block">
         <div class="content-block__header">
           <h2>Open Loops</h2>
-          {{ badge("Derived / non-canonical", "derived") }}
+          {{ badge("Generated", "derived") }}
         </div>
         <pre class="content-block__pre">{{ artifacts.open_loops.content_text }}</pre>
         <p class="metadata-line">
@@ -88,7 +88,7 @@
       <section class="surface-card content-block">
         <div class="content-block__header">
           <h2>Entity Map</h2>
-          {{ badge("Derived / non-canonical", "derived") }}
+          {{ badge("Generated", "derived") }}
         </div>
         <p>{{ artifacts.entity_map.content_text }}</p>
         <p class="metadata-line">

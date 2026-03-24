@@ -4,11 +4,11 @@
 
 {% block content %}
   <section class="page-header">
-    <p class="page-eyebrow">Import Pipeline</p>
-    <h1>Import conversation exports</h1>
+    <p class="page-eyebrow">Import</p>
+    <h1>Bring conversations home</h1>
     <p class="page-summary">
-      Upload one supported provider export JSON file to run the existing normalization and persistence pipeline.
-      Duplicate conversations are safely skipped.
+      Upload an export file from any supported provider. Your conversations are added to your local archive.
+      Duplicates are safely skipped.
     </p>
   </section>
 
@@ -59,8 +59,8 @@
         </div>
       {% endif %}
 
-      <p class="metadata-line">Next step: review imported conversations in the imported lane.</p>
-      <a class="route-card__link" href="{{ url_for('imported_conversations') }}">Go to Imported conversations</a>
+      <p class="metadata-line">Next step: review your imported conversations.</p>
+      <a class="route-card__link" href="{{ url_for('imported_conversations') }}">See what you've discussed</a>
       {% if result.show_summary_link %}
         <a class="route-card__link" href="{{ url_for('summary') }}">See your updated summary &rarr;</a>
       {% endif %}

@@ -6,15 +6,15 @@
 
 {% block content %}
   <section class="page-header">
-    <p class="page-eyebrow">Canonical imported lane</p>
+    <p class="page-eyebrow">Your imported history</p>
     <div class="page-header__row">
-      <h1>Imported Conversations</h1>
+      <h1>What you've discussed</h1>
       <div class="page-badges">
-        {{ badge("Canonical", "canonical") }}
-        {{ badge("Imported lane", "imported") }}
+        {{ badge("Your archive", "canonical") }}
+        {{ badge("Imported", "imported") }}
       </div>
     </div>
-    <p class="page-summary">Read-only explorer for imported history with explicit provider and canonical identity.</p>
+    <p class="page-summary">Browse your imported conversations by provider, search by title or content.</p>
   </section>
 
   <section class="surface-card filter-panel">
@@ -55,7 +55,7 @@
             </div>
           </div>
           <p class="metadata-line">
-            Provider: {{ conversation.source }} · Canonical ID: {{ conversation.id }} · Source Conversation ID: {{ conversation.source_conversation_id }}
+            Provider: {{ conversation.source }} · ID: {{ conversation.id }} · Source ID: {{ conversation.source_conversation_id }}
           </p>
           <p class="metadata-line">
             Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
@@ -94,7 +94,7 @@
   {% else %}
     {{ empty_state(
       "No imported conversations found.",
-      "Try a different title or message term. Imported and native lanes remain separate until you choose a read-only composed view."
+      "Try a different search term, or import a conversation export to get started."
     ) }}
   {% endif %}
 {% endblock %}

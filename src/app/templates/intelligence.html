@@ -8,14 +8,14 @@
     <div class="back-links" aria-label="Back navigation">
       <a class="back-link" href="/">Back to home</a>
     </div>
-    <p class="page-eyebrow">Derived intelligence surface</p>
+    <p class="page-eyebrow">Themes & patterns</p>
     <div class="page-header__row">
-      <h1>Notes</h1>
+      <h1>Themes & patterns</h1>
       <div class="page-badges">
-        {{ badge("Derived / non-canonical", "derived") }}
+        {{ badge("Generated", "derived") }}
       </div>
     </div>
-    <p class="page-summary">LLM-generated conversation summaries, topic threads, and cross-conversation digests — derived, provenance-bound, never canonical.</p>
+    <p class="page-summary">Conversation summaries, shared topics, and cross-conversation digests — generated from your history, always traceable to source.</p>
   </section>
 
   {% if not llm_configured %}
@@ -79,7 +79,7 @@
               <div class="record-card__header">
                 <h3 class="record-card__title">{{ s.source_conversation_title }}</h3>
                 <div class="metadata-badges">
-                  {{ badge("Derived / non-canonical", "derived") }}
+                  {{ badge("Generated", "derived") }}
                 </div>
               </div>
               <p class="record-card__body">{{ s.summary_text }}</p>
@@ -97,7 +97,7 @@
       {% else %}
         {{ empty_state(
           "No summaries generated yet.",
-          "Navigate to any imported conversation and click Summarize to generate your first derived summary.",
+          "Navigate to any imported conversation and click Summarize to generate your first summary.",
           url_for('imported_conversations'),
           "Browse imported conversations"
         ) }}
@@ -152,7 +152,7 @@
               <div class="record-card__header">
                 <h3 class="record-card__title">{{ d.topic_label }}</h3>
                 <div class="metadata-badges">
-                  {{ badge("Derived / non-canonical", "derived") }}
+                  {{ badge("Generated", "derived") }}
                 </div>
               </div>
               <p class="record-card__body">{{ d.digest_text }}</p>

@@ -35,7 +35,7 @@ Routes are unchanged — only the visible text changes.
 | `/import`         | Import             | Import                      |
 | `/federated`      | Federated          | Everything, together        |
 | `/passport`       | Passport           | Take it with you            |
-| `/ask`            | Ask                | Ask                         |
+| `/ask`            | Ask                | Ask your memory             |
 | `/intelligence`   | Notes              | Themes & patterns           |
 | `/answer-traces`  | Answer Traces      | How answers were found      |
 

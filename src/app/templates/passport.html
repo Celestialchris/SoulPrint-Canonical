@@ -9,36 +9,34 @@
     <div class="page-header__row">
       <h1>Memory Passport</h1>
       <div class="page-badges">
-        {{ badge("Canonical ledger remains authoritative", "canonical") }}
+        {{ badge("Your archive", "canonical") }}
         {{ badge("Validation-ready", "accent") }}
       </div>
     </div>
     <p class="page-summary">
-      Memory Passport is SoulPrint’s exportability and integrity surface for continuity.
-      It packages canonical records with provenance metadata so exports can be inspected and validated,
-      without replacing canonical local records.
+      Memory Passport packages your conversations with source tracking so exports can be inspected
+      and validated — without replacing your local archive.
     </p>
   </section>
 
   <section class="surface-card" aria-label="What Memory Passport Is">
     <h2>What Memory Passport is</h2>
     <p>
-      Memory Passport is a provenance-and-validation construct layered over canonical truth.
-      It supports inspectability, continuity, and local ownership by describing what was exported
-      and where each unit originated.
+      Memory Passport is an export-and-validation package. It describes what was exported and where
+      each piece originated, so you can verify your archive's integrity.
     </p>
     <p>
-      It does <strong>not</strong> replace the canonical local ledger. Canonical records in SoulPrint
-      remain the source of truth; passport artifacts are export snapshots and integrity evidence.
+      It does <strong>not</strong> replace your local archive. Your conversations remain the source
+      of truth; the passport is an export snapshot with integrity evidence.
     </p>
   </section>
 
   <section class="surface-card" aria-label="What Export Does">
     <h2>What export does</h2>
     <p>
-      Export writes an inspectable package from canonical records. Canonical data is copied into a
-      structured artifact, while derived materials (like markdown views) are included as non-canonical
-      representations tied back to provenance.
+      Export writes an inspectable package from your archive. Your conversations are copied into a
+      structured package, while generated materials (like markdown views) are included as supplementary
+      representations tied back to their source.
     </p>
     <p>
       Export is currently available through the existing CLI.
@@ -50,7 +48,7 @@
     <h2>What validation does</h2>
     <p>
       Validation checks passport package integrity and internal coherence: required files, record structure,
-      lane/provider consistency, and provenance links.
+      provider consistency, and source links.
     </p>
     <ul class="content-list">
       <li><strong>Valid</strong>: integrity checks passed without diagnostics.</li>
@@ -76,8 +74,8 @@
   <section class="surface-card" aria-label="Next Actions">
     <h2>Next actions</h2>
     <ul class="content-list">
-      <li>Export a Memory Passport artifact from the CLI.</li>
-      <li>Validate an existing artifact path or manifest path from the CLI.</li>
+      <li>Export your Memory Passport from the CLI.</li>
+      <li>Validate an existing passport from the CLI.</li>
       <li><a href="{{ url_for('imported_conversations') }}">Inspect imported memory</a> and <a href="{{ url_for('chats') }}">native memory</a> before export.</li>
       <li><a href="{{ url_for('home') }}">Return to workspace</a> for continuity overview.</li>
     </ul>
