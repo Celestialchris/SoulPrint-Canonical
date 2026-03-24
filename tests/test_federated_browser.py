@@ -32,7 +32,7 @@ class FederatedBrowserRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("Federated Browser", html)
+        self.assertIn("Everything, together", html)
 
     def test_no_query_federated_results_render_safely(self):
         results = [

@@ -159,3 +159,6 @@ Design system: "Torchlit Vault." See `docs/product/brand.md`.
 **Layer 2** (visual direction, aesthetic polish) may only enhance finish without creating drift.
 
 Frozen decisions in `DECISIONS.md` override any task instruction that contradicts them.
+
+## Extended Rules
+See `.claude/rules/` for modular instruction files.

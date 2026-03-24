@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read files in src/",
+      "Read files in tests/",
+      "Read files in docs/"
+    ],
+    "deny": [
+      "Push to git",
+      "Delete files without confirmation",
+      "Modify instance/"
+    ]
+  }
+}
