@@ -17,10 +17,10 @@
       <h1>{{ display_title }}</h1>
       <div class="page-badges">
         {{ badge("Imported", "imported") }}
-        {{ badge("Read-only", "neutral") }}
+        {{ badge("Provider: " ~ conversation.source, "neutral") }}
       </div>
     </div>
-    <p class="page-summary">Full conversation transcript with prompt navigation and overview.</p>
+    <p class="page-summary">Read through this conversation, or continue where you left off.</p>
     <p class="metadata-line">
       Created: {{ format_timestamp(conversation.created_at_unix) }} ·
       Updated: {{ format_timestamp(conversation.updated_at_unix) }} ·
@@ -30,11 +30,16 @@
       <form method="post" action="/intelligence/summarize/{{ conversation.id }}" class="inline-action">
         <button type="submit" class="ghost-link">Summarize</button>
       </form>
-      <form method="post" action="/intelligence/continuity/{{ conversation.id }}" class="inline-action">
-        <button type="submit" class="ghost-link">Continue this thread</button>
-      </form>
     {% endif %}
   </section>
+
+  {% if llm_configured|default(false) and licensed|default(false) %}
+    <section class="explorer-continue">
+      <form method="post" action="/intelligence/continuity/{{ conversation.id }}">
+        <button type="submit" class="handoff-cta">Continue this thread</button>
+      </form>
+    </section>
+  {% endif %}
 
   {% if lineage_suggestions %}
     <section class="surface-card content-block" style="margin-bottom: 1.5rem;">

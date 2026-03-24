@@ -17,7 +17,7 @@
         {{ badge("Generated", "derived") }}
       </div>
     </div>
-    <p class="page-summary">Summary, decisions, open loops, and key entities extracted from this conversation — ready to hand off.</p>
+    <p class="page-summary">Ready to hand off. Copy the packet below and paste it into a fresh conversation.</p>
     <p class="metadata-line">
       Source: {{ conversation.source }} · Conversation ID: {{ conversation.id }}
     </p>
@@ -32,13 +32,24 @@
     {% else %}
       <section class="empty-state">
         <h2 class="empty-state__title">No continuity packet yet</h2>
-        <p class="empty-state__text">Generate a continuity packet to extract summary, decisions, open loops, and entity map.</p>
+        <p class="empty-state__text">Generate a handoff packet to continue this conversation in a fresh AI chat.</p>
         <form method="post" action="/intelligence/continuity/{{ conversation.id }}" class="inline-action">
-          <button type="submit" class="ghost-link">Generate continuity packet</button>
+          <button type="submit">Generate continuity packet</button>
         </form>
       </section>
     {% endif %}
   {% else %}
+    {# ── Handoff section — the primary action, always first ── #}
+    <section class="handoff-section">
+      <h2>Copy for New Chat</h2>
+      <p class="handoff-hint">Paste this into a fresh AI chat to pick up where you left off.</p>
+      <textarea id="copy-payload" class="copy-payload" readonly rows="12">{{ copy_payload }}</textarea>
+      <button type="button" class="handoff-cta" onclick="navigator.clipboard.writeText(document.getElementById('copy-payload').value)">
+        Copy handoff to clipboard
+      </button>
+    </section>
+
+    {# ── Artifacts — supporting detail below the handoff ── #}
     {% if artifacts.summary %}
       <section class="surface-card content-block">
         <div class="content-block__header">
@@ -47,9 +58,7 @@
         </div>
         <p>{{ artifacts.summary.content_text }}</p>
         <p class="metadata-line">
-          Provider: {{ artifacts.summary.llm_provider_used }} ·
-          Prompt: {{ artifacts.summary.prompt_template_version }} ·
-          Generated: {{ artifacts.summary.generation_timestamp }}
+          {{ artifacts.summary.llm_provider_used }} · {{ artifacts.summary.generation_timestamp }}
         </p>
       </section>
     {% endif %}
@@ -62,9 +71,7 @@
         </div>
         <pre class="content-block__pre">{{ artifacts.decisions.content_text }}</pre>
         <p class="metadata-line">
-          Provider: {{ artifacts.decisions.llm_provider_used }} ·
-          Prompt: {{ artifacts.decisions.prompt_template_version }} ·
-          Generated: {{ artifacts.decisions.generation_timestamp }}
+          {{ artifacts.decisions.llm_provider_used }} · {{ artifacts.decisions.generation_timestamp }}
         </p>
       </section>
     {% endif %}
@@ -77,9 +84,7 @@
         </div>
         <pre class="content-block__pre">{{ artifacts.open_loops.content_text }}</pre>
         <p class="metadata-line">
-          Provider: {{ artifacts.open_loops.llm_provider_used }} ·
-          Prompt: {{ artifacts.open_loops.prompt_template_version }} ·
-          Generated: {{ artifacts.open_loops.generation_timestamp }}
+          {{ artifacts.open_loops.llm_provider_used }} · {{ artifacts.open_loops.generation_timestamp }}
         </p>
       </section>
     {% endif %}
@@ -92,21 +97,9 @@
         </div>
         <p>{{ artifacts.entity_map.content_text }}</p>
         <p class="metadata-line">
-          Provider: {{ artifacts.entity_map.llm_provider_used }} ·
-          Prompt: {{ artifacts.entity_map.prompt_template_version }} ·
-          Generated: {{ artifacts.entity_map.generation_timestamp }}
+          {{ artifacts.entity_map.llm_provider_used }} · {{ artifacts.entity_map.generation_timestamp }}
         </p>
       </section>
     {% endif %}
-
-    <section class="surface-card content-block">
-      <div class="content-block__header">
-        <h2>Copy for New Chat</h2>
-      </div>
-      <textarea id="copy-payload" class="copy-payload" readonly rows="12">{{ copy_payload }}</textarea>
-      <button type="button" class="ghost-link" onclick="navigator.clipboard.writeText(document.getElementById('copy-payload').value)">
-        Copy to clipboard
-      </button>
-    </section>
   {% endif %}
 {% endblock %}
