@@ -53,9 +53,15 @@ A local-first memory continuity system. Import your AI conversation history from
 
 ## Quick Start
 
+Requires **Python 3.12+**.
+
 ```bash
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
 cd SoulPrint-Canonical
+
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
 
 pip install -r requirements-minimal.txt
 python -m src.run
@@ -108,6 +114,9 @@ Adding a provider is bounded work: adapter, detector, registry entry, fixture, t
 | `/passport` | Export and validate your Memory Passport |
 | `/summary` | Your AI Memory Wrapped — visual summary and shareable stats |
 | `/answer-traces` | Audit trail for every generated answer |
+| `/answer-traces/<id>` | Individual trace detail with citations |
+| `/memory/<id>` | Native memory entry detail |
+| `/intelligence/continuity/<id>` | Continuity packet view |
 
 ## Architecture
 
@@ -132,11 +141,13 @@ src/
 ├── passport/       Memory Passport export and validation
 └── tools/          CLI utilities
 
-tests/              44 test files
+tests/              47 test files
 sample_data/        Synthetic provider fixtures
 docs/               Architecture, specs, product docs
 landing/            Static landing page
 scripts/            Windows build script
+roadmap/            Release notes and launch playbook
+.github/            CI workflows
 ```
 
 ## Packaging
@@ -174,7 +185,7 @@ For the full packaging overview, see
 pytest
 ```
 
-44 test files covering parsing, persistence, retrieval, intelligence, continuity, passport, CLI, and browser integration.
+47 test files, 486 test methods covering parsing, persistence, retrieval, intelligence, continuity, passport, CLI, and browser integration.
 
 ## CLI Tools
 
@@ -201,7 +212,7 @@ python -m src.passport.cli validate exports/passports/memory-passport-v1
 |-----------|-------|
 | Canonical ledger | ✓ Stable |
 | 3-provider import | ✓ Stable |
-| 10 web surfaces | ✓ Stable |
+| 14 web surfaces | ✓ Stable |
 | Intelligence layer | ✓ Stable |
 | Continuity engine | ✓ Stable |
 | Memory Passport | ✓ Stable |
@@ -226,6 +237,10 @@ See [`ROADMAP.md`](ROADMAP.md) for the sequenced build plan and [`DECISIONS.md`]
 - [Answering boundary](docs/architecture/answering-boundary.md)
 - [Brand guide](docs/product/brand.md)
 - [Visual direction](docs/product/visual-direction.md)
+
+## Security
+
+SoulPrint is local-first by design. No data leaves your machine unless you configure an LLM API key (BYOK). There are no analytics, no telemetry, no outbound network calls from the core application. See [`SECURITY.md`](SECURITY.md) for reporting guidelines.
 
 ## Contributing
 
