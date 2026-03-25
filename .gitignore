@@ -16,7 +16,7 @@ src/.env
 .DS_Store
 .tmp-*/
 .tmp/
-.claude/settings.local.json
+.claude/
 \#For-Claude_Code/
 roadmap/LAUNCH-PLAYBOOK.md
 roadmap/SOULPRINT-30-DAY-VISION.md
