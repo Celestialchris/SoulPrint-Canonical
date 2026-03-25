@@ -144,19 +144,29 @@ python -m src.obsidian.cli --db instance/soulprint.db --vault ~/my-obsidian-vaul
 
 ## Terminology
 
-Do NOT use: "portable mode," "USB memory," "carry it anywhere," "capsule."
-Use instead: continuity, exportability, interoperability, local ownership, Memory Passport.
+Do NOT use: "portable mode," "capsule," "vault," "torchlit," "ember."
+Use instead: USB stick, plug in, local archive, your machine, Memory Passport.
+Product metaphor: "A virtual USB stick for your AI life."
+Trust language: "Everything stays on your machine. Nothing is sent anywhere."
 
 ## Visual Direction
 
-Design system: "Torchlit Vault." See `docs/product/brand.md`.
+Design system: "USB Drive." See `docs/product/brand.md`.
 
-- Calm, fluid, low-clutter. Typography carries hierarchy.
-- No metrics theater, no noisy admin-panel energy
-- No ornamental AI gimmicks
-- If style conflicts with clarity, choose clarity
-- Wordmark glow: ember bloom, not neon. See "Embers in Velvet Darkness" spec in `docs/product/brand.md`
-- `src/app/static/app-mock.html` is the canonical visual reference for all UI work
+Identity: "A virtual USB stick for your AI life." Green = safe, verified, yours.
+
+- System sans-serif body, JetBrains Mono for labels and metadata
+- Single accent color: `#4ade80` (USB LED green). No second accent.
+- Background: `#0e0f11` (cool neutral black, not warm brown-black)
+- Hierarchy through opacity: `--t1` 88%, `--t2` 55%, `--t3` 35%, `--t4` 15%
+- Filled green CTA buttons with 6px radius. No ghost/outline CTAs for primary actions.
+- No grain overlay, no vignette, no ember glow, no radial gradients on body
+- No serif fonts in the app UI (JetBrains Mono for mono, system sans for everything else)
+- Minimum font size: 11px. Body text: 14-15px.
+- Lane colors: ChatGPT `#4ade80`, Claude `#a78bfa`, Gemini `#60a5fa`
+- Badges use 1px border + 4px radius, not background fills
+- Trust-first design: green accent next to privacy language reinforces safety
+- If style conflicts with clarity or trust, choose clarity
 
 ## Two-Layer Principle
 

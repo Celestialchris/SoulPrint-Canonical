@@ -1,3 +1,6 @@
+# ARCHIVED — Superseded by USB Drive design system in brand.md
+# This file describes the old "Torchlit Vault" palette. Kept for history only.
+
 # SoulPrint — Dual Theme Specification
 
 ## The Principle

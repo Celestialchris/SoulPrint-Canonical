@@ -4,60 +4,52 @@ Doctrine files are not aesthetic playgrounds.
 
 Do not alter product architecture, lane honesty, provenance display rules, or workflow structure in the name of style.
 
-## Canonical design reference
+## Design system: USB Drive
 
-All color tokens, typography specs, glow specifications, and component rules live in [`brand.md`](brand.md). This document governs *where* aesthetic work applies and *where* it must not. For *what* the design system actually is, defer to brand.md.
-
-Wordmark glow specification: see "Embers in Velvet Darkness" in [`brand.md`](brand.md).
+Identity metaphor: "A virtual USB stick for your AI life."
+Trust principle: green accent reinforces safety. Every design choice should make the user feel their data is secure.
 
 ## Where aesthetic prompting applies
 
-Use aesthetic prompting only for:
-
-- visual rhythm
-- gradients
-- subtle motion
-- empty-state warmth
-- brand atmosphere
-- future summary / landing pages
-- tasteful micro-interactions
+- Typography sizing and weight
+- Spacing and layout rhythm
+- Hover states and transitions
+- Empty-state warmth
+- Landing page and Wrapped summary page
+- Button styling and CTA placement
 
 ## Where aesthetic prompting must never apply
 
-Never use aesthetic prompting to redefine:
-
-- route structure
-- information architecture
-- transcript explorer behavior
-- import UX logic
-- answer-trace trust model
-- canonical vs derived boundaries
+- Route structure
+- Information architecture
+- Transcript explorer behavior
+- Import UX logic
+- Answer-trace trust model
+- Canonical vs derived boundaries
 
 ## UI style rules
 
 SoulPrint should feel:
 
-- calm
-- fluid
-- Apple-like
-- low-clutter
-- readable
-- warm
-- continuity-first
-- obvious to navigate
+- Clean and trustworthy
+- Readable at every font size
+- Fast and responsive
+- Like a tool you open daily, not a museum exhibit
+- Green = safe, go, verified
 
 Avoid:
 
-- dashboard bloat
-- metrics theater
-- noisy admin-panel energy
-- ornamental AI gimmicks
-- scroll-scroll-scroll transcript hell
+- Dashboard bloat and metrics theater
+- Noisy admin-panel energy
+- Ornamental AI gimmicks
+- Decorative overlays (grain, vignette, glow)
+- Serif fonts in the app UI
+- Font sizes below 11px
 
-## The two-layer principle
+## Two-layer principle
 
 **Layer 1** (doctrine, architecture, execution) always wins.
-
 **Layer 2** (visual direction, aesthetic polish) may only enhance finish without creating drift.
 
 If style conflicts with clarity, choose clarity.
+If style conflicts with trust, choose trust.

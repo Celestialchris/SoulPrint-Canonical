@@ -6,231 +6,142 @@ Every person should own their AI memory.
 
 ### One-liner
 
-Your AI conversations are scattered everywhere. SoulPrint brings them home.
+A virtual USB stick for your AI life.
+
+### Tagline (landing page hero)
+
+A virtual USB stick for your AI life. Plug in. Take everything with you.
+
+### Trust line
+
+Everything stays on your machine. Nothing is sent anywhere.
 
 ## Product Voice
 
-- Warm, confident, technical but never cold
-- Trustworthy — we handle people's conversation history
+- Direct, clear, trustworthy
+- Technical when needed, never cold
 - Never corporate, never salesy
-- Direct without being terse
-- Warm without being cutesy
-- Use "your" not "the user's" — speak to people, not about them
+- "Your" not "the user's" — speak to people
+- Green = safe, verified, go. Use it to reinforce privacy and ownership.
+- Never use: vault, ember, torchlit, capsule, portable mode
 
 ## Product Name
 
 **SoulPrint** — one word, capital S, capital P.
 Never: Soul Print, soul print, SOULPRINT, SP.
 
-## Warm Nav Labels
+## Identity Metaphor
 
-Sidebar nav text and page heading text adopt warmer labels.
-Routes are unchanged — only the visible text changes.
+SoulPrint is a virtual USB stick. The metaphor carries through:
+- The logo is a pixel-art USB stick with a green body and cutout center
+- The LED blinks green (active, alive, working)
+- "Plug in" = import your data
+- "Take it with you" = Memory Passport export
+- The favicon is the same USB icon at 32px
 
-| Route             | Old Label          | Warm Label                  |
-|-------------------|--------------------|-----------------------------|
-| `/`               | Workspace          | Workspace                   |
-| `/chats`          | Native Memory      | Your own notes              |
-| `/imported`       | Imported           | What you've discussed       |
-| `/import`         | Import             | Import                      |
-| `/federated`      | Federated          | Everything, together        |
-| `/passport`       | Passport           | Take it with you            |
-| `/ask`            | Ask                | Ask your memory             |
-| `/intelligence`   | Notes              | Themes & patterns           |
-| `/answer-traces`  | Answer Traces      | How answers were found      |
+## Color Palette
 
-## Color Palettes
+### Dark (default)
 
-### Dark — "Torchlit Vault" (default)
+| Token        | Value                           | Usage                           |
+|--------------|----------------------------------|----------------------------------|
+| --bg         | #0e0f11                          | Page background                  |
+| --surface    | #141518                          | Panel/sidebar background         |
+| --raised     | #1a1b1f                          | Elevated surface                 |
+| --accent     | #4ade80                          | Primary accent — CTAs, active states, trust signals |
+| --accent-dim | #22c55e                          | Hover state for accent           |
+| --accent-muted | rgba(74,222,128,0.15)          | Icon backgrounds, badges         |
+| --accent-ghost | rgba(74,222,128,0.06)          | Subtle hover fills               |
+| --t1         | rgba(240,242,238,0.88)           | Primary text                     |
+| --t2         | rgba(240,242,238,0.55)           | Secondary text                   |
+| --t3         | rgba(240,242,238,0.35)           | Muted text, labels               |
+| --t4         | rgba(240,242,238,0.15)           | Ghost text, disabled, borders    |
+| --line       | rgba(255,255,255,0.06)           | Borders, dividers                |
 
-| Token         | Value                          | Usage                            |
-|---------------|--------------------------------|----------------------------------|
-| --bg          | #0e0d0b                        | Page background                  |
-| --surface     | #161513                        | Panel background                 |
-| --raised      | #1d1b18                        | Elevated surface                 |
-| --wine        | #6b3a3a                        | Primary accent                   |
-| --wine-soft   | #8a5050                        | Hover / soft accent              |
-| --gold        | #c9a84c                        | Bright highlight accent          |
-| --gold-dim    | #a08848                        | Logo, active nav, subtle gold    |
-| --t1          | rgba(210, 200, 185, 0.90)      | Primary text                     |
-| --t2          | rgba(210, 200, 185, 0.55)      | Secondary text                   |
-| --t3          | rgba(210, 200, 185, 0.30)      | Muted text, labels               |
-| --t4          | rgba(210, 200, 185, 0.12)      | Ghost text, disabled             |
-| --line        | rgba(210, 200, 185, 0.06)      | Borders, dividers                |
+### Light
 
-### Light — "Parchment Observatory"
+| Token        | Value                           | Usage                           |
+|--------------|----------------------------------|----------------------------------|
+| --bg         | #f4f5f0                          | Page background                  |
+| --surface    | #eaebe5                          | Panel background                 |
+| --raised     | #ffffff                          | Elevated surface                 |
+| --accent     | #16a34a                          | Primary accent                   |
+| --accent-dim | #15803d                          | Hover state                      |
+| --t1         | rgba(14,15,17,0.88)              | Primary text                     |
+| --t2         | rgba(14,15,17,0.55)              | Secondary text                   |
+| --t3         | rgba(14,15,17,0.35)              | Muted text                       |
+| --t4         | rgba(14,15,17,0.12)              | Ghost text                       |
 
-| Token         | Value                          | Usage                            |
-|---------------|--------------------------------|----------------------------------|
-| --bg          | #f2f0e9                        | Page background                  |
-| --surface     | rgba(255, 253, 248, 0.94)      | Panel background                 |
-| --raised      | #ffffff                        | Elevated surface                 |
-| --wine        | #6b3a3a                        | Primary accent                   |
-| --wine-soft   | #8a5050                        | Hover / soft accent              |
-| --gold        | #8a7230                        | Bright highlight accent          |
-| --gold-dim    | #7a6528                        | Logo, active nav, subtle gold    |
-| --t1          | #1f2933                        | Primary text                     |
-| --t2          | #3d4f5f                        | Secondary text                   |
-| --t3          | #667085                        | Muted text, labels               |
-| --t4          | #a0a8b4                        | Ghost text, disabled             |
-| --line        | #d7d0c2                        | Borders, dividers                |
+### Provider Lane Colors
 
-## Provider Lane Colors
-
-### Dark mode
-
-| Lane     | Value     |
-|----------|-----------|
-| ChatGPT  | #5a8a6a   |
-| Claude   | #a08848   |
-| Gemini   | #5a7a9a   |
-| Native   | #5a7a9a   |
-
-### Light mode
-
-| Lane     | Value     |
-|----------|-----------|
-| ChatGPT  | #3a6a4a   |
-| Claude   | #7a6528   |
-| Gemini   | #3a5a7a   |
-| Native   | #3a5a7a   |
+| Lane     | Dark      | Light     |
+|----------|-----------|-----------|
+| ChatGPT  | #4ade80   | #16a34a   |
+| Claude   | #a78bfa   | #7c3aed   |
+| Gemini   | #60a5fa   | #2563eb   |
+| Native   | #60a5fa   | #2563eb   |
 
 ## Accent Rules
 
-- Wine (#6b3a3a) and gold (#c9a84c / #a08848) are the only accent colors
-- Wine is the primary accent — used for interactive elements, selection highlights
-- Gold is the secondary accent — used for logo, active nav states, subtle highlights
-- Never mix accents with lane colors
-- Never use accents as background fills on large areas
+- Green (#4ade80) is the ONLY accent color
+- No second accent. No wine. No gold.
+- Green is used for: CTAs, active nav indicator, badges, lane stripes, links on hover, trust signals
+- Never use green as a large background fill (only ghost/muted variants)
 
 ## Typography
 
 ### Font Stack
 
-| Role       | Family                          | Weight | Usage                    |
-|------------|--------------------------------|--------|--------------------------|
-| Wordmark   | Forum, serif                   | 400    | "SoulPrint" brand text   |
-| Body       | Cormorant Garamond, serif      | 400–500| All reading text, nav    |
-| Mono       | JetBrains Mono, monospace      | 400    | IDs, timestamps, labels  |
+| Role       | Family                                              | Weight  | Usage                    |
+|------------|-----------------------------------------------------|---------|--------------------------|
+| Body       | -apple-system, BlinkMacSystemFont, system-ui, sans  | 400-600 | All reading text, nav, headings |
+| Mono       | JetBrains Mono, ui-monospace, monospace             | 400-500 | IDs, timestamps, labels, code |
+| Landing    | Outfit, sans-serif                                  | 300-600 | Landing page only        |
 
-### Base Size
+### Size Rules
 
-`font-size: 17px` on `html`.
+| Element         | Size    | Weight | Notes              |
+|-----------------|---------|--------|--------------------|
+| Page heading    | 1.5rem  | 500    | System sans-serif  |
+| Section heading | 17px    | 500    |                    |
+| Nav link        | 14px    | 400    |                    |
+| Body text       | 14-15px | 400    |                    |
+| Mono label      | 11px    | 400    | Minimum size       |
+| Sidebar brand   | 18px    | 600    | Distinct from nav  |
 
-### Scale
-
-| Element         | Size       | Weight | Letter-spacing |
-|-----------------|------------|--------|----------------|
-| Page heading    | 1.35rem    | 400    | 0              |
-| Section label   | 0.6rem     | 400    | 0.18em         |
-| Nav link        | 0.92rem    | 500    | 0              |
-| Body text       | 1rem       | 400    | 0              |
-| Mono label      | 0.6rem     | 400    | 0.04em         |
-
-## Hero Wordmark
-
-In dark mode, the "SoulPrint" wordmark uses:
-- Font: Forum, serif
-- Color: var(--gold-dim) / #a08848
-- Letter-spacing: 1.5px
-- Weight: 400
-
-No glow, gradient, or text-shadow in light mode.
-
-## Body Atmosphere
-
-### Dark mode
-
-Background is layered radial gradients over --bg:
-- Gold warmth at top-left (opacity ~0.02)
-- Wine warmth at top-right (opacity ~0.015)
-- Dark vignette at center-bottom (opacity ~0.58)
-- Amber warmth at bottom-left (opacity ~0.03)
-
-Grain overlay: fractal noise SVG at opacity 0.018, fixed position.
-Vignette: vertical linear gradient fading to black at top (0.16) and bottom (0.22).
-
-### Light mode
-
-No grain, no vignette. Clean, flat parchment background.
-
-## Selection Colors
-
-```css
-/* Dark */
-::selection { background: rgba(107, 58, 58, 0.30); }
-
-/* Light */
-::selection { background: rgba(107, 58, 58, 0.18); }
-```
+Absolute minimum font size: **11px**. Nothing smaller, ever.
 
 ## Logo
 
-The SoulPrint logo is a stylized fingerprint mark composed of concentric
-arcs that suggest both identity (fingerprint) and conversation (speech
-bubble rhythm). It works at favicon size (16px) and hero size (200px+).
+The SoulPrint logo is a stylized USB stick icon:
+- Metal connector at top (gray, with cutout rectangle)
+- Green body (#4ade80) below
+- Center cutout (dark, matching background)
+- Works at favicon size (16px) and hero size
 
 ### Usage Rules
-- Primary color: gold-dim (#a08848)
-- Monochrome variant: var(--t1) for high-contrast contexts
-- Minimum clear space: equal to the logo's width on all sides
-- Never stretch, rotate, or apply effects to the logo
-- Always pair with the wordmark "SoulPrint" in body text — the mark alone
-  is for favicons and compact contexts only
+- Primary color: green body with gray connector
+- Minimum clear space: 8px on all sides
+- Never stretch, rotate, or apply effects
+- In the sidebar: 24px, paired with "SoulPrint" in 18px/600 weight
+
+## Buttons
+
+- Primary CTA: filled green background, dark text, 6px radius, 600 weight
+- Secondary: transparent background, 1px border in --t4, --t1 text, 8px radius
+- Inline actions: transparent with 1px green border, green text, 6px radius
+- Ghost links: --t2 text, arrow suffix, hover to green
+- No uppercase buttons. No letter-spacing on buttons.
 
 ## Critical Rules
 
-- No card components — use flat rows with line dividers
-- No badge components — use inline mono labels
-- No box-shadows — use border-bottom or var(--line) dividers only
+- No serif fonts in the app UI
+- No grain overlay, no vignette, no ember glow
+- No radial gradient backgrounds
+- No card shadows, no border-radius on flat panels
 - No icons in nav — text only
-- No font-weight above 500
-- No decorative borders or dividers beyond 1px var(--line)
+- No decorative borders beyond 1px var(--line)
 - No stock photos
-- No emoji in the UI (unless user-generated content contains them)
+- No emoji in the UI
 - No "AI" as a visual motif (no robot icons, no brain icons, no sparkles)
-
-## Wordmark Glow — "Embers in Velvet Darkness"
-
-The SoulPrint wordmark glow is not a neon effect. It is a controlled incandescent bloom with typographic anchor.
-
-### Why it works
-
-The glow is five-layer and decaying. The innermost shadow (1px, high opacity warm white) creates a white-hot edge hugging the letterforms — this is what produces the "heated from within" look. Without it, the text has a distant haze instead of radiating heat. The second layer (6px, bright incandescent orange) is the primary visible bloom; it must be tight and hot. The middle layers create atmospheric spread at increasing distance. The outermost dark shadow anchors the letters so they do not dissolve. Without the black under-shadow, the text looks cheap.
-
-The close bloom uses incandescent orange — the same spectrum as heated metal. On the near-black background, this reads as furnace heat, not neon. The tight blur radius (6px) keeps the glow hugging the letterforms rather than floating free.
-
-Forum does half the work. Its high-contrast serif forms catch the glow on thin-thick transitions, producing a "sacred manuscript in firelight" quality. A sans-serif with the same shadow would not produce the same effect.
-
-The page background completes the illusion. The glow sits over layered radial gradients, grain, and vignette — not flat black. The light belongs to an environment, which is why the word looks lit from within rather than simply blurred.
-
-### CSS specification
-
-```css
-.hero-name {
-  color: var(--t1);                              /* warm white, NOT gold */
-  font-family: var(--font-display);              /* Forum */
-  text-shadow:
-    0 0 1px rgba(245, 240, 234, 0.82),           /* white-hot edge — crisp incandescent core */
-    0 0 6px rgba(255, 69, 0, 0.88),              /* close bloom — tight, hot, hugs letterforms */
-    0 0 16px rgba(255, 69, 0, 0.48),             /* medium atmospheric — visible spread */
-    0 0 34px rgba(255, 69, 0, 0.18),             /* ambient warmth — soft outer haze */
-    0 2px 4px rgba(0, 0, 0, 0.4);                /* typographic anchor — keeps letters grounded */
-}
-```
-
-### Constraint language for any model or contributor
-
-Keep the title glow subtle and aristocratic, like heated metal or candlelit amber in a dark chapel. Avoid neon, avoid cyberpunk blue/orange, avoid blur-heavy haze. The letters must stay crisp at the core, with a soft layered bloom and a faint dark anchor shadow underneath.
-
-### What to never do
-
-- Never increase blur radius beyond 40px on the outermost color layer
-- Never widen the close bloom beyond 8px blur — the glow must hug the letterforms
-- Never use blue-spectrum, green-spectrum, or cool-toned glow colors
-- Never remove the dark anchor shadow (the `0 2px 4px rgba(0,0,0,0.4)`)
-- Never apply this glow to body text, nav items, or any element besides the hero wordmark and the app workspace heading
-- Never use a sans-serif font with this shadow stack
-- Never add more than five shadow layers — the stack is tuned, not additive
-
-The glow works because it is disciplined. It is not shouting. It is smoldering.
+- Trust-first: every design choice should make the user feel safe about their data
