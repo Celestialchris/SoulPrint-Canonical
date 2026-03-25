@@ -104,25 +104,25 @@ def _extract_ordered_messages(mapping: Any) -> list[NormalizedMessage]:
     visited: set[str] = set()
     walk_order: list[str] = []
 
-    def visit(node_id: str) -> None:
-        if node_id in visited:
-            return
-        visited.add(node_id)
-        walk_order.append(node_id)
+    def visit(start_ids: list[str]) -> None:
+        stack = list(reversed(start_ids))
+        while stack:
+            node_id = stack.pop()
+            if node_id in visited:
+                continue
+            visited.add(node_id)
+            walk_order.append(node_id)
 
-        node = mapping.get(node_id)
-        if not isinstance(node, dict):
-            return
-        for child_id in node.get("children", []):
-            if isinstance(child_id, str):
-                visit(child_id)
+            node = mapping.get(node_id)
+            if not isinstance(node, dict):
+                continue
+            children = node.get("children", [])
+            for child_id in reversed(children):
+                if isinstance(child_id, str) and child_id not in visited:
+                    stack.append(child_id)
 
-    for root_id in root_ids:
-        visit(root_id)
-
-    for node_id in mapping:
-        if node_id not in visited:
-            visit(node_id)
+    visit(root_ids)
+    visit([nid for nid in mapping if nid not in visited])
 
     normalized_messages: list[NormalizedMessage] = []
     for node_id in walk_order:

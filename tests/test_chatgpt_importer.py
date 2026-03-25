@@ -307,5 +307,32 @@ Add food suggestions.
         self.assertEqual(len(conversations[0].messages), 1)
         self.assertEqual(conversations[0].messages[0].content, "Hello from rescue")
 
+    def test_deep_mapping_tree_does_not_cause_recursion_error(self):
+        """A linear chain of 2500 nodes must not hit Python's recursion limit."""
+        from src.importers.chatgpt import _extract_ordered_messages
+
+        depth = 2500
+        mapping = {}
+        for i in range(depth):
+            node_id = f"node-{i}"
+            mapping[node_id] = {
+                "parent": f"node-{i - 1}" if i > 0 else None,
+                "children": [f"node-{i + 1}"] if i < depth - 1 else [],
+                "message": {
+                    "id": f"msg-{i}",
+                    "author": {"role": "user" if i % 2 == 0 else "assistant"},
+                    "content": {"parts": [f"Message {i}"]},
+                    "create_time": 1700000000.0 + i,
+                },
+            }
+
+        messages = _extract_ordered_messages(mapping)
+        self.assertEqual(len(messages), depth)
+        self.assertEqual(messages[0].content, "Message 0")
+        self.assertEqual(messages[-1].content, f"Message {depth - 1}")
+        for idx, msg in enumerate(messages):
+            self.assertEqual(msg.sequence_index, idx)
+
+
 if __name__ == "__main__":
     unittest.main()
