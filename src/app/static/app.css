@@ -125,13 +125,15 @@ input[type="search"],input[type="text"]{appearance:none;background:transparent;b
 input[type="search"]::placeholder,input[type="text"]::placeholder{color:var(--t3)}
 input[type="search"]:focus,input[type="text"]:focus{border-bottom-color:var(--accent);outline:none;box-shadow:none}
 /* Drop zone */
-.drop-zone{display:flex;align-items:center;justify-content:center;width:100%;min-height:140px;padding:48px 24px;border:2px dashed var(--t4);border-radius:var(--radius-md);background:transparent;cursor:pointer;transition:border-color .25s ease,background .25s ease}
+.drop-zone{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:48px 24px;border:2px dashed var(--t4);border-radius:var(--radius-md);background:transparent;cursor:pointer;transition:border-color .25s ease,background .25s ease;text-align:center}
 .drop-zone:hover{border-color:var(--accent);background:var(--accent-ghost)}
-.drop-zone--active{border-color:var(--accent);background:var(--accent-ghost);border-style:solid}
-.drop-zone--has-file{border-color:var(--accent);border-style:solid}
-.drop-zone__input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.drop-zone__text{color:var(--t3);font-family:var(--font-body);font-size:14px;text-align:center;pointer-events:none}
-.drop-zone--has-file .drop-zone__text{color:var(--t1)}
+.drop-zone--active{border-color:var(--accent);background:var(--accent-ghost)}
+.drop-zone--has-file{border-color:var(--accent)}
+.drop-zone__input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.drop-zone__prompt{display:flex;flex-direction:column;gap:4px;pointer-events:none}
+.drop-zone__main{color:var(--t2);font-family:var(--font-body);font-size:15px}
+.drop-zone__sub{color:var(--t3);font-family:var(--font-body);font-size:13px}
+.drop-zone__filename{display:none;color:var(--t1);font-family:var(--font-body);font-size:15px;pointer-events:none}
 .import-form{display:flex;flex-direction:column;gap:16px}
 .import-trust-line{color:var(--t3);font-family:var(--font-mono);font-size:12px;letter-spacing:0.04em;margin-top:8px}
 button{appearance:none;background:var(--cta-bg);border:none;border-radius:8px;color:var(--cta-text);cursor:pointer;font-family:var(--font-body);font-size:14px;font-weight:600;letter-spacing:0.01em;min-height:42px;padding:14px 32px;transition:background .2s ease,transform .15s ease,box-shadow .15s ease}

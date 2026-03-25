@@ -14,10 +14,14 @@
 
   <section class="surface-card content-block">
     <form method="post" enctype="multipart/form-data" class="import-form" id="import-form">
-      <label class="drop-zone" id="drop-zone" for="export_file">
+      <div class="drop-zone" id="drop-zone">
         <input class="drop-zone__input" id="export_file" name="export_file" type="file" accept="application/json,.json" required>
-        <span class="drop-zone__text" id="drop-zone-text">Drop your export file here or click to browse</span>
-      </label>
+        <span class="drop-zone__prompt" id="drop-zone-prompt">
+          <span class="drop-zone__main">Drop your export file here</span>
+          <span class="drop-zone__sub">or click to browse</span>
+        </span>
+        <span class="drop-zone__filename" id="drop-zone-filename"></span>
+      </div>
       <button type="submit">Import now</button>
     </form>
     <p class="import-trust-line">Your file is processed locally. Nothing leaves your machine.</p>
@@ -72,8 +76,11 @@
 (function(){
   var zone = document.getElementById('drop-zone');
   var input = document.getElementById('export_file');
-  var text = document.getElementById('drop-zone-text');
+  var prompt = document.getElementById('drop-zone-prompt');
+  var filename = document.getElementById('drop-zone-filename');
   if (!zone || !input) return;
+
+  zone.addEventListener('click', function() { input.click(); });
 
   zone.addEventListener('dragover', function(e) {
     e.preventDefault();
@@ -87,16 +94,19 @@
     zone.classList.remove('drop-zone--active');
     if (e.dataTransfer.files.length) {
       input.files = e.dataTransfer.files;
-      text.textContent = e.dataTransfer.files[0].name;
-      zone.classList.add('drop-zone--has-file');
+      showFile(e.dataTransfer.files[0].name);
     }
   });
   input.addEventListener('change', function() {
-    if (input.files.length) {
-      text.textContent = input.files[0].name;
-      zone.classList.add('drop-zone--has-file');
-    }
+    if (input.files.length) { showFile(input.files[0].name); }
   });
+
+  function showFile(name) {
+    prompt.style.display = 'none';
+    filename.textContent = name;
+    filename.style.display = 'block';
+    zone.classList.add('drop-zone--has-file');
+  }
 })();
 </script>
 {% endblock %}
