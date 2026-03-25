@@ -2,6 +2,8 @@
 
 {% block title %}SoulPrint Workspace{% endblock %}
 
+{% block page_class %}{% if not workspace.has_any_data %}main-content--centered{% endif %}{% endblock %}
+
 {% block content %}
   {% if not workspace.has_any_data %}
     {# ── First-run: trust hero, centered ── #}
