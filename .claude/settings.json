@@ -10,8 +10,5 @@
       "Delete files without confirmation",
       "Modify instance/"
     ]
-  },
-  "enabledPlugins": {
-    "superpowers@claude-plugins-official": true
   }
 }

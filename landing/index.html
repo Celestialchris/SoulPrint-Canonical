@@ -3,51 +3,332 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SoulPrint — Your AI conversations, brought home</title>
-<meta name="description" content="SoulPrint is a local-first memory continuity system. Import your AI conversations from ChatGPT, Claude, and Gemini. Browse, search, and own your history.">
+<title>SoulPrint — A virtual USB stick for your AI life</title>
+<meta name="description" content="Import your AI conversations from ChatGPT, Claude, and Gemini into one local archive. Search, browse, and own your history. Nothing leaves your machine.">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Forum&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0908;--wine:#6b3a3a;--wine-soft:#8a5050;--gold-dim:#a08848;--t1:rgba(210,200,185,0.90);--t2:rgba(210,200,185,0.55);--t3:rgba(210,200,185,0.30);--t4:rgba(210,200,185,0.12);--font-display:'Forum',serif;--font-body:'Cormorant Garamond',serif;--font-mono:'JetBrains Mono',monospace}
+:root{
+  --bg:#0e0f11;--surface:#141518;--raised:#1a1b1f;
+  --accent:#4ade80;--accent-dim:#22c55e;--accent-muted:rgba(74,222,128,0.15);--accent-ghost:rgba(74,222,128,0.06);
+  --t1:rgba(240,242,238,0.90);--t2:rgba(240,242,238,0.55);--t3:rgba(240,242,238,0.32);--t4:rgba(240,242,238,0.12);
+  --line:rgba(255,255,255,0.06);
+  --font-heading:'Outfit',sans-serif;--font-body:'Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace;
+}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{font-size:17px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-body{background:radial-gradient(ellipse at 35% 20%,rgba(201,168,76,0.025) 0%,transparent 50%),radial-gradient(ellipse at 70% 18%,rgba(107,58,58,0.018) 0%,transparent 45%),radial-gradient(ellipse at 55% 65%,rgba(30,28,24,0.55) 0%,transparent 65%),radial-gradient(ellipse at 25% 80%,rgba(107,74,58,0.030) 0%,transparent 38%),var(--bg);color:var(--t1);font-family:var(--font-body);font-weight:400;line-height:1.65;height:100vh;overflow:hidden;position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-::selection{background:rgba(107,58,58,0.30)}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");opacity:0.018}
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;background:linear-gradient(180deg,rgba(0,0,0,0.16) 0%,transparent 18%,transparent 82%,rgba(0,0,0,0.22) 100%)}
-.landing{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;padding:0 2rem}
-.logo{width:48px;height:48px;color:var(--gold-dim);margin-bottom:2rem}
-.logo svg{width:100%;height:100%}
-.wordmark{font-family:var(--font-display);font-size:clamp(3.5rem,10vw,6rem);font-weight:400;color:var(--t1);letter-spacing:3px;line-height:1;text-shadow:0 0 7px rgba(220,140,70,0.50),0 0 20px rgba(210,120,60,0.35),0 0 50px rgba(200,100,50,0.18),0 0 100px rgba(180,80,40,0.07),0 2px 4px rgba(0,0,0,0.4)}
-.line{width:40px;height:1px;background:var(--t4);margin:2.5rem 0}
-.tagline{font-size:1.2rem;color:var(--t2);max-width:440px;line-height:1.7;font-style:italic}
-.ctas{margin-top:3rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;justify-content:center}
-.btn-primary{display:inline-block;padding:0.7rem 2.2rem;border:1px solid var(--wine);color:var(--wine-soft);font-family:var(--font-display);font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;transition:all 0.5s ease}
-.btn-primary:hover{background:var(--wine);color:var(--t1)}
-.btn-ghost{font-family:var(--font-body);font-size:0.9rem;font-weight:500;color:var(--t3);text-decoration:none;transition:color 0.3s ease}
-.btn-ghost:hover{color:var(--t2)}
-.promise{margin-top:2.5rem;font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.12em;color:var(--t3)}
-.continuation-hook{margin-top:1.5rem;font-family:var(--font-body);font-size:0.95rem;font-style:italic;color:var(--t2);letter-spacing:0.01em}
-footer{position:fixed;bottom:0;left:0;right:0;padding:1.5rem 2rem;text-align:center;z-index:1}
-footer span{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.1em;color:var(--t4)}
-@media(max-width:480px){.wordmark{font-size:3rem}.ctas{flex-direction:column}}
+::selection{background:rgba(74,222,128,0.25)}
+html{font-size:16px;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t1);font-family:var(--font-body);font-weight:400;line-height:1.65;overflow-x:hidden}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes typeCursor{0%,100%{border-color:var(--accent)}50%{border-color:transparent}}
+.reveal{opacity:0;animation:fadeUp .7s var(--d,.1s) cubic-bezier(.16,1,.3,1) forwards}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(14,15,17,0.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.nav-brand{display:flex;align-items:center;gap:10px;font-family:var(--font-heading);font-size:16px;font-weight:500;color:var(--t1);text-decoration:none}
+.nav-brand svg{width:22px;height:22px}
+.nav-links{display:flex;gap:24px;align-items:center}
+.nav-links a{font-size:14px;color:var(--t2);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--accent)}
+.nav-cta{padding:8px 18px;background:var(--accent);color:var(--bg);font-size:13px;font-weight:600;border-radius:6px;text-decoration:none;transition:background .2s}
+.nav-cta:hover{background:var(--accent-dim)}
+
+section{padding:100px 32px;max-width:1100px;margin:0 auto}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-top:80px}
+.hero-usb{margin-bottom:40px}
+.pixel-grid{display:inline-grid;grid-template-columns:repeat(14,11px);gap:2px}
+.px{width:11px;height:11px;border-radius:1.5px}
+.px-on{background:var(--accent)}.px-dim{background:rgba(74,222,128,.30)}.px-ghost{background:rgba(74,222,128,.08)}.px-off{background:transparent}
+.px-metal{background:rgba(180,190,200,.45)}.px-metal-dim{background:rgba(180,190,200,.18)}.px-hole{background:rgba(0,0,0,.5)}
+.px-led{background:var(--accent);animation:blink 2s ease-in-out infinite}
+.hero h1{font-family:var(--font-heading);font-size:clamp(2.4rem,5.5vw,4rem);font-weight:600;line-height:1.08;letter-spacing:-1.5px;margin-bottom:20px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero-sub{font-size:18px;color:var(--t2);max-width:460px;line-height:1.7;margin-bottom:36px}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:28px}
+.btn-fill{padding:14px 32px;background:var(--accent);color:var(--bg);font-family:var(--font-body);font-size:15px;font-weight:600;border-radius:8px;text-decoration:none;transition:all .2s;border:none;cursor:pointer;display:inline-block}
+.btn-fill:hover{background:var(--accent-dim);transform:translateY(-2px)}
+.btn-outline{padding:14px 32px;background:transparent;color:var(--t1);font-family:var(--font-body);font-size:15px;font-weight:400;border:1px solid var(--t4);border-radius:8px;text-decoration:none;transition:all .2s;display:inline-block}
+.btn-outline:hover{border-color:var(--t2);color:var(--accent)}
+.hero-trust{font-family:var(--font-mono);font-size:12px;color:var(--t3);letter-spacing:.04em}
+
+/* Providers */
+.providers{text-align:center;padding:20px 32px 80px;max-width:1100px;margin:0 auto}
+.providers p{font-family:var(--font-mono);font-size:11px;color:var(--t3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:20px}
+.provider-row{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+.provider-pill{display:flex;align-items:center;gap:8px;padding:8px 20px;border:1px solid var(--line);border-radius:100px;font-size:14px;color:var(--t2)}
+.provider-dot{width:8px;height:8px;border-radius:50%}
+
+/* Features */
+.features-wrap{padding:100px 32px;max-width:1100px;margin:0 auto}
+.features-wrap h2{font-family:var(--font-heading);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:500;text-align:center;margin-bottom:12px}
+.features-wrap .sub{font-size:16px;color:var(--t2);text-align:center;margin-bottom:48px;max-width:480px;margin-left:auto;margin-right:auto}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.feature-card{background:var(--bg);padding:32px 24px;display:flex;flex-direction:column;gap:10px;transition:background .3s}
+.feature-card:hover{background:var(--surface)}
+.feature-icon{width:36px;height:36px;border-radius:8px;background:var(--accent-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.feature-icon svg{width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.feature-card h3{font-family:var(--font-heading);font-size:15px;font-weight:500}
+.feature-card p{font-size:14px;color:var(--t2);line-height:1.6}
+
+/* Terminal */
+.demo{padding:100px 32px;max-width:1100px;margin:0 auto;text-align:center}
+.demo h2{font-family:var(--font-heading);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:500;margin-bottom:12px}
+.demo .sub{font-size:16px;color:var(--t2);margin-bottom:48px;max-width:480px;margin-left:auto;margin-right:auto}
+.terminal{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-align:left;max-width:620px;margin:0 auto}
+.terminal-bar{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.terminal-dot{width:10px;height:10px;border-radius:50%;background:var(--t4)}
+.terminal-title{font-family:var(--font-mono);font-size:11px;color:var(--t3);margin-left:auto;margin-right:auto}
+.terminal-body{padding:20px 24px;font-family:var(--font-mono);font-size:13px;line-height:2.1}
+.terminal-body .cmd{color:var(--t1)}
+.terminal-body .g{color:var(--accent)}
+.terminal-body .m{color:var(--t3)}
+.terminal-body .y{color:#fbbf24}
+.terminal-body .p{color:#a78bfa}
+.terminal-body .b{color:#60a5fa}
+
+/* How */
+.how{padding:100px 32px;max-width:1100px;margin:0 auto;text-align:center}
+.how h2{font-family:var(--font-heading);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:500;margin-bottom:48px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:left}
+.step-num{font-family:var(--font-mono);font-size:44px;font-weight:500;color:var(--accent-muted);line-height:1;margin-bottom:12px}
+.step h3{font-family:var(--font-heading);font-size:15px;font-weight:500;margin-bottom:6px}
+.step p{font-size:14px;color:var(--t2);line-height:1.6}
+
+/* Difference */
+.difference{padding:100px 32px;max-width:1100px;margin:0 auto}
+.difference h2{font-family:var(--font-heading);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:500;text-align:center;margin-bottom:48px}
+.diff-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:32px;align-items:start}
+.diff-col{display:flex;flex-direction:column;gap:12px}
+.diff-col h3{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.diff-item{font-size:14px;color:var(--t2);line-height:1.5;padding-left:20px;position:relative}
+.diff-item::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%}
+.diff-col--without .diff-item::before{background:rgba(239,68,68,0.5)}
+.diff-col--with .diff-item::before{background:var(--accent)}
+.diff-vs{font-family:var(--font-mono);font-size:13px;color:var(--t3);padding-top:24px}
+
+/* Bottom CTA */
+.bottom-cta{text-align:center;padding:120px 32px;max-width:1100px;margin:0 auto}
+.bottom-cta h2{font-family:var(--font-heading);font-size:clamp(1.6rem,3vw,2.8rem);font-weight:500;margin-bottom:12px}
+.bottom-cta h2 em{font-style:normal;color:var(--accent)}
+.bottom-cta p{font-size:16px;color:var(--t2);margin-bottom:36px;max-width:440px;margin-left:auto;margin-right:auto}
+
+footer{border-top:1px solid var(--line);padding:32px;text-align:center}
+footer p{font-family:var(--font-mono);font-size:11px;color:var(--t3);letter-spacing:.04em}
+footer a{color:var(--t2);text-decoration:none}
+footer a:hover{color:var(--accent)}
+
+@media(max-width:820px){
+  .features{grid-template-columns:1fr}
+  .steps{grid-template-columns:repeat(2,1fr)}
+  .diff-grid{grid-template-columns:1fr;gap:40px}
+  .diff-vs{display:none}
+  nav{padding:12px 16px}
+  .nav-links a:not(.nav-cta){display:none}
+  section,.features-wrap,.demo,.how,.difference,.bottom-cta,.providers{padding-left:20px;padding-right:20px}
+}
+@media(max-width:480px){
+  .steps{grid-template-columns:1fr}
+  .hero-actions{flex-direction:column;align-items:center}
+  .provider-row{flex-direction:column;align-items:center}
+}
 </style>
 </head>
 <body>
-<div class="landing">
-  <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M28 38c0-4 3.5-7 8-7"/><path d="M24 42c0-8 6-14 14-14"/><path d="M20 46c0-12 8.5-21 20-21"/><path d="M16 50c0-16 11-28 26-28"/><path d="M12 54c0-20 13.5-35 32-35"/></svg></div>
-  <div class="wordmark">SoulPrint</div>
-  <div class="line"></div>
-  <p class="tagline">Your AI conversations are scattered everywhere.<br>SoulPrint brings them home.</p>
-  <div class="ctas">
-    <a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases" class="btn-primary">Download</a>
-    <a href="https://github.com/Celestialchris/SoulPrint-Canonical" class="btn-ghost">View on GitHub</a>
+
+<nav>
+  <a href="#" class="nav-brand">
+    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="0" width="8" height="5" rx="1" fill="currentColor" opacity=".35"/><rect x="8" y="1" width="4" height="3" rx=".5" fill="#0e0f11"/><rect x="3" y="5" width="14" height="15" rx="2.5" fill="#4ade80"/><rect x="7" y="9" width="6" height="6" rx="1.5" fill="#0e0f11"/></svg>
+    SoulPrint
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical">GitHub</a>
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases" class="nav-cta">Download</a>
   </div>
-  <p class="promise">Local-first &middot; Open source &middot; Your data stays on your machine</p>
-  <p class="continuation-hook">Never start from scratch with AI again.</p>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-usb reveal" style="--d:0s">
+    <div class="pixel-grid">
+      <i class="px px-off"></i><i class="px px-ghost"></i><i class="px px-metal-dim"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal-dim"></i><i class="px px-ghost"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-off"></i><i class="px px-ghost"></i><i class="px px-metal-dim"></i><i class="px px-metal"></i><i class="px px-hole"></i><i class="px px-hole"></i><i class="px px-hole"></i><i class="px px-hole"></i><i class="px px-metal"></i><i class="px px-metal-dim"></i><i class="px px-ghost"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-off"></i><i class="px px-ghost"></i><i class="px px-metal-dim"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal"></i><i class="px px-metal-dim"></i><i class="px px-ghost"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-ghost"></i><i class="px px-dim"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-dim"></i><i class="px px-ghost"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-dim"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-dim"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-off"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-led"></i><i class="px px-led"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-dim"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-on"></i><i class="px px-dim"></i><i class="px px-off"></i><i class="px px-off"></i>
+      <i class="px px-ghost"></i><i class="px px-dim"></i><i class="px px-dim"></i><i class="px px-dim"></i><i class="px px-dim"></i><i class="px px-dim"></i><i class="px px-dim"></i><i class="px px-dim"></i><i class="px px-dim"></i><i class="px px-dim"></i><i class="px px-dim"></i><i class="px px-ghost"></i><i class="px px-off"></i><i class="px px-off"></i>
+    </div>
+  </div>
+
+  <h1 class="reveal" style="--d:.15s">A <em>virtual USB stick</em><br>for your AI life</h1>
+  <p class="hero-sub reveal" style="--d:.25s">Import your conversations from ChatGPT, Claude, and Gemini into one local archive. Search across everything. Own your history.</p>
+  <div class="hero-actions reveal" style="--d:.35s">
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases" class="btn-fill">Download free</a>
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical" class="btn-outline">View on GitHub</a>
+  </div>
+  <p class="hero-trust reveal" style="--d:.45s">Everything stays on your machine. Nothing is sent anywhere.</p>
+</section>
+
+<!-- Providers -->
+<div class="providers reveal" style="--d:.5s">
+  <p>Works with</p>
+  <div class="provider-row">
+    <span class="provider-pill"><span class="provider-dot" style="background:#4ade80"></span> ChatGPT</span>
+    <span class="provider-pill"><span class="provider-dot" style="background:#a78bfa"></span> Claude</span>
+    <span class="provider-pill"><span class="provider-dot" style="background:#60a5fa"></span> Gemini</span>
+    <span class="provider-pill" style="color:var(--t3)">More coming</span>
+  </div>
 </div>
-<footer><span>Apache-2.0 &middot; soulprint.dev</span></footer>
+
+<!-- Features -->
+<div class="features-wrap" id="features">
+  <h2 class="reveal" style="--d:.1s">What SoulPrint does</h2>
+  <p class="sub reveal" style="--d:.15s">One local archive for every AI conversation you've ever had.</p>
+  <div class="features reveal" style="--d:.2s">
+    <div class="feature-card">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      <h3>Import</h3>
+      <p>Drop your ChatGPT .zip, Claude .json, or Gemini Takeout. Provider auto-detected. Duplicates skipped.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      <h3>Search everything</h3>
+      <p>Full-text search across all providers at once. Lane-aware retrieval keeps provenance explicit.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+      <h3>Browse transcripts</h3>
+      <p>Prompt-level table of contents, minimap rail, and full threading. Like reading a real archive.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></div>
+      <h3>Ask your memory</h3>
+      <p>Grounded answers from your conversations, with citations. Returns "insufficient evidence" instead of guessing.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+      <h3>Discover themes</h3>
+      <p>Cross-conversation topic detection, per-conversation summaries, and multi-conversation digests.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></div>
+      <h3>Export passport</h3>
+      <p>Memory Passport with manifest, JSONL lanes, provenance index, and checksums. Verifiable and portable.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Terminal Demo -->
+<div class="demo">
+  <h2 class="reveal" style="--d:.1s">Up and running in 30 seconds</h2>
+  <p class="sub reveal" style="--d:.15s">Clone, install, run. Your conversations appear instantly.</p>
+  <div class="terminal reveal" style="--d:.2s">
+    <div class="terminal-bar">
+      <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+      <span class="terminal-title">terminal</span>
+    </div>
+    <div class="terminal-body">
+      <span class="m">$</span> <span class="cmd">git clone https://github.com/Celestialchris/SoulPrint-Canonical.git</span><br>
+      <span class="m">$</span> <span class="cmd">cd SoulPrint-Canonical && pip install -r requirements-minimal.txt</span><br>
+      <span class="m">$</span> <span class="cmd">python -m src.run</span><br>
+      <br>
+      <span class="g">&#10003;</span> <span class="m">Server running at</span> <span class="g">http://127.0.0.1:5678</span><br>
+      <br>
+      <span class="m"># Drop your export file on the Import page</span><br>
+      <span class="g">&#10003;</span> <span class="m">Detected provider:</span> <span class="g">chatgpt</span><br>
+      <span class="g">&#10003;</span> <span class="m">Imported</span> <span class="cmd">847 conversations</span> <span class="m">with</span> <span class="cmd">41,293 messages</span><br>
+      <span class="y">&#9679;</span> <span class="m">Duplicates skipped:</span> <span class="y">0</span><br>
+      <br>
+      <span class="m"># Search across everything</span><br>
+      <span class="m">$</span> <span class="cmd">python -m src.retrieval.cli --db instance/soulprint.db "trip to Lisbon"</span><br>
+      <span class="p">&#9632; claude</span> <span class="m">Planning our Lisbon itinerary...</span><br>
+      <span class="g">&#9632; chatgpt</span> <span class="m">Best restaurants in Alfama...</span><br>
+      <span class="b">&#9632; gemini</span> <span class="m">Lisbon transit card options...</span><br>
+    </div>
+  </div>
+</div>
+
+<!-- How it works -->
+<div class="how" id="how">
+  <h2 class="reveal" style="--d:.1s">How it works</h2>
+  <div class="steps reveal" style="--d:.2s">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Export your data</h3>
+      <p>Download your conversation history from ChatGPT, Claude, or Gemini. Each has an export option in settings.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Import into SoulPrint</h3>
+      <p>Drop the file on the Import page. Provider is auto-detected. Normalized into one canonical SQLite ledger.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Browse and search</h3>
+      <p>Full transcript explorer with TOC and minimap. Cross-provider search returns results with provenance.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <h3>Take it with you</h3>
+      <p>Export a verified Memory Passport. Your archive is one SQLite file — portable, inspectable, yours.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Difference -->
+<div class="difference">
+  <h2 class="reveal" style="--d:.1s">What makes SoulPrint different</h2>
+  <div class="diff-grid reveal" style="--d:.2s">
+    <div class="diff-col diff-col--without">
+      <h3>Without SoulPrint</h3>
+      <div class="diff-item">Conversations locked inside each provider</div>
+      <div class="diff-item">Exports are dead JSON/ZIP files on disk</div>
+      <div class="diff-item">No cross-provider search</div>
+      <div class="diff-item">No way to verify what you exported</div>
+      <div class="diff-item">Every new AI session starts from scratch</div>
+    </div>
+    <div class="diff-vs">vs</div>
+    <div class="diff-col diff-col--with">
+      <h3>With SoulPrint</h3>
+      <div class="diff-item">One archive across ChatGPT, Claude, and Gemini</div>
+      <div class="diff-item">Browsable transcripts with threading and TOC</div>
+      <div class="diff-item">Search everything with provenance per result</div>
+      <div class="diff-item">Verified Memory Passport with checksums</div>
+      <div class="diff-item">Continuity packets carry context forward</div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom CTA -->
+<div class="bottom-cta">
+  <h2 class="reveal" style="--d:.1s">Your AI memory.<br><em>Plug in and own it.</em></h2>
+  <p class="reveal" style="--d:.15s">Open source. Local-first. Apache-2.0 licensed.<br>No accounts. No cloud. No tracking.</p>
+  <div class="hero-actions reveal" style="--d:.2s">
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases" class="btn-fill">Download free</a>
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical" class="btn-outline">View on GitHub</a>
+  </div>
+</div>
+
+<footer>
+  <p>Apache-2.0 &middot; <a href="https://github.com/Celestialchris/SoulPrint-Canonical">github.com/Celestialchris/SoulPrint-Canonical</a> &middot; soulprint.dev</p>
+</footer>
+
+<script>
+var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.style.animationPlayState='running';io.unobserve(e.target)}})},{threshold:0.15});
+document.querySelectorAll('.reveal').forEach(function(el){el.style.animationPlayState='paused';io.observe(el)});
+</script>
 </body>
 </html>
