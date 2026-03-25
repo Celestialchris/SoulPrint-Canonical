@@ -58,9 +58,9 @@ pre code{padding:0;background:none}
 .sidebar::-webkit-scrollbar-track{background:transparent}
 .sidebar::-webkit-scrollbar-thumb{background:var(--t4);border-radius:2px}
 .sidebar__header{padding:0 20px;margin-bottom:28px;flex-shrink:0}
-.sidebar__brand{display:inline-flex;align-items:center;gap:10px;color:var(--t1);font-family:var(--font-body);font-size:18px;font-weight:600;letter-spacing:0.3px;text-decoration:none;transition:opacity .2s}
+.sidebar__brand{display:inline-flex;align-items:center;color:var(--t1);text-decoration:none;transition:opacity .2s}
 .sidebar__brand:hover{opacity:.8}
-.sidebar__logo{flex-shrink:0;width:24px;height:24px}
+.sidebar__logo{width:120px;height:auto}
 
 /* Nav */
 .sidebar__nav{display:flex;flex:1;flex-direction:column}
@@ -79,7 +79,8 @@ pre code{padding:0;background:none}
 
 /* Mobile */
 .mobile-bar{display:none}
-.mobile-bar__brand{display:inline-flex;align-items:center;gap:6px;color:var(--t1);font-family:var(--font-body);font-size:15px;font-weight:500;letter-spacing:0.5px;text-decoration:none}
+.mobile-bar__brand{display:inline-flex;align-items:center;color:var(--t1);text-decoration:none}
+.mobile-bar__logo{width:80px;height:auto}
 .mobile-bar__toggle{appearance:none;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-height:auto;padding:6px}
 .mobile-bar__toggle span{display:block;width:18px;height:1.5px;background:var(--t2);border-radius:1px}
 
