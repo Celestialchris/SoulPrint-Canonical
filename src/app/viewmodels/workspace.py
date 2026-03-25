@@ -25,6 +25,7 @@ class WorkspaceSummary:
     recent_traces: list[dict[str, object]]
     has_any_data: bool
     continuity_sentence: str
+    provider_recent: list[dict[str, object]]
 
 
 def _trim_text(value: str, limit: int = 120) -> str:
@@ -56,6 +57,22 @@ def build_workspace_summary(*, trace_store_path: str | Path) -> WorkspaceSummary
         {"name": source, "conversation_count": conversation_count}
         for source, conversation_count in provider_rows
     ]
+
+    # Per-provider most recent conversation
+    provider_recent = []
+    for source, conversation_count in provider_rows:
+        most_recent = (
+            ImportedConversation.query
+            .filter_by(source=source)
+            .order_by(ImportedConversation.id.desc())
+            .first()
+        )
+        provider_recent.append({
+            "provider": source,
+            "count": conversation_count,
+            "recent_title": most_recent.title if most_recent else "",
+            "recent_id": most_recent.id if most_recent else None,
+        })
 
     recent_imported_rows = (
         ImportedConversation.query.order_by(ImportedConversation.id.desc()).limit(5).all()
@@ -122,4 +139,5 @@ def build_workspace_summary(*, trace_store_path: str | Path) -> WorkspaceSummary
         recent_traces=recent_traces,
         has_any_data=has_any_data,
         continuity_sentence=continuity_sentence,
+        provider_recent=provider_recent,
     )

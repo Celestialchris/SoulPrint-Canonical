@@ -96,5 +96,45 @@ class WorkspaceViewmodelTest(unittest.TestCase):
         self.assertEqual(summary.recent_traces[0]["trace_id"], "trace-1")
 
 
+    def test_provider_recent_includes_most_recent_per_provider(self):
+        with self.app.app_context():
+            # Seed 3 chatgpt conversations
+            for i in range(3):
+                conv = ImportedConversation(
+                    source="chatgpt",
+                    source_conversation_id=f"chatgpt-{i}",
+                    title=f"ChatGPT conv {i}",
+                )
+                db.session.add(conv)
+            # Seed 1 claude conversation
+            conv_claude = ImportedConversation(
+                source="claude",
+                source_conversation_id="claude-0",
+                title="Claude conv 0",
+            )
+            db.session.add(conv_claude)
+            db.session.commit()
+
+            summary = build_workspace_summary(trace_store_path=self._trace_path())
+
+            self.assertEqual(len(summary.provider_recent), 2)
+            # Ordered by count desc
+            chatgpt_entry = summary.provider_recent[0]
+            self.assertEqual(chatgpt_entry["provider"], "chatgpt")
+            self.assertEqual(chatgpt_entry["count"], 3)
+            self.assertEqual(chatgpt_entry["recent_title"], "ChatGPT conv 2")
+            self.assertIsNotNone(chatgpt_entry["recent_id"])
+
+            claude_entry = summary.provider_recent[1]
+            self.assertEqual(claude_entry["provider"], "claude")
+            self.assertEqual(claude_entry["count"], 1)
+            self.assertEqual(claude_entry["recent_title"], "Claude conv 0")
+
+    def test_provider_recent_empty_when_no_imports(self):
+        with self.app.app_context():
+            summary = build_workspace_summary(trace_store_path=self._trace_path())
+            self.assertEqual(summary.provider_recent, [])
+
+
 if __name__ == "__main__":
     unittest.main()
