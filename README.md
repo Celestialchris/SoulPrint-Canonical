@@ -6,58 +6,11 @@
 
 **Your AI conversations are scattered everywhere. SoulPrint brings them home.**
 
-A local-first memory continuity system. Import your AI conversation history from ChatGPT, Claude, and Gemini. Browse, search, discover themes, ask questions, and export a verifiable Memory Passport. Everything stays on your machine. Nothing is hosted. The canonical ledger is yours.
+A local-first app that imports your conversation history from ChatGPT, Claude, and Gemini into one canonical archive on your machine. Browse it, search it, ask questions from it, discover themes across it, distill it into handoffs for new chats, and export a verifiable Memory Passport. No cloud. No accounts. Everything stays local.
 
----
-
-## What SoulPrint Does
-
-**Import** — Drop your ChatGPT `.zip`, Claude `.json`, or Gemini Takeout. Auto-detected. Normalized into one canonical ledger.
-
-**Browse** — Workspace, imported conversations, native notes, federated view across all providers. Every record carries stable IDs, timestamps, and provenance.
-
-**Search** — Full-text across all conversations, all providers. Lane-aware retrieval (imported, native, federated).
-
-**Ask** — Grounded answering from your own conversation record. Every answer cites specific conversations. Every answer has an auditable trace.
-
-**Discover** — Cross-conversation topic detection. Per-conversation summaries. Multi-conversation digests. All derived, all traceable.
-
-**Distill** — Select any set of conversations and condense them into a single paste-ready markdown handoff. Paste it into a new AI chat so the model has your full context without starting from zero. The core differentiator.
-
-**Continue** — Generate compact continuity packets from any conversation. Copy a structured handoff into your next chat so you never start from zero.
-
-**Export** — Memory Passport with checksums and provenance. Verifiable against the canonical record.
-
-**Obsidian Bridge** — One-way export to an Obsidian vault. Conversations become structured markdown notes with frontmatter, wiki-links, theme notes, and daily-note anchors. If the vault is deleted, rebuild it from SoulPrint.
-
-**Your AI Memory Wrapped** — A cinematic summary of your entire AI history. Total conversations, provider breakdown, top themes, unfinished threads. Screenshot it. Share it.
-
----
-
-## Screenshots
-
-**Workspace** — your continuity dashboard with provider coverage and recent activity
-![Workspace](docs/screenshots/workspace.png)
-
-**Transcript Explorer** — prompt-level navigation with TOC and minimap
-![Transcript Explorer](docs/screenshots/explorer.png)
-
-**Federated Browser** — cross-provider view with explicit provenance
-![Federated Browser](docs/screenshots/federated.png)
-
-**Memory Passport** — export and validate your canonical archive
-![Passport](docs/screenshots/passport.png)
-
-## What SoulPrint Is Not
-
-- **Not a hosted SaaS** — your data never leaves your machine
-- **Not a mem0 clone** — SoulPrint is for users, not developer infrastructure
-- **Not an AI dashboard** — no metrics theater, no admin-panel energy
-- **Not a generic wrapper** — SoulPrint has its own canonical ledger and trust chain
+![SoulPrint workspace](docs/screenshots/workspace.png)
 
 ## Quick Start
-
-Requires **Python 3.12+**.
 
 ```bash
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
@@ -69,29 +22,39 @@ python -m venv .venv
 
 pip install -r requirements-minimal.txt
 python -m src.run
-# Opens http://127.0.0.1:5678
+# → http://127.0.0.1:5678
 ```
 
-Drop an export file on the Import page. Your conversations appear in seconds.
+Drop a ChatGPT `.zip`, Claude `.json`, or Gemini Takeout on the Import page. Your conversations appear in seconds.
 
-## Why I Built This
-
-I've been using ChatGPT, Claude, and Gemini daily for over a year. My conversation history — ideas, decisions, research threads, creative work — is scattered across three platforms that don't talk to each other. Their exports are barely usable zip files that sit dead on disk.
-
-Nobody was building a tool to bring all of that together locally, with provenance, intelligence, and real exportability. So I built one.
-
-SoulPrint is not a hosted service that wants to hold your data. It's a local tool that treats your AI memory the way it should be treated: as yours.
-
-## Intelligence (BYOK)
-
-SoulPrint's intelligence features use your own API key. Configure once:
+Or install as a package:
 
 ```bash
-export SOULPRINT_LLM_PROVIDER=openai      # or: anthropic
-export SOULPRINT_LLM_API_KEY=sk-...
+pip install -e .
+soulprint
 ```
 
-Without a key, import, browse, search, and export all work fully. Intelligence features (summaries, topics, digests, ask, continuity packets) require a configured provider.
+## What It Does
+
+**Import** — Drop your export file. Provider is auto-detected. Normalized into a canonical SQLite ledger with duplicate guards.
+
+**Browse** — Workspace dashboard, imported conversation list, transcript explorer with prompt-level TOC, native notes, federated cross-provider view.
+
+**Search** — Full-text across all conversations from all providers in one place.
+
+**Ask** — Grounded answering from your own conversation record. Every answer cites specific conversations. Every answer has an auditable trace. Returns `insufficient_evidence` rather than guessing.
+
+**Distill** — Select any set of conversations and condense them into a single paste-ready handoff. Drop it into a new AI chat so the model has your full context. The core differentiator.
+
+**Discover** — Cross-conversation topic detection, per-conversation summaries, multi-conversation digests. All derived, all traceable to source.
+
+**Continue** — Generate continuity packets from any conversation. Copy a structured handoff into your next chat.
+
+**Export** — Memory Passport with manifest, JSONL lanes, provenance index, and checksums. Validate any export against the canonical contract.
+
+**Obsidian Bridge** — One-way export to an Obsidian vault. Conversations become markdown notes with frontmatter, wiki-links, theme notes, and daily-note anchors.
+
+**Wrapped** — A cinematic summary of your entire AI history. Total conversations, provider breakdown, top themes, unfinished threads. Screenshot it, share it.
 
 ## Providers
 
@@ -101,89 +64,62 @@ Without a key, import, browse, search, and export all work fully. Intelligence f
 | Claude | `.json` export from Anthropic | ✓ Supported |
 | Gemini | Google Takeout | ✓ Supported |
 
-Adding a provider is bounded work: adapter, detector, registry entry, fixture, tests. The architecture supports unlimited providers.
+Adding a provider is bounded work: adapter implementing `ConversationImporter`, detector, registry entry, fixture, tests. The architecture supports unlimited providers.
 
-## Surfaces
+## Intelligence (BYOK)
 
-| Route | Purpose |
-|-------|---------|
-| `/` | Workspace — ledger overview and activity |
-| `/import` | Import conversations from any supported provider |
-| `/ask` | Ask questions answered from your conversation record |
-| `/intelligence` | Summaries, topic scans, and digests |
-| `/imported` | Browse imported conversations by provider |
-| `/imported/<id>/explorer` | Transcript explorer with prompt-level navigation |
-| `/federated` | Cross-provider view with provenance |
-| `/chats` | Native memory — notes created directly in SoulPrint |
-| `/passport` | Export and validate your Memory Passport |
-| `/summary` | Your AI Memory Wrapped — visual summary and shareable stats |
-| `/answer-traces` | Audit trail for every generated answer |
-| `/answer-traces/<id>` | Individual trace detail with citations |
-| `/memory/<id>` | Native memory entry detail |
-| `/intelligence/continuity/<id>` | Continuity packet view |
-| `/distill` | Multi-conversation distillation — condense N conversations into one handoff |
+Intelligence features use your own API key:
+
+```bash
+export SOULPRINT_LLM_PROVIDER=openai      # or: anthropic
+export SOULPRINT_LLM_API_KEY=sk-...
+```
+
+Without a key, import, browse, search, and export all work fully. Summaries, topics, digests, ask, continuity, and distill require a configured provider.
 
 ## Architecture
 
 ```
-Layer A — Truth         Canonical SQLite ledger. Explicit lanes. Stable provenance.
-Layer B — Legibility    Browse, search, inspect, trace, export. Read-only over truth.
-Layer C — Intelligence  Summaries, topics, digests, continuity. All derived. All traceable.
-Layer D — Distribution  Desktop app, landing page, freemium gate.
+Truth         → Canonical SQLite ledger. Explicit lanes. Stable provenance.
+Legibility    → Browse, search, inspect, trace, export. Read-only over truth.
+Intelligence  → Summaries, topics, digests, continuity, distill. Derived. Traceable.
+Distribution  → Web app, CLI, desktop exe, freemium gate.
 ```
 
-Every derived artifact stores: source conversation IDs, generation timestamp, LLM provider, and prompt template version. Derived never impersonates canonical.
+Every derived artifact stores source conversation IDs, generation timestamp, LLM provider, and prompt template version. Derived never impersonates canonical.
+
+## Why I Built This
+
+I've been using ChatGPT, Claude, and Gemini daily for over a year. My conversation history — ideas, decisions, research, creative work — is scattered across three platforms that don't talk to each other. Their exports are barely usable zip files sitting dead on disk.
+
+Nobody was building a tool to bring all of that together locally, with provenance, intelligence, and real exportability. So I built one.
+
+## Freemium
+
+**Free** (no key needed): all imports, browsing, search, export, passport, answer traces, wrapped summary, native notes.
+
+**Pro** (local license key at `instance/license.key`): ask, intelligence, distill, continuity packets.
+
+No accounts. No server auth. No network calls for licensing.
 
 ## Repo Map
 
 ```
 src/
-├── app/            Flask web app, templates, static assets
+├── app/            Flask app, templates, static, viewmodels
 ├── importers/      Provider adapters, auto-detection, persistence
 ├── retrieval/      Federated retrieval across storage lanes
 ├── answering/      Grounded answering and trace audit
-├── intelligence/   Summaries, topics, digests, continuity engine
+├── intelligence/   Summaries, topics, digests, distill, continuity
 ├── passport/       Memory Passport export and validation
 ├── obsidian/       Obsidian vault bridge (one-way export)
 └── tools/          CLI utilities
 
-tests/              47 test files
-sample_data/        Synthetic provider fixtures
-docs/               Architecture, specs, product docs
+tests/              47 test files, 492 methods
+sample_data/        Synthetic provider fixtures (ChatGPT, Claude, Gemini)
+docs/               Architecture, specs, brand guide
 landing/            Static landing page
-scripts/            Windows build script
-roadmap/            Release notes and launch playbook
-.github/            CI workflows
 ```
-
-## Packaging
-
-### Windows executable
-
-Build a standalone Windows executable from the repo:
-
-```powershell
-cmd /c "scripts\build_windows.bat"
-```
-
-This runs the test suite, then packages the app with PyInstaller.
-Output lands in `dist\SoulPrint\`:
-
-```
-dist/
-├── SoulPrint/
-│   ├── SoulPrint.exe    ← double-click to launch
-│   └── _internal/
-└── SoulPrint-windows.zip
-```
-
-The exe starts the local server and opens your browser to
-`http://127.0.0.1:5678` automatically.
-
-For the full packaging overview, see
-[`docs/reference/ideas/executable-packaging-overview.md`](docs/reference/ideas/executable-packaging-overview.md).
-
----
 
 ## Tests
 
@@ -191,12 +127,12 @@ For the full packaging overview, see
 pytest
 ```
 
-47 test files, 484 test methods covering parsing, persistence, retrieval, intelligence, continuity, distillation, passport, Obsidian bridge, CLI, and browser integration.
+47 test files, 492 methods covering parsing, persistence, retrieval, intelligence, continuity, distillation, passport, Obsidian bridge, licensing, CLI, and browser integration.
 
-## CLI Tools
+## CLI
 
 ```bash
-# Import conversations
+# Import
 python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
 
 # Federated search
@@ -211,34 +147,51 @@ python -m src.passport.cli exports/passports --db instance/soulprint.db
 # Validate a passport
 python -m src.passport.cli validate exports/passports/memory-passport-v1
 
-# Export to Obsidian vault
+# Export to Obsidian
 python -m src.obsidian.cli --db instance/soulprint.db --vault ~/my-obsidian-vault
 ```
+
+## Windows Executable
+
+```powershell
+cmd /c "scripts\build_windows.bat"
+```
+
+Runs tests, then packages with PyInstaller. Output: `dist/SoulPrint/SoulPrint.exe` — double-click to launch.
+
+## Surfaces
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Workspace — overview, provider coverage, recent activity |
+| `/import` | Import from any supported provider |
+| `/imported` | Browse imported conversations by provider |
+| `/imported/<id>/explorer` | Transcript explorer with TOC and minimap |
+| `/chats` | Native notes created in SoulPrint |
+| `/federated` | Cross-provider search with provenance |
+| `/ask` | Grounded answering with citations |
+| `/distill` | Multi-conversation distillation |
+| `/intelligence` | Summaries, topic scans, digests |
+| `/summary` | Your AI Memory Wrapped |
+| `/passport` | Memory Passport export and validation |
+| `/answer-traces` | Audit trail for generated answers |
 
 ## Project Status
 
 | Component | State |
 |-----------|-------|
-| Canonical ledger | ✓ Stable |
-| 3-provider import | ✓ Stable |
-| 15 web surfaces | ✓ Stable |
+| Canonical SQLite ledger | ✓ Stable |
+| 3-provider import (ChatGPT, Claude, Gemini) | ✓ Stable |
+| 15+ web surfaces | ✓ Stable |
 | Intelligence layer | ✓ Stable |
 | Continuity engine | ✓ Stable |
-| Memory Passport | ✓ Stable |
-| Grounded answering + traces | ✓ Stable |
-| Bridge assembly | ✓ Stable |
-| Lineage suggestions | ✓ Stable |
-| Obsidian Bridge | ✓ Stable |
 | Multi-conversation distillation | ✓ Stable |
-| Desktop wrapper | ✓ Shipped (PyInstaller) |
-| Freemium gate | ✓ Shipped |
+| Memory Passport export + validation | ✓ Stable |
+| Grounded answering + audit traces | ✓ Stable |
+| Obsidian Bridge | ✓ Stable |
 | Wrapped summary page | ✓ Shipped |
-| Landing page | ✓ Shipped |
-| Brand system (Torchlit Vault) | ✓ Frozen |
-
-## Roadmap
-
-See [`ROADMAP.md`](ROADMAP.md) for the sequenced build plan and [`DECISIONS.md`](DECISIONS.md) for frozen architectural decisions.
+| Freemium gate | ✓ Shipped |
+| Desktop exe (PyInstaller) | ✓ Shipped |
 
 ## Docs
 
@@ -248,20 +201,19 @@ See [`ROADMAP.md`](ROADMAP.md) for the sequenced build plan and [`DECISIONS.md`]
 - [Obsidian Bridge spec](docs/specs/obsidian-bridge-spec.md)
 - [Answering boundary](docs/architecture/answering-boundary.md)
 - [Brand guide](docs/product/brand.md)
-- [Visual direction](docs/product/visual-direction.md)
 
 ## Security
 
-SoulPrint is local-first by design. No data leaves your machine unless you configure an LLM API key (BYOK). There are no analytics, no telemetry, no outbound network calls from the core application. See [`SECURITY.md`](SECURITY.md) for reporting guidelines.
+Local-first by design. No telemetry, no analytics, no outbound calls from the core app. The only network traffic is opt-in BYOK intelligence. See [`SECURITY.md`](SECURITY.md).
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). The short version: small PRs, tests required, no speculative architecture.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Small PRs, tests required, no speculative architecture.
 
 ## License
 
-Apache-2.0 — [inspect the code yourself](LICENSE).
+Apache-2.0 — [LICENSE](LICENSE)
 
 ---
 
-*Built with local-first principles. Your memory, under your custody.*
+*Your memory, under your custody.*
