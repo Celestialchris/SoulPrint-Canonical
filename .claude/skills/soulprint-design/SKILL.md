@@ -3,109 +3,224 @@ name: soulprint-design
 description: SoulPrint-specific visual direction and UI doctrine. Activates for all frontend, template, and CSS work in this repo.
 ---
 
-# SoulPrint Design Skill
+# SoulPrint Design
 
-## Identity
-SoulPrint is a local-first memory continuity system. The UI must feel
-like a calm, trustworthy product — not a developer tool, not a dashboard,
-not an AI gimmick.
+> Visual identity and UI doctrine for SoulPrint. Every frontend change
+> in this repo must pass through this skill.
 
-## Design System: Torchlit Vault (dark default)
+---
 
-The app uses a dual-theme system. Dark ("Torchlit Vault") is the default.
-Light ("Parchment Observatory") is the toggle variant. The canonical
-visual reference is `src/app/static/app-mock.html`.
+## Metadata
+
+| Field          | Value |
+|----------------|-------|
+| **Intent**     | Enforce a calm, trustworthy product aesthetic — not a dev tool, not a dashboard, not an AI gimmick. Every surface answers: What am I looking at? Where did it come from? Where can I go next? |
+| **Method**     | Read CSS tokens → check hard rules → build/edit → verify at 3 breakpoints |
+| **Difficulty** | Medium (strict tokens, Jinja2 templating requires care) |
+| **Tool Hint**  | Run `python -m pytest tests/ -v` after template changes. Check at 1200px, 768px, 480px. |
+
+---
+
+## Trigger Conditions
+
+Use this skill when:
+- Editing any `.html` template in `src/app/templates/`
+- Editing `src/app/static/app.css`
+- Adding a new route with a visible page
+- Changing nav structure, labels, or grouping
+- Changing typography, color, or spacing
+- Creating or modifying Jinja macros in `_ui.html`
+
+Do NOT use this skill when:
+- Editing backend Python with no template impact
+- Changing test fixtures or CLI scripts
+- Working on import/normalize/store internals
+
+---
+
+## Design System: USB Drive
+
+**Tagline:** "A virtual USB stick for your AI life. Plug in. Take everything with you."
 
 ### Dark Theme Tokens (default)
 ```
---bg: #0e0d0b
---surface: #161513
---raised: #1d1b18
---wine: #6b3a3a          (CTAs, actions, active indicators ONLY)
---wine-soft: #8a5050     (hover states)
---gold: #c9a84c          (bright highlight — rare)
---gold-dim: #a08848      (headings, provenance, active nav, wordmark)
---t1: rgba(210,200,185,0.90)   (primary text)
---t2: rgba(210,200,185,0.55)   (secondary text)
---t3: rgba(210,200,185,0.30)   (muted labels, mono text)
---t4: rgba(210,200,185,0.12)   (ghost/disabled)
---line: rgba(210,200,185,0.06) (borders, dividers)
---selection: rgba(107,58,58,0.30)
+--bg: #0e0f11               (page background)
+--surface: #141518           (panel/hover background)
+--raised: #1a1b1f            (elevated surface)
+--accent: #4ade80            (green — primary accent, CTAs, links, active states)
+--accent-dim: #22c55e        (hover/pressed green)
+--accent-muted: rgba(74,222,128,0.15)  (subtle green backgrounds)
+--accent-ghost: rgba(74,222,128,0.06)  (barely-there green tint)
+--t1: rgba(240,242,238,0.88) (primary text)
+--t2: rgba(240,242,238,0.55) (secondary text)
+--t3: rgba(240,242,238,0.35) (muted labels, mono text)
+--t4: rgba(240,242,238,0.15) (ghost/disabled)
+--line: rgba(255,255,255,0.06) (borders, dividers)
+--selection: rgba(74,222,128,0.20)
 ```
 
 ### Light Theme Tokens (data-theme="light")
 ```
---bg: #f2f0e9
---surface: #eae7df
+--bg: #f4f5f0
+--surface: #eaebe5
 --raised: #ffffff
---wine: #6b3a3a
---gold-dim: #7a6328
---t1: rgba(31,41,51,0.92)
---t2: rgba(31,41,51,0.55)
---t3: rgba(31,41,51,0.32)
---t4: rgba(31,41,51,0.12)
---line: rgba(31,41,51,0.07)
---selection: rgba(107,58,58,0.15)
+--accent: #16a34a
+--accent-dim: #15803d
+--accent-muted: rgba(22,163,74,0.12)
+--accent-ghost: rgba(22,163,74,0.04)
+--t1: rgba(14,15,17,0.88)
+--t2: rgba(14,15,17,0.55)
+--t3: rgba(14,15,17,0.35)
+--t4: rgba(14,15,17,0.12)
+--line: rgba(0,0,0,0.06)
+--selection: rgba(22,163,74,0.15)
 ```
 
 ### Typography
 ```
---font-display: "Forum", serif           (wordmark, page headings)
---font-body: "Cormorant Garamond", serif (all reading text, nav links)
---font-mono: "JetBrains Mono", monospace (IDs, timestamps, labels, eyebrows)
-```
-Google Fonts loaded in base.html via:
-`Forum`, `Cormorant Garamond:ital,wght@0,400;0,500;1,400`, `JetBrains Mono:wght@400`
-
-Base font-size: 17px on html.
-
-### Lane Colors (2px vertical stripes for provider identity)
-```
---lane-chatgpt: #5a8a6a  (sage)
---lane-claude: #a08848   (gold)
---lane-gemini: #5a7a9a   (steel)
---lane-native: #5a7a9a   (steel)
+--font-display: "Forum", serif                    (wordmark only)
+--font-body: -apple-system, BlinkMacSystemFont,
+             "Segoe UI", system-ui, sans-serif     (everything else — headings, nav, body)
+--font-mono: "JetBrains Mono", ui-monospace,
+             monospace                              (eyebrows, labels, metadata, timestamps)
 ```
 
-### Body Atmosphere (dark mode only)
-- Layered radial gradients over --bg (gold warmth top-left, wine warmth top-right)
-- Grain overlay: fractal noise SVG at opacity 0.018, fixed position
-- Vignette: vertical linear gradient fading to black at top (0.16) and bottom (0.22)
-- Light mode: no grain, no vignette, clean flat background
+Google Fonts in `base.html`: `Forum` (wordmark only), `JetBrains Mono:wght@400`
 
-### Wordmark Glow (dark mode only, wordmark element only)
-```css
-text-shadow:
-  0 0 7px rgba(220,140,70,0.50),
-  0 0 20px rgba(210,120,60,0.35),
-  0 0 50px rgba(200,100,50,0.18),
-  0 0 100px rgba(180,80,40,0.07),
-  0 2px 4px rgba(0,0,0,0.4);
+Base font-size: 16px on html.
+
+### Lane Colors (2px left-border stripes for provider identity)
 ```
+--lane-chatgpt: #4ade80  (green)
+--lane-claude: #a78bfa   (purple)
+--lane-gemini: #60a5fa   (blue)
+--lane-native: #60a5fa   (blue)
+```
+
+### CTA System
+```
+--cta-bg: var(--accent)           (green background)
+--cta-text: #0e0f11               (dark text on green)
+--cta-hover-bg: var(--accent-dim)
+--cta-border: var(--accent)
+--cta-outline-text: var(--accent)  (ghost/outline button text)
+```
+
+Buttons: `border-radius: 6px`, `font-weight: 600`, `min-height: 42px`.
+Outline buttons: transparent bg, `1px solid var(--accent)`, `color: var(--accent)`.
+
+---
 
 ## Hard Design Rules
 
-1. **No cards.** No border-radius on containers, no box-shadows.
-2. **No badges as visual components.** Use inline mono labels.
-3. **No icons in nav.** Text only. Nav uses --font-body at 500 weight.
-4. **No font-weight above 500.** Ever.
-5. **No decorative borders** beyond 1px var(--line) dividers.
-6. **Hierarchy through opacity, not color.** Four text levels: t1, t2, t3, t4.
-7. **Wine for actions only.** CTA borders, active nav indicator, action buttons.
-8. **Gold for headings/provenance only.** Page headings, provenance citation borders, stat numbers.
-9. **Never mix accents with lane colors.**
-10. **Never use accents as background fills on large areas.**
-11. **No stock photos, no emoji in UI, no AI visual motifs** (no robot icons, no brain icons, no sparkles).
+1. **No box-shadows on content.** Surface-card, record-card, route-card, content-block all have `box-shadow: none`.
+2. **No border-radius on content containers.** Cards are flat with bottom-border dividers only.
+3. **Small border-radius only on:** buttons (6px), badges (4px), inputs, minimap, empty states (6-8px).
+4. **Hierarchy through opacity, not color.** Four text levels: t1, t2, t3, t4. Headings are t1, not accent-colored.
+5. **Green accent for interactive elements only.** CTAs, links on hover, active nav border, badges with --accent class.
+6. **Headings use --font-body at weight 500, not --font-display.** Only the wordmark uses Forum.
+7. **Eyebrow labels** use --font-mono at 11px, uppercase, letter-spaced 0.10-0.16em, color --t3.
+8. **No decorative elements.** No grain, no vignette, no atmosphere gradients, no glow effects.
+9. **No icons in nav.** Text only.
+10. **No stock photos, no emoji in UI, no AI visual motifs.**
+11. **Lane identity through 2px left-border,** not background fills or badges.
+
+---
 
 ## Design Principles
+
 - Every surface answers: What am I looking at? Where did it come from? Where can I go next?
-- Canonical vs derived must be visually distinct (labels, not badges)
-- Transcript explorer: TOC on side, clean reading pane, minimap rail
-- Empty states are calm and helpful, never sad or broken-looking
+- Canonical vs derived must be visually distinct (mono labels, not decorative badges)
+- Empty states are calm and helpful (`border: 1px dashed var(--t4)`, centered text)
 - Navigation is obvious — user never wonders "how do I go back?"
-- Typography carries structure. Spacing creates hierarchy. Color is restrained.
+- Typography and spacing carry structure. Color is restrained — green accent only for actions.
+- Content containers are flat rows separated by `1px solid var(--line)` bottom borders.
+- No background fills on containers — content sits directly on `--bg`.
+
+---
+
+## Current Nav Structure (sidebar, grouped)
+
+```
+SANCTUM
+  Workspace              → /
+  Ask your memory         → /ask            (Pro-gated)
+
+MEMORY
+  What you've discussed   → /imported
+  Your own notes          → /chats
+  Everything, together    → /federated
+
+INTERPRETATION
+  Themes & patterns       → /intelligence   (Pro-gated)
+  Distill                 → /distill        (Pro-gated)
+  How answers were found  → /answer-traces
+
+CONTINUITY
+  Import                  → /import
+  Take it with you        → /passport
+```
+
+**Sidebar:** 200px fixed, `backdrop-filter: blur(12px)`, `--sidebar-bg` with transparency.
+**Footer:** theme toggle (left), "v0.1.0 · local-first" (right), separated by `1px solid var(--line)`.
+**Group labels:** --font-mono 11px uppercase, --t3, letter-spacing 0.14em.
+**Active link:** `border-left: 2px solid var(--accent)`, color --t1.
+
+**Not in nav:** `/summary` (standalone, always dark), `/upgrade` (via "Go deeper→")
+
+Do NOT change nav labels, grouping, or route structure without explicit instruction.
+
+---
+
+## Current Surfaces
+
+| Route | Template | Notes |
+|-------|----------|-------|
+| `/` | index.html | Workspace — wordmark, badges, tagline, CTA, stats, resume grid |
+| `/import` | import.html | "Bring conversations home" |
+| `/ask` | ask.html | Pro-gated |
+| `/passport` | passport.html | Memory Passport export/validate |
+| `/intelligence` | intelligence.html | Pro-gated |
+| `/imported` | imported_list.html | Conversation list by provider |
+| `/imported/<id>/explorer` | imported_explorer.html | 3-column: TOC, transcript, minimap |
+| `/federated` | federated.html | Cross-provider view |
+| `/chats` | view.html | Native memory |
+| `/memory/<id>` | memory_detail.html | Single memory entry |
+| `/answer-traces` | answer_trace_list.html | Trace list |
+| `/answer-traces/<id>` | answer_trace_detail.html | Single trace |
+| `/intelligence/continuity/<id>` | continuity_detail.html | Continuity packet |
+| `/distill` | distill.html + distill_result.html | Pro-gated, multi-conversation distillation |
+| `/summary` | wrapped.html | Standalone, always dark, cinematic |
+| `/upgrade` | upgrade.html | "Go deeper" Pro upsell |
+
+---
+
+## Template Architecture
+
+- `base.html` — shell with sidebar nav, Google Fonts, theme toggle, `data-theme` on `<html>`
+- `_ui.html` — Jinja macros (nav_link, badge, empty_state)
+- `wrapped.html` — standalone, does NOT extend base.html
+- Theme toggle: inline JS in base.html, localStorage key `soulprint-theme`
+- Mobile: sidebar collapses at 760px, mobile bar appears with hamburger toggle
+
+---
+
+## Key CSS Patterns
+
+**Page header:** eyebrow (mono, t3, uppercase) + h1 (font-body, 1.5rem, weight 500) + optional badges + summary (t2, 15px)
+
+**Content sections:** `.workspace-block` or `.content-block` — flex column, gap 10px, padding 20px 0, separated by `border-bottom: 1px solid var(--line)`
+
+**Record cards:** flat rows, bottom-border, optional 2px left lane stripe. Title at 15px/500, body at 14px/t2, metadata in mono 11px/t3.
+
+**Stats grid:** 4-column grid, mono 11px uppercase labels, 2.2rem numbers in --font-body weight 500.
+
+**Responsive breakpoints:** 1180px (tighter padding), 920px (narrower sidebar), 760px (mobile — sidebar becomes overlay, single-column layouts).
+
+---
 
 ## Anti-Patterns
+
 - No giant sidebars stuffed with noise
 - No "AI everywhere" visual gimmicks
 - No cluttered admin panels or dashboard bloat
@@ -113,50 +228,31 @@ text-shadow:
 - No scroll-scroll-scroll transcript hell
 - If style conflicts with clarity, choose clarity
 
-## Current Surfaces (19 templates, all dark-first)
-- `/` (Workspace) — index.html
-- `/import` — import.html
-- `/ask` — ask.html (Pro-gated)
-- `/passport` — passport.html
-- `/intelligence` — intelligence.html (Pro-gated)
-- `/imported` — imported_list.html
-- `/imported/<id>/explorer` — imported_explorer.html
-- `/federated` — federated.html
-- `/chats` — view.html
-- `/memory/<id>` — memory_detail.html
-- `/answer-traces` — answer_trace_list.html
-- `/answer-traces/<id>` — answer_trace_detail.html
-- `/intelligence/continuity/<id>` — continuity_detail.html
-- `/distill` — distill.html + distill_result.html (Pro-gated, conversation selection + result)
-- `/summary` — wrapped.html (standalone, always dark, no base.html)
-- `/upgrade` — upgrade.html (Pro upsell)
+---
 
-## Template Architecture
-- `base.html` — shell with topbar nav, Google Fonts, theme toggle, data-theme on html
-- `_ui.html` — Jinja macros (nav_link, badge, empty_state)
-- `wrapped.html` — standalone, does NOT extend base.html (always dark, cinematic)
-- Theme toggle: inline JS in base.html, persists to localStorage as `soulprint-theme`
+## Verification Checklist
 
-## When Editing Frontend
-- Read `src/app/static/app.css` first (1850 lines, complete design system)
-- Read `docs/product/brand.md` for authoritative token values
-- Read `src/app/static/app-mock.html` as the canonical visual reference (47KB)
-- Preserve all CSS custom properties — extend, don't replace
-- Keep server-rendered Jinja templates
-- Every visual change must work at 1200px, 768px, and 480px widths
-- Run `python -m pytest tests/ -v` after any template changes
+- [ ] All colors use CSS custom properties (no hardcoded hex in templates)
+- [ ] All fonts use the three-family stack (display/body/mono) per their roles
+- [ ] Headings use --font-body weight 500, NOT --font-display (only wordmark uses Forum)
+- [ ] No box-shadows on content containers
+- [ ] Green accent only on interactive elements (CTAs, hover links, active nav)
+- [ ] Renders correctly at 1200px, 768px, 480px
+- [ ] Nav labels and grouping unchanged (unless explicitly instructed)
+- [ ] `python -m pytest tests/ -v` passes
 
-## Frozen Nav Labels (from PRODUCT-GRAMMAR-LOCK.md)
-| Route | Nav Label |
-|-------|-----------|
-| `/` | Workspace |
-| `/chats` | Your own notes |
-| `/imported` | What you've discussed |
-| `/import` | Import |
-| `/federated` | Everything, together |
-| `/passport` | Take it with you |
-| `/ask` | Ask your memory |
-| `/intelligence` | Themes & patterns |
-| `/answer-traces` | How answers were found |
+---
 
-Do NOT change nav labels or route structure without explicit instruction.
+## Composition Notes
+
+**Composes well with:** frontend-design (general patterns), brainstorming (for UI planning)
+**Conflicts with:** any old reference to "Torchlit Vault", wine/gold accents, Cormorant Garamond, grain overlays
+**Prerequisites:** none — always loaded for frontend work
+
+---
+
+## Changelog
+
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-03-25 | Full rewrite: USB Drive system from live app.css, 4-tuple structure, updated nav | Previous version referenced stale Torchlit Vault system |
