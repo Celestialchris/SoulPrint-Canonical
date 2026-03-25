@@ -1,4 +1,2 @@
--r requirements-minimal.txt
--r requirements-intelligence.txt
-python-dotenv
-cryptography
+flask
+flask-sqlalchemy

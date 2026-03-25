@@ -34,5 +34,4 @@
 
 - Release notes: `roadmap/RELEASE-v0.1.0.md`
 - Frozen decisions: `DECISIONS.md`
-- Launch playbook: `roadmap/LAUNCH-PLAYBOOK.md`
 - Obsidian Bridge spec: `docs/specs/obsidian-bridge-spec.md`

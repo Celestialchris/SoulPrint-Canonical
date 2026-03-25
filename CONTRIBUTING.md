@@ -38,21 +38,20 @@ Every PR description should confirm:
 - Canonical ledger remains authoritative
 - Native/imported lane boundaries remain explicit
 - Derived outputs remain non-canonical and provenance-bound
-- No portability/USB/capsule framing is introduced in active docs or UI copy
 - Test command run locally matches CI command
 
 ### Code style
 - Smallest working implementation over speculative architecture
-- Preserve existing behavior unless the task explicitly changes it
+- Preserve existing behavior unless the task explicitly calls for refactor
 - Flag uncertainty instead of inventing hidden structure
 
 ## Out of bounds
 
 The following are explicitly out of scope for contributions:
 
-- Product framing that treats SoulPrint as hosted memory or as packaging-first software instead of a canonical local ledger
+- Product framing that treats SoulPrint as hosted memory instead of a canonical local ledger
 - mem0 activation (adapter exists but is gated off by design)
-- Desktop packaging (Tauri, Electron, etc.)
+- Desktop packaging beyond the current PyInstaller setup (no Tauri, no Electron)
 - Mobile apps
 - Cloud/hosted deployment
 
