@@ -13,16 +13,18 @@
   </section>
 
   <section class="surface-card content-block">
-    <form method="post" enctype="multipart/form-data" class="filter-panel">
-      <div>
-        <label class="field-label" for="export_file">Choose your export file</label>
-        <input id="export_file" name="export_file" type="file" accept="application/json,.json" required>
+    <form method="post" enctype="multipart/form-data" class="import-form" id="import-form">
+      <div class="drop-zone" id="drop-zone">
+        <input class="drop-zone__input" id="export_file" name="export_file" type="file" accept="application/json,.json" required>
+        <span class="drop-zone__prompt" id="drop-zone-prompt">
+          <span class="drop-zone__main">Drop your export file here</span>
+          <span class="drop-zone__sub">or click to browse</span>
+        </span>
+        <span class="drop-zone__filename" id="drop-zone-filename"></span>
       </div>
-      <div>
-        <button type="submit">Import now</button>
-      </div>
+      <button type="submit">Import now</button>
     </form>
-    <p class="workspace-welcome__trust">Your file is processed locally. Nothing leaves your machine.</p>
+    <p class="import-trust-line">Your file is processed locally. Nothing leaves your machine.</p>
   </section>
 
   {% if error_message %}
@@ -67,4 +69,44 @@
       </ul>
     </section>
   {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  var zone = document.getElementById('drop-zone');
+  var input = document.getElementById('export_file');
+  var prompt = document.getElementById('drop-zone-prompt');
+  var filename = document.getElementById('drop-zone-filename');
+  if (!zone || !input) return;
+
+  zone.addEventListener('click', function() { input.click(); });
+
+  zone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    zone.classList.add('drop-zone--active');
+  });
+  zone.addEventListener('dragleave', function() {
+    zone.classList.remove('drop-zone--active');
+  });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    zone.classList.remove('drop-zone--active');
+    if (e.dataTransfer.files.length) {
+      input.files = e.dataTransfer.files;
+      showFile(e.dataTransfer.files[0].name);
+    }
+  });
+  input.addEventListener('change', function() {
+    if (input.files.length) { showFile(input.files[0].name); }
+  });
+
+  function showFile(name) {
+    prompt.style.display = 'none';
+    filename.textContent = name;
+    filename.style.display = 'block';
+    zone.classList.add('drop-zone--has-file');
+  }
+})();
+</script>
 {% endblock %}

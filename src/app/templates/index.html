@@ -1,130 +1,67 @@
 {% extends "base.html" %}
-{% from "_ui.html" import badge %}
 
 {% block title %}SoulPrint Workspace{% endblock %}
 
-{% block content %}
-  <section class="page-header">
-    <p class="page-eyebrow">Workspace</p>
-    <div class="page-header__row">
-      <h1 class="hero-wordmark">SoulPrint</h1>
-      <div class="page-badges">
-        {{ badge("Your archive", "canonical") }}
-        {% if license_status is defined and license_status.licensed %}
-          <span class="badge badge--accent">Pro</span>
-        {% else %}
-          <span class="badge badge--neutral">Free</span>
-        {% endif %}
-      </div>
-    </div>
-  </section>
+{% block page_class %}{% if not workspace.has_any_data %}main-content--centered{% endif %}{% endblock %}
 
+{% block content %}
   {% if not workspace.has_any_data %}
-    {# ── First-run: calm welcome, one clear action ── #}
-    <section class="workspace-welcome">
-      <p class="workspace-welcome__tagline">
-        A <em>virtual USB stick</em> for your AI life.<br>
-        Plug in. Take everything with you.
+    {# ── First-run: trust hero, centered ── #}
+    <section class="workspace-firstrun">
+      <h1 class="workspace-firstrun__wordmark">SoulPrint</h1>
+      <p class="workspace-firstrun__tagline">
+        A virtual USB stick for your AI life.
       </p>
-      <a class="workspace-welcome__cta" href="{{ url_for('import_conversations') }}">Bring your first conversation home</a>
-      <p class="workspace-welcome__trust">Everything stays on your machine. Nothing is sent anywhere.</p>
-      {% if not (license_status is defined and license_status.licensed) %}
-        <p class="workspace-welcome__trust"><a href="{{ url_for('ask') }}" class="ghost-link">Go deeper</a></p>
-      {% endif %}
+      <div class="container-card workspace-firstrun__trust">
+        <p>
+          Your files are processed locally.
+          Nothing is sent anywhere. No account.
+          No cloud. Everything stays on your machine.
+        </p>
+        <a class="workspace-firstrun__cta" href="{{ url_for('import_conversations') }}">
+          Bring your first conversation home
+        </a>
+      </div>
     </section>
 
   {% else %}
-    {# ── Has data: focused workspace ── #}
-    <section class="workspace-welcome workspace-welcome--compact">
-      <p class="workspace-welcome__tagline">Your AI memory. Always with you.</p>
-    </section>
+    {# ── Post-import: trust line + continuity card + archive card ── #}
+    <p class="workspace-trust-line">Local-only · nothing leaves your machine</p>
 
-    <section class="workspace-grid">
-      <article class="surface-card workspace-block" aria-label="Continuity Status">
-        <h2>Continuity Status</h2>
-        <p class="workspace-summary">{{ workspace.continuity_sentence }}</p>
-        <div class="workspace-counts">
-          <div><span>Native entries</span><strong>{{ workspace.native_count }}</strong></div>
-          <div><span>Imported conversations</span><strong>{{ workspace.imported_conversation_count }}</strong></div>
-          <div><span>Imported messages</span><strong>{{ workspace.imported_message_count }}</strong></div>
-          <div><span>Answer traces</span><strong>{{ workspace.trace_count }}</strong></div>
-        </div>
-        {% if workspace.providers %}
-          <div class="provider-badges">
-            {% for provider in workspace.providers %}
-              <span class="badge badge--imported">{{ provider.name }} · {{ provider.conversation_count }}</span>
-            {% endfor %}
+    <div class="workspace-post">
+      <div class="container-card">
+        <p class="container-card__eyebrow">Continuity</p>
+        <p class="workspace-continuity-sentence">
+          You have {{ workspace.imported_conversation_count }} conversations
+          across {{ workspace.provider_recent|length }} providers.
+        </p>
+        <a class="workspace-import-cta" href="{{ url_for('import_conversations') }}">
+          Import more conversations
+        </a>
+      </div>
+
+      {% if workspace.provider_recent %}
+        <div class="container-card">
+          <p class="container-card__eyebrow">Your Archive</p>
+          {% for entry in workspace.provider_recent %}
+            <div class="record-card workspace-provider-row workspace-provider-row--{{ entry.provider }}">
+              <div class="workspace-provider-row__header">
+                <span class="workspace-provider-row__name">{{ entry.provider }}</span>
+                <span class="workspace-provider-row__count">{{ entry.count }} conversations</span>
+              </div>
+              {% if entry.recent_title and entry.recent_id %}
+                <a class="ghost-link workspace-provider-row__recent"
+                   href="{{ url_for('imported_explorer', conversation_id=entry.recent_id) }}">
+                  last: "{{ entry.recent_title }}"
+                </a>
+              {% endif %}
+            </div>
+          {% endfor %}
+          <div class="container-card__footer">
+            <a class="ghost-link" href="{{ url_for('federated_browser') }}">Browse everything together</a>
           </div>
-        {% endif %}
-      </article>
-
-      <article class="surface-card workspace-block workspace-block--wide" aria-label="Resume Recent Work">
-        <div class="workspace-block__head">
-          <h2>Resume Recent Work</h2>
-          <a class="ghost-link" href="{{ url_for('federated_browser') }}">Browse everything together</a>
         </div>
-        <div class="resume-grid">
-          <section>
-            <h3>Imported conversations</h3>
-            {% if workspace.recent_imported %}
-              <ul class="resume-list">
-                {% for item in workspace.recent_imported %}
-                  <li>
-                    <a href="{{ url_for('imported_explorer', conversation_id=item.id) }}">{{ item.title }}</a>
-                    <span>{{ item.source }}</span>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <p class="empty-note">No imported conversations yet.</p>
-            {% endif %}
-          </section>
-
-          <section>
-            <h3>Native memory</h3>
-            {% if workspace.recent_native %}
-              <ul class="resume-list">
-                {% for item in workspace.recent_native %}
-                  <li>
-                    <a href="{{ url_for('memory_detail', entry_id=item.id) }}">Entry #{{ item.id }} · {{ item.role }}</a>
-                    <span>{{ item.preview }}</span>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <p class="empty-note">No native entries yet.</p>
-            {% endif %}
-          </section>
-
-          <section>
-            <h3>Answer traces</h3>
-            {% if workspace.recent_traces %}
-              <ul class="resume-list">
-                {% for item in workspace.recent_traces %}
-                  <li>
-                    <a href="{{ url_for('answer_trace_detail', trace_id=item.trace_id) }}">{{ item.question or item.trace_id }}</a>
-                    <span>{{ item.status }}</span>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <p class="empty-note">No answer traces yet.</p>
-            {% endif %}
-          </section>
-        </div>
-      </article>
-
-      <article class="surface-card workspace-block" aria-label="Next Actions">
-        <h2>Next Actions</h2>
-        <ul class="content-list">
-          <li><a href="{{ url_for('imported_conversations') }}">Continue a conversation</a> — pick up where you left off.</li>
-          <li><a href="{{ url_for('summary') }}">View your summary</a> — your AI memory at a glance.</li>
-          <li><a href="{{ url_for('imported_conversations') }}">Browse your history</a> — inspect transcripts by provider.</li>
-          <li><a href="{{ url_for('federated_browser') }}">Search across everything</a> — all providers, one view.</li>
-          <li><a href="{{ url_for('passport_surface') }}">Export your Memory Passport</a> — portable archive with provenance.</li>
-          <li><a href="{{ url_for('import_conversations') }}">Import more conversations</a> — add another provider's history.</li>
-        </ul>
-      </article>
-    </section>
+      {% endif %}
+    </div>
   {% endif %}
 {% endblock %}

@@ -83,10 +83,11 @@ SoulPrint is a virtual USB stick. The metaphor carries through:
 
 ## Accent Rules
 
-- Green (#4ade80) is the ONLY accent color
-- No second accent. No wine. No gold.
-- Green is used for: CTAs, active nav indicator, badges, lane stripes, links on hover, trust signals
-- Never use green as a large background fill (only ghost/muted variants)
+- Two accents: green (#4ade80) for actions, purple (#7c5cbf) for interactive feedback
+- Green is used for: CTAs, active nav border, success badges, links on hover, trust signals
+- Purple is used for: row hover states, sidebar active background, selected items
+- No third accent color
+- Never use either accent as a large background fill (only ghost/muted variants)
 
 ## Typography
 

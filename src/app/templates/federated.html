@@ -36,7 +36,7 @@
   </section>
 
   {% if rows %}
-    <div class="list-stack">
+    <div class="container-card">
       {% for row in rows %}
         {% set result = row.result %}
         {% set tone = "native" if result.source_lane == "native_memory" else "imported" %}

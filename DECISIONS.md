@@ -30,12 +30,11 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-03 | Design direction: "Torchlit Vault." Dark warm background (#0e0d0b), Forum display font, Cormorant Garamond body, JetBrains Mono for forensic data. | Quiet, warm, confident. Not dashboard. Not vault cosplay. Not AI toy. |
-| 2026-03 | Hierarchy through opacity, not color. Four text opacity levels (t1/t2/t3/t4). Two accent colors only: wine (#6b3a3a) and gold (#a08848). | Prevents color proliferation. Typography carries structure. |
-| 2026-03 | No cards, no badges, no borders around containers, no shadows, no icons in nav, no bold >500 weight. | Content sits on the dark background with typography and spacing creating structure. Apple deference principle. |
-| 2026-03 | Wine appears only on: primary CTA borders, active nav indicator, action buttons. Gold appears only on: page headings, provenance citation borders, main stat number. | Accent restraint. If everything glows, nothing is sacred. |
-| 2026-03 | Provider lane colors as 2px vertical stripes: ChatGPT sage (#5a8a6a), Claude gold, Gemini steel (#5a7a9a), Native steel. | Lane identity through material, not SaaS badges. |
-| 2026-03 | Design is frozen. No further design exploration until continuity MVP ships. | Coherence erosion is the main engineering risk. Ship the spine first. |
+| 2026-03 | Design direction: "USB Drive." Dark neutral background (#0e0f11), system sans-serif body, JetBrains Mono for forensic data. | Calm, trustworthy, local-first. Not dashboard. Not AI toy. |
+| 2026-03 | Hierarchy through opacity, not color. Four text opacity levels (t1/t2/t3/t4). Two accents: green (#4ade80) for actions, purple (#7c5cbf) for interactive feedback. | Green = "do this." Purple = "you're here." Typography carries structure. |
+| 2026-03 | No box-shadows on content containers. Flat containers with border-dividers. `.container-card` uses border-radius for grouped containers. No icons in nav, no bold >500 weight. | Container grouping via `.container-card`; flat rows inside via `.record-card`. |
+| 2026-03 | Green for actions only: CTAs, active nav border, success badges. Purple for interactive feedback: hover, selection, active sidebar background. | Two accents, two cognitive signals. If everything glows, nothing is sacred. |
+| 2026-03 | Provider lane colors as 2px left-border stripes: ChatGPT green (#4ade80), Claude purple (#a78bfa), Gemini blue (#60a5fa), Native blue. | Lane identity through color stripe, not badges. |
 
 ## Product
 
