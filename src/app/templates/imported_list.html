@@ -41,7 +41,7 @@
       Showing {{ (page - 1) * 50 + 1 }}–{{ (page - 1) * 50 + rows|length }} of {{ total }} conversations · Page {{ page }} of {{ total_pages }}
     </p>
 
-    <div class="list-stack">
+    <div class="container-card">
       {% for conversation, message_count in rows %}
         {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
         <article class="record-card record-card--imported">
