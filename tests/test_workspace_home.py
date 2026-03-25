@@ -1,4 +1,4 @@
-"""Tests for the canonical workspace rendered at `/`."""
+"""Tests for the redesigned workspace landing page."""
 
 from __future__ import annotations
 
@@ -41,94 +41,84 @@ class WorkspaceHomeTest(unittest.TestCase):
         db.session.flush()
         return conv
 
-    def _write_traces(self, count: int) -> None:
-        trace_path = self.workdir / "answer_traces.jsonl"
-        with open(trace_path, "w", encoding="utf-8") as f:
-            for i in range(count):
-                record = {
-                    "trace_id": f"trace-{i}",
-                    "created_at": "2026-03-11T00:00:00+00:00",
-                    "question": f"Question {i}",
-                    "retrieval_terms": f"term{i}",
-                    "status": "answered",
-                    "answer_text": f"Answer {i}",
-                    "citations": [],
-                    "source_lanes": [],
-                    "notes": [],
-                    "fallback_reason": None,
-                    "derived_from": "canonical_ledger",
-                    "trace_kind": "grounded_answer",
-                }
-                f.write(json.dumps(record) + "\n")
+    # ── First-run state ──
 
-    def test_workspace_renders_welcome_on_empty_db(self):
+    def test_first_run_shows_trust_block_and_cta(self):
         html = self._get_workspace_html()
         self.assertIn("SoulPrint", html)
         self.assertIn("Bring your first conversation home", html)
+        self.assertIn("Nothing is sent anywhere", html)
         self.assertIn("Everything stays on your machine", html)
 
-    def test_workspace_continuity_counts_reflect_seeded_data(self):
-        with self.app.app_context():
-            conv = self._seed_conv("chatgpt", "WithMessages")
-            for i in range(2):
-                db.session.add(
-                    MemoryEntry(
-                        timestamp=datetime.utcnow(),
-                        role="user",
-                        content=f"Native entry {i}",
-                        tags="",
-                    )
-                )
-            for i in range(3):
-                db.session.add(
-                    ImportedMessage(
-                        conversation_id=conv.id,
-                        sequence_index=i,
-                        role="user",
-                        content=f"Message {i}",
-                        source_message_id=f"msg-{i}",
-                    )
-                )
-            db.session.commit()
-
-        self._write_traces(4)
+    def test_first_run_does_not_show_provider_stack(self):
         html = self._get_workspace_html()
+        self.assertNotIn("YOUR ARCHIVE", html)
+        self.assertNotIn("CONTINUITY", html)
 
-        self.assertIn("You have 1 imported conversations across 1 providers and 2 native memory entries.", html)
-        self.assertIn("Native entries</span><strong>2</strong>", html)
-        self.assertIn("Imported conversations</span><strong>1</strong>", html)
-        self.assertIn("Imported messages</span><strong>3</strong>", html)
-        self.assertIn("Answer traces</span><strong>4</strong>", html)
+    # ── Post-import state ──
 
-    def test_workspace_provider_coverage_renders_provider_badges(self):
+    def test_post_import_shows_trust_oneliner(self):
         with self.app.app_context():
-            self._seed_conv("chatgpt", "C1")
-            self._seed_conv("claude", "C2")
+            self._seed_conv("chatgpt", "Test conv")
             db.session.commit()
-
         html = self._get_workspace_html()
-        self.assertIn("chatgpt · 1", html)
-        self.assertIn("claude · 1", html)
+        self.assertIn("nothing leaves your machine", html.lower())
 
-    def test_workspace_resume_recent_work_renders_links(self):
+    def test_post_import_shows_continuity_card_with_simplified_sentence(self):
         with self.app.app_context():
-            conv = self._seed_conv("gemini", "Recent import")
-            db.session.add(
-                MemoryEntry(
-                    timestamp=datetime.utcnow(),
-                    role="assistant",
-                    content="Native resume preview content",
-                    tags="",
-                )
-            )
+            self._seed_conv("chatgpt", "Conv1")
+            self._seed_conv("claude", "Conv2")
+            db.session.commit()
+        html = self._get_workspace_html()
+        self.assertIn("2 conversations", html)
+        self.assertIn("2 providers", html)
+        self.assertIn("Import more conversations", html)
+        # Must NOT contain the old verbose sentence with native/trace counts
+        self.assertNotIn("native memory entries", html)
+
+    def test_post_import_shows_provider_stack_with_lane_colors(self):
+        with self.app.app_context():
+            self._seed_conv("chatgpt", "GPT conversation")
+            self._seed_conv("claude", "Claude conversation")
+            db.session.commit()
+        html = self._get_workspace_html()
+        self.assertIn("chatgpt", html.lower())
+        self.assertIn("claude", html.lower())
+        self.assertIn("GPT conversation", html)
+        self.assertIn("Claude conversation", html)
+
+    def test_post_import_shows_browse_everything_link(self):
+        with self.app.app_context():
+            self._seed_conv("chatgpt", "Test")
+            db.session.commit()
+        html = self._get_workspace_html()
+        self.assertIn("Browse everything together", html)
+        self.assertIn("/federated", html)
+
+    def test_post_import_does_not_show_stats_grid(self):
+        with self.app.app_context():
+            self._seed_conv("chatgpt", "Test")
+            db.session.commit()
+        html = self._get_workspace_html()
+        # Old elements removed
+        self.assertNotIn("workspace-counts", html)
+        self.assertNotIn("Next Actions", html)
+        self.assertNotIn("Resume Recent Work", html)
+
+    def test_post_import_uses_container_card_class(self):
+        with self.app.app_context():
+            self._seed_conv("chatgpt", "Test")
+            db.session.commit()
+        html = self._get_workspace_html()
+        self.assertIn("container-card", html)
+
+    def test_post_import_provider_row_links_to_explorer(self):
+        with self.app.app_context():
+            conv = self._seed_conv("chatgpt", "Linked conversation")
             db.session.commit()
             conv_id = conv.id
-
-        self._write_traces(1)
         html = self._get_workspace_html()
-        self.assertIn(f'href="/imported/{conv_id}/explorer"', html)
-        self.assertIn('href="/memory/1"', html)
-        self.assertIn('href="/answer-traces/trace-0"', html)
+        self.assertIn(f'/imported/{conv_id}/explorer', html)
 
 
 if __name__ == "__main__":

@@ -86,23 +86,24 @@ class FreeRoutesUnaffectedTest(_FreemiumTestBase):
 
 
 class WorkspaceTierBadgeTest(_FreemiumTestBase):
-    """Workspace page shows Free or Pro tier indicator."""
+    """Workspace page is accessible regardless of license tier."""
 
     license_override = "false"
 
-    def test_workspace_shows_free_tier_badge(self):
+    def test_workspace_accessible_when_unlicensed(self):
         response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("Free", html)
-        self.assertIn("Go deeper", html)
+        self.assertIn("SoulPrint", html)
 
 
 class WorkspaceProBadgeTest(_FreemiumTestBase):
-    """Workspace page shows Pro badge when licensed."""
+    """Workspace page is accessible when licensed."""
 
     license_override = "true"
 
-    def test_workspace_shows_pro_tier_badge_when_licensed(self):
+    def test_workspace_accessible_when_licensed(self):
         response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("Pro", html)
+        self.assertIn("SoulPrint", html)
