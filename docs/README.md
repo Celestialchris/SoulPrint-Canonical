@@ -8,7 +8,6 @@
 - [Positioning](product/positioning.md)
 - [Brand guide](product/brand.md)
 - [Visual direction](product/visual-direction.md)
-- [Dual-theme spec](product/dual-theme-spec.md)
 
 ## Architecture
 - [Answering boundary](architecture/answering-boundary.md)
@@ -17,7 +16,7 @@
 
 ## Specs
 - [Memory Passport v1](specs/memory-passport-spec.md)
-- [Obsidian Bridge spec](specs/obsidian-bridge-spec.md)
+- [Obsidian Bridge](specs/obsidian-bridge-spec.md)
 
 ## Reference
 - [Project status (2026-03-09)](reference/history/project-status-2026-03-09.md)
@@ -29,3 +28,4 @@
 ## Archive
 - [Pre-continuity README](archive/README.pre-continuity.md)
 - [Pre-continuity roadmap](archive/ROADMAP.pre-continuity.md)
+- [Dual-theme spec (Torchlit Vault, superseded)](archive/dual-theme-spec.md)

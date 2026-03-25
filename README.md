@@ -20,7 +20,7 @@ python -m venv .venv
 # Windows: .venv\Scripts\activate
 # macOS/Linux: source .venv/bin/activate
 
-pip install -r requirements-minimal.txt
+pip install -r requirements.txt
 python -m src.run
 # → http://127.0.0.1:5678
 ```

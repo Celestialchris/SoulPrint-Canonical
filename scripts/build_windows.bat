@@ -8,8 +8,8 @@ if not exist .venv (
 
 call .venv\Scripts\activate.bat
 python -m pip install --upgrade pip
-pip install -r requirements-minimal.txt -r requirements-build.txt
-pip install -e .
+pip install -r requirements.txt
+pip install -e ".[build,dev]"
 
 python -m pytest
 if errorlevel 1 (
@@ -17,7 +17,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-pyinstaller --noconfirm --clean SoulPrint.spec
+pyinstaller --noconfirm --clean scripts\SoulPrint.spec
 if errorlevel 1 (
     echo PyInstaller build failed.
     exit /b 1

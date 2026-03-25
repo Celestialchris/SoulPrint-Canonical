@@ -44,7 +44,7 @@ State what should exist when done:
 Explicitly declare boundaries:
 - **Only edit** files named in the starting state, plus new files stated in target
 - **Do not touch**: any file not listed, `instance/`, `docs/archive/`, sample fixtures (unless task is fixture work)
-- **Do not add**: dependencies not in `requirements.txt` or `requirements-minimal.txt` without explicit approval
+- **Do not add**: dependencies not in `pyproject.toml` without explicit approval
 - **Do not change**: database schema, import return signatures, or route paths unless the task explicitly calls for it
 
 ### 4. Stop Conditions
@@ -99,7 +99,7 @@ Before starting work, silently check for these failure patterns:
 - Continuity packets: typed artifacts (summary, decisions, open loops, entity map, bridge packet) stored with provenance
 - Obsidian bridge: one-way derived export in `src/obsidian/`. Exporter, renderer, config, CLI. Same authority rules as Memory Passport — SoulPrint stays canonical, Obsidian is the thinking interface.
 - Distillation: multi-conversation condensation in `src/intelligence/distill.py`. Select N conversations → one paste-ready markdown handoff. JSONL store, Pro-gated, derived/non-canonical.
-- Design reference: `src/app/static/app-mock.html` is the canonical visual reference for all UI work
+- Design reference: `src/app/static/app.css` is the live design system. `docs/product/brand.md` is the token reference.
 
 ## Commands
 

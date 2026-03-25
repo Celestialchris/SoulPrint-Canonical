@@ -23,6 +23,7 @@
 - Per-conversation summaries
 - Cross-conversation topic detection
 - Multi-conversation digests
+- Multi-conversation distillation into paste-ready handoffs
 - Continuity packets for handoff into new chats
 - Bridge assembly and lineage suggestions
 - Requires your own OpenAI or Anthropic API key
@@ -36,6 +37,7 @@
 ### Export
 - Memory Passport with manifest, canonical JSONL lanes, and provenance index
 - Passport validation against the canonical contract
+- Obsidian Bridge — one-way export to Obsidian vault
 - Reports: `valid`, `valid_with_warnings`, or `invalid`
 
 ## Quick Start
@@ -43,7 +45,7 @@
 ```bash
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
 cd SoulPrint-Canonical
-pip install -r requirements-minimal.txt
+pip install -r requirements.txt
 python -m src.run
 ```
 
@@ -51,17 +53,15 @@ Open http://127.0.0.1:5678 and drop an export file on the Import page.
 
 ## Stats
 
-- 10 web surfaces
-- 41 test files, 365 test methods
+- 15+ web surfaces
+- 47 test files, 492 test methods
 - Python 3.12, Flask, SQLite
 - Apache-2.0 licensed
 
 ## What's next
 
-- Desktop wrapper (PyWebView)
-- Freemium gate with local license validation
-- "AI Memory Wrapped" shareable summary page
 - Additional providers (Grok, Copilot, Perplexity)
+- Expanded Obsidian integration
 
 ---
 
