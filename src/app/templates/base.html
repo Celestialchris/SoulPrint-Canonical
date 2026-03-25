@@ -19,7 +19,10 @@
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar__header">
-        <a class="sidebar__brand" href="{{ url_for('home') }}">SoulPrint</a>
+        <a class="sidebar__brand" href="{{ url_for('home') }}">
+          <img class="sidebar__logo" src="{{ url_for('static', filename='logo.svg') }}" alt="" height="24">
+          SoulPrint
+        </a>
       </div>
 
       <nav class="sidebar__nav" aria-label="Primary">
@@ -55,7 +58,10 @@
 
     {# Mobile nav toggle #}
     <header class="mobile-bar">
-      <a class="mobile-bar__brand" href="{{ url_for('home') }}">SoulPrint</a>
+      <a class="mobile-bar__brand" href="{{ url_for('home') }}">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="" height="18">
+        SoulPrint
+      </a>
       <button class="mobile-bar__toggle" type="button" aria-label="Menu"
         onclick="document.getElementById('sidebar').classList.toggle('sidebar--open')">
         <span></span><span></span><span></span>
