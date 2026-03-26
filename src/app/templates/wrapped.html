@@ -7,18 +7,28 @@
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Forum&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Forum&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <style>
     :root {
-      --t1: rgba(210,200,185,0.90);
-      --t2: rgba(210,200,185,0.55);
-      --t3: rgba(210,200,185,0.30);
-      --t4: rgba(210,200,185,0.12);
-      --wine: #6b3a3a;
-      --wine-soft: #8a5050;
-      --gold: #c9a84c;
-      --gold-dim: #a08848;
-      --line: rgba(210,200,185,0.06);
+      --bg: #0e0f11;
+      --surface: #141518;
+      --raised: #1a1b1f;
+      --accent: #4ade80;
+      --accent-dim: #22c55e;
+      --accent-muted: rgba(74,222,128,0.15);
+      --accent-ghost: rgba(74,222,128,0.06);
+      --t1: rgba(240,242,238,0.88);
+      --t2: rgba(240,242,238,0.55);
+      --t3: rgba(240,242,238,0.35);
+      --t4: rgba(240,242,238,0.15);
+      --line: rgba(255,255,255,0.06);
+      --lane-chatgpt: #4ade80;
+      --lane-claude: #a78bfa;
+      --lane-gemini: #60a5fa;
+      --lane-native: #60a5fa;
+      --font-display: "Forum", serif;
+      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
     }
 
     *, *::before, *::after {
@@ -27,47 +37,26 @@
       box-sizing: border-box;
     }
 
+    ::selection {
+      background: rgba(74,222,128,0.20);
+    }
+
     html {
-      background: #0a0908;
-      font-size: 17px;
+      background: var(--bg);
+      font-size: 16px;
     }
 
     body {
-      background:
-        radial-gradient(ellipse at 20% 14%, rgba(201,168,76,0.025) 0%, transparent 46%),
-        radial-gradient(ellipse at 78% 22%, rgba(107,58,58,0.018) 0%, transparent 42%),
-        radial-gradient(ellipse at 62% 70%, rgba(30,28,24,0.58) 0%, transparent 68%),
-        radial-gradient(ellipse at 32% 84%, rgba(107,74,58,0.035) 0%, transparent 34%),
-        #0a0908;
+      background: var(--bg);
       color: var(--t1);
-      font-family: "Cormorant Garamond", serif;
+      font-family: var(--font-body);
       font-weight: 400;
-      line-height: 1.6;
+      line-height: 1.65;
       min-height: 100vh;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");
-      opacity: 0.018;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.20) 0%, transparent 18%, transparent 82%, rgba(0,0,0,0.28) 100%);
-      pointer-events: none;
-      z-index: 2;
+      -webkit-font-smoothing: antialiased;
     }
 
     .wrapped-container {
-      position: relative;
-      z-index: 3;
       max-width: 800px;
       margin: 0 auto;
       padding: 3rem 1.5rem 4rem;
@@ -83,28 +72,21 @@
 
     .hero-wordmark {
       color: var(--t1);
-      font-family: "Forum", serif;
+      font-family: var(--font-display);
       font-size: 1.8rem;
       letter-spacing: 1.5px;
-      text-shadow:
-        0 0 7px rgba(220,140,70,0.50),
-        0 0 20px rgba(210,120,60,0.35),
-        0 0 50px rgba(200,100,50,0.18),
-        0 0 100px rgba(180,80,40,0.07),
-        0 2px 4px rgba(0,0,0,0.4);
       margin-bottom: 0.4rem;
     }
 
     .hero-subtitle {
-      font-family: "Cormorant Garamond", serif;
-      font-size: 1.15rem;
+      font-family: var(--font-body);
+      font-size: 1rem;
       color: var(--t2);
       font-weight: 400;
-      font-style: italic;
     }
 
     .hero-dates {
-      font-family: "JetBrains Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 0.75rem;
       color: var(--t3);
       margin-top: 0.6rem;
@@ -120,15 +102,17 @@
     }
 
     .headline-number {
-      font-family: "Forum", serif;
+      font-family: var(--font-body);
       font-size: clamp(4rem, 10vw, 8rem);
-      color: var(--gold);
+      font-weight: 500;
+      color: var(--accent);
       line-height: 1.1;
     }
 
     .headline-label {
       color: var(--t2);
-      font-size: 1.1rem;
+      font-family: var(--font-body);
+      font-size: 1rem;
       margin-top: 0.3rem;
     }
 
@@ -144,18 +128,18 @@
     }
 
     .stat-cell-number {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 1.4rem;
-      font-weight: 400;
+      font-family: var(--font-body);
+      font-size: 2.2rem;
+      font-weight: 500;
       color: var(--t1);
     }
 
     .stat-cell-label {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
       color: var(--t3);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.10em;
       margin-top: 0.25rem;
     }
 
@@ -167,10 +151,12 @@
     }
 
     .section-heading {
-      font-family: "Cormorant Garamond", serif;
-      font-size: 1rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
       font-weight: 400;
-      color: var(--t2);
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
       margin-bottom: 1.2rem;
     }
 
@@ -182,7 +168,7 @@
     }
 
     .provider-name {
-      font-family: "JetBrains Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 0.75rem;
       color: var(--t2);
       min-width: 5.5rem;
@@ -204,7 +190,7 @@
     }
 
     .provider-count {
-      font-family: "JetBrains Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 0.7rem;
       color: var(--t3);
       min-width: 3rem;
@@ -228,22 +214,23 @@
     }
 
     .mid-block-label {
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
       color: var(--t3);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.10em;
       margin-bottom: 0.35rem;
     }
 
     .mid-block-value {
-      font-family: "Cormorant Garamond", serif;
-      font-size: 1.15rem;
+      font-family: var(--font-body);
+      font-size: 1.1rem;
+      font-weight: 500;
       color: var(--t1);
     }
 
     .mid-block-sub {
-      font-family: "JetBrains Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 0.7rem;
       color: var(--t3);
       margin-top: 0.15rem;
@@ -264,7 +251,7 @@
     }
 
     .topic-item {
-      font-family: "JetBrains Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 0.75rem;
       color: var(--t2);
       padding: 0.25rem 0;
@@ -283,7 +270,7 @@
     }
 
     .unfinished-count {
-      font-family: "JetBrains Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 1.2rem;
       color: var(--t1);
       margin-bottom: 0.5rem;
@@ -295,6 +282,7 @@
     }
 
     .unfinished-list li {
+      font-family: var(--font-body);
       font-size: 0.95rem;
       color: var(--t2);
       padding: 0.2rem 0;
@@ -306,17 +294,20 @@
     }
 
     .unfinished-cta {
-      font-family: "JetBrains Mono", monospace;
+      display: inline-block;
+      font-family: var(--font-mono);
       font-size: 0.75rem;
-      color: var(--wine);
+      color: var(--accent);
       text-decoration: none;
+      transition: color 150ms ease;
     }
 
     .unfinished-cta:hover {
-      color: var(--wine-soft);
+      color: var(--accent-dim);
     }
 
     .unfinished-clear {
+      font-family: var(--font-body);
       font-size: 0.95rem;
       color: var(--t2);
     }
@@ -329,13 +320,13 @@
     }
 
     .watermark-line {
-      font-family: "JetBrains Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 0.7rem;
       color: var(--t3);
     }
 
     .watermark-url {
-      font-family: "JetBrains Mono", monospace;
+      font-family: var(--font-mono);
       font-size: 0.65rem;
       color: var(--t4);
       margin-top: 0.2rem;
@@ -349,18 +340,20 @@
     }
 
     .footer-back {
-      font-family: "JetBrains Mono", monospace;
+      display: inline-block;
+      font-family: var(--font-mono);
       font-size: 0.75rem;
-      color: var(--wine);
+      color: var(--accent);
       text-decoration: none;
+      transition: color 150ms ease;
     }
 
     .footer-back:hover {
-      color: var(--wine-soft);
+      color: var(--accent-dim);
     }
 
     .footer-share {
-      font-family: "Cormorant Garamond", serif;
+      font-family: var(--font-body);
       font-size: 0.85rem;
       color: var(--t3);
       margin-top: 0.5rem;
@@ -374,6 +367,7 @@
     }
 
     .empty-message {
+      font-family: var(--font-body);
       font-size: 1.1rem;
       color: var(--t2);
       margin: 1.5rem 0;
@@ -381,17 +375,23 @@
 
     .empty-cta {
       display: inline-block;
-      font-family: "JetBrains Mono", monospace;
-      font-size: 0.8rem;
-      color: var(--t1);
-      background: var(--wine);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--bg);
+      background: var(--accent);
       padding: 0.6rem 1.6rem;
+      border-radius: 6px;
       text-decoration: none;
-      letter-spacing: 0.5px;
+      min-height: 42px;
+      line-height: 42px;
+      padding: 0 1.6rem;
+      letter-spacing: 0.02em;
+      transition: background 150ms ease;
     }
 
     .empty-cta:hover {
-      background: var(--wine-soft);
+      background: var(--accent-dim);
     }
   </style>
 </head>
@@ -437,12 +437,12 @@
     {# ---- Provider Breakdown ---- #}
     <div class="providers-section">
       <div class="section-heading">Your providers</div>
-      {%- set lane_colors = {"chatgpt": "#5a8a6a", "claude": "#a08848", "gemini": "#5a7a9a", "native": "#5a7a9a"} -%}
+      {%- set lane_colors = {"chatgpt": "#4ade80", "claude": "#a78bfa", "gemini": "#60a5fa", "native": "#60a5fa"} -%}
       {% for provider in wrapped.providers %}
       <div class="provider-row">
         <span class="provider-name">{{ provider.name }}</span>
         <div class="provider-bar-track">
-          <div class="provider-bar-fill" style="width: {{ provider.percentage }}%; background: {{ lane_colors.get(provider.name, '#5a7a9a') }};"></div>
+          <div class="provider-bar-fill" style="width: {{ provider.percentage }}%; background: {{ lane_colors.get(provider.name, '#60a5fa') }};"></div>
         </div>
         <span class="provider-count">{{ provider.count }}</span>
       </div>
