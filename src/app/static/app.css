@@ -229,7 +229,7 @@ button:active{transform:scale(0.98)}
 .viewport-indicator{position:absolute;left:2px;right:2px;min-height:14px;border:1px solid var(--accent);border-radius:3px;background:var(--accent-ghost);pointer-events:none;transition:top 60ms linear,height 60ms linear}
 
 /* Welcome */
-.workspace-welcome{padding:48px 0 40px;text-align:center}
+.workspace-welcome{padding:48px 0 40px;text-align:center;min-height:calc(100vh - 200px);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .workspace-welcome--compact{padding:12px 0 20px}
 .workspace-welcome__tagline{color:var(--t2);font-family:var(--font-body);font-size:18px;line-height:1.7;max-width:360px;margin:0 auto}
 .workspace-welcome__tagline em{font-style:normal;color:var(--accent)}
