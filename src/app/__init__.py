@@ -257,9 +257,10 @@ def create_app():
             else:
                 temp_path: Path | None = None
                 try:
+                    suffix = Path(upload.filename).suffix or ".json"
                     with tempfile.NamedTemporaryFile(
                         mode="wb",
-                        suffix=".json",
+                        suffix=suffix,
                         delete=False,
                     ) as handle:
                         upload.save(handle)

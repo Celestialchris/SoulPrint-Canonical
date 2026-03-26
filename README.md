@@ -115,7 +115,7 @@ src/
 ├── obsidian/       Obsidian vault bridge (one-way export)
 └── tools/          CLI utilities
 
-tests/              47 test files, 492 methods
+tests/              48 test files, 500 methods
 sample_data/        Synthetic provider fixtures (ChatGPT, Claude, Gemini)
 docs/               Architecture, specs, brand guide
 landing/            Static landing page
@@ -127,7 +127,7 @@ landing/            Static landing page
 pytest
 ```
 
-47 test files, 492 methods covering parsing, persistence, retrieval, intelligence, continuity, distillation, passport, Obsidian bridge, licensing, CLI, and browser integration.
+48 test files, 500 methods covering parsing, persistence, retrieval, intelligence, continuity, distillation, passport, Obsidian bridge, licensing, CLI, and browser integration.
 
 ## CLI
 

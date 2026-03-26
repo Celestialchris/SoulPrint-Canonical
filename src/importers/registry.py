@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import shutil
+import tempfile
+import zipfile
 from dataclasses import dataclass
 from json import JSONDecodeError
 from pathlib import Path
@@ -79,6 +82,11 @@ def parse_import_file(
 ) -> ImportParseResult:
     """Load, detect, and parse one provider export file."""
 
+    path = Path(path)
+
+    if path.suffix.lower() == ".zip":
+        return _parse_zip_import(path, provider_hint=provider_hint)
+
     payload = _load_json_payload(path)
     spec = _resolve_provider_spec(payload, provider_hint=provider_hint)
 
@@ -104,6 +112,52 @@ def _load_json_payload(path: str | Path) -> Any:
             return json.load(handle)
     except JSONDecodeError as exc:
         raise MalformedImportFileError(f"Import file is not valid JSON: {exc}") from exc
+
+
+def _parse_zip_import(
+    path: Path,
+    *,
+    provider_hint: str | None = None,
+) -> ImportParseResult:
+    """Extract a .zip and find the importable JSON inside."""
+
+    tmp_dir = Path(tempfile.mkdtemp(prefix="soulprint_zip_"))
+    try:
+        with zipfile.ZipFile(path, "r") as zf:
+            zf.extractall(tmp_dir)
+
+        # Collect all .json files in the extracted tree.
+        json_files = sorted(tmp_dir.rglob("*.json"))
+        if not json_files:
+            raise MalformedImportFileError(
+                "Zip archive does not contain any .json files."
+            )
+
+        # ChatGPT exports always contain conversations.json — try it first.
+        conversations_json = [f for f in json_files if f.name == "conversations.json"]
+        prioritized = conversations_json + [f for f in json_files if f not in conversations_json]
+
+        last_error: Exception | None = None
+        for json_path in prioritized:
+            try:
+                payload = _load_json_payload(json_path)
+                spec = _resolve_provider_spec(payload, provider_hint=provider_hint)
+                conversations = spec.importer.parse_payload(payload)
+                return ImportParseResult(
+                    provider_id=spec.provider_id,
+                    conversations=conversations,
+                    warnings=_collect_import_warnings(spec.provider_id, conversations),
+                )
+            except (ImportProviderDetectionError, MalformedImportFileError, UnsupportedImportFormatError, ValueError) as exc:
+                last_error = exc
+                continue
+
+        raise ImportProviderDetectionError(
+            f"No importable JSON found in zip archive ({len(json_files)} .json file(s) checked). "
+            f"Last error: {last_error}"
+        )
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 def _resolve_provider_spec(
