@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import os
 import unittest
+from unittest.mock import patch
 
 from src.app import create_app
 from src.app.models.db import db
@@ -22,22 +22,21 @@ class _FreemiumTestBase(unittest.TestCase):
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.workdir}/test.db"
         self.addCleanup(self._restore_sqlite_uri)
 
-        self._old_override = os.environ.get("SOULPRINT_LICENSE_OVERRIDE")
-        os.environ["SOULPRINT_LICENSE_OVERRIDE"] = self.license_override
-
         self.app = create_app()
         self.client = self.app.test_client()
         self.addCleanup(release_app_db_handles, self.app, drop_all=True)
-        self.addCleanup(self._restore_license_override)
+
+        # Mock is_licensed at the call site so tests don't depend on
+        # filesystem state (instance/license.key on dev machines).
+        self._lic_patcher = patch(
+            "src.app.is_licensed",
+            return_value=(self.license_override == "true"),
+        )
+        self._lic_patcher.start()
+        self.addCleanup(self._lic_patcher.stop)
 
     def _restore_sqlite_uri(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
-
-    def _restore_license_override(self):
-        if self._old_override is None:
-            os.environ.pop("SOULPRINT_LICENSE_OVERRIDE", None)
-        else:
-            os.environ["SOULPRINT_LICENSE_OVERRIDE"] = self._old_override
 
 
 class UnlicensedAskGatingTest(_FreemiumTestBase):
