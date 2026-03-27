@@ -10,7 +10,7 @@
     <section class="workspace-firstrun">
       <h1 class="workspace-firstrun__wordmark">SoulPrint</h1>
       <p class="workspace-firstrun__tagline">
-        A virtual USB stick for your AI life.
+        Your AI conversations are scattered everywhere. SoulPrint brings them home.
       </p>
       <div class="container-card workspace-firstrun__trust">
         <p>
@@ -32,8 +32,8 @@
       <div class="container-card">
         <p class="container-card__eyebrow">Continuity</p>
         <p class="workspace-continuity-sentence">
-          You have {{ workspace.imported_conversation_count }} conversations
-          across {{ workspace.provider_recent|length }} providers.
+          You have {{ workspace.imported_conversation_count }} conversation{{ 's' if workspace.imported_conversation_count != 1 else '' }}
+          across {{ workspace.provider_recent|length }} provider{{ 's' if workspace.provider_recent|length != 1 else '' }}.
         </p>
         <a class="workspace-import-cta" href="{{ url_for('import_conversations') }}">
           Import more conversations
