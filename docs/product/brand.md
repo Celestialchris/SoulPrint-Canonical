@@ -6,143 +6,132 @@ Every person should own their AI memory.
 
 ### One-liner
 
-A virtual USB stick for your AI life.
-
-### Tagline (landing page hero)
-
-A virtual USB stick for your AI life. Plug in. Take everything with you.
-
-### Trust line
-
-Everything stays on your machine. Nothing is sent anywhere.
+Your AI conversations are scattered everywhere. SoulPrint brings them home.
 
 ## Product Voice
 
-- Direct, clear, trustworthy
-- Technical when needed, never cold
+- Warm, confident, technical but never cold
+- Trustworthy — we handle people's conversation history
 - Never corporate, never salesy
-- "Your" not "the user's" — speak to people
-- Green = safe, verified, go. Use it to reinforce privacy and ownership.
-- Never use: vault, ember, torchlit, capsule, portable mode
+- Direct without being terse
+- Warm without being cutesy
+- Use "your" not "the user's" — speak to people, not about them
 
 ## Product Name
 
 **SoulPrint** — one word, capital S, capital P.
 Never: Soul Print, soul print, SOULPRINT, SP.
 
-## Identity Metaphor
+## Warm Nav Labels
 
-SoulPrint is a virtual USB stick. The metaphor carries through:
-- The logo is a pixel-art USB stick with a green body and cutout center
-- The LED blinks green (active, alive, working)
-- "Plug in" = import your data
-- "Take it with you" = Memory Passport export
-- The favicon is the same USB icon at 32px
+Sidebar nav text and page heading text adopt warmer labels.
+Routes are unchanged — only the visible text changes.
 
-## Color Palette
+| Route             | Nav Label                   | Page Heading                  |
+|-------------------|-----------------------------|-------------------------------|
+| `/`               | Workspace                   | Workspace                     |
+| `/ask`            | Ask your memory             | Ask your memory               |
+| `/imported`       | What you've discussed       | What you've discussed         |
+| `/chats`          | Your own notes              | Your own notes                |
+| `/federated`      | Everything, together        | Everything, together          |
+| `/intelligence`   | Themes & patterns           | Themes & patterns             |
+| `/distill`        | Distill                     | Distill                       |
+| `/answer-traces`  | How answers were found      | How answers were found        |
+| `/import`         | Import                      | Bring conversations home      |
+| `/passport`       | Take it with you            | Memory Passport               |
 
-### Dark (default)
+## Design System: USB Drive
 
-| Token        | Value                           | Usage                           |
-|--------------|----------------------------------|----------------------------------|
-| --bg         | #0e0f11                          | Page background                  |
-| --surface    | #141518                          | Panel/sidebar background         |
-| --raised     | #1a1b1f                          | Elevated surface                 |
-| --accent     | #4ade80                          | Primary accent — CTAs, active states, trust signals |
-| --accent-dim | #22c55e                          | Hover state for accent           |
-| --accent-muted | rgba(74,222,128,0.15)          | Icon backgrounds, badges         |
-| --accent-ghost | rgba(74,222,128,0.06)          | Subtle hover fills               |
-| --t1         | rgba(240,242,238,0.88)           | Primary text                     |
-| --t2         | rgba(240,242,238,0.55)           | Secondary text                   |
-| --t3         | rgba(240,242,238,0.35)           | Muted text, labels               |
-| --t4         | rgba(240,242,238,0.15)           | Ghost text, disabled, borders    |
-| --line       | rgba(255,255,255,0.06)           | Borders, dividers                |
+The design communicates trust, calm, and local ownership. Green is a deliberate trust signal — users handing over their entire AI conversation history need to feel safe instantly.
 
-### Light
+### Color Tokens (dark theme, default)
 
-| Token        | Value                           | Usage                           |
-|--------------|----------------------------------|----------------------------------|
-| --bg         | #f4f5f0                          | Page background                  |
-| --surface    | #eaebe5                          | Panel background                 |
-| --raised     | #ffffff                          | Elevated surface                 |
-| --accent     | #16a34a                          | Primary accent                   |
-| --accent-dim | #15803d                          | Hover state                      |
-| --t1         | rgba(14,15,17,0.88)              | Primary text                     |
-| --t2         | rgba(14,15,17,0.55)              | Secondary text                   |
-| --t3         | rgba(14,15,17,0.35)              | Muted text                       |
-| --t4         | rgba(14,15,17,0.12)              | Ghost text                       |
+| Token         | Value       | Usage                                    |
+|---------------|-------------|------------------------------------------|
+| --bg          | #0e0f11                       | Page background                          |
+| --surface     | #141518                       | Sidebar, panel backgrounds               |
+| --raised      | #1a1b1f                       | Elevated surfaces, empty state containers|
+| --accent      | #4ade80                       | Primary accent — CTAs, active nav, badges|
+| --accent-dim  | #22c55e                       | Hover state                              |
+| --accent-muted| rgba(74,222,128,0.15)         | Subtle backgrounds, badge fills          |
+| --lane-claude | #a78bfa                       | Derived/generated indicators, Claude lane|
+| --t1          | rgba(240,242,238,0.88)        | Primary text                             |
+| --t2          | rgba(240,242,238,0.55)        | Secondary text                           |
+| --t3          | rgba(240,242,238,0.35)        | Muted text, labels                       |
+| --t4          | rgba(240,242,238,0.15)        | Ghost text, disabled                     |
+| --line        | rgba(255,255,255,0.06)        | Borders, dividers                        |
+
+### Typography
+
+| Role       | Family                              | Weight | Usage                    |
+|------------|-------------------------------------|--------|--------------------------|
+| Wordmark   | Forum, serif                        | 400    | "SoulPrint" in sidebar   |
+| Body       | system-ui, -apple-system, sans-serif| 400    | All reading text, nav    |
+| Mono       | JetBrains Mono, monospace           | 400    | IDs, labels, section headers, eyebrows |
+
+Base font-size: 16px on html.
 
 ### Provider Lane Colors
 
-| Lane     | Dark      | Light     |
-|----------|-----------|-----------|
-| ChatGPT  | #4ade80   | #16a34a   |
-| Claude   | #a78bfa   | #7c3aed   |
-| Gemini   | #60a5fa   | #2563eb   |
-| Native   | #60a5fa   | #2563eb   |
+| Lane     | Value     | Usage                                    |
+|----------|-----------|------------------------------------------|
+| ChatGPT  | #4ade80   | Green — shared with primary accent       |
+| Claude   | #a78bfa   | Purple                                   |
+| Gemini   | #60a5fa   | Blue                                     |
+| Native   | #60a5fa   | Blue — same as Gemini for now            |
 
-## Accent Rules
+### Accent Rules
 
-- Two accents: green (#4ade80) for actions, purple (#7c5cbf) for interactive feedback
-- Green is used for: CTAs, active nav border, success badges, links on hover, trust signals
-- Purple is used for: row hover states, sidebar active background, selected items
-- No third accent color
-- Never use either accent as a large background fill (only ghost/muted variants)
+- Green (#4ade80) is the primary accent (--accent) — CTA buttons, active nav indicators, tab pills, search buttons
+- Purple (#a78bfa) marks derived/generated surfaces (--lane-claude) — "Generated" badges, section labels on interpretation pages
+- Green is a trust signal, not decoration
+- Never use accents as background fills on large areas
+- Buttons use solid green background with dark text
 
-## Typography
+### Active Nav Indicator
 
-### Font Stack
+The active sidebar nav item uses:
+- Green (#4ade80) left border (3px solid)
+- Slightly elevated background
+- Text remains the same color
 
-| Role       | Family                                              | Weight  | Usage                    |
-|------------|-----------------------------------------------------|---------|--------------------------|
-| Body       | -apple-system, BlinkMacSystemFont, system-ui, sans  | 400-600 | All reading text, nav, headings |
-| Mono       | JetBrains Mono, ui-monospace, monospace             | 400-500 | IDs, timestamps, labels, code |
-| Landing    | Outfit, sans-serif                                  | 300-600 | Landing page only        |
+### Section Headers (eyebrows)
 
-### Size Rules
+All section headers above page headings use:
+- JetBrains Mono
+- Uppercase
+- Letter-spacing: 0.12-0.18em
+- Color: green accent or muted (--t3) depending on context
+- Font-size: ~0.65rem
 
-| Element         | Size    | Weight | Notes              |
-|-----------------|---------|--------|--------------------|
-| Page heading    | 1.5rem  | 500    | System sans-serif  |
-| Section heading | 17px    | 500    |                    |
-| Nav link        | 14px    | 400    |                    |
-| Body text       | 14-15px | 400    |                    |
-| Mono label      | 11px    | 400    | Minimum size       |
-| Sidebar brand   | 18px    | 600    | Distinct from nav  |
+### Tab Pills
 
-Absolute minimum font size: **11px**. Nothing smaller, ever.
+- Active tab: green (#4ade80) border, green text
+- Inactive tab: muted border, muted text
+- Small, inline, next to page headings
 
-## Logo
+### Derived Surface Labels
 
-The SoulPrint logo is a stylized USB stick icon:
-- Metal connector at top (gray, with cutout rectangle)
-- Green body (#4ade80) below
-- Center cutout (dark, matching background)
-- Works at favicon size (16px) and hero size
-
-### Usage Rules
-- Primary color: green body with gray connector
-- Minimum clear space: 8px on all sides
-- Never stretch, rotate, or apply effects
-- In the sidebar: 24px, paired with "SoulPrint" in 18px/600 weight
-
-## Buttons
-
-- Primary CTA: filled green background, dark text, 6px radius, 600 weight
-- Secondary: transparent background, 1px border in --t4, --t1 text, 8px radius
-- Inline actions: transparent with 1px green border, green text, 6px radius
-- Ghost links: --t2 text, arrow suffix, hover to green
-- No uppercase buttons. No letter-spacing on buttons.
+Surfaces showing generated/derived content display a small "Generated" badge:
+- Green (#4ade80) outline
+- Small font (JetBrains Mono)
+- Positioned next to the page heading
 
 ## Critical Rules
 
-- No serif fonts in the app UI
-- No grain overlay, no vignette, no ember glow
-- No radial gradient backgrounds
-- No card shadows, no border-radius on flat panels
+- No box-shadows on containers
 - No icons in nav — text only
-- No decorative borders beyond 1px var(--line)
+- No font-weight above 500
+- No decorative borders beyond 1px var(--line) dividers
 - No stock photos
-- No emoji in the UI
+- No emoji in the UI (unless user-generated content contains them)
 - No "AI" as a visual motif (no robot icons, no brain icons, no sparkles)
-- Trust-first: every design choice should make the user feel safe about their data
+- Flat rows with border-bottom dividers preferred over card components
+- Empty state containers may use subtle borders for visual grouping
+- Typography and spacing create structure, not color
+
+## Footer
+
+Sidebar footer shows:
+- "dark" text (theme indicator, left)
+- "v0.1.0 · local-first" (right, JetBrains Mono, muted)

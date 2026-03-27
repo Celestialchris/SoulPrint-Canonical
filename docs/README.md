@@ -28,4 +28,4 @@
 ## Archive
 - [Pre-continuity README](archive/README.pre-continuity.md)
 - [Pre-continuity roadmap](archive/ROADMAP.pre-continuity.md)
-- [Dual-theme spec (Torchlit Vault, superseded)](archive/dual-theme-spec.md)
+- [Dual-theme spec (superseded)](archive/dual-theme-spec.md)
