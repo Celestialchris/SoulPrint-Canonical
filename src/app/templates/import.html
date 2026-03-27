@@ -2,6 +2,163 @@
 
 {% block title %}Import · SoulPrint{% endblock %}
 
+{% block head_extra %}
+<style>
+  /* ── Drop zone ──────────────────────────────────────── */
+  .drop-zone {
+    border: 2px dashed var(--t4);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--duration) var(--ease-out),
+                background var(--duration) var(--ease-out);
+    position: relative;
+  }
+  .drop-zone:hover {
+    border-color: var(--t3);
+    background: var(--accent-ghost);
+  }
+  .drop-zone--active {
+    border-color: var(--accent);
+    background: var(--accent-ghost);
+    box-shadow: 0 0 0 1px var(--accent-muted);
+  }
+  .drop-zone--has-file {
+    border-color: var(--accent);
+    border-style: solid;
+  }
+  .drop-zone__input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .drop-zone__icon {
+    display: block;
+    margin: 0 auto 1rem;
+    opacity: 0.45;
+  }
+  .drop-zone__main {
+    display: block;
+    color: var(--t1);
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .drop-zone__sub {
+    display: block;
+    color: var(--t3);
+    font-size: 13px;
+  }
+  .drop-zone__filename {
+    display: none;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    margin-top: 4px;
+  }
+
+  /* ── Provider pills ─────────────────────────────────── */
+  .provider-pills {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 1.25rem;
+  }
+  .provider-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+    background: none;
+    white-space: nowrap;
+  }
+  .provider-pill--chatgpt { color: var(--lane-chatgpt); border-color: var(--lane-chatgpt); }
+  .provider-pill--claude  { color: var(--lane-claude);  border-color: var(--lane-claude);  }
+  .provider-pill--gemini  { color: var(--lane-gemini);  border-color: var(--lane-gemini);  }
+
+  /* ── Trust shields ──────────────────────────────────── */
+  .trust-shields {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+  .trust-shield {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--t2);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 5px 14px 5px 10px;
+  }
+  .trust-shield__check {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .trust-shield__check svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* ── Import button ──────────────────────────────────── */
+  .import-form button[type="submit"] {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    margin: 1.5rem auto 0;
+    padding: 12px 24px;
+    background: var(--cta-bg);
+    color: var(--cta-text);
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--duration-fast) ease;
+  }
+  .import-form button[type="submit"]:hover {
+    background: var(--cta-hover-bg);
+  }
+
+  /* ── Localhost line ─────────────────────────────────── */
+  .localhost-guarantee {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--t3);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 2rem;
+    font-variant: small-caps;
+  }
+
+  /* ── Responsive ─────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .drop-zone { padding: 2rem 1.25rem; }
+    .trust-shields { gap: 8px; }
+    .trust-shield { font-size: 12px; padding: 4px 10px 4px 8px; }
+    .provider-pills { gap: 6px; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
   <section class="page-header">
     <p class="page-eyebrow">Import</p>
@@ -15,16 +172,57 @@
   <section class="surface-card content-block">
     <form method="post" enctype="multipart/form-data" class="import-form" id="import-form">
       <div class="drop-zone" id="drop-zone">
-        <input class="drop-zone__input" id="export_file" name="export_file" type="file" accept="application/json,.json" required>
+        <input class="drop-zone__input" id="export_file" name="export_file" type="file" accept="application/json,.json,.zip" required>
         <span class="drop-zone__prompt" id="drop-zone-prompt">
+          <!-- Import icon -->
+          <svg class="drop-zone__icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
           <span class="drop-zone__main">Drop your export file here</span>
           <span class="drop-zone__sub">or click to browse</span>
         </span>
         <span class="drop-zone__filename" id="drop-zone-filename"></span>
+        <div class="provider-pills">
+          <span class="provider-pill provider-pill--chatgpt">ChatGPT .zip</span>
+          <span class="provider-pill provider-pill--claude">Claude .json</span>
+          <span class="provider-pill provider-pill--gemini">Gemini Takeout</span>
+        </div>
       </div>
+
+      <!-- Trust shields -->
+      <div class="trust-shields">
+        <span class="trust-shield">
+          <span class="trust-shield__check">
+            <svg viewBox="0 0 10 10" fill="none" stroke="#0e0f11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="2,5.5 4.2,7.5 8,3"/>
+            </svg>
+          </span>
+          Processed on your machine
+        </span>
+        <span class="trust-shield">
+          <span class="trust-shield__check">
+            <svg viewBox="0 0 10 10" fill="none" stroke="#0e0f11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="2,5.5 4.2,7.5 8,3"/>
+            </svg>
+          </span>
+          Nothing sent anywhere
+        </span>
+        <span class="trust-shield">
+          <span class="trust-shield__check">
+            <svg viewBox="0 0 10 10" fill="none" stroke="#0e0f11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="2,5.5 4.2,7.5 8,3"/>
+            </svg>
+          </span>
+          No account needed
+        </span>
+      </div>
+
       <button type="submit">Import now</button>
     </form>
-    <p class="import-trust-line">Your file is processed locally. Nothing leaves your machine.</p>
+
+    <p class="localhost-guarantee">Your file never leaves localhost</p>
   </section>
 
   {% if error_message %}
@@ -80,7 +278,9 @@
   var filename = document.getElementById('drop-zone-filename');
   if (!zone || !input) return;
 
-  zone.addEventListener('click', function() { input.click(); });
+  zone.addEventListener('click', function(e) {
+    if (e.target !== input) input.click();
+  });
 
   zone.addEventListener('dragover', function(e) {
     e.preventDefault();
@@ -98,7 +298,7 @@
     }
   });
   input.addEventListener('change', function() {
-    if (input.files.length) { showFile(input.files[0].name); }
+    if (input.files.length) showFile(input.files[0].name);
   });
 
   function showFile(name) {
