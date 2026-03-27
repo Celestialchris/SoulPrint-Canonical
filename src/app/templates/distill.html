@@ -37,18 +37,55 @@
   {% elif not conversations %}
     {{ empty_state(
       "No conversations to distill",
-      "Import some conversations first, then come back here.",
+      "Import some conversations first. Once you have a few, SoulPrint will find threads and help you distill what matters.",
       url_for('import_conversations'),
       "Go to Import"
     ) }}
   {% else %}
+
+    {# ── Suggested threads ──────────────────────────────── #}
+    {% if threads %}
+      <section class="distill-threads">
+        <p class="distill-threads__eyebrow">Suggested threads</p>
+        {% for thread in threads %}
+          <details class="distill-thread">
+            <summary class="distill-thread__header">
+              <span class="distill-thread__label">{{ thread.label }}</span>
+              <span class="distill-thread__meta">
+                {{ thread.conversations | length }} conversations · {{ thread.total_messages }} messages
+              </span>
+              {% if thread.date_range %}
+                <span class="distill-thread__date">{{ thread.date_range }}</span>
+              {% endif %}
+            </summary>
+            <div class="distill-thread__body">
+              <ul class="distill-thread__list">
+                {% for conv in thread.conversations %}
+                  <li class="distill-thread__conv">
+                    <span class="distill-thread__conv-title">{{ conv.title or "Untitled" }}</span>
+                    <span class="distill-thread__conv-meta">
+                      <span class="lane-label lane-label--{{ conv.source }}">{{ conv.source }}</span>
+                    </span>
+                  </li>
+                {% endfor %}
+              </ul>
+              <button type="button" class="distill-thread__action" data-thread-ids="{{ thread.conversations | map(attribute='id') | list | join(',') }}">
+                Distill this thread
+              </button>
+            </div>
+          </details>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {# ── Manual selection ───────────────────────────────── #}
     <form method="post" action="{{ url_for('distill') }}" id="distill-form">
       <section class="distill-controls">
         <div class="distill-controls__row">
           <label class="distill-controls__select-all">
             <input type="checkbox" id="select-all"> Select all
           </label>
-          <span class="distill-controls__count" id="selected-count">0 selected</span>
+          <span class="distill-controls__count" id="selected-count">0 of {{ conversations | length }} selected</span>
           <button type="submit" class="distill-controls__submit" id="distill-btn" disabled>
             Distill selected
           </button>
@@ -57,12 +94,18 @@
 
       <section class="distill-list">
         {% for conv in conversations %}
-          <label class="distill-item">
+          <label class="distill-item" data-conv-id="{{ conv.id }}">
             <input type="checkbox" name="conversation_ids" value="{{ conv.id }}" class="conv-checkbox">
             <div class="distill-item__body">
               <span class="distill-item__title">{{ conv.title or "Untitled" }}</span>
               <span class="distill-item__meta">
-                {{ conv.source }} · {{ conv.messages | length }} messages
+                <span class="lane-label lane-label--{{ conv.source }}">{{ conv.source }}</span>
+                <span class="distill-item__msgs">{{ conv.messages | length }} msgs</span>
+                {% if conv.created_at_unix %}
+                  <time class="distill-item__date" datetime="{{ conv.created_at_unix }}">
+                    {{ conv.created_at_unix | format_ts }}
+                  </time>
+                {% endif %}
               </span>
             </div>
           </label>
@@ -79,13 +122,19 @@
   var selectAll = document.getElementById('select-all');
   var countEl = document.getElementById('selected-count');
   var btn = document.getElementById('distill-btn');
-  if (!boxes.length) return;
+  var form = document.getElementById('distill-form');
+  var total = boxes.length;
+  if (!total) return;
 
   function update() {
     var n = 0;
     boxes.forEach(function(b) { if (b.checked) n++; });
-    countEl.textContent = n + ' selected';
+    countEl.textContent = n + ' of ' + total + ' selected';
     btn.disabled = n === 0;
+    if (selectAll) {
+      selectAll.checked = n === total;
+      selectAll.indeterminate = n > 0 && n < total;
+    }
   }
 
   boxes.forEach(function(b) { b.addEventListener('change', update); });
@@ -95,6 +144,25 @@
       update();
     });
   }
+
+  // Thread distill buttons
+  document.querySelectorAll('.distill-thread__action').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var ids = this.getAttribute('data-thread-ids').split(',');
+      // Uncheck all, then check thread conversations
+      boxes.forEach(function(b) { b.checked = false; });
+      ids.forEach(function(id) {
+        var item = document.querySelector('.distill-item[data-conv-id="' + id + '"]');
+        if (item) {
+          var cb = item.querySelector('.conv-checkbox');
+          if (cb) cb.checked = true;
+        }
+      });
+      update();
+      // Submit the form
+      form.submit();
+    });
+  });
 })();
 </script>
 {% endblock %}
