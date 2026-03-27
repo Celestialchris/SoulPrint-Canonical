@@ -28,7 +28,7 @@ Drop an export file on the Import page. Your conversations appear in seconds.
 
 ## Why I Built This
 
-I've been using ChatGPT, Claude, and Gemini daily for over a year. My conversation history — ideas, decisions, research threads, creative work — is scattered across three platforms that don't talk to each other. Their exports are barely usable zip files that sit dead on disk.
+I've been using ChatGPT, Claude, and Gemini daily for over a year. My conversation history & ideas, decisions, research threads, creative work is scattered across three platforms that don't talk to each other. Their exports are barely usable zip files that sit dead on disk.
 
 Nobody was building a tool to bring all of that together locally, with provenance, intelligence, and real exportability. So I built one.
 
