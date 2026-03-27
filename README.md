@@ -16,7 +16,7 @@ A local-first memory continuity system. Import your AI conversation history from
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
 cd SoulPrint-Canonical
 
-pip install -r requirements-minimal.txt
+pip install -r requirements.txt
 
 python -m src.run
 # Open http://127.0.0.1:5678
