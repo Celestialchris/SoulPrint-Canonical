@@ -190,6 +190,28 @@ button:active{transform:scale(0.98)}
 .empty-state .ghost-link{margin-top:12px;display:inline-flex}
 .empty-note{color:var(--t3);font-size:14px}
 
+/* Notes scratchpad */
+.note-create{padding-bottom:20px;border-bottom:1px solid var(--line)}
+.note-textarea{appearance:none;background:var(--surface);border:1px solid var(--t4);border-radius:6px;color:var(--t1);display:block;font-family:var(--font-body);font-size:15px;line-height:1.6;padding:12px 14px;resize:vertical;width:100%;transition:border-color .2s ease}
+.note-textarea::placeholder{color:var(--t3)}
+.note-textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 2px var(--accent-ghost)}
+.note-form__row{display:flex;align-items:center;gap:12px;margin-top:10px}
+.note-tags-input{appearance:none;background:transparent;border:none;border-bottom:1px solid var(--t4);border-radius:0;color:var(--t1);flex:1;font-family:var(--font-body);font-size:14px;min-height:38px;outline:none;padding:8px 0;transition:border-color .2s ease}
+.note-tags-input::placeholder{color:var(--t3)}
+.note-tags-input:focus{border-bottom-color:var(--accent);outline:none}
+.note-save-btn{flex-shrink:0}
+.note-search{padding:16px 0;border-bottom:1px solid var(--line)}
+.notes-list{margin-top:8px}
+.note-item{padding:14px 0;border-bottom:1px solid var(--line)}
+.note-item:last-child{border-bottom:none}
+.note-item__link{display:block;color:inherit;text-decoration:none;border-radius:4px;transition:background var(--duration-fast) ease}
+.note-item__link:hover{background:var(--surface)}
+.note-item__content{color:var(--t1);font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word;margin:0}
+.note-item__meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.note-item__tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag-pill{border:1px solid var(--accent-muted);border-radius:4px;color:var(--accent);font-family:var(--font-mono);font-size:11px;letter-spacing:0.02em;padding:2px 8px}
+.note-item__time{color:var(--t3);font-family:var(--font-mono);font-size:11px}
+
 /* Grid */
 .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .detail-stack,.trace-list{display:flex;flex-direction:column;gap:0}
