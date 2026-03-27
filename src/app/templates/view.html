@@ -1,58 +1,105 @@
 {% extends "base.html" %}
 {% from "_ui.html" import badge, empty_state %}
 
-{% block title %}Native Memory · SoulPrint{% endblock %}
+{% block title %}Your Notes · SoulPrint{% endblock %}
 
 {% block content %}
   <section class="page-header">
     <p class="page-eyebrow">Your notes</p>
-    <div class="page-header__row">
-      <h1>Your own notes</h1>
-      <div class="page-badges">
-        {{ badge("Your archive", "canonical") }}
-        {{ badge("Your notes", "native") }}
-      </div>
-    </div>
-    <p class="page-summary">Notes and entries you've created directly in SoulPrint.</p>
+    <h1>Your own notes</h1>
+    <p class="page-summary">Capture thoughts, clip moments from conversations, keep what matters.</p>
   </section>
 
-  <section class="surface-card filter-panel">
+  {# ── Note creation ── #}
+  <section class="note-create">
+    <form id="note-form" class="note-form" method="post" action="{{ url_for('save') }}">
+      <textarea id="note-content" class="note-textarea" name="content" rows="3"
+        placeholder="Write something... (Ctrl+Enter to save)"></textarea>
+      <div class="note-form__row">
+        <input type="text" id="note-tags" name="tags" class="note-tags-input"
+          placeholder="Add tags, comma separated">
+        <button type="submit" class="note-save-btn">Save note</button>
+      </div>
+    </form>
+  </section>
+
+  {# ── Search / filter ── #}
+  <section class="note-search">
     <form class="filter-form" method="get" action="{{ url_for('chats') }}">
-      <div>
-        <label class="field-label" for="tag-filter">Filter by tag</label>
+      <div style="width:100%">
+        <label class="field-label" for="tag-filter">Search notes</label>
         <div class="filter-row">
-          <input id="tag-filter" name="tag" placeholder="Filter by tag" value="{{ request.args.get('tag', '') }}">
+          <input id="tag-filter" type="text" name="tag" placeholder="Filter by tag" value="{{ request.args.get('tag', '') }}">
           <button type="submit">Search</button>
         </div>
       </div>
     </form>
   </section>
 
+  {# ── Notes list ── #}
   {% if entries %}
-    <div class="container-card">
+    <div class="notes-list">
       {% for e in entries %}
-        <article class="record-card record-card--native">
-          <div class="record-card__header">
-            <h2 class="record-card__title">
-              <a href="{{ url_for('memory_detail', entry_id=e.id) }}">memory:{{ e.id }}</a>
-            </h2>
-            <div class="metadata-badges">
-              {{ badge("Role: " ~ e.role, "native") }}
-              {% if e.tags and e.tags.strip() %}
-                {{ badge("Tagged", "neutral") }}
-              {% endif %}
-            </div>
+        <article class="note-item">
+          <a class="note-item__link" href="{{ url_for('memory_detail', entry_id=e.id) }}">
+            <p class="note-item__content">{{ e.content }}</p>
+          </a>
+          <div class="note-item__meta">
+            {% if e.tags and e.tags.strip() %}
+              <span class="note-item__tags">
+                {% for tag in e.tags.split(',') %}
+                  {% if tag.strip() %}
+                    <span class="tag-pill">{{ tag.strip() }}</span>
+                  {% endif %}
+                {% endfor %}
+              </span>
+            {% endif %}
+            <span class="note-item__time">{{ e.timestamp.strftime('%Y-%m-%d %H:%M') if e.timestamp else '—' }}</span>
           </div>
-          <p class="metadata-line">Timestamp: {{ e.timestamp }}</p>
-          <p class="metadata-line">Role: {{ e.role }} · Tags: {{ e.tags if e.tags and e.tags.strip() else "None" }}</p>
-          <pre class="record-pre">{{ e.content }}</pre>
         </article>
       {% endfor %}
     </div>
+  {% elif not request.args.get('tag') %}
+    <section class="empty-state">
+      <h2 class="empty-state__title">No notes yet.</h2>
+      <p class="empty-state__text">Write your first thought above, or clip moments from your conversations as you browse them.</p>
+    </section>
   {% else %}
     {{ empty_state(
       "No notes found.",
-      "Try a different tag, or create a note to get started."
+      "Try a different tag, or write a new note above."
     ) }}
   {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  var form = document.getElementById('note-form');
+  var ta = document.getElementById('note-content');
+
+  ta.addEventListener('keydown', function(e){
+    if (e.ctrlKey && e.key === 'Enter') {
+      e.preventDefault();
+      form.dispatchEvent(new Event('submit', {cancelable: true}));
+    }
+  });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var content = ta.value.trim();
+    if (!content) return;
+    var tags = document.getElementById('note-tags').value.trim();
+
+    fetch(form.action, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: content, tags: tags, role: 'user'})
+    }).then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.ok) window.location.reload();
+      });
+  });
+})();
+</script>
 {% endblock %}
