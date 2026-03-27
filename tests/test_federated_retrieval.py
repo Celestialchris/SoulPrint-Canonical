@@ -121,6 +121,103 @@ class FederatedRetrievalTest(unittest.TestCase):
         self.assertEqual(len(rows), 2)
         self.assertEqual({row.source_lane for row in rows}, {"native_memory", "imported_conversation"})
 
+    def test_imported_lane_prefers_updated_then_created_timestamps_over_id(self):
+        workdir = make_test_temp_dir(self, "federated-retrieval")
+        sqlite_path = workdir / "federated_imported_order.db"
+        app = Flask(__name__)
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{sqlite_path}"
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+        db.init_app(app)
+        with app.app_context():
+            try:
+                db.create_all()
+
+                older_insert_newer_timestamp = ImportedConversation(
+                    source="chatgpt",
+                    source_conversation_id="conv-newer-ts",
+                    title="Newest by timestamp",
+                    created_at_unix=1710000100.0,
+                    updated_at_unix=1710000900.0,
+                )
+                newer_insert_older_timestamp = ImportedConversation(
+                    source="chatgpt",
+                    source_conversation_id="conv-older-ts",
+                    title="Older by timestamp",
+                    created_at_unix=1710000000.0,
+                    updated_at_unix=1710000200.0,
+                )
+                db.session.add(older_insert_newer_timestamp)
+                db.session.add(newer_insert_older_timestamp)
+                db.session.commit()
+            finally:
+                db.session.remove()
+                db.engine.dispose()
+
+        rows = federated_search(sqlite_path, limit_per_lane=1)
+
+        imported_rows = [row for row in rows if row.source_lane == "imported_conversation"]
+        self.assertEqual(
+            [row.source_metadata["source_conversation_id"] for row in imported_rows],
+            ["conv-newer-ts"],
+        )
+
+    def test_imported_message_match_adds_evidence_text_without_changing_primary_stable_id(self):
+        workdir = make_test_temp_dir(self, "federated-retrieval")
+        sqlite_path = workdir / "federated_imported_evidence.db"
+        app = Flask(__name__)
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{sqlite_path}"
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+        db.init_app(app)
+        with app.app_context():
+            try:
+                db.create_all()
+
+                imported = ImportedConversation(
+                    source="chatgpt",
+                    source_conversation_id="conv-evidence",
+                    title="General planning",
+                    created_at_unix=1710000000.0,
+                    updated_at_unix=1710000300.0,
+                )
+                db.session.add(imported)
+                db.session.flush()
+                db.session.add_all(
+                    [
+                        ImportedMessage(
+                            conversation_id=imported.id,
+                            source_message_id="msg-non-match",
+                            role="user",
+                            content="Talk about packing lists.",
+                            sequence_index=0,
+                            created_at_unix=1710000001.0,
+                        ),
+                        ImportedMessage(
+                            conversation_id=imported.id,
+                            source_message_id="msg-match",
+                            role="assistant",
+                            content="Include baking ideas for the fundraiser.",
+                            sequence_index=1,
+                            created_at_unix=1710000002.0,
+                        ),
+                    ]
+                )
+                db.session.commit()
+            finally:
+                db.session.remove()
+                db.engine.dispose()
+
+        rows = federated_search(sqlite_path, keyword="baking")
+
+        self.assertEqual(len(rows), 1)
+        imported_row = rows[0]
+        self.assertEqual(imported_row.source_lane, "imported_conversation")
+        self.assertEqual(imported_row.stable_id, "imported_conversation:1")
+        self.assertEqual(imported_row.title, "General planning")
+        self.assertEqual(imported_row.evidence_text, "Include baking ideas for the fundraiser.")
+        self.assertEqual(imported_row.evidence_stable_ids, ["imported_conversation:1"])
+
 
 if __name__ == "__main__":
     unittest.main()

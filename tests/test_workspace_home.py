@@ -62,7 +62,7 @@ class WorkspaceHomeTest(unittest.TestCase):
             self._seed_conv("chatgpt", "Test conv")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("nothing leaves your machine", html.lower())
+        self.assertIn("Your AI memory. Always with you.", html)
 
     def test_post_import_shows_continuity_card_with_simplified_sentence(self):
         with self.app.app_context():
@@ -70,11 +70,16 @@ class WorkspaceHomeTest(unittest.TestCase):
             self._seed_conv("claude", "Conv2")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("2 conversations", html)
-        self.assertIn("2 providers", html)
+        self.assertIn("Continuity Status", html)
+        self.assertIn(
+            "You have 2 imported conversations across 2 providers and 0 native memory entries.",
+            html,
+        )
+        self.assertIn("workspace-counts", html)
+        self.assertIn("provider-badges", html)
+        self.assertIn("chatgpt · 1", html)
+        self.assertIn("claude · 1", html)
         self.assertIn("Import more conversations", html)
-        # Must NOT contain the old verbose sentence with native/trace counts
-        self.assertNotIn("native memory entries", html)
 
     def test_post_import_shows_provider_stack_with_lane_colors(self):
         with self.app.app_context():
@@ -95,22 +100,21 @@ class WorkspaceHomeTest(unittest.TestCase):
         self.assertIn("Browse everything together", html)
         self.assertIn("/federated", html)
 
-    def test_post_import_does_not_show_stats_grid(self):
+    def test_post_import_shows_workspace_counts_and_current_sections(self):
         with self.app.app_context():
             self._seed_conv("chatgpt", "Test")
             db.session.commit()
         html = self._get_workspace_html()
-        # Old elements removed
-        self.assertNotIn("workspace-counts", html)
-        self.assertNotIn("Next Actions", html)
-        self.assertNotIn("Resume Recent Work", html)
+        self.assertIn("workspace-counts", html)
+        self.assertIn("Resume Recent Work", html)
+        self.assertIn("Next Actions", html)
 
-    def test_post_import_uses_container_card_class(self):
+    def test_post_import_uses_current_surface_card_class(self):
         with self.app.app_context():
             self._seed_conv("chatgpt", "Test")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("container-card", html)
+        self.assertIn("surface-card", html)
 
     def test_post_import_provider_row_links_to_explorer(self):
         with self.app.app_context():
