@@ -320,6 +320,13 @@ def create_app():
         entries = q.limit(100).all()
         return render_template("view.html", entries=entries)
 
+    @app.post("/memory/<int:memory_id>/delete")
+    def delete_memory(memory_id: int):
+        entry = MemoryEntry.query.get_or_404(memory_id)
+        db.session.delete(entry)
+        db.session.commit()
+        return redirect(url_for("chats"))
+
     @app.get("/memory/<int:entry_id>")
     def memory_detail(entry_id: int):
         entry = MemoryEntry.query.filter_by(id=entry_id).first_or_404()

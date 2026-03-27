@@ -55,6 +55,10 @@
               </span>
             {% endif %}
             <span class="note-item__time">{{ e.timestamp.strftime('%Y-%m-%d %H:%M') if e.timestamp else '—' }}</span>
+            <form method="POST" action="{{ url_for('delete_memory', memory_id=e.id) }}"
+                  style="display:inline" onsubmit="return confirm('Delete this note?')">
+              <button type="submit" class="note-delete-btn">Delete</button>
+            </form>
           </div>
         </article>
       {% endfor %}

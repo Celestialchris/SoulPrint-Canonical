@@ -211,6 +211,8 @@ button:active{transform:scale(0.98)}
 .note-item__tags{display:flex;gap:6px;flex-wrap:wrap}
 .tag-pill{border:1px solid var(--accent-muted);border-radius:4px;color:var(--accent);font-family:var(--font-mono);font-size:11px;letter-spacing:0.02em;padding:2px 8px}
 .note-item__time{color:var(--t3);font-family:var(--font-mono);font-size:11px}
+.note-delete-btn{background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;padding:0;margin-left:auto}
+.note-delete-btn:hover{color:#ef4444}
 
 /* Grid */
 .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
