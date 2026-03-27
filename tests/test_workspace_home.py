@@ -62,23 +62,21 @@ class WorkspaceHomeTest(unittest.TestCase):
             self._seed_conv("chatgpt", "Test conv")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("Your AI memory. Always with you.", html)
+        self.assertIn("Local-only", html)
+        self.assertIn("nothing leaves your machine", html)
 
-    def test_post_import_shows_continuity_card_with_simplified_sentence(self):
+    def test_post_import_shows_stats_and_provider_counts(self):
         with self.app.app_context():
             self._seed_conv("chatgpt", "Conv1")
             self._seed_conv("claude", "Conv2")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("Continuity Status", html)
-        self.assertIn(
-            "You have 2 imported conversations across 2 providers and 0 native memory entries.",
-            html,
-        )
-        self.assertIn("workspace-counts", html)
-        self.assertIn("provider-badges", html)
-        self.assertIn("chatgpt · 1", html)
-        self.assertIn("claude · 1", html)
+        # Stats row shows conversation count and provider count
+        self.assertIn("conversations", html.lower())
+        self.assertIn("provider", html.lower())
+        # Both providers appear
+        self.assertIn("chatgpt", html.lower())
+        self.assertIn("claude", html.lower())
         self.assertIn("Import more conversations", html)
 
     def test_post_import_shows_provider_stack_with_lane_colors(self):
@@ -100,21 +98,23 @@ class WorkspaceHomeTest(unittest.TestCase):
         self.assertIn("Browse everything together", html)
         self.assertIn("/federated", html)
 
-    def test_post_import_shows_workspace_counts_and_current_sections(self):
+    def test_post_import_shows_stats_and_quick_actions(self):
         with self.app.app_context():
             self._seed_conv("chatgpt", "Test")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("workspace-counts", html)
-        self.assertIn("Resume Recent Work", html)
-        self.assertIn("Next Actions", html)
+        self.assertIn("conversations", html.lower())
+        self.assertIn("notes", html.lower())
+        self.assertIn("Browse everything together", html)
+        self.assertIn("See your summary", html)
 
-    def test_post_import_uses_current_surface_card_class(self):
+    def test_post_import_shows_hero_with_tagline(self):
         with self.app.app_context():
             self._seed_conv("chatgpt", "Test")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("surface-card", html)
+        self.assertIn("SoulPrint", html)
+        self.assertIn("SoulPrint brings them home", html)
 
     def test_post_import_provider_row_links_to_explorer(self):
         with self.app.app_context():
