@@ -29,12 +29,7 @@
     </section>
   {% endif %}
 
-  {% if not llm_configured %}
-    {{ empty_state(
-      "LLM provider not configured",
-      "Distillation requires an LLM. Set SOULPRINT_LLM_PROVIDER and SOULPRINT_LLM_API_KEY before starting SoulPrint."
-    ) }}
-  {% elif not conversations %}
+  {% if not conversations %}
     {{ empty_state(
       "No conversations to distill",
       "Import some conversations first. Once you have a few, SoulPrint will find threads and help you distill what matters.",
@@ -69,9 +64,11 @@
                   </li>
                 {% endfor %}
               </ul>
-              <button type="button" class="distill-thread__action" data-thread-ids="{{ thread.conversations | map(attribute='id') | list | join(',') }}">
-                Distill this thread
-              </button>
+              {% if llm_configured %}
+                <button type="button" class="distill-thread__action" data-thread-ids="{{ thread.conversations | map(attribute='id') | list | join(',') }}">
+                  Distill this thread
+                </button>
+              {% endif %}
             </div>
           </details>
         {% endfor %}
@@ -86,10 +83,19 @@
             <input type="checkbox" id="select-all"> Select all
           </label>
           <span class="distill-controls__count" id="selected-count">0 of {{ conversations | length }} selected</span>
-          <button type="submit" class="distill-controls__submit" id="distill-btn" disabled>
-            Distill selected
-          </button>
+          {% if llm_configured %}
+            <button type="submit" class="distill-controls__submit" id="distill-btn" disabled>
+              Distill selected
+            </button>
+          {% else %}
+            <button type="submit" class="distill-controls__submit" disabled>
+              Distill selected
+            </button>
+          {% endif %}
         </div>
+        {% if not llm_configured %}
+          <p class="distill-controls__llm-note">Configure SOULPRINT_LLM_PROVIDER and SOULPRINT_LLM_API_KEY to enable distillation.</p>
+        {% endif %}
       </section>
 
       <section class="distill-list">
@@ -129,8 +135,8 @@
   function update() {
     var n = 0;
     boxes.forEach(function(b) { if (b.checked) n++; });
-    countEl.textContent = n + ' of ' + total + ' selected';
-    btn.disabled = n === 0;
+    if (countEl) countEl.textContent = n + ' of ' + total + ' selected';
+    if (btn) btn.disabled = n === 0;
     if (selectAll) {
       selectAll.checked = n === total;
       selectAll.indeterminate = n > 0 && n < total;

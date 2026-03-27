@@ -371,6 +371,7 @@ button:active{transform:scale(0.98)}
 .distill-controls__submit{appearance:none;background:var(--cta-bg);border:1px solid var(--cta-border);border-radius:4px;color:var(--cta-text);cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;margin-left:auto;min-height:auto;padding:8px 20px;transition:background var(--duration-fast) ease,opacity var(--duration-fast) ease}
 .distill-controls__submit:hover:not(:disabled){background:var(--cta-hover-bg);color:var(--cta-hover-text)}
 .distill-controls__submit:disabled{opacity:.35;cursor:not-allowed}
+.distill-controls__llm-note{color:var(--t3);font-size:12px;margin-top:8px}
 
 /* Distill — Conversation list */
 .distill-list{display:flex;flex-direction:column;gap:2px}
