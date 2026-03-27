@@ -2,6 +2,14 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## Post-Import Flash Page (2026-03-27)
+- New `/import/complete` route: post-import confirmation page with conversation stats
+- Shows count of imported conversations and messages after a successful import
+
+## Workspace Revamp (2026-03-27)
+- Redesigned workspace (`/`) with hero section, stats row, and provider summary
+- Cleaner layout with at-a-glance metrics for imported conversations
+
 ## Multi-Conversation Distillation (2026-03-24)
 - New `/distill` route: select N conversations, condense into one paste-ready markdown handoff
 - Core module: `src/intelligence/distill.py` with structured prompt, bounded output, provenance
@@ -27,6 +35,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - Warm nav labels frozen: "What you've discussed", "Ask your memory", "Everything, together", etc.
 - CTA language: "Go deeper" for upgrade, "Bring conversations home" for import
 - PRODUCT-GRAMMAR-LOCK.md added as implementation-ready language reference
+  (Note: file was later merged into brand.md and CLAUDE.md)
 
 ## Freemium Gate (2026-03-16)
 - Local-only license key validation (`instance/license.key`, prefix `SP-`)

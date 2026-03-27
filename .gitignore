@@ -35,3 +35,4 @@ convert_rescue.py
 import_rescue.py
 .mcp.json
 tools/ecc/
+REPO-AUDIT-REPORT.html

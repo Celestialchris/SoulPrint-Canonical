@@ -16,7 +16,7 @@ A local-first memory continuity system. Import your AI conversation history from
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
 cd SoulPrint-Canonical
 
-pip install -r requirements-minimal.txt
+pip install -r requirements.txt
 
 python -m src.run
 # Open http://127.0.0.1:5678
@@ -127,10 +127,11 @@ src/
 ├── retrieval/      Federated retrieval across storage lanes
 ├── answering/      Grounded answering, trace audit, CLI
 ├── intelligence/   Summaries, topics, digests, continuity engine
+├── obsidian/       Obsidian vault export bridge
 ├── passport/       Memory Passport export and validation
 └── tools/          Memory query and tag validation utilities
 
-tests/              48 test files, 504 test methods
+tests/              51 test files, 537 test methods
 sample_data/        Synthetic provider fixtures (ChatGPT, Claude, Gemini)
 docs/               Architecture, specs, product docs, brand guide
 landing/            Static landing page
@@ -144,7 +145,7 @@ landing/            Static landing page
 python -m pytest tests/ -v
 ```
 
-48 test files covering parsing, persistence, retrieval, intelligence, continuity, distillation, passport, CLI, and browser integration.
+51 test files covering parsing, persistence, retrieval, intelligence, continuity, distillation, passport, CLI, and browser integration.
 
 ---
 
@@ -179,7 +180,7 @@ python -m src.passport.cli validate exports/passports/memory-passport-v1
 |-----------|-------|
 | Canonical SQLite ledger | ✓ Stable |
 | 3-provider import (ChatGPT, Claude, Gemini) | ✓ Stable |
-| 15+ web surfaces | ✓ Stable |
+| 16+ web surfaces | ✓ Stable |
 | Intelligence layer (summaries, topics, digests) | ✓ Stable |
 | Continuity engine (packets, bridges, lineage) | ✓ Stable |
 | Multi-conversation distillation | ✓ Stable |
