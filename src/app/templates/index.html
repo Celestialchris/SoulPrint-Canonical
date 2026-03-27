@@ -25,43 +25,66 @@
     </section>
 
   {% else %}
-    {# ── Post-import: trust line + continuity card + archive card ── #}
-    <p class="workspace-trust-line">Local-only · nothing leaves your machine</p>
+    {# ── Post-import: hero + stats + providers + quick actions ── #}
 
-    <div class="workspace-post">
-      <div class="container-card">
-        <p class="container-card__eyebrow">Continuity</p>
-        <p class="workspace-continuity-sentence">
-          You have {{ workspace.imported_conversation_count }} conversation{{ 's' if workspace.imported_conversation_count != 1 else '' }}
-          across {{ workspace.provider_recent|length }} provider{{ 's' if workspace.provider_recent|length != 1 else '' }}.
-        </p>
-        <a class="workspace-import-cta" href="{{ url_for('import_conversations') }}">
-          Import more conversations
-        </a>
+    {# Hero #}
+    <section style="text-align:center;padding:2.5rem 0 1.5rem">
+      <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:400;color:var(--t1);letter-spacing:0.01em;margin:0">
+        SoulPrint
+      </h1>
+      <p style="color:var(--t2);font-size:15px;margin-top:8px;line-height:1.6">
+        Your AI conversations are scattered everywhere. SoulPrint brings them home.
+      </p>
+      <p style="color:var(--t3);font-family:var(--font-mono);font-size:11px;letter-spacing:0.08em;margin-top:10px;text-transform:uppercase">
+        Local-only · nothing leaves your machine
+      </p>
+    </section>
+
+    {# Stats row #}
+    <section style="display:flex;justify-content:center;gap:40px;flex-wrap:wrap;padding:1rem 0 2rem">
+      <div style="text-align:center">
+        <span style="font-size:24px;color:var(--t1);font-weight:500;display:block">{{ workspace.imported_conversation_count }}</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em">conversations</span>
       </div>
+      <div style="text-align:center">
+        <span style="font-size:24px;color:var(--t1);font-weight:500;display:block">{{ workspace.imported_message_count }}</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em">messages</span>
+      </div>
+      <div style="text-align:center">
+        <span style="font-size:24px;color:var(--t1);font-weight:500;display:block">{{ workspace.provider_recent|length }}</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em">{{ 'provider' if workspace.provider_recent|length == 1 else 'providers' }}</span>
+      </div>
+      <div style="text-align:center">
+        <span style="font-size:24px;color:var(--t1);font-weight:500;display:block">{{ workspace.native_count }}</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:0.08em">notes</span>
+      </div>
+    </section>
 
-      {% if workspace.provider_recent %}
-        <div class="container-card">
-          <p class="container-card__eyebrow">Your Archive</p>
-          {% for entry in workspace.provider_recent %}
-            <div class="record-card workspace-provider-row workspace-provider-row--{{ entry.provider }}">
-              <div class="workspace-provider-row__header">
-                <span class="workspace-provider-row__name">{{ entry.provider }}</span>
-                <span class="workspace-provider-row__count">{{ entry.count }} conversations</span>
-              </div>
-              {% if entry.recent_title and entry.recent_id %}
-                <a class="ghost-link workspace-provider-row__recent"
-                   href="{{ url_for('imported_explorer', conversation_id=entry.recent_id) }}">
-                  last: "{{ entry.recent_title }}"
-                </a>
-              {% endif %}
-            </div>
-          {% endfor %}
-          <div class="container-card__footer">
-            <a class="ghost-link" href="{{ url_for('federated_browser') }}">Browse everything together</a>
+    {# Provider summary #}
+    {% if workspace.provider_recent %}
+      <section style="max-width:600px;margin:0 auto;padding:0 0 2rem">
+        {% for entry in workspace.provider_recent %}
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)">
+            <span style="color:var(--lane-{{ entry.provider }});font-weight:500;font-size:15px">{{ entry.provider }}</span>
+            <span style="color:var(--t2);font-size:14px">{{ entry.count }} conversation{{ 's' if entry.count != 1 else '' }}</span>
           </div>
-        </div>
-      {% endif %}
-    </div>
+          {% if entry.recent_title and entry.recent_id %}
+            <div style="padding:4px 0 8px">
+              <a href="{{ url_for('imported_explorer', conversation_id=entry.recent_id) }}"
+                 style="color:var(--t3);font-size:13px;text-decoration:none">
+                last: "{{ entry.recent_title }}" →
+              </a>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {# Quick actions #}
+    <section style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;padding:0.5rem 0 2rem">
+      <a href="{{ url_for('federated_browser') }}" style="color:var(--t2);font-size:14px;text-decoration:none">Browse everything together →</a>
+      <a href="{{ url_for('import_conversations') }}" style="color:var(--t2);font-size:14px;text-decoration:none">Import more conversations →</a>
+      <a href="{{ url_for('summary') }}" style="color:var(--t2);font-size:14px;text-decoration:none">See your summary →</a>
+    </section>
   {% endif %}
 {% endblock %}
