@@ -1,5 +1,5 @@
 from dataclasses import asdict
-from flask import Flask, abort, redirect, render_template, request, jsonify, url_for
+from flask import Flask, abort, redirect, render_template, request, jsonify, session, url_for
 from datetime import datetime, timezone
 import os
 import tempfile
@@ -285,13 +285,23 @@ def create_app():
                     if count_before == 0 and import_result.imported_conversations > 0:
                         return redirect(url_for("summary"))
 
+                    # New conversations arrived → flash page
+                    if import_result.imported_conversations > 0:
+                        session["import_stats"] = {
+                            "messages_imported": import_result.imported_messages,
+                            "conversations_imported": import_result.imported_conversations,
+                            "provider_name": import_result.provider_id,
+                        }
+                        return redirect(url_for("import_complete"))
+
+                    # All duplicates — show inline feedback on import page
                     result = {
                         "provider_id": import_result.provider_id,
                         "imported_conversations": import_result.imported_conversations,
                         "skipped_conversations": import_result.skipped_conversations,
                         "imported_messages": import_result.imported_messages,
                         "warnings": import_result.warnings,
-                        "show_summary_link": import_result.imported_conversations > 0,
+                        "show_summary_link": False,
                     }
                 except ImportProviderDetectionError:
                     error_message = (
@@ -310,6 +320,13 @@ def create_app():
             error_message=error_message,
             result=result,
         )
+
+    @app.get("/import/complete")
+    def import_complete():
+        stats = session.pop("import_stats", None)
+        if not stats:
+            return redirect(url_for("import_conversations"))
+        return render_template("import_flash.html", **stats)
 
     @app.get("/chats")
     def chats():

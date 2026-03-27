@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Brought home · SoulPrint{% endblock %}
+
+{% block head_extra %}
+<style>
+  .flash-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-top: 15vh;
+    padding-bottom: 6rem;
+  }
+  .flash-heading {
+    font-size: 30px;
+    font-weight: 400;
+    color: var(--t1);
+    margin-bottom: 3rem;
+  }
+  .flash-stats {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    margin-bottom: 2.5rem;
+  }
+  .flash-stat__number {
+    display: block;
+    font-size: 42px;
+    font-weight: 400;
+    color: var(--t1);
+    line-height: 1.1;
+  }
+  .flash-stat__label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--t3);
+    margin-top: 6px;
+  }
+  .flash-body {
+    color: var(--t2);
+    font-size: 14px;
+    margin-bottom: 2rem;
+  }
+  .flash-links {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+  }
+  .flash-links a {
+    color: var(--t2);
+    font-size: 14px;
+    transition: color var(--duration-fast) ease;
+  }
+  .flash-links a:hover {
+    color: var(--t1);
+  }
+
+  @media (max-width: 480px) {
+    .flash-page { padding-top: 10vh; }
+    .flash-stats { gap: 36px; }
+    .flash-stat__number { font-size: 34px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="flash-page">
+    <h1 class="flash-heading">Brought home.</h1>
+
+    <div class="flash-stats">
+      <div class="flash-stat">
+        <span class="flash-stat__number">{{ messages_imported }}</span>
+        <span class="flash-stat__label">Messages</span>
+      </div>
+      <div class="flash-stat">
+        <span class="flash-stat__number">{{ conversations_imported }}</span>
+        <span class="flash-stat__label">Conversations</span>
+      </div>
+    </div>
+
+    <p class="flash-body">
+      Your history is now searchable, browsable, and yours to keep.
+    </p>
+
+    <div class="flash-links">
+      <a href="{{ url_for('imported_conversations') }}">Explore your archive &rarr;</a>
+      <a href="{{ url_for('summary') }}">See your summary &rarr;</a>
+    </div>
+  </div>
+{% endblock %}
