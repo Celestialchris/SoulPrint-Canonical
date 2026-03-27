@@ -4,52 +4,57 @@ Doctrine files are not aesthetic playgrounds.
 
 Do not alter product architecture, lane honesty, provenance display rules, or workflow structure in the name of style.
 
-## Design system: USB Drive
+## Design system authority
 
-Identity metaphor: "A virtual USB stick for your AI life."
-Trust principle: green accent reinforces safety. Every design choice should make the user feel their data is secure.
+The live `src/app/static/app.css` is always the authoritative source for design tokens, colors, fonts, and spacing. If this file and any documentation file disagree, the CSS wins.
+
+Current system: "USB Drive" — see `docs/product/brand.md` for documented tokens.
 
 ## Where aesthetic prompting applies
 
-- Typography sizing and weight
-- Spacing and layout rhythm
-- Hover states and transitions
-- Empty-state warmth
-- Landing page and Wrapped summary page
-- Button styling and CTA placement
+Use aesthetic prompting only for:
+
+- visual rhythm and spacing
+- empty-state warmth
+- brand atmosphere
+- summary / wrapped / landing pages
+- tasteful micro-interactions
 
 ## Where aesthetic prompting must never apply
 
-- Route structure
-- Information architecture
-- Transcript explorer behavior
-- Import UX logic
-- Answer-trace trust model
-- Canonical vs derived boundaries
+Never use aesthetic prompting to redefine:
+
+- route structure
+- information architecture
+- transcript explorer behavior
+- import UX logic
+- answer-trace trust model
+- canonical vs derived boundaries
 
 ## UI style rules
 
 SoulPrint should feel:
 
-- Clean and trustworthy
-- Readable at every font size
-- Fast and responsive
-- Like a tool you open daily, not a museum exhibit
-- Green = safe, go, verified
+- calm
+- fluid
+- low-clutter
+- readable
+- warm
+- trustworthy
+- obvious to navigate
 
 Avoid:
 
-- Dashboard bloat and metrics theater
-- Noisy admin-panel energy
-- Ornamental AI gimmicks
-- Decorative overlays (grain, vignette, glow)
-- Serif fonts in the app UI
-- Font sizes below 11px
+- dashboard bloat
+- metrics theater
+- noisy admin-panel energy
+- ornamental AI gimmicks
+- scroll-scroll-scroll transcript hell
 
-## Two-layer principle
+## The two-layer principle
 
 **Layer 1** (doctrine, architecture, execution) always wins.
+
 **Layer 2** (visual direction, aesthetic polish) may only enhance finish without creating drift.
 
 If style conflicts with clarity, choose clarity.
-If style conflicts with trust, choose trust.

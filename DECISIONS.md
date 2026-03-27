@@ -30,18 +30,18 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-03 | Design direction: "USB Drive." Dark neutral background (#0e0f11), system sans-serif body, JetBrains Mono for forensic data. | Calm, trustworthy, local-first. Not dashboard. Not AI toy. |
-| 2026-03 | Hierarchy through opacity, not color. Four text opacity levels (t1/t2/t3/t4). Two accents: green (#4ade80) for actions, purple (#7c5cbf) for interactive feedback. | Green = "do this." Purple = "you're here." Typography carries structure. |
-| 2026-03 | No box-shadows on content containers. Flat containers with border-dividers. `.container-card` uses border-radius for grouped containers. No icons in nav, no bold >500 weight. | Container grouping via `.container-card`; flat rows inside via `.record-card`. |
-| 2026-03 | Green for actions only: CTAs, active nav border, success badges. Purple for interactive feedback: hover, selection, active sidebar background. | Two accents, two cognitive signals. If everything glows, nothing is sacred. |
-| 2026-03 | Provider lane colors as 2px left-border stripes: ChatGPT green (#4ade80), Claude purple (#a78bfa), Gemini blue (#60a5fa), Native blue. | Lane identity through color stripe, not badges. |
+| 2026-03 | Design direction: "USB Drive." Near-black background (#0e0f11), green (#4ade80) trust accent, system sans-serif body, Forum wordmark, JetBrains Mono for labels. | Green communicates safety and trust for users handing over conversation history. Clean, minimal, not dashboard. |
+| 2026-03 | Green (#4ade80) is the primary accent. Purple (#a78bfa) marks derived/generated surfaces. | Two-accent system. Green = action/trust. Purple = "this was generated." |
+| 2026-03 | No box-shadows, no icons in nav, no font-weight above 500. Flat rows with border-bottom dividers. | Content sits on the dark background with typography and spacing creating structure. |
+| 2026-03 | Provider lane colors: ChatGPT green (#4ade80), Claude purple (#a78bfa), Gemini blue (#60a5fa). | Lane identity through color, consistent with accent palette. |
+| 2026-03 | The live `app.css` is always authoritative over doc files. | Prevents coherence drift between docs and implementation. |
 
 ## Product
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-03 | Freemium split: import/browse/passport/traces = free. Ask/intelligence = paid. Summary/Wrapped = free (growth hook). | Free tier must feel complete, not crippled. Intelligence is the natural upgrade. |
+| 2026-03 | Freemium split: import/browse/passport/traces = free. Ask/intelligence/distill = paid. Summary/Wrapped = free (growth hook). | Free tier must feel complete, not crippled. Intelligence is the natural upgrade. |
 | 2026-03 | License validation is local-only. Key file at `instance/license.key`, prefix `SP-`. No server auth. No accounts. No login flow. | Local-first means local-first. |
-| 2026-03 | Brand has two faces: public (lucid, premium, immediate) and inner (SoulPrint glow concentrated in meaning-bearing moments). | Market viability without killing the soul. |
-| 2026-03 | Nav grouping: Sanctum (Workspace, Ask) · Memory (Imported, Native, Federated) · Interpretation (Intelligence/Notes, Traces) · Continuity (Import, Passport). | Reduces taxonomy parsing. Makes the product feel authored, not listed. |
+| 2026-03 | Brand has two faces: public (lucid, premium, immediate) and inner (cinematic glow on Summary/Wrapped page). | Market viability without killing the soul. |
+| 2026-03 | Nav grouping: Sanctum (Workspace, Ask) · Memory (Imported, Native, Federated) · Interpretation (Intelligence, Distill, Traces) · Continuity (Import, Passport). | Reduces taxonomy parsing. Makes the product feel authored, not listed. |
 | 2026-03 | The "wow" moment is the Summary/Wrapped page. Dark, premium, cinematic, share-ready. This carries the strongest glow in the system. | The regular app stays calm and trustworthy. The summary page earns distribution. |
