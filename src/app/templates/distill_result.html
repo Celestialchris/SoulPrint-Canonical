@@ -24,17 +24,68 @@
     </p>
   </section>
 
+  {# ── Source metadata ──────────────────────────────────── #}
+  {% if source_meta %}
+    <section class="distill-source-meta">
+      <p class="distill-source-meta__label">Distilled from</p>
+      <p class="distill-source-meta__summary">
+        {{ result.conversation_count }} conversations · {{ result.total_message_count }} messages
+        {%- if source_meta.date_range %} · {{ source_meta.date_range }}{% endif %}
+      </p>
+      <ul class="distill-source-meta__list">
+        {% for conv in source_meta.conversations %}
+          <li>
+            <a class="distill-source-meta__link" href="/imported/{{ conv.id }}/explorer">
+              {{ conv.title }}
+            </a>
+            <span class="lane-label lane-label--{{ conv.source }}">{{ conv.source }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  {# ── Distilled output ────────────────────────────────── #}
   <section class="distill-result">
     <div class="distill-result__actions">
       <button type="button" class="distill-result__copy" id="copy-btn" aria-label="Copy handoff to clipboard">
         Copy handoff to clipboard
       </button>
+      <button type="button" class="distill-result__export" id="export-btn" aria-label="Export as markdown">
+        Export as markdown
+      </button>
       <span class="distill-result__copied" id="copy-confirm" hidden>Copied.</span>
     </div>
 
-    <div class="distill-result__content" id="distill-text">{{ result.distilled_text }}</div>
+    <div class="distill-result__sections" id="distill-text">
+      {# Parse markdown sections from distilled_text #}
+      {% set sections = result.distilled_text.split('\n## ') %}
+      {% for section in sections %}
+        {% if loop.first and not section.startswith('## ') %}
+          {# Preamble before first ## heading, or the whole text if no headings #}
+          {% if '## ' not in result.distilled_text %}
+            <div class="distill-section">
+              <div class="distill-section__content">{{ section }}</div>
+            </div>
+          {% elif section.strip() %}
+            <div class="distill-section">
+              <div class="distill-section__content">{{ section }}</div>
+            </div>
+          {% endif %}
+        {% else %}
+          {% set lines = section.split('\n', 1) %}
+          <div class="distill-section">
+            <p class="distill-section__label">{{ lines[0].strip().replace('#', '').strip() | upper }}</p>
+            {% if lines | length > 1 %}
+              <div class="distill-section__content">{{ lines[1] }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
   </section>
 
+  {# ── Provenance ──────────────────────────────────────── #}
   <section class="distill-provenance">
     <p class="page-eyebrow">Provenance</p>
     <div class="metadata-line">
@@ -68,31 +119,53 @@
 {% block scripts %}
 <script>
 (function() {
-  var btn = document.getElementById('copy-btn');
+  var copyBtn = document.getElementById('copy-btn');
+  var exportBtn = document.getElementById('export-btn');
   var confirm = document.getElementById('copy-confirm');
   var textEl = document.getElementById('distill-text');
-  if (!btn || !textEl) return;
+  if (!textEl) return;
 
-  btn.addEventListener('click', function() {
-    var text = textEl.innerText || textEl.textContent;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function() {
+  function getFullText() {
+    return textEl.innerText || textEl.textContent;
+  }
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      var text = getFullText();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          confirm.hidden = false;
+          setTimeout(function() { confirm.hidden = true; }, 2000);
+        });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
         confirm.hidden = false;
         setTimeout(function() { confirm.hidden = true; }, 2000);
-      });
-    } else {
-      var ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      confirm.hidden = false;
-      setTimeout(function() { confirm.hidden = true; }, 2000);
-    }
-  });
+      }
+    });
+  }
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', function() {
+      var text = getFullText();
+      var blob = new Blob([text], { type: 'text/markdown' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'distill-handoff.md';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
 })();
 </script>
 {% endblock %}

@@ -84,6 +84,17 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    # Jinja filters
+    @app.template_filter("format_ts")
+    def _format_ts(unix_ts):
+        """Render a unix timestamp as 'Mar 27, 2026'."""
+        if unix_ts is None:
+            return ""
+        from datetime import datetime, timezone
+
+        dt = datetime.fromtimestamp(float(unix_ts), tz=timezone.utc)
+        return dt.strftime("%b %d, %Y").replace(" 0", " ")
+
     @app.get("/")
     def home():
         from ..answering.trace import default_trace_store_path
@@ -711,14 +722,19 @@ def create_app():
         provider = provider_from_config()
 
         if request.method == "GET":
+            from ..intelligence.threads import suggest_threads
+
             conversations = (
                 ImportedConversation.query
                 .order_by(ImportedConversation.id.desc())
+                .limit(20)
                 .all()
             )
+            threads = suggest_threads(conversations) if conversations else []
             return render_template(
                 "distill.html",
                 conversations=conversations,
+                threads=threads,
                 llm_configured=provider is not None,
                 result=None,
             )
@@ -729,14 +745,19 @@ def create_app():
 
         selected_ids = request.form.getlist("conversation_ids", type=int)
         if not selected_ids:
+            from ..intelligence.threads import suggest_threads
+
             conversations = (
                 ImportedConversation.query
                 .order_by(ImportedConversation.id.desc())
+                .limit(20)
                 .all()
             )
+            threads = suggest_threads(conversations) if conversations else []
             return render_template(
                 "distill.html",
                 conversations=conversations,
+                threads=threads,
                 llm_configured=True,
                 result=None,
                 error_message="Select at least one conversation to distill.",
@@ -763,9 +784,24 @@ def create_app():
             default_distillation_store_path(sqlite_path), result
         )
 
+        # Build source metadata for the result page header
+        from ..intelligence.threads import _format_date, _date_range_str
+
+        source_timestamps = [
+            c.created_at_unix or c.updated_at_unix for c in conversations
+        ]
+        source_meta = {
+            "date_range": _date_range_str(source_timestamps),
+            "conversations": [
+                {"id": c.id, "title": c.title or "Untitled", "source": c.source}
+                for c in conversations
+            ],
+        }
+
         return render_template(
             "distill_result.html",
             result=result,
+            source_meta=source_meta,
         )
 
     return app
