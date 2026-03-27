@@ -28,6 +28,8 @@ class FederatedReadResult:
     title: str
     timestamp_unix: float | None
     source_metadata: dict[str, str]
+    evidence_text: str | None = None
+    evidence_stable_ids: list[str] | None = None
 
 
 def _sqlite_app(sqlite_path: str | Path) -> Flask:
@@ -46,6 +48,20 @@ def _memory_timestamp_to_unix(entry: MemoryEntry) -> float | None:
     if timestamp.tzinfo is None:
         timestamp = timestamp.replace(tzinfo=timezone.utc)
     return timestamp.timestamp()
+
+
+def _imported_sort_key():
+    """Return deterministic timestamp-first ordering for imported conversations."""
+
+    return (
+        func.coalesce(
+            ImportedConversation.updated_at_unix,
+            ImportedConversation.created_at_unix,
+            0,
+        ).desc(),
+        func.coalesce(ImportedConversation.created_at_unix, 0).desc(),
+        ImportedConversation.id.desc(),
+    )
 
 
 def federated_search(
@@ -92,10 +108,30 @@ def federated_search(
                 )
 
             imported_rows = (
-                imported_query.order_by(ImportedConversation.id.desc())
+                imported_query.order_by(*_imported_sort_key())
                 .limit(limit_per_lane)
                 .all()
             )
+            matched_messages_by_conversation_id: dict[int, ImportedMessage] = {}
+            if pattern is not None and imported_rows:
+                imported_ids = [row.id for row in imported_rows]
+                matched_messages = (
+                    ImportedMessage.query.filter(
+                        ImportedMessage.conversation_id.in_(imported_ids),
+                        func.lower(ImportedMessage.content).like(pattern),
+                    )
+                    .order_by(
+                        ImportedMessage.conversation_id.asc(),
+                        ImportedMessage.sequence_index.asc(),
+                        ImportedMessage.id.asc(),
+                    )
+                    .all()
+                )
+                for message in matched_messages:
+                    matched_messages_by_conversation_id.setdefault(
+                        message.conversation_id,
+                        message,
+                    )
 
             results: list[FederatedReadResult] = [
                 FederatedReadResult(
@@ -121,6 +157,12 @@ def federated_search(
                         "source": row.source,
                         "source_conversation_id": row.source_conversation_id,
                     },
+                    evidence_text=matched_messages_by_conversation_id[row.id].content
+                    if row.id in matched_messages_by_conversation_id
+                    else None,
+                    evidence_stable_ids=[f"imported_conversation:{row.id}"]
+                    if row.id in matched_messages_by_conversation_id
+                    else None,
                 )
                 for row in imported_rows
             )
