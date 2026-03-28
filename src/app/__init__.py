@@ -44,6 +44,82 @@ def _memory_timestamp_to_unix(entry: MemoryEntry) -> float | None:
     return timestamp.timestamp()
 
 
+def format_handoff_briefing(distilled_text: str, conversation_count: int,
+                            date_range: str | None) -> str:
+    """Reformat distill output as an AI-consumable handoff briefing.
+
+    Parses markdown headings from distilled_text to extract known sections,
+    then assembles a compact briefing designed for pasting into a new AI chat.
+    """
+    lines: list[str] = ["## Context from SoulPrint", ""]
+
+    span = date_range or "an unknown period"
+    lines.append(
+        f"I'm continuing a thread that spans {conversation_count} "
+        f"conversations over {span}."
+    )
+    lines.append("")
+
+    # Parse sections from markdown by ## headings
+    sections: dict[str, str] = {}
+    raw = distilled_text.strip()
+    if "\n## " in raw or raw.startswith("## "):
+        parts = raw.split("\n## ")
+        for i, part in enumerate(parts):
+            if i == 0 and not raw.startswith("## "):
+                sections["_preamble"] = part.strip()
+            else:
+                heading, _, body = part.partition("\n")
+                key = heading.strip().lstrip("#").strip().lower()
+                sections[key] = body.strip()
+
+    # Decisions
+    for key in ("decisions", "decisions made"):
+        if key in sections and sections[key]:
+            lines.append("**Decisions made:**")
+            lines.append(sections[key])
+            lines.append("")
+            break
+
+    # Open loops
+    for key in ("open loops", "open questions", "unresolved"):
+        if key in sections and sections[key]:
+            lines.append("**Open loops:**")
+            lines.append(sections[key])
+            lines.append("")
+            break
+
+    # Key context from summary
+    for key in ("summary", "executive summary", "key context", "context"):
+        if key in sections and sections[key]:
+            lines.append("**Key context:**")
+            summary_lines = sections[key].split("\n")
+            lines.append("\n".join(summary_lines[:4]))
+            lines.append("")
+            break
+
+    # Where I left off — from evolution/thinking section
+    for key in ("how thinking evolved", "evolution", "thinking evolved",
+                "trajectory", "where things stand"):
+        if key in sections and sections[key]:
+            lines.append("**Where I left off:**")
+            paragraphs = [p.strip() for p in sections[key].split("\n\n") if p.strip()]
+            if paragraphs:
+                lines.append(paragraphs[-1])
+            lines.append("")
+            break
+
+    # Fallback: if no sections were matched, include the full text
+    if len(lines) <= 4:  # only header + count + blanks
+        lines.append(raw)
+        lines.append("")
+
+    lines.append("---")
+    lines.append("Please continue from this context.")
+
+    return "\n".join(lines)
+
+
 def _native_memory_entry_id(stable_id: str) -> int | None:
     """Extract the canonical entry id from a native-memory stable id."""
 
@@ -131,10 +207,14 @@ def create_app():
             ),
         }
 
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        db_path = _sqlite_path_from_uri(sqlite_uri)
+
         return render_template(
             "passport.html",
             capability=capability,
             status=status,
+            db_path=db_path,
         )
 
     @app.post("/save")
@@ -910,10 +990,17 @@ def create_app():
             ],
         }
 
+        handoff_briefing = format_handoff_briefing(
+            result.distilled_text,
+            result.conversation_count,
+            source_meta.get("date_range"),
+        )
+
         return render_template(
             "distill_result.html",
             result=result,
             source_meta=source_meta,
+            handoff_briefing=handoff_briefing,
         )
 
     return app

@@ -41,9 +41,21 @@
     <div class="notes-list">
       {% for e in entries %}
         <article class="note-item">
+          {% set parts = e.content.split('\n---\n') %}
           <a class="note-item__link" href="{{ url_for('memory_detail', entry_id=e.id) }}">
-            <p class="note-item__content">{{ e.content }}</p>
+            <p class="note-item__content">{{ parts[0] }}</p>
           </a>
+          {% if parts | length > 1 %}
+            <div class="clip-citation">
+              {% for line in parts[1].strip().splitlines() %}
+                {% if line.startswith('Source: /') %}
+                  <a class="clip-source-link" href="{{ line.replace('Source: ', '') }}">{{ line }}</a>
+                {% else %}
+                  <span>{{ line }}</span>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
           <div class="note-item__meta">
             {% if e.tags and e.tags.strip() %}
               <span class="note-item__tags">

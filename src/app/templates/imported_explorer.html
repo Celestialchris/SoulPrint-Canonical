@@ -71,7 +71,10 @@
 
     <section class="transcript-panel" id="transcriptPane">
       {% for message in messages %}
-        <article class="message {{ message.role }}" id="{{ anchor_for_message(message.id) }}">
+        <article class="message {{ message.role }}"
+                 id="{{ anchor_for_message(message.id) }}"
+                 data-message-index="{{ message.sequence_index }}"
+                 data-message-anchor="msg-{{ message.sequence_index }}">
           <div class="message-header">
             <span>#{{ message.sequence_index }} · {{ message.role }}</span>
             <span>{{ format_timestamp(message.created_at_unix) }}</span>
@@ -156,6 +159,116 @@
       pane.addEventListener("scroll", syncViewport);
       window.addEventListener("resize", syncViewport);
       syncViewport();
+    })();
+
+    /* ── Clip-to-notes ── */
+    (function () {
+      var pane = document.getElementById("transcriptPane");
+      if (!pane) return;
+
+      var convId = {{ conversation.id | tojson }};
+      var convTitle = {{ (conversation.title or "Untitled") | tojson }};
+      var convSource = {{ conversation.source | tojson }};
+
+      var clipBtn = document.createElement("button");
+      clipBtn.className = "clip-btn";
+      clipBtn.textContent = "Clip to notes";
+      clipBtn.style.display = "none";
+      pane.appendChild(clipBtn);
+
+      var selectedText = "";
+      var selectedIndex = null;
+
+      function findMessageArticle(node) {
+        while (node && node !== pane) {
+          if (node.nodeType === 1 && node.classList.contains("message")) return node;
+          node = node.parentNode;
+        }
+        return null;
+      }
+
+      pane.addEventListener("mouseup", function (e) {
+        var sel = window.getSelection();
+        if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+          clipBtn.style.display = "none";
+          return;
+        }
+
+        var article = findMessageArticle(sel.anchorNode);
+        if (!article) { clipBtn.style.display = "none"; return; }
+
+        selectedText = sel.toString().trim();
+        selectedIndex = article.getAttribute("data-message-index");
+
+        var range = sel.getRangeAt(0);
+        var rect = range.getBoundingClientRect();
+        var paneRect = pane.getBoundingClientRect();
+
+        clipBtn.style.top = (rect.bottom - paneRect.top + pane.scrollTop + 4) + "px";
+        clipBtn.style.left = (rect.left - paneRect.left + (rect.width / 2)) + "px";
+        clipBtn.style.display = "";
+        clipBtn.style.opacity = "1";
+      });
+
+      document.addEventListener("mousedown", function (e) {
+        if (e.target === clipBtn) return;
+        clipBtn.style.display = "none";
+      });
+
+      clipBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!selectedText) return;
+
+        var btnRect = { top: clipBtn.style.top, left: clipBtn.style.left };
+        clipBtn.style.display = "none";
+
+        fetch("/api/clip", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: selectedText,
+            source_conversation_id: convId,
+            source_conversation_title: convTitle,
+            source_provider: convSource,
+            source_message_index: selectedIndex
+          })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.status === "ok") {
+            var pill = document.createElement("span");
+            pill.className = "clip-confirm";
+            pill.textContent = "Clipped \u2713";
+            pill.style.top = btnRect.top;
+            pill.style.left = btnRect.left;
+            pane.appendChild(pill);
+            setTimeout(function () {
+              pill.style.opacity = "0";
+              setTimeout(function () { pill.remove(); }, 200);
+            }, 1500);
+          }
+        });
+
+        window.getSelection().removeAllRanges();
+        selectedText = "";
+        selectedIndex = null;
+      });
+    })();
+
+    /* ── Deep-link scroll-to-message ── */
+    (function () {
+      if (!window.location.hash) return;
+      var pane = document.getElementById("transcriptPane");
+      if (!pane) return;
+      var target = document.getElementById(window.location.hash.slice(1));
+      if (!target) return;
+      setTimeout(function () {
+        pane.scrollTop = target.offsetTop - pane.offsetTop - 40;
+        target.style.transition = "background-color 0.3s";
+        target.style.backgroundColor = "rgba(74, 222, 128, 0.1)";
+        setTimeout(function () { target.style.backgroundColor = ""; }, 2000);
+      }, 100);
     })();
   </script>
 {% endblock %}

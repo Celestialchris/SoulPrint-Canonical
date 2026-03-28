@@ -54,7 +54,7 @@
       <button type="button" class="distill-result__export" id="export-btn" aria-label="Export as markdown">
         Export as markdown
       </button>
-      <span class="distill-result__copied" id="copy-confirm" hidden>Copied.</span>
+      <span class="distill-result__copied" id="copy-confirm" hidden>Copied ✓</span>
     </div>
 
     <div class="distill-result__sections" id="distill-text">
@@ -123,31 +123,32 @@
   var exportBtn = document.getElementById('export-btn');
   var confirm = document.getElementById('copy-confirm');
   var textEl = document.getElementById('distill-text');
+  var briefing = {{ handoff_briefing | tojson }};
   if (!textEl) return;
 
   function getFullText() {
     return textEl.innerText || textEl.textContent;
   }
 
+  function showCopied() {
+    confirm.hidden = false;
+    setTimeout(function() { confirm.hidden = true; }, 2000);
+  }
+
   if (copyBtn) {
     copyBtn.addEventListener('click', function() {
-      var text = getFullText();
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
-          confirm.hidden = false;
-          setTimeout(function() { confirm.hidden = true; }, 2000);
-        });
+        navigator.clipboard.writeText(briefing).then(showCopied);
       } else {
         var ta = document.createElement('textarea');
-        ta.value = text;
+        ta.value = briefing;
         ta.style.position = 'fixed';
         ta.style.left = '-9999px';
         document.body.appendChild(ta);
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        confirm.hidden = false;
-        setTimeout(function() { confirm.hidden = true; }, 2000);
+        showCopied();
       }
     });
   }
