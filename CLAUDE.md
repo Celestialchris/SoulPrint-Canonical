@@ -82,6 +82,18 @@ Design system: "USB Drive." See `docs/product/brand.md` and `docs/product/visual
 - If style conflicts with clarity, choose clarity
 - The live `app.css` is always authoritative over any doc file
 
+## Git Workflow
+
+- ALWAYS verify you are on the correct branch before committing. Run `git branch` before every `git add`/`git commit`. NEVER commit directly to main unless explicitly told to. If you realize you committed to the wrong branch, STOP and ask the user before attempting recovery.
+
+- When told DO NOT edit a file or given a scope lock, treat it as absolute. Do not add cache busters, do not make 'minor' changes, do not touch the file for any reason without asking first.
+
+- After making CSS/UI changes, do NOT assume the fix worked. Tell the user to verify visually. If the user reports the fix didn't work, reconsider the approach rather than blaming browser caching.
+
+- Always run the full test suite (`pytest`) after completing each task before committing. All tests must pass before any git commit.
+
+- This project uses Python (Flask), Jinja2 templates, HTML/CSS, and Markdown documentation. The test suite uses pytest. There are 500+ tests. Run `pytest` from the repo root.
+
 ## Extended Rules
 
 See `.claude/rules/` for modular instruction files.
