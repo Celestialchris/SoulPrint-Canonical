@@ -217,6 +217,70 @@ def create_app():
             db_path=db_path,
         )
 
+    def _passport_output_dir() -> Path:
+        """Resolve passport export directory as a sibling of the SQLite file."""
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        db_dir = Path(_sqlite_path_from_uri(sqlite_uri)).parent
+        return db_dir / "exports" / "passports"
+
+    @app.post("/passport/export")
+    def passport_export():
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        sqlite_path = _sqlite_path_from_uri(sqlite_uri)
+        output_dir = _passport_output_dir()
+
+        try:
+            result = export_memory_passport(
+                sqlite_path=sqlite_path,
+                output_dir=str(output_dir),
+            )
+            return jsonify({
+                "status": "ok",
+                "path": str(result.package_dir),
+                "canonical_units": result.canonical_units,
+                "derived_units": result.derived_units,
+            })
+        except Exception as exc:
+            return jsonify({"status": "error", "message": str(exc)}), 500
+
+    @app.post("/passport/validate")
+    def passport_validate():
+        output_dir = _passport_output_dir()
+        passport_dir = output_dir / "memory-passport-v1"
+
+        if not passport_dir.exists() or not (passport_dir / "manifest.json").exists():
+            return jsonify({
+                "status": "error",
+                "message": "No exported passport found. Export one first.",
+            }), 404
+
+        try:
+            result = validate_memory_passport(str(passport_dir))
+            return jsonify({
+                "status": "ok",
+                "valid": result.status != "invalid",
+                "validation_status": result.status,
+                "summary": _format_validation_summary(result),
+                "issues": [d.message for d in result.errors] + [d.message for d in result.warnings],
+                "checked_counts": result.checked_counts,
+            })
+        except Exception as exc:
+            return jsonify({"status": "error", "message": str(exc)}), 500
+
+    def _format_validation_summary(result) -> str:
+        """Build a human-readable one-line validation summary."""
+        parts = [f"Status: {result.status}"]
+        if result.checked_counts:
+            counts = ", ".join(
+                f"{k}: {v}" for k, v in sorted(result.checked_counts.items())
+            )
+            parts.append(f"Checked: {counts}")
+        if result.errors:
+            parts.append(f"{len(result.errors)} error(s)")
+        if result.warnings:
+            parts.append(f"{len(result.warnings)} warning(s)")
+        return " · ".join(parts)
+
     @app.post("/save")
     def save():
         data = request.get_json(force=True) or {}

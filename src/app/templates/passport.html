@@ -40,6 +40,7 @@
     </p>
     <p>
       Export is currently available through the existing CLI.
+      You can also use the Export button below.
     </p>
     <p class="passport-command"><code>python -m src.passport.cli export &lt;output_dir&gt;</code></p>
   </section>
@@ -71,6 +72,13 @@
     <p class="page-summary passport-status-note">{{ status.message }}</p>
   </section>
 
+  <section class="passport-actions" aria-label="Passport Actions">
+    <div class="passport-actions-label">ACTIONS</div>
+    <button class="passport-btn" id="export-btn" onclick="exportPassport()">Export passport</button>
+    <button class="passport-btn passport-btn--secondary" id="validate-btn" onclick="validatePassport()">Validate passport</button>
+    <div id="passport-result" class="passport-result" style="display:none"></div>
+  </section>
+
   <section class="file-proof" aria-label="Your Archive">
     <div class="file-proof-label">YOUR ARCHIVE</div>
     <code class="file-proof-path">{{ db_path }}</code>
@@ -82,10 +90,71 @@
   <section class="surface-card" aria-label="Next Actions">
     <h2>Next actions</h2>
     <ul class="content-list">
-      <li>Export your Memory Passport from the CLI.</li>
-      <li>Validate an existing passport from the CLI.</li>
+      <li>Export your Memory Passport using the button above.</li>
+      <li>Validate an existing passport to check integrity.</li>
       <li><a href="{{ url_for('imported_conversations') }}">Inspect imported memory</a> and <a href="{{ url_for('chats') }}">native memory</a> before export.</li>
       <li><a href="{{ url_for('home') }}">Return to workspace</a> for continuity overview.</li>
     </ul>
   </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportPassport(){
+  var btn=document.getElementById('export-btn');
+  var result=document.getElementById('passport-result');
+  btn.disabled=true;btn.textContent='Exporting\u2026';
+  fetch('/passport/export',{method:'POST'})
+    .then(function(r){return r.json()})
+    .then(function(data){
+      result.style.display='block';
+      if(data.status==='ok'){
+        result.className='passport-result passport-result--success';
+        result.innerHTML='<strong>Passport exported</strong><br>'
+          +'<code>'+data.path+'</code><br>'
+          +'Canonical units: '+data.canonical_units+' · Derived units: '+data.derived_units;
+      }else{
+        result.className='passport-result passport-result--error';
+        result.innerHTML='<strong>Export failed</strong><br>'+data.message;
+      }
+      btn.disabled=false;btn.textContent='Export passport';
+    })
+    .catch(function(err){
+      result.style.display='block';
+      result.className='passport-result passport-result--error';
+      result.innerHTML='<strong>Export failed</strong><br>'+err;
+      btn.disabled=false;btn.textContent='Export passport';
+    });
+}
+function validatePassport(){
+  var btn=document.getElementById('validate-btn');
+  var result=document.getElementById('passport-result');
+  btn.disabled=true;btn.textContent='Validating\u2026';
+  fetch('/passport/validate',{method:'POST'})
+    .then(function(r){return r.json()})
+    .then(function(data){
+      result.style.display='block';
+      if(data.status==='ok'){
+        if(data.valid){
+          result.className='passport-result passport-result--success';
+          result.innerHTML='<strong>Passport valid</strong><br>'+data.summary;
+        }else{
+          result.className='passport-result passport-result--warning';
+          result.innerHTML='<strong>Validation issues</strong><br>'+data.summary
+            +'<br>'+(data.issues||[]).map(function(i){return '\u00b7 '+i}).join('<br>');
+        }
+      }else{
+        result.className='passport-result passport-result--error';
+        result.innerHTML='<strong>'+data.message+'</strong>';
+      }
+      btn.disabled=false;btn.textContent='Validate passport';
+    })
+    .catch(function(err){
+      result.style.display='block';
+      result.className='passport-result passport-result--error';
+      result.innerHTML='<strong>Validation failed</strong><br>'+err;
+      btn.disabled=false;btn.textContent='Validate passport';
+    });
+}
+</script>
 {% endblock %}
