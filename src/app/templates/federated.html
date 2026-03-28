@@ -35,41 +35,97 @@
     </form>
   </section>
 
-  {% if rows %}
-    <div class="container-card">
-      {% for row in rows %}
-        {% set result = row.result %}
-        {% set tone = "native" if result.source_lane == "native_memory" else "imported" %}
-        {% set lane_class = "record-card--native" if result.source_lane == "native_memory" else "record-card--imported" %}
-        <article class="record-card {{ lane_class }}">
-          <div class="record-card__header">
-            <h2 class="record-card__title">{{ result.title|default('', true)|trim or "Untitled result" }}</h2>
-            <div class="metadata-badges">
-              {{ badge("Source: " ~ result.source_lane, tone) }}
-              {{ badge(result.stable_id, "neutral", mono=True) }}
+  {% if fts_active %}
+    {# ── FTS message-level search results ── #}
+    {% if fts_results %}
+      <div class="fts-stats">
+        {{ fts_results|length }} result{{ 's' if fts_results|length != 1 }} for "{{ keyword }}"
+      </div>
+      <div class="container-card">
+        {% for result in fts_results %}
+          <article class="fts-result">
+            <div class="fts-result-meta">
+              <span class="fts-provider fts-provider--{{ result.provider }}">
+                {{ result.provider }}
+              </span>
+              {% if result.source_type == 'imported_message' %}
+                <span class="fts-conversation-title">
+                  {{ result.conversation_title }}
+                </span>
+                <span class="fts-role">{{ result.message_role }}</span>
+              {% else %}
+                <span class="fts-conversation-title">Note</span>
+              {% endif %}
+              <span class="fts-timestamp">{{ result.timestamp }}</span>
             </div>
-          </div>
-          <p class="metadata-line">
-            Source: {{ result.source_lane }} · ID: {{ result.stable_id }} · Timestamp: {{ format_timestamp(result.timestamp_unix) }}
-          </p>
-          {% if result.source_metadata %}
-            <p class="metadata-line">
-              Source metadata:
-              {% for key, value in result.source_metadata.items() %}
-                {{ key }}={{ value if value is not none else "" }}{% if not loop.last %} · {% endif %}
-              {% endfor %}
-            </p>
-          {% endif %}
-          {% if row.handoff_href %}
-            <a class="record-card__link" href="{{ row.handoff_href }}">Open full view</a>
-          {% endif %}
-        </article>
-      {% endfor %}
-    </div>
+
+            <div class="fts-snippet">
+              {{ result.snippet | safe }}
+            </div>
+
+            <div class="fts-actions">
+              {% if result.source_type == 'imported_message' %}
+                <a href="/imported/{{ result.conversation_id }}/explorer#message-{{ result.message_id }}"
+                   class="fts-source-link">
+                  Open at this message &rarr;
+                </a>
+              {% else %}
+                <a href="/memory/{{ result.note_id }}"
+                   class="fts-source-link">
+                  Open note &rarr;
+                </a>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="fts-empty">
+        <p>No messages found for "{{ keyword }}"</p>
+        <p style="font-size: 13px; margin-top: 8px;">
+          Try different terms or check your imports.
+        </p>
+      </div>
+    {% endif %}
+
   {% else %}
-    {{ empty_state(
-      "No results found.",
-      "Try a different search term. Results from all providers appear here together, each showing its source."
-    ) }}
+    {# ── Existing browse mode (unchanged) ── #}
+    {% if rows %}
+      <div class="container-card">
+        {% for row in rows %}
+          {% set result = row.result %}
+          {% set tone = "native" if result.source_lane == "native_memory" else "imported" %}
+          {% set lane_class = "record-card--native" if result.source_lane == "native_memory" else "record-card--imported" %}
+          <article class="record-card {{ lane_class }}">
+            <div class="record-card__header">
+              <h2 class="record-card__title">{{ result.title|default('', true)|trim or "Untitled result" }}</h2>
+              <div class="metadata-badges">
+                {{ badge("Source: " ~ result.source_lane, tone) }}
+                {{ badge(result.stable_id, "neutral", mono=True) }}
+              </div>
+            </div>
+            <p class="metadata-line">
+              Source: {{ result.source_lane }} · ID: {{ result.stable_id }} · Timestamp: {{ format_timestamp(result.timestamp_unix) }}
+            </p>
+            {% if result.source_metadata %}
+              <p class="metadata-line">
+                Source metadata:
+                {% for key, value in result.source_metadata.items() %}
+                  {{ key }}={{ value if value is not none else "" }}{% if not loop.last %} · {% endif %}
+                {% endfor %}
+              </p>
+            {% endif %}
+            {% if row.handoff_href %}
+              <a class="record-card__link" href="{{ row.handoff_href }}">Open full view</a>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      {{ empty_state(
+        "No results found.",
+        "Try a different search term. Results from all providers appear here together, each showing its source."
+      ) }}
+    {% endif %}
   {% endif %}
 {% endblock %}

@@ -56,6 +56,7 @@ def persist_normalized_conversations(
     imported_conversations = 0
     imported_messages = 0
     skipped_conversations = 0
+    new_conversation_ids: list[int] = []
 
     for conversation in conversations_list:
         if conversation.source_conversation_id in existing_ids:
@@ -85,9 +86,22 @@ def persist_normalized_conversations(
             )
             imported_messages += 1
 
+        new_conversation_ids.append(db_conversation.id)
         imported_conversations += 1
 
     db.session.commit()
+
+    # Index newly imported conversations for FTS (best-effort)
+    if new_conversation_ids:
+        try:
+            from src.retrieval.fts import index_new_messages
+
+            db_path = str(db.engine.url.database)
+            for conv_id in new_conversation_ids:
+                index_new_messages(db_path, conv_id)
+        except Exception:
+            pass  # FTS indexing is non-critical
+
     return PersistResult(
         imported_conversations=imported_conversations,
         imported_messages=imported_messages,

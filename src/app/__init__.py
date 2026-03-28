@@ -84,6 +84,14 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    # Create FTS5 virtual tables (derived indexes, not canonical)
+    try:
+        from ..retrieval.fts import ensure_fts_tables
+
+        ensure_fts_tables(_sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"]))
+    except Exception:
+        pass  # FTS is best-effort; app works without it
+
     # Jinja filters
     @app.template_filter("format_ts")
     def _format_ts(unix_ts):
@@ -149,9 +157,63 @@ def create_app():
         db.session.add(entry)
         db.session.commit()
 
+        try:
+            from ..retrieval.fts import index_new_note
+
+            index_new_note(
+                _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"]),
+                entry.id,
+            )
+        except Exception:
+            pass
+
         return jsonify({"ok": True, "id": entry.id})
 
+    @app.post("/api/clip")
+    def api_clip():
+        data = request.get_json(force=True) or {}
 
+        content = data.get("content", "").strip()
+        source_conversation_id = data.get("source_conversation_id")
+        source_conversation_title = data.get("source_conversation_title", "Untitled")
+        source_provider = data.get("source_provider", "")
+        source_message_index = data.get("source_message_index")
+
+        if not content:
+            return jsonify({"status": "error", "message": "content is required"}), 400
+        if source_conversation_id is None:
+            return jsonify({"status": "error", "message": "source_conversation_id is required"}), 400
+
+        # Build citation block
+        citation_parts = [
+            content,
+            "",
+            "---",
+            f'Clipped from "{source_conversation_title}" \u00b7 {source_provider} \u00b7 message {source_message_index}',
+            f"Source: /imported/{source_conversation_id}/explorer#msg-{source_message_index}",
+        ]
+        full_content = "\n".join(citation_parts)
+
+        entry = MemoryEntry(
+            timestamp=datetime.utcnow(),
+            role="user",
+            content=full_content,
+            tags="clipped",
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        try:
+            from ..retrieval.fts import index_new_note
+
+            index_new_note(
+                _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"]),
+                entry.id,
+            )
+        except Exception:
+            pass
+
+        return jsonify({"status": "ok", "note_id": entry.id})
 
     @app.get("/imported/<int:conversation_id>/explorer")
     def imported_explorer(conversation_id: int):
@@ -366,6 +428,30 @@ def create_app():
         keyword = request.args.get("q", "").strip()
         sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
         sqlite_path = _sqlite_path_from_uri(sqlite_uri)
+
+        # Try FTS5 message-level search when a keyword is present
+        fts_results: list[dict] = []
+        if keyword:
+            try:
+                from ..retrieval.fts import sanitize_fts_query, search_fts
+
+                fts_query = sanitize_fts_query(keyword)
+                if fts_query:
+                    fts_results = search_fts(sqlite_path, fts_query, limit=50)
+            except Exception:
+                fts_results = []
+
+        if fts_results:
+            return render_template(
+                "federated.html",
+                keyword=keyword,
+                fts_results=fts_results,
+                fts_active=True,
+                rows=[],
+                format_timestamp=format_timestamp,
+            )
+
+        # No FTS results (or no keyword) — existing browse/search behavior
         results = federated_search(sqlite_path=sqlite_path, keyword=keyword)
 
         rows = []
@@ -393,6 +479,8 @@ def create_app():
             "federated.html",
             keyword=keyword,
             rows=rows,
+            fts_active=False,
+            fts_results=[],
             format_timestamp=format_timestamp,
         )
 
