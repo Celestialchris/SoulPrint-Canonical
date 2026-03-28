@@ -38,7 +38,7 @@ SoulPrint is not a hosted service that wants to hold your data. It's a local too
 
 ## What SoulPrint Does
 
-**Import** — Drop your ChatGPT `.zip`, Claude `.json`, or Gemini Takeout. Provider is auto-detected. Normalized into one local archive with duplicate guards.
+**Import** — Drop your ChatGPT `.zip` or Claude `.json`. Provider is auto-detected. Normalized into one local archive with duplicate guards. Gemini Takeout support coming soon.
 
 **Browse** — Workspace dashboard, imported conversations by provider, transcript explorer with prompt-level TOC and minimap, native notes, cross-provider view. Every record carries stable IDs, timestamps, and source tracking.
 
@@ -49,6 +49,18 @@ SoulPrint is not a hosted service that wants to hold your data. It's a local too
 **Discover** — Cross-conversation topic detection. Per-conversation summaries. Multi-conversation digests and distillation. Continuity packets for handoff into new chats. All generated, all traceable to source.
 
 **Export** — Memory Passport with manifest, JSONL lanes, provenance index, and checksums. Validate any exported passport against the current contract.
+
+---
+
+## Screenshots
+
+![Workspace](docs/screenshots/workspace.png)
+
+![Federated Search](docs/screenshots/search.png)
+
+![Import](docs/screenshots/import.png)
+
+![Memory Passport](docs/screenshots/passport.png)
 
 ---
 
@@ -67,7 +79,7 @@ SoulPrint is not a hosted service that wants to hold your data. It's a local too
 |----------|--------|--------|
 | ChatGPT | `.zip` export from OpenAI | ✓ Supported |
 | Claude | `.json` export from Anthropic | ✓ Supported |
-| Gemini | Google Takeout or Chrome extension JSON | ✓ Supported |
+| Gemini | Google Takeout (My Activity) | Coming soon |
 
 Adding a provider is bounded work: adapter, detector, registry entry, fixture, tests. The architecture supports unlimited providers.
 
@@ -131,7 +143,7 @@ src/
 ├── passport/       Memory Passport export and validation
 └── tools/          Memory query and tag validation utilities
 
-tests/              51 test files, 537 test methods
+tests/              53 test files, 578 test methods
 sample_data/        Synthetic provider fixtures (ChatGPT, Claude, Gemini)
 docs/               Architecture, specs, product docs, brand guide
 landing/            Static landing page
@@ -145,7 +157,7 @@ landing/            Static landing page
 python -m pytest tests/ -v
 ```
 
-51 test files covering parsing, persistence, retrieval, intelligence, continuity, distillation, passport, CLI, and browser integration.
+53 test files covering parsing, persistence, retrieval, intelligence, continuity, distillation, passport, CLI, and browser integration.
 
 ---
 

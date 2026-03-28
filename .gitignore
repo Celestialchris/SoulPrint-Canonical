@@ -36,3 +36,8 @@ import_rescue.py
 .mcp.json
 tools/ecc/
 REPO-AUDIT-REPORT.html
+
+# Dev tooling (not part of product)
+.agents/
+.codex/
+ops/

@@ -2,6 +2,34 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## FTS5 Message-Level Search (2026-03-28)
+- SQLite FTS5 full-text search over imported messages and native notes
+- BM25 ranking with Porter stemming and unicode61 tokenization
+- `snippet()` with highlighted `<mark>` tags showing exact matches
+- Deep links from search results to exact messages in explorer
+- Auto-index on import, backfill CLI: `python -m src.retrieval.fts`
+- Federated page: FTS mode when query present, browse mode when not
+
+## Clip from Explorer (2026-03-28)
+- Text selection in transcript explorer → floating "Clip to notes" button
+- Saves note with automatic citation: conversation title, provider, message index
+- Citation includes clickable source link back to exact message
+- Auto-tagged "clipped" for easy filtering
+- User stays on explorer page (no redirect)
+
+## Handoff Briefing + File Proof (2026-03-28)
+- Distill result: "Copy handoff to clipboard" produces AI-consumable briefing
+- Briefing format: thread stats, decisions, open loops, key context
+- Ends with "Please continue from this context." for immediate AI handoff
+- Passport page: database file path disclosure ("It's yours")
+
+## Repo Audit Reconciliation (2026-03-28)
+- README: requirements-minimal.txt → requirements.txt
+- README: test counts updated, surface count updated, obsidian/ added to repo map
+- LAUNCH-PLAYBOOK: Torchlit Vault → USB Drive reference fixed
+- PRODUCT-GRAMMAR-LOCK.md: noted as merged into brand.md and CLAUDE.md
+- Freemium gate tests: investigated root cause (instance/license.key)
+
 ## Post-Import Flash Page (2026-03-27)
 - New `/import/complete` route: post-import confirmation page with conversation stats
 - Shows count of imported conversations and messages after a successful import
