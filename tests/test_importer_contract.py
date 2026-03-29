@@ -28,7 +28,7 @@ class ImporterContractTest(unittest.TestCase):
         importer: ConversationImporter = ChatGPTImporter()
         self.assertEqual(importer.provider_id, PROVIDER_CHATGPT)
 
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
         conversations = parse_chatgpt_export_file(fixture)
         parsed = importer.parse_payload([{"id": "x", "title": "t", "mapping": {}}])
 
@@ -72,7 +72,7 @@ class ImporterContractTest(unittest.TestCase):
         self.assertEqual(parsed[0].source_provider, PROVIDER_GEMINI)
 
     def test_provider_identity_is_preserved_through_persistence(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
         conversations = parse_chatgpt_export_file(fixture)
 
         workdir = make_test_temp_dir(self, "importer-contract")

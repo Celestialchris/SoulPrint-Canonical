@@ -22,7 +22,7 @@ from tests.temp_helpers import make_test_temp_dir
 
 class ChatGPTImporterTest(unittest.TestCase):
     def test_parse_chatgpt_fixture_normalizes_order_and_title(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
         conversations = parse_chatgpt_export_file(fixture)
 
         self.assertEqual(len(conversations), 2)
@@ -39,7 +39,7 @@ class ChatGPTImporterTest(unittest.TestCase):
         self.assertEqual(len(second.messages), 1)
 
     def test_persist_normalized_conversation_to_sqlite(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
         conversations = parse_chatgpt_export_file(fixture)
 
         workdir = make_test_temp_dir(self, "chatgpt-importer")
@@ -70,7 +70,7 @@ class ChatGPTImporterTest(unittest.TestCase):
                 db.engine.dispose()
 
     def test_cli_import_path_imports_fixture_into_sqlite(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         workdir = make_test_temp_dir(self, "chatgpt-importer")
         sqlite_path = workdir / "cli_import.db"
@@ -94,7 +94,7 @@ class ChatGPTImporterTest(unittest.TestCase):
                 db.engine.dispose()
 
     def test_list_imported_conversations_returns_rows(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         workdir = make_test_temp_dir(self, "chatgpt-query")
         sqlite_path = workdir / "query_list.db"
@@ -107,7 +107,7 @@ class ChatGPTImporterTest(unittest.TestCase):
         self.assertEqual(rows[1].source_conversation_id, "conv-1")
 
     def test_get_imported_conversation_returns_messages_in_sequence_order(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         workdir = make_test_temp_dir(self, "chatgpt-query")
         sqlite_path = workdir / "query_show.db"
@@ -127,7 +127,7 @@ class ChatGPTImporterTest(unittest.TestCase):
         self.assertEqual([m.role for m in detail.messages], ["user", "assistant", "user"])
 
     def test_search_imported_conversations_matches_title_and_content(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         workdir = make_test_temp_dir(self, "chatgpt-query")
         sqlite_path = workdir / "query_search.db"
@@ -140,7 +140,7 @@ class ChatGPTImporterTest(unittest.TestCase):
         self.assertEqual([row.source_conversation_id for row in content_matches], ["conv-2"])
 
     def test_search_imported_conversations_is_case_insensitive_and_deterministic(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         workdir = make_test_temp_dir(self, "chatgpt-query")
         sqlite_path = workdir / "query_search_order.db"
@@ -160,7 +160,7 @@ class ChatGPTImporterTest(unittest.TestCase):
 
 
     def test_duplicate_import_policy_skips_existing_source_conversation_ids(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         workdir = make_test_temp_dir(self, "chatgpt-importer")
         sqlite_path = workdir / "duplicate_policy.db"
@@ -190,7 +190,7 @@ class ChatGPTImporterTest(unittest.TestCase):
                 db.engine.dispose()
 
     def test_render_imported_conversation_markdown_includes_metadata_and_ordered_messages(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         workdir = make_test_temp_dir(self, "chatgpt-query")
         sqlite_path = workdir / "query_export_render.db"
@@ -239,7 +239,7 @@ Add food suggestions.
         self.assertEqual(rendered, expected)
 
     def test_export_imported_conversation_markdown_writes_file(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         workdir = make_test_temp_dir(self, "chatgpt-query")
         sqlite_path = workdir / "query_export_write.db"

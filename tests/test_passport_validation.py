@@ -50,7 +50,7 @@ class PassportValidationTest(unittest.TestCase):
         workdir = make_test_temp_dir(self, "passport-validation")
         sqlite_path = workdir / "passport.db"
         import_chatgpt_export_to_sqlite(
-            Path("sample_data/chatgpt_export_sample.json"),
+            Path("sample_data/chatgpt.json"),
             sqlite_path,
         )
         if include_native:
@@ -171,7 +171,7 @@ class PassportValidationTest(unittest.TestCase):
         workdir = make_test_temp_dir(self, "passport-roundtrip")
         sqlite_path = workdir / "claude.db"
         import_conversation_export_to_sqlite(
-            Path("sample_data/claude_export_sample.json"),
+            Path("sample_data/claude.json"),
             sqlite_path,
             provider="claude",
         )

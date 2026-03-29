@@ -34,7 +34,7 @@ from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
 class GeminiTakeoutParserTest(unittest.TestCase):
     def test_parse_takeout_fixture_produces_one_conversation_per_activity_entry(self):
         conversations = parse_gemini_export_file(
-            Path("sample_data/gemini_takeout_sample.json")
+            Path("sample_data/gemini_takeout.json")
         )
 
         self.assertEqual(len(conversations), 4)
@@ -49,7 +49,7 @@ class GeminiTakeoutParserTest(unittest.TestCase):
 
     def test_takeout_titles_are_truncated_from_prompt_text(self):
         conversations = parse_gemini_export_file(
-            Path("sample_data/gemini_takeout_sample.json")
+            Path("sample_data/gemini_takeout.json")
         )
 
         first = conversations[0]
@@ -58,10 +58,10 @@ class GeminiTakeoutParserTest(unittest.TestCase):
 
     def test_takeout_source_ids_are_stable_across_re_parses(self):
         first_run = parse_gemini_export_file(
-            Path("sample_data/gemini_takeout_sample.json")
+            Path("sample_data/gemini_takeout.json")
         )
         second_run = parse_gemini_export_file(
-            Path("sample_data/gemini_takeout_sample.json")
+            Path("sample_data/gemini_takeout.json")
         )
 
         first_ids = [conv.source_conversation_id for conv in first_run]
@@ -109,7 +109,7 @@ class GeminiTakeoutParserTest(unittest.TestCase):
 class GeminiConversationalParserTest(unittest.TestCase):
     def test_parse_conversations_fixture_normalizes_provider_and_roles(self):
         conversations = parse_gemini_export_file(
-            Path("sample_data/gemini_conversations_sample.json")
+            Path("sample_data/gemini_conv.json")
         )
 
         self.assertEqual(len(conversations), 2)
@@ -130,7 +130,7 @@ class GeminiConversationalParserTest(unittest.TestCase):
 
     def test_conversation_id_derived_from_url_when_available(self):
         conversations = parse_gemini_export_file(
-            Path("sample_data/gemini_conversations_sample.json")
+            Path("sample_data/gemini_conv.json")
         )
 
         self.assertEqual(conversations[0].source_conversation_id, "gemini-abc123def456")
@@ -266,12 +266,12 @@ class GeminiDetectionTest(unittest.TestCase):
 
 class GeminiAutoDetectImportTest(unittest.TestCase):
     def test_takeout_fixture_auto_detects_as_gemini(self):
-        result = parse_import_file(Path("sample_data/gemini_takeout_sample.json"))
+        result = parse_import_file(Path("sample_data/gemini_takeout.json"))
         self.assertEqual(result.provider_id, "gemini")
         self.assertEqual(len(result.conversations), 4)
 
     def test_conversations_fixture_auto_detects_as_gemini(self):
-        result = parse_import_file(Path("sample_data/gemini_conversations_sample.json"))
+        result = parse_import_file(Path("sample_data/gemini_conv.json"))
         self.assertEqual(result.provider_id, "gemini")
         self.assertEqual(len(result.conversations), 2)
 
@@ -283,7 +283,7 @@ class GeminiAutoDetectImportTest(unittest.TestCase):
 
 class GeminiPersistenceTest(unittest.TestCase):
     def test_takeout_import_persists_and_deduplicates(self):
-        fixture = Path("sample_data/gemini_takeout_sample.json")
+        fixture = Path("sample_data/gemini_takeout.json")
         workdir = make_test_temp_dir(self, "gemini-persist")
         sqlite_path = workdir / "gemini_takeout.db"
 
@@ -297,7 +297,7 @@ class GeminiPersistenceTest(unittest.TestCase):
         self.assertEqual(second.skipped_conversations, 4)
 
     def test_conversations_import_persists_full_messages(self):
-        fixture = Path("sample_data/gemini_conversations_sample.json")
+        fixture = Path("sample_data/gemini_conv.json")
         workdir = make_test_temp_dir(self, "gemini-persist")
         sqlite_path = workdir / "gemini_conversations.db"
 
@@ -319,7 +319,7 @@ class GeminiCliTest(unittest.TestCase):
         sqlite_path = workdir / "cli_gemini.db"
         argv = [
             "importers.cli",
-            "sample_data/gemini_takeout_sample.json",
+            "sample_data/gemini_takeout.json",
             "--db",
             str(sqlite_path),
         ]
@@ -342,7 +342,7 @@ class GeminiCliTest(unittest.TestCase):
         sqlite_path = workdir / "cli_gemini_conv.db"
         argv = [
             "importers.cli",
-            "sample_data/gemini_conversations_sample.json",
+            "sample_data/gemini_conv.json",
             "--db",
             str(sqlite_path),
             "--provider",
@@ -378,7 +378,7 @@ class GeminiBrowserIntegrationTest(unittest.TestCase):
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.sqlite_path}"
 
         import_conversation_export_to_sqlite(
-            Path("sample_data/gemini_conversations_sample.json"),
+            Path("sample_data/gemini_conv.json"),
             self.sqlite_path,
             provider="gemini",
         )

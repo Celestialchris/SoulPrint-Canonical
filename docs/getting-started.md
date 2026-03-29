@@ -56,10 +56,10 @@ python -m pytest tests/ -v
 Import any of the sample exports included in `sample_data/`:
 
 ```bash
-python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
-python -m src.importers.cli sample_data/claude_export_sample.json --db instance/soulprint.db
-python -m src.importers.cli sample_data/gemini_takeout_sample.json --db instance/soulprint.db
-python -m src.importers.cli sample_data/gemini_conversations_sample.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/chatgpt.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/claude.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/gemini_takeout.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/gemini_conv.json --db instance/soulprint.db
 ```
 
 The importer auto-detects the provider from the file's payload shape.

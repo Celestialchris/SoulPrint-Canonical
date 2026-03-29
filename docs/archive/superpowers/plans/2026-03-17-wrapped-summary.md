@@ -198,10 +198,10 @@ class WrappedSummaryTest(unittest.TestCase):
     # -- Test 8: Post-first-import redirect to /summary --
 
     def test_post_first_import_redirects_to_summary(self):
-        fixture_bytes = Path("sample_data/chatgpt_export_sample.json").read_bytes()
+        fixture_bytes = Path("sample_data/chatgpt.json").read_bytes()
         response = self.client.post(
             "/import",
-            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt_export_sample.json")},
+            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt.json")},
             content_type="multipart/form-data",
         )
         # First import (DB was empty) should redirect to /summary

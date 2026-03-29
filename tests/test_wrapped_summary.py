@@ -200,14 +200,14 @@ class WrappedSummaryTest(unittest.TestCase):
         """POST /import with fixture on empty DB should redirect 302 to
         /summary. Will fail until Task 3 adds the redirect.
         """
-        fixture_path = Path(__file__).resolve().parent.parent / "sample_data" / "chatgpt_export_sample.json"
+        fixture_path = Path(__file__).resolve().parent.parent / "sample_data" / "chatgpt.json"
         if not fixture_path.exists():
             self.skipTest(f"Fixture not found at {fixture_path}")
 
         with open(fixture_path, "rb") as f:
             response = self.client.post(
                 "/import",
-                data={"export_file": (f, "chatgpt_export_sample.json")},
+                data={"export_file": (f, "chatgpt.json")},
                 content_type="multipart/form-data",
             )
 

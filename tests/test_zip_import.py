@@ -9,8 +9,8 @@ from src.importers.registry import parse_import_file
 from src.importers.errors import ImportProviderDetectionError, MalformedImportFileError
 
 
-CHATGPT_FIXTURE = Path("sample_data/chatgpt_export_sample.json")
-CLAUDE_FIXTURE = Path("sample_data/claude_export_sample.json")
+CHATGPT_FIXTURE = Path("sample_data/chatgpt.json")
+CLAUDE_FIXTURE = Path("sample_data/claude.json")
 
 
 class TestZipImportChatGPT:

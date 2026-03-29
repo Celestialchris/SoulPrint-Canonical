@@ -25,7 +25,7 @@ from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
 
 class ClaudeImporterTest(unittest.TestCase):
     def test_parse_claude_fixture_normalizes_provider_ids_timestamps_and_order(self):
-        fixture = Path("sample_data/claude_export_sample.json")
+        fixture = Path("sample_data/claude.json")
 
         conversations = parse_claude_export_file(fixture)
 
@@ -102,7 +102,7 @@ class ClaudeImporterTest(unittest.TestCase):
         self.assertIn("claude import payload is malformed", str(error.exception))
 
     def test_claude_duplicate_import_policy_remains_source_aware(self):
-        fixture = Path("sample_data/claude_export_sample.json")
+        fixture = Path("sample_data/claude.json")
 
         workdir = make_test_temp_dir(self, "claude-importer")
         sqlite_path = workdir / "claude_duplicate.db"
@@ -116,7 +116,7 @@ class ClaudeImporterTest(unittest.TestCase):
         self.assertEqual(second.skipped_conversations, 2)
 
     def test_auto_detected_chatgpt_path_still_imports(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         workdir = make_test_temp_dir(self, "cross-llm-importer")
         sqlite_path = workdir / "chatgpt_auto.db"
@@ -140,7 +140,7 @@ class GeminiBoundaryTest(unittest.TestCase):
         self.assertIn("Could not detect import provider", str(error.exception))
 
     def test_gemini_takeout_fixture_auto_detects_and_imports(self):
-        fixture = Path("sample_data/gemini_takeout_sample.json")
+        fixture = Path("sample_data/gemini_takeout.json")
 
         workdir = make_test_temp_dir(self, "gemini-cross-llm")
         sqlite_path = workdir / "gemini_auto.db"
@@ -152,7 +152,7 @@ class GeminiBoundaryTest(unittest.TestCase):
         self.assertEqual(result.imported_messages, 4)
 
     def test_gemini_conversations_fixture_auto_detects_and_imports(self):
-        fixture = Path("sample_data/gemini_conversations_sample.json")
+        fixture = Path("sample_data/gemini_conv.json")
 
         workdir = make_test_temp_dir(self, "gemini-cross-llm")
         sqlite_path = workdir / "gemini_conv_auto.db"
@@ -173,7 +173,7 @@ class ClaudeImportedBrowserIntegrationTest(unittest.TestCase):
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.sqlite_path}"
 
         import_conversation_export_to_sqlite(
-            Path("sample_data/claude_export_sample.json"),
+            Path("sample_data/claude.json"),
             self.sqlite_path,
             provider="claude",
         )
@@ -227,7 +227,7 @@ class ImportCliOutputTest(unittest.TestCase):
         sqlite_path = workdir / "cli_claude.db"
         argv = [
             "importers.cli",
-            "sample_data/claude_export_sample.json",
+            "sample_data/claude.json",
             "--db",
             str(sqlite_path),
         ]

@@ -28,10 +28,10 @@ class ImportFlashRouteTest(unittest.TestCase):
 
     def _seed_initial_import(self):
         """Import the fixture once so the DB is non-empty."""
-        fixture_bytes = Path("sample_data/chatgpt_export_sample.json").read_bytes()
+        fixture_bytes = Path("sample_data/chatgpt.json").read_bytes()
         self.client.post(
             "/import",
-            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt_export_sample.json")},
+            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt.json")},
             content_type="multipart/form-data",
         )
 
@@ -79,10 +79,10 @@ class ImportFlashRouteTest(unittest.TestCase):
         self._seed_initial_import()
 
         # Import a different provider fixture
-        fixture_bytes = Path("sample_data/claude_export_sample.json").read_bytes()
+        fixture_bytes = Path("sample_data/claude.json").read_bytes()
         response = self.client.post(
             "/import",
-            data={"export_file": (io.BytesIO(fixture_bytes), "claude_export_sample.json")},
+            data={"export_file": (io.BytesIO(fixture_bytes), "claude.json")},
             content_type="multipart/form-data",
         )
 
@@ -92,10 +92,10 @@ class ImportFlashRouteTest(unittest.TestCase):
     def test_duplicate_import_does_not_redirect_to_flash(self):
         self._seed_initial_import()
 
-        fixture_bytes = Path("sample_data/chatgpt_export_sample.json").read_bytes()
+        fixture_bytes = Path("sample_data/chatgpt.json").read_bytes()
         response = self.client.post(
             "/import",
-            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt_export_sample.json")},
+            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt.json")},
             content_type="multipart/form-data",
         )
 
