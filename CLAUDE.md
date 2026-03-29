@@ -41,7 +41,7 @@ python -m src.run
 python -m pytest tests/ -v
 
 # Import conversations
-python -m src.importers.cli sample_data/chatgpt_export_sample.json --db instance/soulprint.db
+python -m src.importers.cli sample_data/chatgpt.json --db instance/soulprint.db
 
 # Export passport
 python -m src.passport.cli exports/passports --db instance/soulprint.db
