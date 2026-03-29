@@ -1,9 +1,12 @@
 from dataclasses import asdict
 from flask import Flask, abort, redirect, render_template, request, jsonify, session, url_for
 from datetime import datetime, timezone
+import logging
 import os
 import tempfile
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from .imported_explorer import anchor_for_message, build_prompt_toc, format_timestamp
 from .models.db import db
@@ -241,7 +244,8 @@ def create_app():
                 "derived_units": result.derived_units,
             })
         except Exception as exc:
-            return jsonify({"status": "error", "message": str(exc)}), 500
+            logger.exception("Passport export failed")
+            return jsonify({"status": "error", "message": "Export failed"}), 500
 
     @app.post("/passport/validate")
     def passport_validate():
@@ -265,7 +269,8 @@ def create_app():
                 "checked_counts": result.checked_counts,
             })
         except Exception as exc:
-            return jsonify({"status": "error", "message": str(exc)}), 500
+            logger.exception("Passport validation failed")
+            return jsonify({"status": "error", "message": "Validation failed"}), 500
 
     def _format_validation_summary(result) -> str:
         """Build a human-readable one-line validation summary."""
@@ -474,7 +479,9 @@ def create_app():
             else:
                 temp_path: Path | None = None
                 try:
-                    suffix = Path(upload.filename).suffix or ".json"
+                    ALLOWED_EXTENSIONS = {".json", ".zip"}
+                    raw_suffix = Path(upload.filename).suffix.lower() if upload.filename else ""
+                    suffix = raw_suffix if raw_suffix in ALLOWED_EXTENSIONS else ".json"
                     with tempfile.NamedTemporaryFile(
                         mode="wb",
                         suffix=suffix,
