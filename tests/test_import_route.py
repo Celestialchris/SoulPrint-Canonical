@@ -43,11 +43,11 @@ class ImportRouteTest(unittest.TestCase):
         self.assertIn("Choose an export JSON file before importing.", html)
 
     def test_valid_supported_fixture_imports_successfully(self):
-        fixture_bytes = Path("sample_data/chatgpt_export_sample.json").read_bytes()
+        fixture_bytes = Path("sample_data/chatgpt.json").read_bytes()
 
         response = self.client.post(
             "/import",
-            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt_export_sample.json")},
+            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt.json")},
             content_type="multipart/form-data",
         )
 
@@ -59,16 +59,16 @@ class ImportRouteTest(unittest.TestCase):
             self.assertEqual(ImportedConversation.query.count(), 2)
 
     def test_duplicate_import_shows_skip_feedback(self):
-        fixture_bytes = Path("sample_data/chatgpt_export_sample.json").read_bytes()
+        fixture_bytes = Path("sample_data/chatgpt.json").read_bytes()
 
         self.client.post(
             "/import",
-            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt_export_sample.json")},
+            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt.json")},
             content_type="multipart/form-data",
         )
         second = self.client.post(
             "/import",
-            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt_export_sample.json")},
+            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt.json")},
             content_type="multipart/form-data",
         )
 

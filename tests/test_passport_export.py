@@ -37,7 +37,7 @@ class PassportExportTest(unittest.TestCase):
                 db.engine.dispose()
 
     def test_export_writes_manifest_lane_files_markdown_and_provenance(self):
-        fixture = Path("sample_data/chatgpt_export_sample.json")
+        fixture = Path("sample_data/chatgpt.json")
 
         temp_root = make_test_temp_dir(self, "passport-export")
         sqlite_path = temp_root / "passport.db"
@@ -167,7 +167,7 @@ class PassportExportTest(unittest.TestCase):
         self.assertEqual(provenance_path.read_text(encoding="utf-8"), "")
 
     def test_export_groups_imported_records_under_their_provider_paths(self):
-        fixture = Path("sample_data/claude_export_sample.json")
+        fixture = Path("sample_data/claude.json")
 
         temp_root = make_test_temp_dir(self, "passport-export")
         sqlite_path = temp_root / "passport_claude.db"
