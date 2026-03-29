@@ -1,7 +1,7 @@
 [Setup]
 AppName=SoulPrint
-AppVersion=0.3.1
-AppVerName=SoulPrint 0.3.1
+AppVersion=0.4.0
+AppVerName=SoulPrint 0.4.0
 AppPublisher=Celestialchris
 AppPublisherURL=https://soulprint.dev
 AppSupportURL=https://github.com/Celestialchris/SoulPrint-Canonical

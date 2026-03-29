@@ -3,6 +3,7 @@
 [![Tests](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml/badge.svg)](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/Celestialchris/SoulPrint-Canonical)](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest)
 
 **Your AI conversations are scattered everywhere. SoulPrint brings them home.**
 
@@ -10,11 +11,15 @@ Import your conversation history from ChatGPT, Claude, and Gemini into one
 local archive. Browse, search, discover themes, ask questions with citations,
 and export a verifiable Memory Passport. Everything stays on your machine.
 
-## Screenshots
-
 ![Workspace](docs/screenshots/workspace.png)
 
-![Import](docs/screenshots/import.png)
+---
+
+## Download
+
+**Windows:** [SoulPrint-Setup.exe](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest/download/SoulPrint-Setup.exe) — install and run. No Python required.
+
+**From source:** See [Quick Start](#quick-start) below.
 
 ---
 
@@ -60,7 +65,7 @@ highlighted snippets.
 **Ask** — Answers grounded in your own conversations. Every answer cites
 sources. Every answer has an audit trace.
 
-**Discover** — Cross-conversation themes. Summaries. Multi-conversation
+**Distill** — Cross-conversation themes. Summaries. Multi-conversation
 distillation. Continuity handoffs for new AI chats.
 
 **Export** — Memory Passport with manifest, canonical JSONL, provenance
@@ -86,20 +91,6 @@ browser extension — it's a local app with a canonical file you own.
 
 ---
 
-## Architecture
-
-```
-Layer A — Truth         SQLite ledger. Explicit lanes. Stable provenance.
-Layer B — Legibility    Browse, search, inspect, trace, export. Read-only.
-Layer C — Intelligence  Summaries, themes, distill, continuity. All derived.
-Layer D — Distribution  Web app, CLI, landing page, freemium gate.
-```
-
-Every derived output traces back to canonical IDs and timestamps.
-Derived never impersonates canonical.
-
----
-
 ## Surfaces
 
 | Route | What it does |
@@ -119,52 +110,17 @@ Derived never impersonates canonical.
 
 ---
 
-## Repo Map
+## Architecture
 
 ```
-src/
-├── app/            Flask web app, templates, static
-├── importers/      Provider adapters, auto-detection, persistence
-├── retrieval/      Federated retrieval across storage lanes
-├── answering/      Grounded answering, trace audit
-├── intelligence/   Summaries, themes, distill, continuity
-├── obsidian/       Obsidian vault export bridge
-└── passport/       Memory Passport export and validation
-
-tests/              56 test files, 586 test methods
-sample_data/        Provider fixtures (ChatGPT, Claude, Gemini)
-docs/               Architecture, specs, product docs
-landing/            Static landing page (soulprint.dev)
+Layer A — Truth         SQLite ledger. Explicit lanes. Stable provenance.
+Layer B — Legibility    Browse, search, inspect, trace, export. Read-only.
+Layer C — Intelligence  Summaries, themes, distill, continuity. All derived.
+Layer D — Distribution  Desktop app, CLI, landing page, freemium gate.
 ```
 
----
-
-## Tests
-
-```bash
-python -m pytest tests/ -v
-```
-
-56 test files covering import, persistence, retrieval, intelligence,
-continuity, passport, CLI, and browser integration. CI runs on every push.
-
----
-
-## CLI
-
-```bash
-# Import
-python -m src.importers.cli sample_data/chatgpt.json
-
-# Search
-python -m src.retrieval.cli --db instance/soulprint.db "search term"
-
-# Ask
-python -m src.answering.cli --db instance/soulprint.db "What about Lisbon?"
-
-# Export passport
-python -m src.passport.cli exports/passports
-```
+Every derived output traces back to canonical IDs and timestamps.
+Derived never impersonates canonical.
 
 ---
 
@@ -179,6 +135,39 @@ License validation is local-only. No server. No accounts.
 
 ---
 
+## Repo Map
+
+```
+src/
+├── app/            Flask web app, templates, static
+├── importers/      Provider adapters, auto-detection, persistence
+├── retrieval/      Federated retrieval, FTS5 search
+├── answering/      Grounded answering, trace audit
+├── intelligence/   Summaries, themes, distill, continuity
+├── obsidian/       Obsidian vault export bridge
+└── passport/       Memory Passport export and validation
+
+scripts/            PyInstaller spec, Inno Setup installer, build script
+tests/              56 test files, 587 test methods
+sample_data/        Provider fixtures (ChatGPT, Claude, Gemini)
+docs/               Architecture, specs, product docs
+landing/            Static landing page (soulprint.dev)
+```
+
+---
+
+## Tests
+
+```bash
+python -m pytest tests/ -v
+```
+
+56 test files covering import, persistence, retrieval, search, intelligence,
+distillation, continuity, passport, freemium gate, CLI, and browser integration.
+CI runs on every push.
+
+---
+
 ## Project Status
 
 | Component | State |
@@ -186,13 +175,17 @@ License validation is local-only. No server. No accounts.
 | Canonical SQLite ledger | ✓ Stable |
 | 3-provider import | ✓ Stable |
 | 16 web surfaces | ✓ Stable |
+| FTS5 message-level search | ✓ Stable |
 | Intelligence layer | ✓ Stable |
+| Multi-conversation distillation | ✓ Stable |
 | Memory Passport export + validation | ✓ Stable |
 | Grounded answering + audit traces | ✓ Stable |
+| Obsidian Bridge | ✓ Stable |
 | Freemium gate | ✓ Shipped |
+| Summary/Wrapped page | ✓ Shipped |
+| Windows installer | ✓ Shipped |
 | Design system (USB Drive) | ✓ Frozen |
 | Landing page | ✓ Shipped |
-| Desktop packaging | Planned |
 
 ---
 
