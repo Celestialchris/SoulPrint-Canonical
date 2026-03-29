@@ -3,6 +3,9 @@
 [![Tests](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml/badge.svg)](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Security Policy](https://img.shields.io/badge/Security-Policy-green)](SECURITY.md)
+[![No Telemetry](https://img.shields.io/badge/Telemetry-None-brightgreen)]()
+[![Local Only](https://img.shields.io/badge/Cloud-None-brightgreen)]()
 [![Latest Release](https://img.shields.io/github/v/release/Celestialchris/SoulPrint-Canonical)](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest)
 
 **Your AI conversations are scattered everywhere. SoulPrint brings them home.**
