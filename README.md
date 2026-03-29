@@ -154,7 +154,7 @@ continuity, passport, CLI, and browser integration. CI runs on every push.
 
 ```bash
 # Import
-python -m src.importers.cli sample_data/chatgpt_export_sample.json
+python -m src.importers.cli sample_data/chatgpt.json
 
 # Search
 python -m src.retrieval.cli --db instance/soulprint.db "search term"
