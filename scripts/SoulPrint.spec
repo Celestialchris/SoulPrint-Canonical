@@ -114,6 +114,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
+    icon=str(project_root / "scripts" / "soulprint.ico"),
 )
 
 coll = COLLECT(
