@@ -84,6 +84,22 @@ browser extension — it's a local app with a canonical file you own.
 
 ---
 
+## Trust
+
+SoulPrint makes no network calls. There is no analytics, no telemetry,
+no phone-home. Your archive is a SQLite file on your machine that you
+can open in any database viewer and verify yourself.
+
+The only exception: intelligence features (Ask, Distill, Themes) send
+conversation chunks to your configured LLM provider when you explicitly
+use them. This is opt-in and requires your own API key. Without a key,
+everything else works fully offline.
+
+See our [Security Policy](SECURITY.md) for architecture details and
+vulnerability reporting.
+
+---
+
 ## Providers
 
 | Provider | Format | Status |
