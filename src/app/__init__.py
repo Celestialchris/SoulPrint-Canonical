@@ -479,9 +479,7 @@ def create_app():
             else:
                 temp_path: Path | None = None
                 try:
-                    ALLOWED_EXTENSIONS = {".json", ".zip"}
-                    raw_suffix = Path(upload.filename).suffix.lower() if upload.filename else ""
-                    suffix = raw_suffix if raw_suffix in ALLOWED_EXTENSIONS else ".json"
+                    suffix = ".zip" if (upload.filename and upload.filename.lower().endswith(".zip")) else ".json"
                     with tempfile.NamedTemporaryFile(
                         mode="wb",
                         suffix=suffix,
