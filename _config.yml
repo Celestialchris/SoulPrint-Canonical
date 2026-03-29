@@ -1,0 +1,16 @@
+exclude:
+  - docs/
+  - src/
+  - tests/
+  - scripts/
+  - exports/
+  - sample_data/
+  - instance/
+  - "*.py"
+  - "*.txt"
+  - "*.toml"
+  - "*.spec"
+  - "*.bat"
+  - CLAUDE.md
+  - AGENTS.md
+  - PRIORITIES.md
