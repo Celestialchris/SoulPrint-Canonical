@@ -131,5 +131,90 @@ class ImportedListRouteTest(unittest.TestCase):
         self.assertIn("Source ID: claude-conv-1", html)
 
 
+    def test_provider_filter_returns_only_matching_provider(self):
+        self._seed_conversation("ChatGPT chat", "conv-c1", "Hello", source="chatgpt")
+        self._seed_conversation("Claude chat", "conv-cl1", "World", source="claude")
+        self._seed_conversation("Gemini chat", "conv-g1", "Greetings", source="gemini")
+
+        response = self.client.get("/imported?provider=claude")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("Claude chat", html)
+        self.assertNotIn("ChatGPT chat", html)
+        self.assertNotIn("Gemini chat", html)
+
+    def test_provider_filter_chatgpt_returns_only_chatgpt(self):
+        self._seed_conversation("ChatGPT notes", "conv-c2", "Notes", source="chatgpt")
+        self._seed_conversation("Gemini notes", "conv-g2", "Notes", source="gemini")
+
+        response = self.client.get("/imported?provider=chatgpt")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("ChatGPT notes", html)
+        self.assertNotIn("Gemini notes", html)
+
+    def test_invalid_provider_returns_all_conversations(self):
+        self._seed_conversation("First", "conv-i1", "A", source="chatgpt")
+        self._seed_conversation("Second", "conv-i2", "B", source="claude")
+
+        response = self.client.get("/imported?provider=invalid_provider")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("First", html)
+        self.assertIn("Second", html)
+
+    def test_no_provider_param_returns_all_conversations(self):
+        self._seed_conversation("Alpha", "conv-a", "One", source="chatgpt")
+        self._seed_conversation("Beta", "conv-b", "Two", source="gemini")
+
+        response = self.client.get("/imported")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("Alpha", html)
+        self.assertIn("Beta", html)
+
+    def test_provider_filter_shows_correct_count(self):
+        self._seed_conversation("A", "conv-fc1", "X", source="chatgpt")
+        self._seed_conversation("B", "conv-fc2", "Y", source="chatgpt")
+        self._seed_conversation("C", "conv-fc3", "Z", source="claude")
+
+        response = self.client.get("/imported?provider=chatgpt")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("of 2 conversations", html)
+
+    def test_provider_filter_combined_with_keyword_search(self):
+        self._seed_conversation("Lisbon trip", "conv-lk1", "Portugal", source="chatgpt")
+        self._seed_conversation("Lisbon food", "conv-lk2", "Restaurants", source="claude")
+
+        response = self.client.get("/imported?provider=chatgpt&q=lisbon")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("Lisbon trip", html)
+        self.assertNotIn("Lisbon food", html)
+
+    def test_provider_tabs_rendered_with_active_state(self):
+        response = self.client.get("/imported?provider=claude")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("provider-tab--active", html)
+        self.assertIn("provider-tab--claude", html)
+
+    def test_all_tab_active_when_no_provider(self):
+        response = self.client.get("/imported")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        # The All tab should have the active class
+        self.assertIn('provider-tab provider-tab--active', html)
+
+
 if __name__ == "__main__":
     unittest.main()
