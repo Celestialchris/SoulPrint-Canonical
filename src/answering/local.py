@@ -17,6 +17,7 @@ class AnswerCitation:
     stable_id: str
     timestamp: str | None
     source_metadata: dict[str, str]
+    evidence_text: str | None = None
 
 
 @dataclass(frozen=True)
@@ -93,7 +94,14 @@ def _hit_overlap_count(hit: FederatedReadResult, terms: list[str]) -> int:
 
 
 def _evidence_text_for_hit(hit: FederatedReadResult) -> str:
-    """Build best-effort evidence text from the existing federated result shape."""
+    """Build best-effort evidence text from the existing federated result shape.
+
+    Prefers hit.evidence_text (actual matched message content from FTS5)
+    when available, falling back to title + metadata for overlap scoring.
+    """
+
+    if hit.evidence_text:
+        return hit.evidence_text
 
     fragments = [hit.title.strip()]
     for key in ("tags", "role", "source", "source_conversation_id"):
@@ -104,7 +112,22 @@ def _evidence_text_for_hit(hit: FederatedReadResult) -> str:
 
 
 def _evidence_summary_for_hit(hit: FederatedReadResult) -> str:
-    """Return concise, evidence-bearing text for answer assembly."""
+    """Return concise, evidence-bearing text for answer assembly.
+
+    When evidence_text is available (actual message content from FTS5),
+    uses it as the primary summary with the conversation title as context.
+    Falls back to title + metadata when no evidence_text exists.
+    """
+
+    if hit.evidence_text:
+        snippet = hit.evidence_text.strip()
+        if len(snippet) > 200:
+            snippet = snippet[:200] + "\u2026"
+        title = hit.title.strip()
+        source = hit.source_metadata.get("source", "").strip()
+        if source:
+            return f'"{snippet}" \u2014 from "{title}" ({source})'
+        return f'"{snippet}" \u2014 from "{title}"'
 
     summary = hit.title.strip()
     tags = hit.source_metadata.get("tags", "").strip()
@@ -207,6 +230,7 @@ def answer_from_federated_hits(question: str, federated_hits: list[FederatedRead
             stable_id=hit.stable_id,
             timestamp=_to_iso_utc(hit.timestamp_unix),
             source_metadata=hit.source_metadata,
+            evidence_text=hit.evidence_text,
         )
         for hit in top_hits
     ]
