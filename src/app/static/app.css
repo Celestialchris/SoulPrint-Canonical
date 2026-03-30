@@ -142,6 +142,7 @@ button:active{transform:scale(0.98)}
 .metadata-line,.metadata-note{color:var(--t3);font-family:var(--font-mono);font-size:11px;line-height:1.8;margin-top:6px}
 .citation-link{color:var(--accent)}
 .citation-note{color:var(--t3);font-size:11px}
+.citation-evidence{color:var(--t3);font-size:13px;font-style:italic;line-height:1.5;margin:4px 0 0;padding-left:12px;border-left:2px solid var(--line)}
 
 /* Route cards */
 .route-card{display:flex;flex-direction:column;gap:6px;padding:16px 0;border:none;border-bottom:1px solid var(--line);background:none}

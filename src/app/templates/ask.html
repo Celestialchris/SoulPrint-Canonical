@@ -79,6 +79,9 @@
               {% endif %}
               · source: {{ citation.source_lane }}
               {% if citation.timestamp %}· timestamp: {{ citation.timestamp }}{% endif %}
+              {% if citation.evidence_text %}
+                <p class="citation-evidence">{{ citation.evidence_text[:200] }}{% if citation.evidence_text|length > 200 %}&hellip;{% endif %}</p>
+              {% endif %}
             </li>
           {% endfor %}
         </ul>

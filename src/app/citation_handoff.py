@@ -24,6 +24,7 @@ class AnswerTraceCitationView:
     stable_id: str
     timestamp: str | None
     target: ResolvedCitationTarget | None
+    evidence_text: str | None = None
 
 
 def _string_value(value: object) -> str:
@@ -85,10 +86,12 @@ def build_answer_trace_citation_view(
     stable_id = _string_value(citation.get("stable_id"))
     source_lane = _string_value(citation.get("source_lane"))
     timestamp = _string_value(citation.get("timestamp")) or None
+    evidence_text = _string_value(citation.get("evidence_text")) or None
 
     return AnswerTraceCitationView(
         source_lane=source_lane,
         stable_id=stable_id,
         timestamp=timestamp,
         target=resolve_citation_target(citation),
+        evidence_text=evidence_text,
     )
