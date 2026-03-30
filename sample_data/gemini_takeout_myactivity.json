@@ -1,0 +1,50 @@
+[
+  {
+    "header": "Gemini Apps",
+    "title": "Prompted What is the capital of France?",
+    "time": "2026-03-10T14:00:00.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"],
+    "safeHtmlItem": [{"html": "<p>The capital of France is Paris.</p>"}]
+  },
+  {
+    "header": "Gemini Apps",
+    "title": "Prompted What about Germany?",
+    "time": "2026-03-10T14:01:30.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"],
+    "safeHtmlItem": [{"html": "<p>The capital of Germany is Berlin.</p>"}]
+  },
+  {
+    "header": "Gemini Apps",
+    "title": "Prompted And Spain?",
+    "time": "2026-03-10T14:03:00.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"],
+    "safeHtmlItem": [{"html": "<p>The capital of Spain is Madrid.</p>"}]
+  },
+  {
+    "header": "Gemini Apps",
+    "title": "Prompted Explain how photosynthesis works",
+    "time": "2026-03-10T18:15:00.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"],
+    "safeHtmlItem": [{"html": "<p>Photosynthesis is the process by which plants convert sunlight into energy.</p><p>It occurs primarily in the leaves.</p>"}]
+  },
+  {
+    "header": "Gemini Apps",
+    "title": "Prompted What role does chlorophyll play?",
+    "time": "2026-03-10T18:16:00.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"],
+    "safeHtmlItem": [{"html": "<p>Chlorophyll is the green pigment that absorbs sunlight during photosynthesis.</p>"}]
+  },
+  {
+    "header": "Gemini Apps",
+    "title": "Prompted Can photosynthesis occur without sunlight?",
+    "time": "2026-03-10T18:17:30.000Z",
+    "products": ["Gemini Apps"],
+    "activityControls": ["Gemini Apps Activity"],
+    "safeHtmlItem": [{"html": "<p>No, photosynthesis requires light energy. Without sunlight, the light-dependent reactions cannot occur.</p>"}]
+  }
+]
