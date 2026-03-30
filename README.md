@@ -78,9 +78,9 @@ index. Validate any passport against the contract.
 
 ## What It's Not
 
-SoulPrint is not a hosted service — your data never leaves your machine.
-Not a developer SDK — this is for people, not infrastructure. Not a
-browser extension — it's a local app with a canonical file you own.
+SoulPrint is not a hosted service, your data never leaves your machine.
+Not a developer SDK, this is for people, not infrastructure. 
+Not a browser extension, it's a local app with a canonical file you own.
 
 ---
 
