@@ -67,8 +67,11 @@ pre code{padding:0;background:none}
 .app-nav__link--active{color:var(--t1);border-left-color:var(--accent)}
 
 /* Sidebar footer */
-.sidebar__footer{margin-top:auto;padding:12px 20px 0;flex-shrink:0}
+.sidebar__footer{margin-top:auto;padding:12px 20px 0;display:flex;align-items:center;gap:0;flex-shrink:0}
 .sidebar__version{color:var(--t4);font-family:var(--font-mono);font-size:11px}
+.sidebar__footer-sep{color:var(--t4);font-family:var(--font-mono);font-size:11px;margin:0 6px}
+.theme-toggle{appearance:none;background:none;border:none;color:var(--t4);cursor:pointer;font-family:var(--font-mono);font-size:11px;padding:0;transition:color var(--duration-fast) ease;min-height:auto;text-transform:lowercase}
+.theme-toggle:hover{color:var(--t2)}
 
 /* Mobile */
 .mobile-bar{display:none}
