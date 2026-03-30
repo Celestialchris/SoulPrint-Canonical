@@ -81,6 +81,7 @@ pre code{padding:0;background:none}
 
 /* Main */
 .main-content{margin-left:200px;max-width:var(--content-wide);min-height:100vh;padding:3rem 4.5rem 4rem}
+.trust-strip{text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--t3);letter-spacing:0.12em;text-transform:uppercase;padding:0 0 1rem}
 
 /* Page headers */
 .page-header{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--line)}
@@ -438,6 +439,7 @@ body,.sidebar,.app-nav__link,.sidebar__brand,.badge,.page-header h1,.content-blo
   .dash-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ask-form__row{grid-template-columns:1fr}
   .ask-form__row button{justify-self:start;margin-top:8px}
+  .trust-strip{font-size:10px;letter-spacing:0.08em}
 }
 
 /* Clip-to-notes */

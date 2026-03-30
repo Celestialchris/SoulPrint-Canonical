@@ -84,39 +84,6 @@
   .provider-pill--claude  { color: var(--lane-claude);  border-color: var(--lane-claude);  }
   .provider-pill--gemini  { color: var(--lane-gemini);  border-color: var(--lane-gemini);  }
 
-  /* ── Trust shields ──────────────────────────────────── */
-  .trust-shields {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 1.5rem;
-  }
-  .trust-shield {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--t2);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 5px 14px 5px 10px;
-  }
-  .trust-shield__check {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .trust-shield__check svg {
-    width: 10px;
-    height: 10px;
-  }
-
   /* ── Import button ──────────────────────────────────── */
   .import-form button[type="submit"] {
     display: block;
@@ -137,23 +104,9 @@
     background: var(--cta-hover-bg);
   }
 
-  /* ── Localhost line ─────────────────────────────────── */
-  .localhost-guarantee {
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--t3);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    margin-top: 2rem;
-    font-variant: small-caps;
-  }
-
   /* ── Responsive ─────────────────────────────────────── */
   @media (max-width: 640px) {
     .drop-zone { padding: 2rem 1.25rem; }
-    .trust-shields { gap: 8px; }
-    .trust-shield { font-size: 12px; padding: 4px 10px 4px 8px; }
     .provider-pills { gap: 6px; }
   }
 </style>
@@ -191,38 +144,9 @@
         </div>
       </div>
 
-      <!-- Trust shields -->
-      <div class="trust-shields">
-        <span class="trust-shield">
-          <span class="trust-shield__check">
-            <svg viewBox="0 0 10 10" fill="none" stroke="#0e0f11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="2,5.5 4.2,7.5 8,3"/>
-            </svg>
-          </span>
-          Processed on your machine
-        </span>
-        <span class="trust-shield">
-          <span class="trust-shield__check">
-            <svg viewBox="0 0 10 10" fill="none" stroke="#0e0f11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="2,5.5 4.2,7.5 8,3"/>
-            </svg>
-          </span>
-          Nothing sent anywhere
-        </span>
-        <span class="trust-shield">
-          <span class="trust-shield__check">
-            <svg viewBox="0 0 10 10" fill="none" stroke="#0e0f11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="2,5.5 4.2,7.5 8,3"/>
-            </svg>
-          </span>
-          No account needed
-        </span>
-      </div>
-
       <button type="submit">Import now</button>
     </form>
 
-    <p class="localhost-guarantee">Your file never leaves localhost</p>
   </section>
 
   {% if error_message %}
