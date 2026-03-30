@@ -106,7 +106,7 @@ vulnerability reporting.
 |----------|--------|--------|
 | ChatGPT | `.zip` from OpenAI | ✓ Supported |
 | Claude | `.json` from Anthropic | ✓ Supported |
-| Gemini | Google Takeout or extension JSON | ✓ Supported |
+| Gemini | Google Takeout `MyActivity.json` or Chrome extension JSON | ✓ Supported |
 
 ---
 
@@ -167,7 +167,7 @@ src/
 └── passport/       Memory Passport export and validation
 
 scripts/            PyInstaller spec, Inno Setup installer, build script
-tests/              56 test files, 587 test methods
+tests/              55 test files, 618 test methods
 sample_data/        Provider fixtures (ChatGPT, Claude, Gemini)
 docs/               Architecture, specs, product docs
 landing/            Static landing page (soulprint.dev)
@@ -181,7 +181,7 @@ landing/            Static landing page (soulprint.dev)
 python -m pytest tests/ -v
 ```
 
-56 test files covering import, persistence, retrieval, search, intelligence,
+55 test files covering import, persistence, retrieval, search, intelligence,
 distillation, continuity, passport, freemium gate, CLI, and browser integration.
 CI runs on every push.
 

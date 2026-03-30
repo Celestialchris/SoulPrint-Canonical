@@ -2,6 +2,15 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## Gemini Takeout Parser (2026-03-30)
+- Added Google Takeout MyActivity.json parser for Gemini conversations
+- Time-proximity grouping reconstructs conversation boundaries from activity entries
+- HTML-to-text extraction for Gemini model responses (safeHtmlItem)
+- Deterministic synthetic conversation IDs for idempotent re-import
+- Canvas and non-conversation activity entries silently filtered
+- 31 new tests covering detection, parsing, grouping, persistence, edge cases
+- beautifulsoup4 and lxml added to requirements
+
 ## FTS5 Message-Level Search (2026-03-28)
 - SQLite FTS5 full-text search over imported messages and native notes
 - BM25 ranking with Porter stemming and unicode61 tokenization
