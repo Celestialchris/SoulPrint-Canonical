@@ -417,11 +417,17 @@ def create_app():
 
     @app.get("/imported")
     def imported_conversations():
+        from ..importers.contracts import SUPPORTED_IMPORT_PROVIDERS
+
         PER_PAGE = 50
         keyword = request.args.get("q", "").strip()
         page = request.args.get("page", 1, type=int)
+        provider = request.args.get("provider", "").strip().lower()
         if page < 1:
             page = 1
+
+        if provider and provider not in SUPPORTED_IMPORT_PROVIDERS:
+            provider = ""
 
         rows_query = (
             db.session.query(
@@ -431,6 +437,9 @@ def create_app():
             .outerjoin(ImportedConversation.messages)
             .group_by(ImportedConversation.id)
         )
+
+        if provider:
+            rows_query = rows_query.filter(ImportedConversation.source == provider)
 
         if keyword:
             pattern = f"%{keyword.lower()}%"
@@ -458,6 +467,7 @@ def create_app():
             "imported_list.html",
             rows=rows,
             keyword=keyword,
+            provider=provider,
             format_timestamp=format_timestamp,
             page=page,
             total_pages=total_pages,

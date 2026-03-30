@@ -64,10 +64,10 @@
     {% if workspace.provider_recent %}
       <section style="max-width:600px;margin:0 auto;padding:0 0 2rem">
         {% for entry in workspace.provider_recent %}
-          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)">
+          <a href="/imported?provider={{ entry.provider }}" style="display:flex;align-items:baseline;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none">
             <span style="color:var(--lane-{{ entry.provider }});font-weight:500;font-size:15px">{{ entry.provider }}</span>
             <span style="color:var(--t2);font-size:14px">{{ entry.count }} conversation{{ 's' if entry.count != 1 else '' }}</span>
-          </div>
+          </a>
           {% if entry.recent_title and entry.recent_id %}
             <div style="padding:4px 0 8px">
               <a href="{{ url_for('imported_explorer', conversation_id=entry.recent_id) }}"

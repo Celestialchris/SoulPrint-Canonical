@@ -17,8 +17,16 @@
     <p class="page-summary">Browse your imported conversations by provider, search by title or content.</p>
   </section>
 
+  <nav class="provider-tabs" aria-label="Filter by provider">
+    <a class="provider-tab{% if not provider %} provider-tab--active{% endif %}" href="/imported{% if keyword %}?q={{ keyword|urlencode }}{% endif %}">All</a>
+    <a class="provider-tab provider-tab--chatgpt{% if provider == 'chatgpt' %} provider-tab--active{% endif %}" href="/imported?provider=chatgpt{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">ChatGPT</a>
+    <a class="provider-tab provider-tab--claude{% if provider == 'claude' %} provider-tab--active{% endif %}" href="/imported?provider=claude{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Claude</a>
+    <a class="provider-tab provider-tab--gemini{% if provider == 'gemini' %} provider-tab--active{% endif %}" href="/imported?provider=gemini{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Gemini</a>
+  </nav>
+
   <section class="surface-card filter-panel">
     <form class="filter-form" method="get" action="/imported">
+      {% if provider %}<input type="hidden" name="provider" value="{{ provider }}">{% endif %}
       <div>
         <label class="field-label" for="imported-query">Search imported conversations</label>
         <div class="filter-row">
@@ -67,7 +75,7 @@
     {% if total_pages > 1 %}
       <nav class="pagination" aria-label="Pagination">
         {% if page > 1 %}
-          <a class="pagination__link" href="/imported?page={{ page - 1 }}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">← Previous</a>
+          <a class="pagination__link" href="/imported?page={{ page - 1 }}{% if provider %}&provider={{ provider }}{% endif %}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">← Previous</a>
         {% else %}
           <span class="pagination__link pagination__link--disabled">← Previous</span>
         {% endif %}
@@ -76,7 +84,7 @@
           {% if p == page %}
             <span class="pagination__link pagination__link--current">{{ p }}</span>
           {% elif p <= 3 or p > total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
-            <a class="pagination__link" href="/imported?page={{ p }}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">{{ p }}</a>
+            <a class="pagination__link" href="/imported?page={{ p }}{% if provider %}&provider={{ provider }}{% endif %}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">{{ p }}</a>
           {% elif p == 4 and page > 5 %}
             <span class="pagination__ellipsis">…</span>
           {% elif p == total_pages - 2 and page < total_pages - 4 %}
@@ -85,7 +93,7 @@
         {% endfor %}
 
         {% if page < total_pages %}
-          <a class="pagination__link" href="/imported?page={{ page + 1 }}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Next →</a>
+          <a class="pagination__link" href="/imported?page={{ page + 1 }}{% if provider %}&provider={{ provider }}{% endif %}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Next →</a>
         {% else %}
           <span class="pagination__link pagination__link--disabled">Next →</span>
         {% endif %}
