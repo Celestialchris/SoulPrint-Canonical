@@ -1,18 +1,22 @@
 """Gemini exporter adapter using the shared importer normalization contract.
 
-Supports two real export shapes:
+Supports three real export shapes:
 
-1. Google Takeout MyActivity.json — flat activity log entries with ``header``,
-   ``title``, ``time``, and ``products`` fields.  Each entry represents one user
-   prompt; model responses are not included by Google Takeout.  Each entry is
-   mapped to a single-message conversation for canonical persistence.
+1. Google Takeout MyActivity.json (with responses) — flat activity log entries
+   with ``header``, ``title`` prefixed by ``"Prompted "``, ``time``, and model
+   responses in ``safeHtmlItem``.  Entries are grouped into synthetic
+   conversations using time-proximity clustering.
 
-2. Conversational JSON — per-conversation objects with ``messages`` arrays
+2. Google Takeout MyActivity.json (prompts only) — same structure as (1) but
+   without ``"Prompted "`` prefix or ``safeHtmlItem``.  Each entry is mapped to
+   a single-message conversation (legacy behavior).
+
+3. Conversational JSON — per-conversation objects with ``messages`` arrays
    containing ``role``/``content`` pairs.  This shape is produced by third-party
    Chrome extensions (AI Chat Exporter, gemini-chat-exporter, etc.) and
    preserves full user+model turns.
 
-Both shapes can appear as a JSON array of entries/conversations or as a single
+All shapes can appear as a JSON array of entries/conversations or as a single
 object (conversational shape only).
 """
 
@@ -20,6 +24,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -37,6 +42,12 @@ DEFAULT_TITLE = "Untitled Conversation"
 # Google Takeout activity entries use this header for Gemini interactions.
 _TAKEOUT_HEADER = "Gemini Apps"
 
+# Real Google Takeout MyActivity entries prefix the prompt with this string.
+_PROMPTED_PREFIX = "Prompted "
+
+# Default gap threshold for time-proximity grouping (seconds).
+DEFAULT_ACTIVITY_GAP_SECONDS = 30 * 60  # 30 minutes
+
 
 class GeminiImporter(ConversationImporter):
     """Concrete importer adapter for Gemini export payloads."""
@@ -50,6 +61,26 @@ class GeminiImporter(ConversationImporter):
 # ---------------------------------------------------------------------------
 # Auto-detection helpers
 # ---------------------------------------------------------------------------
+
+
+def looks_like_gemini_myactivity(payload: Any) -> bool:
+    """Return True when payload matches real Google Takeout MyActivity format.
+
+    This is the format produced by takeout.google.com with JSON selected for
+    "My Activity > Gemini Apps".  Entries have ``title`` prefixed with
+    ``"Prompted "`` and model responses in ``safeHtmlItem``.
+    """
+
+    if not isinstance(payload, list):
+        return False
+
+    return any(
+        isinstance(item, dict)
+        and item.get("header") == _TAKEOUT_HEADER
+        and isinstance(item.get("title"), str)
+        and item["title"].startswith(_PROMPTED_PREFIX)
+        for item in payload
+    )
 
 
 def looks_like_gemini_takeout(payload: Any) -> bool:
@@ -81,7 +112,11 @@ def looks_like_gemini_conversations(payload: Any) -> bool:
 def looks_like_gemini_export(payload: Any) -> bool:
     """Return True when payload matches any supported Gemini export shape."""
 
-    return looks_like_gemini_takeout(payload) or looks_like_gemini_conversations(payload)
+    return (
+        looks_like_gemini_myactivity(payload)
+        or looks_like_gemini_takeout(payload)
+        or looks_like_gemini_conversations(payload)
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -102,11 +137,18 @@ def parse_gemini_export_file(path: str | Path) -> list[NormalizedConversation]:
 # ---------------------------------------------------------------------------
 
 
-def parse_gemini_export(payload: Any) -> list[NormalizedConversation]:
+def parse_gemini_export(
+    payload: Any,
+    *,
+    activity_gap_seconds: int = DEFAULT_ACTIVITY_GAP_SECONDS,
+) -> list[NormalizedConversation]:
     """Normalize Gemini exports into canonical conversation/message records.
 
     Dispatches to the appropriate parser based on detected payload shape.
     """
+
+    if looks_like_gemini_myactivity(payload):
+        return _parse_myactivity(payload, gap_seconds=activity_gap_seconds)
 
     if looks_like_gemini_takeout(payload):
         return _parse_takeout_activity(payload)
@@ -198,6 +240,184 @@ def _derive_takeout_source_id(
     identity = f"{prompt_text}|{created_at or fallback_index}"
     digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
     return f"gemini-takeout-{digest}"
+
+
+# ---------------------------------------------------------------------------
+# Shape A2 — Google Takeout MyActivity.json (with responses + grouping)
+# ---------------------------------------------------------------------------
+
+
+def _parse_myactivity(
+    payload: list[Any],
+    *,
+    gap_seconds: int = DEFAULT_ACTIVITY_GAP_SECONDS,
+) -> list[NormalizedConversation]:
+    """Parse real Google Takeout MyActivity entries into grouped conversations.
+
+    Entries with ``"Prompted "`` title prefix are extracted, sorted by time,
+    grouped by time proximity, and each group becomes one conversation with
+    user/assistant message pairs.
+    """
+
+    entries = _extract_activity_entries(payload)
+    if not entries:
+        return []
+
+    entries.sort(key=lambda e: e["timestamp"])
+    groups = _group_entries_by_time_proximity(entries, gap_seconds=gap_seconds)
+
+    normalized: list[NormalizedConversation] = []
+    for group in groups:
+        conv_id = _derive_myactivity_group_id(group)
+        first_entry = group[0]
+        title = first_entry["prompt"][:80] + ("\u2026" if len(first_entry["prompt"]) > 80 else "")
+
+        messages: list[NormalizedMessage] = []
+        for entry in group:
+            seq = len(messages)
+            messages.append(
+                NormalizedMessage(
+                    source_message_id=f"{conv_id}-msg-{seq}",
+                    role="user",
+                    content=entry["prompt"],
+                    sequence_index=seq,
+                    created_at=entry["timestamp"],
+                )
+            )
+            if entry["response"]:
+                seq = len(messages)
+                messages.append(
+                    NormalizedMessage(
+                        source_message_id=f"{conv_id}-msg-{seq}",
+                        role="assistant",
+                        content=entry["response"],
+                        sequence_index=seq,
+                        created_at=entry["timestamp"],
+                    )
+                )
+
+        normalized.append(
+            NormalizedConversation(
+                source_provider=PROVIDER_GEMINI,
+                source_conversation_id=conv_id,
+                title=title,
+                created_at=first_entry["timestamp"],
+                updated_at=group[-1]["timestamp"],
+                messages=messages,
+                source_metadata={"gemini_export_shape": "myactivity"},
+            )
+        )
+
+    return normalized
+
+
+def _extract_activity_entries(payload: list[Any]) -> list[dict[str, Any]]:
+    """Extract prompt/response/timestamp dicts from MyActivity entries."""
+
+    entries: list[dict[str, Any]] = []
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        if item.get("header") != _TAKEOUT_HEADER:
+            continue
+        raw_title = item.get("title")
+        if not isinstance(raw_title, str) or not raw_title.startswith(_PROMPTED_PREFIX):
+            continue
+
+        prompt = raw_title[len(_PROMPTED_PREFIX):].strip()
+        if not prompt:
+            continue
+
+        timestamp = _parse_iso_timestamp(item.get("time"))
+        response = _extract_safe_html_response(item)
+
+        entries.append({
+            "prompt": prompt,
+            "response": response,
+            "timestamp": timestamp,
+        })
+
+    return entries
+
+
+def _extract_safe_html_response(entry: dict[str, Any]) -> str:
+    """Extract plain text from safeHtmlItem, returning empty string if absent."""
+
+    safe_items = entry.get("safeHtmlItem")
+    if not isinstance(safe_items, list) or not safe_items:
+        return ""
+
+    first = safe_items[0]
+    if not isinstance(first, dict):
+        return ""
+
+    html = first.get("html")
+    if not isinstance(html, str) or not html.strip():
+        return ""
+
+    return _html_to_text(html)
+
+
+def _html_to_text(html: str) -> str:
+    """Convert HTML to plain text.
+
+    Uses BeautifulSoup if available, falls back to regex tag stripping.
+    """
+
+    try:
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(html, "lxml")
+        return soup.get_text(separator="\n").strip()
+    except ImportError:
+        # Fallback: strip tags with regex.
+        text = re.sub(r"<[^>]+>", "\n", html)
+        # Collapse multiple newlines and strip.
+        text = re.sub(r"\n{2,}", "\n", text)
+        return text.strip()
+
+
+def _group_entries_by_time_proximity(
+    entries: list[dict[str, Any]],
+    *,
+    gap_seconds: int = DEFAULT_ACTIVITY_GAP_SECONDS,
+) -> list[list[dict[str, Any]]]:
+    """Group sorted entries into conversations by time proximity.
+
+    Walks through entries in order. When the gap between consecutive entries
+    exceeds ``gap_seconds``, a new group starts.  Entries without timestamps
+    are attached to the current group.
+    """
+
+    if not entries:
+        return []
+
+    groups: list[list[dict[str, Any]]] = [[entries[0]]]
+    for entry in entries[1:]:
+        prev_ts = groups[-1][-1]["timestamp"]
+        curr_ts = entry["timestamp"]
+
+        if prev_ts is not None and curr_ts is not None:
+            if curr_ts - prev_ts > gap_seconds:
+                groups.append([])
+
+        groups[-1].append(entry)
+
+    return groups
+
+
+def _derive_myactivity_group_id(group: list[dict[str, Any]]) -> str:
+    """Build a deterministic conversation ID from a group of activity entries.
+
+    Uses the first entry's timestamp plus all prompt texts so re-imports
+    produce identical IDs.
+    """
+
+    first_ts = group[0]["timestamp"]
+    prompts = "|".join(entry["prompt"] for entry in group)
+    identity = f"{first_ts}|{prompts}"
+    digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
+    return f"gemini_activity_{digest}"
 
 
 # ---------------------------------------------------------------------------
