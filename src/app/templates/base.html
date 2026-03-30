@@ -10,9 +10,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=1">
-  <script>
-    (function(){var t=localStorage.getItem('soulprint-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)})();
-  </script>
   {% block head_extra %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -50,9 +47,7 @@
       </nav>
 
       <div class="sidebar__footer">
-        <button class="theme-toggle" type="button" aria-label="Toggle theme"
-          onclick="(function(){var h=document.documentElement,c=h.getAttribute('data-theme')==='light'?'dark':'light';h.setAttribute('data-theme',c);localStorage.setItem('soulprint-theme',c);this.textContent=c}).call(this)">dark</button>
-        <span class="sidebar__version">v0.1.0 · local-first</span>
+        <span class="sidebar__version">v0.1.0</span>
       </div>
     </aside>
 
@@ -75,9 +70,6 @@
 
   <script>
     (function(){
-      var b=document.querySelector('.theme-toggle');
-      if(b) b.textContent=document.documentElement.getAttribute('data-theme')||'dark';
-      // Close sidebar on mobile nav click
       document.querySelectorAll('.sidebar__nav .app-nav__link').forEach(function(a){
         a.addEventListener('click', function(){
           document.getElementById('sidebar').classList.remove('sidebar--open');
