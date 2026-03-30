@@ -998,7 +998,6 @@ def create_app():
             conversations = (
                 ImportedConversation.query
                 .order_by(ImportedConversation.id.desc())
-                .limit(20)
                 .all()
             )
             threads = suggest_threads(conversations) if conversations else []
