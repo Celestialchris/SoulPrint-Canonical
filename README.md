@@ -1,3 +1,5 @@
+![SoulPrint](docs/screenshots/banner.png)
+
 # SoulPrint
 
 [![Tests](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml/badge.svg)](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml)
@@ -10,30 +12,22 @@
 
 **Your AI conversations are scattered everywhere. SoulPrint brings them home.**
 
-Import your conversation history from ChatGPT, Claude, and Gemini into one
-local archive. Browse, search, discover themes, ask questions with citations,
-and export a verifiable Memory Passport. Everything stays on your machine.
-
 ![Workspace](docs/screenshots/workspace.png)
 
 ---
 
 ## Download
 
-**Windows:** [SoulPrint-Setup.exe](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest/download/SoulPrint-Setup.exe) — install and run. No Python required.
+**Windows:** grab [SoulPrint-Setup.exe](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest) from the latest release. Install, run, done.
 
-**From source:** See [Quick Start](#quick-start) below.
-
----
-
-## Quick Start
+**From source:**
 
 ```bash
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
 cd SoulPrint-Canonical
 pip install -r requirements.txt
 python -m src.run
-# → http://127.0.0.1:5678
+# Open http://127.0.0.1:5678
 ```
 
 Drop an export file on the Import page. Your conversations appear in seconds.
@@ -56,23 +50,13 @@ intelligence you can export.
 
 ## What It Does
 
-**Import** — Drop a ChatGPT `.zip`, Claude `.json`, or Gemini Takeout.
-Auto-detected. Deduplicated.
+**Import.** Drop a ChatGPT `.zip`, Claude `.json`, or Gemini Takeout. Provider auto-detected. Deduplicated. Normalized into one SQLite file on your machine.
 
-**Browse** — Workspace dashboard, conversation list by provider, transcript
-explorer with TOC and minimap, personal notes, cross-provider view.
+**Browse and Search.** Workspace dashboard with stats and quick actions. Conversation list by provider. Transcript explorer with prompt-level TOC and minimap. Full-text search across all providers with message-level hits and highlighted snippets.
 
-**Search** — Full-text across all providers. Message-level hits with
-highlighted snippets.
+**Distill.** Cross-conversation themes. Summaries. Multi-conversation distillation into a handoff briefing you can paste into your next AI chat and pick up where you left off. *(Pro)*
 
-**Ask** — Answers grounded in your own conversations. Every answer cites
-sources. Every answer has an audit trace.
-
-**Distill** — Cross-conversation themes. Summaries. Multi-conversation
-distillation. Continuity handoffs for new AI chats.
-
-**Export** — Memory Passport with manifest, canonical JSONL, provenance
-index. Validate any passport against the contract.
+**Export.** Memory Passport with manifest, canonical JSONL lanes, provenance index, and checksums. Validate any passport against the contract. The archive is a file you own.
 
 ---
 
@@ -86,17 +70,11 @@ Not a browser extension, it's a local app with a canonical file you own.
 
 ## Trust
 
-SoulPrint makes no network calls. There is no analytics, no telemetry,
-no phone-home. Your archive is a SQLite file on your machine that you
-can open in any database viewer and verify yourself.
+SoulPrint makes no network calls. There is no analytics, no telemetry, no phone-home. Your archive is a SQLite file on your machine that you can open in any database viewer and verify yourself.
 
-The only exception: intelligence features (Ask, Distill, Themes) send
-conversation chunks to your configured LLM provider when you explicitly
-use them. This is opt-in and requires your own API key. Without a key,
-everything else works fully offline.
+The only exception: intelligence features (Ask, Distill, Themes) send conversation chunks to your configured LLM provider when you explicitly use them. This requires your own API key. Without a key, everything else works fully offline.
 
-See our [Security Policy](SECURITY.md) for architecture details and
-vulnerability reporting.
+See [SECURITY.md](SECURITY.md) for architecture details and vulnerability reporting.
 
 ---
 
@@ -104,124 +82,39 @@ vulnerability reporting.
 
 | Provider | Format | Status |
 |----------|--------|--------|
-| ChatGPT | `.zip` from OpenAI | ✓ Supported |
-| Claude | `.json` from Anthropic | ✓ Supported |
-| Gemini | Google Takeout `MyActivity.json` or Chrome extension JSON | ✓ Supported |
+| ChatGPT | `.zip` from OpenAI | Supported |
+| Claude | `.json` from Anthropic | Supported |
+| Gemini | Google Takeout `MyActivity.json` or Chrome extension JSON | Supported |
 
 ---
 
-## Surfaces
+## Roadmap
 
-| Route | What it does |
-|-------|-------------|
-| `/` | Workspace — stats, provider coverage, quick actions |
-| `/import` | Bring conversations home |
-| `/imported` | What you've discussed — browse by provider |
-| `/imported/<id>/explorer` | Transcript with TOC and minimap |
-| `/chats` | Your own notes |
-| `/federated` | Everything, together — cross-provider search |
-| `/ask` | Ask your memory (Pro) |
-| `/intelligence` | Themes & patterns (Pro) |
-| `/distill` | Multi-conversation distillation (Pro) |
-| `/answer-traces` | How answers were found |
-| `/passport` | Take it with you — export and validate |
-| `/summary` | Your AI memory, wrapped |
+SoulPrint v0.1 ships with 3-provider import, full-text search, grounded answering, continuity engine, and Memory Passport export.
+
+**Coming next:**
+- Cross-model compare: same topic, different providers, side by side
+- Signed Windows installer + Linux and Mac builds
+- Paste-into-AI handoff loop
+- More providers, more export formats
+
+[Full roadmap →](ROADMAP.md)
 
 ---
 
-## Architecture
+## Support
 
-```
-Layer A — Truth         SQLite ledger. Explicit lanes. Stable provenance.
-Layer B — Legibility    Browse, search, inspect, trace, export. Read-only.
-Layer C — Intelligence  Summaries, themes, distill, continuity. All derived.
-Layer D — Distribution  Desktop app, CLI, landing page, freemium gate.
-```
+SoulPrint is built by one person. If it's useful to you:
 
-Every derived output traces back to canonical IDs and timestamps.
-Derived never impersonates canonical.
-
----
-
-## Freemium Model
-
-**Free** (no key needed): Import, browse, search, export, passport,
-notes, answer traces, summary.
-
-**Pro** (local license key): Ask, Themes & patterns, Distill.
-
-License validation is local-only. No server. No accounts.
-
----
-
-## Repo Map
-
-```
-src/
-├── app/            Flask web app, templates, static
-├── importers/      Provider adapters, auto-detection, persistence
-├── retrieval/      Federated retrieval, FTS5 search
-├── answering/      Grounded answering, trace audit
-├── intelligence/   Summaries, themes, distill, continuity
-├── obsidian/       Obsidian vault export bridge
-└── passport/       Memory Passport export and validation
-
-scripts/            PyInstaller spec, Inno Setup installer, build script
-tests/              55 test files, 618 test methods
-sample_data/        Provider fixtures (ChatGPT, Claude, Gemini)
-docs/               Architecture, specs, product docs
-landing/            Static landing page (soulprint.dev)
-```
-
----
-
-## Tests
-
-```bash
-python -m pytest tests/ -v
-```
-
-55 test files covering import, persistence, retrieval, search, intelligence,
-distillation, continuity, passport, freemium gate, CLI, and browser integration.
-CI runs on every push.
-
----
-
-## Project Status
-
-| Component | State |
-|-----------|-------|
-| Canonical SQLite ledger | ✓ Stable |
-| 3-provider import | ✓ Stable |
-| 16 web surfaces | ✓ Stable |
-| FTS5 message-level search | ✓ Stable |
-| Intelligence layer | ✓ Stable |
-| Multi-conversation distillation | ✓ Stable |
-| Memory Passport export + validation | ✓ Stable |
-| Grounded answering + audit traces | ✓ Stable |
-| Obsidian Bridge | ✓ Stable |
-| Freemium gate | ✓ Shipped |
-| Summary/Wrapped page | ✓ Shipped |
-| Windows installer | ✓ Shipped |
-| Design system (USB Drive) | ✓ Frozen |
-| Landing page | ✓ Shipped |
-
----
-
-## Docs
-
-- [Getting started](docs/getting-started.md)
-- [Positioning](docs/product/positioning.md)
-- [Brand guide](docs/product/brand.md)
-- [Memory Passport spec](docs/specs/memory-passport-spec.md)
-- [Answering boundary](docs/architecture/answering-boundary.md)
-- [Visual direction](docs/product/visual-direction.md)
+⭐ **Star this repo** — it helps people find it
+🐛 **[Report a bug](https://github.com/Celestialchris/SoulPrint-Canonical/issues)** — every report makes it better
+📣 **Tell someone** — word of mouth is everything for indie tools
 
 ---
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, architecture, test commands, and PR guidelines.
 
 ---
 
