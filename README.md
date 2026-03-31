@@ -107,9 +107,7 @@ SoulPrint v0.1 ships with 3-provider import, full-text search, grounded answerin
 SoulPrint is built by one person. If it's useful to you:
 
 ⭐ **Star this repo** — it helps people find it
-
 🐛 **[Report a bug](https://github.com/Celestialchris/SoulPrint-Canonical/issues)** — every report makes it better
-
 📣 **Tell someone** — word of mouth is everything for indie tools
 
 ---
