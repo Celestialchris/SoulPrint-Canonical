@@ -36,13 +36,13 @@ Drop an export file on the Import page. Your conversations appear in seconds.
 
 ## Why This Exists
 
-I use ChatGPT, Claude, and Gemini every day. My conversation history —
-research, decisions, creative work — is scattered across three platforms
+I use ChatGPT, Claude, and Gemini every day. My conversation history, 
+research, decisions and creative work is scattered across three platforms
 that don't talk to each other. Their exports sit dead on disk as unusable
 zip files.
 
 In March 2026, Google and Anthropic both launched features to import your
-AI conversations — into *their* silos. SoulPrint does the opposite: it
+AI conversations into *their* silos. SoulPrint does the opposite: it
 gives you a local file you own, with provenance you can verify, and
 intelligence you can export.
 
@@ -62,9 +62,9 @@ intelligence you can export.
 
 ## What It's Not
 
-SoulPrint is not a hosted service — your data never leaves your machine.
-Not a developer SDK — this is for people, not infrastructure. Not a
-browser extension — it's a local app with a canonical file you own.
+SoulPrint is not a hosted service, your data never leaves your machine.
+Not a developer SDK, this is for people, not infrastructure. 
+Not a browser extension, it's a local app with a canonical file you own.
 
 ---
 
