@@ -5,6 +5,12 @@ cd /d %~dp0\..
 echo === SoulPrint Windows Build ===
 echo.
 
+REM --- Version from pyproject.toml ---
+for /f "tokens=3 delims= " %%v in ('findstr /b "version" pyproject.toml') do set "VERSION=%%~v"
+set "VERSION=%VERSION:"=%"
+echo Version: %VERSION%
+echo.
+
 if not exist .venv (
     echo Creating virtual environment...
     py -3.12 -m venv .venv
@@ -37,11 +43,16 @@ if errorlevel 1 (
 
 echo.
 echo Packaging zip...
-if exist dist\SoulPrint-windows.zip del /f /q dist\SoulPrint-windows.zip
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path dist\SoulPrint\* -DestinationPath dist\SoulPrint-windows.zip -Force"
+set "ZIP_NAME=dist\SoulPrint-%VERSION%-windows.zip"
+if exist "%ZIP_NAME%" del /f /q "%ZIP_NAME%"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path dist\SoulPrint\* -DestinationPath '%ZIP_NAME%' -Force"
 
 echo.
 echo === Step 4: Inno Setup Installer ===
+REM --- Inject version into ISS before compiling ---
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "(Get-Content scripts\SoulPrint.iss) -replace 'AppVersion=.*','AppVersion=%VERSION%' -replace 'AppVerName=.*','AppVerName=SoulPrint %VERSION%' | Set-Content scripts\SoulPrint.iss"
+
 set "ISCC_PATH=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 if exist "%ISCC_PATH%" (
     "%ISCC_PATH%" scripts\SoulPrint.iss
@@ -70,7 +81,8 @@ echo   Build complete!
 echo.
 echo   Folder:    dist\SoulPrint\
 echo   Exe:       dist\SoulPrint\SoulPrint.exe
-echo   Zip:       dist\SoulPrint-windows.zip
+echo   Zip:       %ZIP_NAME%
+echo   Version:   %VERSION%
 if exist dist\SoulPrint-Setup.exe echo   Installer: dist\SoulPrint-Setup.exe
 echo ============================================
 endlocal

@@ -1,7 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
+import sys
+import tomllib
 from pathlib import Path
 
 project_root = Path(SPECPATH).resolve().parent
+
+# Single source of truth for version
+with open(project_root / "pyproject.toml", "rb") as f:
+    VERSION = tomllib.load(f)["project"]["version"]
 
 datas = [
     (str(project_root / "src" / "app" / "templates"), "src/app/templates"),
@@ -103,6 +109,18 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
+# --- Platform-specific icon ---
+icon_file = None
+if sys.platform == "win32":
+    ico = project_root / "scripts" / "soulprint.ico"
+    if ico.exists():
+        icon_file = str(ico)
+elif sys.platform == "darwin":
+    icns = project_root / "scripts" / "soulprint.icns"
+    if icns.exists():
+        icon_file = str(icns)
+# Linux: no icon needed for the binary
+
 exe = EXE(
     pyz,
     a.scripts,
@@ -114,7 +132,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
-    icon=str(project_root / "scripts" / "soulprint.ico"),
+    icon=icon_file,
 )
 
 coll = COLLECT(
@@ -126,3 +144,17 @@ coll = COLLECT(
     upx_exclude=[],
     name="SoulPrint",
 )
+
+# --- macOS .app bundle ---
+if sys.platform == "darwin":
+    app = BUNDLE(
+        coll,
+        name="SoulPrint.app",
+        icon=icon_file,
+        bundle_identifier="dev.soulprint.app",
+        info_plist={
+            "CFBundleShortVersionString": VERSION,
+            "CFBundleName": "SoulPrint",
+            "NSHighResolutionCapable": True,
+        },
+    )
