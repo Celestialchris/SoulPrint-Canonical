@@ -1,3 +1,10 @@
+---
+status: archived
+date: 2026-03-17
+warning: DO NOT PASTE INTO CLAUDE CODE. Contains Torchlit Vault
+  design prompts that conflict with the current USB Drive system.
+---
+
 # SoulPrint — Execution Plan (Final)
 
 **Date:** March 17, 2026
@@ -172,7 +179,7 @@ Target State:
 - 2px vertical lane stripes for provider identity
 - Body atmosphere (grain overlay, vignette, radial gradients) from dual-theme-spec.md
 - Selection color: rgba(107, 58, 58, 0.30) dark / rgba(107, 58, 58, 0.18) light
-- Wordmark glow text-shadow from dual-theme-spec.md (dark only)
+- Wordmark glow: multi-layer text-shadow, dark mode only, wordmark only.
 - All 15 templates render correctly
 
 Allowed Actions:
