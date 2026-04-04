@@ -1,10 +1,10 @@
 ---
-status: speculative
+status: shipped
 ---
 
 # SoulPrint executable packaging overview
 
-> **Status: Not yet shipped. Speculative reference.**
+> **Status: Shipped.** Build scripts for all three platforms are in `scripts/`. CI release workflow is in `.github/workflows/release.yml`. Bootstrap install scripts are in `bootstrap/`.
 
 This document defines the shortest sane path from the current working Flask repo to a downloadable Windows build.
 

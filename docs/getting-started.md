@@ -1,6 +1,38 @@
 # Getting Started
 
-This guide covers the smallest practical path to running SoulPrint locally, loading sample data, and exercising the Memory Passport flow.
+This guide covers installing SoulPrint and running it locally.
+
+## Install from Release
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest).
+
+**Windows:** Download `SoulPrint-Setup.exe` (or the zip) and run it. Or use the bootstrap script:
+
+```powershell
+bootstrap\install_windows.bat
+```
+
+**macOS:** Download `SoulPrint-macos.zip`, unzip, and move `SoulPrint.app` to `~/Applications/`. Or use the bootstrap script:
+
+```bash
+bash bootstrap/install_macos.sh
+```
+
+If macOS blocks the app, go to System Settings → Privacy & Security and click "Open Anyway".
+
+**Linux:** Download `SoulPrint-linux.tar.gz` and extract to `~/.local/share/SoulPrint/`. Or use the bootstrap script:
+
+```bash
+bash bootstrap/install_linux.sh
+```
+
+The bootstrap scripts handle downloading, extracting, and preserving your existing data automatically.
+
+---
+
+## From Source (Development)
+
+For development or if you want to run from source:
 
 ## Minimal Setup
 

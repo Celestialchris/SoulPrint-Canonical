@@ -12,7 +12,37 @@ All tests must pass before submitting a PR:
 python -m pytest tests/ -v
 ```
 
-CI uses the same command in `.github/workflows/tests.yml`.
+CI uses the same command in `.github/workflows/tests.yml` across Ubuntu, macOS, and Windows.
+
+## Building for release
+
+Build scripts live in `scripts/` and handle venv creation, dependency install, tests, and PyInstaller packaging.
+
+**Windows:**
+
+```powershell
+cmd /c "scripts\build_windows.bat"
+```
+
+Produces `dist\SoulPrint\SoulPrint.exe`, a versioned zip, and optionally a `SoulPrint-Setup.exe` installer (if Inno Setup is available).
+
+**macOS:**
+
+```bash
+bash scripts/build_macos.sh
+```
+
+Produces `dist/SoulPrint.app` and a versioned zip. Set `CODESIGN_IDENTITY` to sign the bundle.
+
+**Linux:**
+
+```bash
+bash scripts/build_linux.sh
+```
+
+Produces `dist/SoulPrint/SoulPrint` and a versioned tar.gz.
+
+**CI:** The release workflow in `.github/workflows/release.yml` builds all three platforms on tag push (`v*`) and creates a draft GitHub Release with artifacts attached.
 
 ## Rules
 

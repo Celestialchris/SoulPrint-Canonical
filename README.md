@@ -18,7 +18,13 @@
 
 ## Download
 
-**Windows:** grab [SoulPrint-Setup.exe](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest) from the latest release. Install, run, done.
+Grab the latest release for your platform from [GitHub Releases](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest):
+
+- **Windows:** `SoulPrint-Setup.exe` (installer) or `SoulPrint-windows.zip`
+- **macOS:** `SoulPrint-macos.zip` — unzip and move to Applications
+- **Linux:** `SoulPrint-linux.tar.gz` — extract and run
+
+Or use the bootstrap scripts in `bootstrap/` to automate the download and install.
 
 **From source:**
 
@@ -94,7 +100,6 @@ SoulPrint v0.1 ships with 3-provider import, full-text search, grounded answerin
 
 **Coming next:**
 - Cross-model compare: same topic, different providers, side by side
-- Signed Windows installer + Linux and Mac builds
 - Paste-into-AI handoff loop
 - More providers, more export formats
 
