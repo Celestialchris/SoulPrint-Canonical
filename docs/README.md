@@ -29,3 +29,4 @@
 - [Pre-continuity README](archive/README.pre-continuity.md)
 - [Pre-continuity roadmap](archive/ROADMAP.pre-continuity.md)
 - [Dual-theme spec (superseded)](archive/dual-theme-spec.md)
+- [Execution plan (March 2026)](archive/execution-plan-march-2026.md) *(archived — contains stale design prompts)*
