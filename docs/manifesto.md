@@ -30,7 +30,7 @@ When you use intelligence features like Distill or Ask, conversation data is sen
 
 **Provenance over convenience.** Every conversation carries its source provider, original timestamps, and a checksum chain. Memory Passport exports include a manifest you can validate independently. If you can't verify it, you can't trust it.
 
-**Local by architecture, not by promise.** SoulPrint doesn't avoid the cloud as a policy decision. The architecture has no networking layer. There is nothing to disable, no toggle to misconfigure, no server to breach. The absence of connectivity is structural.
+**Local by architecture, not by promise.** SoulPrint is offline by default. There is no telemetry, no analytics, no background connectivity. The only network calls happen when you explicitly trigger intelligence features (Ask, Distill, Themes) using your own API key. Outside of that, nothing leaves your machine.
 
 **Intelligence without surveillance.** Distillation, theme extraction, and grounded Q&A work across your full conversation history. The computation happens through your own API key, under your own rate limits, with no intermediary.
 
