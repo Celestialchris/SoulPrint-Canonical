@@ -2,163 +2,10 @@
 
 {% block title %}Import · SoulPrint{% endblock %}
 
-{% block head_extra %}
-<style>
-  /* ── Drop zone ──────────────────────────────────────── */
-  .drop-zone {
-    border: 2px dashed var(--t4);
-    border-radius: 12px;
-    padding: 3rem 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color var(--duration) var(--ease-out),
-                background var(--duration) var(--ease-out);
-    position: relative;
-  }
-  .drop-zone:hover {
-    border-color: var(--t3);
-    background: var(--accent-ghost);
-  }
-  .drop-zone--active {
-    border-color: var(--accent);
-    background: var(--accent-ghost);
-    box-shadow: 0 0 0 1px var(--accent-muted);
-  }
-  .drop-zone--has-file {
-    border-color: var(--accent);
-    border-style: solid;
-  }
-  .drop-zone__input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-  .drop-zone__icon {
-    display: block;
-    margin: 0 auto 1rem;
-    opacity: 0.45;
-  }
-  .drop-zone__main {
-    display: block;
-    color: var(--t1);
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 4px;
-  }
-  .drop-zone__sub {
-    display: block;
-    color: var(--t3);
-    font-size: 13px;
-  }
-  .drop-zone__filename {
-    display: none;
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: 14px;
-    letter-spacing: 0.02em;
-    margin-top: 4px;
-  }
-
-  /* ── Provider pills ─────────────────────────────────── */
-  .provider-pills {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 1.25rem;
-  }
-  .provider-pill {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.03em;
-    padding: 4px 12px;
-    border-radius: 20px;
-    border: 1px solid;
-    background: none;
-    white-space: nowrap;
-  }
-  .provider-pill--chatgpt { color: var(--lane-chatgpt); border-color: var(--lane-chatgpt); }
-  .provider-pill--claude  { color: var(--lane-claude);  border-color: var(--lane-claude);  }
-  .provider-pill--gemini  { color: var(--lane-gemini);  border-color: var(--lane-gemini);  }
-
-  /* ── Import button ──────────────────────────────────── */
-  .import-form button[type="submit"] {
-    display: block;
-    width: 100%;
-    max-width: 400px;
-    margin: 1.5rem auto 0;
-    padding: 12px 24px;
-    background: var(--cta-bg);
-    color: var(--cta-text);
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background var(--duration-fast) ease;
-  }
-  .import-form button[type="submit"]:hover {
-    background: var(--cta-hover-bg);
-  }
-
-  /* ── Responsive ─────────────────────────────────────── */
-  @media (max-width: 640px) {
-    .drop-zone { padding: 2rem 1.25rem; }
-    .provider-pills { gap: 6px; }
-  }
-</style>
-{% endblock %}
-
 {% block content %}
-  <section class="page-header">
-    <p class="page-eyebrow">Import</p>
-    <h1>Bring conversations home</h1>
-    <p class="page-summary">
-      Upload a conversation export from ChatGPT, Claude, or Gemini.
-      Your history is added to your local archive. Duplicates are safely skipped.
-    </p>
-  </section>
-
-  <section class="surface-card content-block">
-    <form method="post" enctype="multipart/form-data" class="import-form" id="import-form">
-      <div class="drop-zone" id="drop-zone">
-        <input class="drop-zone__input" id="export_file" name="export_file" type="file" accept="application/json,.json,.zip" required>
-        <span class="drop-zone__prompt" id="drop-zone-prompt">
-          <!-- Import icon -->
-          <svg class="drop-zone__icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          <span class="drop-zone__main">Drop your export file here</span>
-          <span class="drop-zone__sub">or click to browse</span>
-        </span>
-        <span class="drop-zone__filename" id="drop-zone-filename"></span>
-        <div class="provider-pills">
-          <span class="provider-pill provider-pill--chatgpt">ChatGPT .zip</span>
-          <span class="provider-pill provider-pill--claude">Claude .json</span>
-          <span class="provider-pill provider-pill--gemini">Gemini .json</span>
-        </div>
-      </div>
-
-      <button type="submit">Import selected file</button>
-    </form>
-
-  </section>
-
-  {% if error_message %}
-    <section class="empty-state" role="alert">
-      <h2 class="empty-state__title">Import could not be completed</h2>
-      <p class="empty-state__text">{{ error_message }}</p>
-    </section>
-  {% endif %}
-
   {% if result %}
-    <section class="surface-card content-block">
-      <h2>Import complete</h2>
+    <section class="import-result">
+      <h1>Import complete</h1>
       <div class="metadata-badges">
         <span class="badge badge--imported">Provider: {{ result.provider_id }}</span>
         <span class="badge">Conversations imported: {{ result.imported_conversations }}</span>
@@ -181,56 +28,31 @@
         </div>
       {% endif %}
 
-      <p class="workspace-summary">Your conversations are home. Here's what to do next:</p>
+      <p class="workspace-summary">Your conversations are home. What's next:</p>
       <ul class="content-list">
-        <li><a href="{{ url_for('imported_conversations') }}">Browse what you've discussed</a> — see your imported history.</li>
+        <li><a href="{{ url_for('imported_conversations') }}">Browse imported conversations</a></li>
         {% if result.show_summary_link %}
-          <li><a href="{{ url_for('summary') }}">View your summary</a> — your AI memory at a glance.</li>
+          <li><a href="{{ url_for('summary') }}">View your summary</a></li>
         {% endif %}
-        <li><a href="{{ url_for('import_conversations') }}">Import another provider</a> — bring more conversations in.</li>
+        <li><a href="{{ url_for('home') }}">Return to workspace</a></li>
       </ul>
     </section>
+
+  {% elif error_message %}
+    <section class="empty-state" role="alert">
+      <h2 class="empty-state__title">Import could not be completed</h2>
+      <p class="empty-state__text">{{ error_message }}</p>
+      <p class="empty-state__text">Drop another file in the sidebar to retry.</p>
+    </section>
+
+  {% else %}
+    <section class="page-header">
+      <p class="page-eyebrow">Import</p>
+      <h1>Bring conversations home</h1>
+      <p class="page-summary">
+        Drop an export file in the sidebar to import conversations from ChatGPT, Claude, or Gemini.
+        Files are processed locally. Duplicates are safely skipped.
+      </p>
+    </section>
   {% endif %}
-{% endblock %}
-
-{% block scripts %}
-<script>
-(function(){
-  var zone = document.getElementById('drop-zone');
-  var input = document.getElementById('export_file');
-  var prompt = document.getElementById('drop-zone-prompt');
-  var filename = document.getElementById('drop-zone-filename');
-  if (!zone || !input) return;
-
-  zone.addEventListener('click', function(e) {
-    if (e.target !== input) input.click();
-  });
-
-  zone.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    zone.classList.add('drop-zone--active');
-  });
-  zone.addEventListener('dragleave', function() {
-    zone.classList.remove('drop-zone--active');
-  });
-  zone.addEventListener('drop', function(e) {
-    e.preventDefault();
-    zone.classList.remove('drop-zone--active');
-    if (e.dataTransfer.files.length) {
-      input.files = e.dataTransfer.files;
-      showFile(e.dataTransfer.files[0].name);
-    }
-  });
-  input.addEventListener('change', function() {
-    if (input.files.length) showFile(input.files[0].name);
-  });
-
-  function showFile(name) {
-    prompt.style.display = 'none';
-    filename.textContent = name;
-    filename.style.display = 'block';
-    zone.classList.add('drop-zone--has-file');
-  }
-})();
-</script>
 {% endblock %}

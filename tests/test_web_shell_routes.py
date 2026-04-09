@@ -36,7 +36,8 @@ class WebShellRouteTest(unittest.TestCase):
         self.assertIn("Workspace", html)
         self.assertIn('href="/chats"', html)
         self.assertIn('href="/imported"', html)
-        self.assertIn('href="/import"', html)
+        # Import flow now lives as a sidebar drop zone form posting to /import
+        self.assertIn('action="/import"', html)
         self.assertIn('href="/federated"', html)
         self.assertIn('href="/passport"', html)
         self.assertIn('href="/ask"', html)

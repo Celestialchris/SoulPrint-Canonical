@@ -43,12 +43,13 @@ class WorkspaceHomeTest(unittest.TestCase):
 
     # ── First-run state ──
 
-    def test_first_run_shows_trust_block_and_cta(self):
+    def test_first_run_shows_tagline_and_sidebar_hint(self):
+        """The first-run empty state tells the user to use the sidebar drop zone."""
         html = self._get_workspace_html()
         self.assertIn("SoulPrint", html)
-        self.assertIn("Bring your first conversation home", html)
-        self.assertIn("Nothing is sent anywhere", html)
-        self.assertIn("Everything stays on your machine", html)
+        self.assertIn("Bring your conversations home", html)
+        self.assertIn("No account", html)
+        self.assertIn("Drop an export file in the sidebar", html)
 
     def test_first_run_does_not_show_provider_stack(self):
         html = self._get_workspace_html()
@@ -57,27 +58,18 @@ class WorkspaceHomeTest(unittest.TestCase):
 
     # ── Post-import state ──
 
-    def test_post_import_shows_trust_oneliner(self):
-        with self.app.app_context():
-            self._seed_conv("chatgpt", "Test conv")
-            db.session.commit()
-        html = self._get_workspace_html()
-        self.assertIn("Local-only", html)
-        self.assertIn("nothing leaves your machine", html)
-
     def test_post_import_shows_stats_and_provider_counts(self):
         with self.app.app_context():
             self._seed_conv("chatgpt", "Conv1")
             self._seed_conv("claude", "Conv2")
             db.session.commit()
         html = self._get_workspace_html()
-        # Stats row shows conversation count and provider count
+        # Stats row shows conversation count and provider count labels
         self.assertIn("conversations", html.lower())
         self.assertIn("provider", html.lower())
-        # Both providers appear
+        # Both providers appear in the provider-row list
         self.assertIn("chatgpt", html.lower())
         self.assertIn("claude", html.lower())
-        self.assertIn("Import more conversations", html)
 
     def test_post_import_shows_provider_stack_with_lane_colors(self):
         with self.app.app_context():
@@ -90,31 +82,36 @@ class WorkspaceHomeTest(unittest.TestCase):
         self.assertIn("GPT conversation", html)
         self.assertIn("Claude conversation", html)
 
-    def test_post_import_shows_browse_everything_link(self):
+    def test_post_import_sidebar_contains_federated_link(self):
+        """The sidebar nav always exposes the federated browser route."""
         with self.app.app_context():
             self._seed_conv("chatgpt", "Test")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("Browse everything together", html)
-        self.assertIn("/federated", html)
+        self.assertIn("Everything together", html)
+        self.assertIn('href="/federated"', html)
 
-    def test_post_import_shows_stats_and_quick_actions(self):
+    def test_post_import_shows_stats_grid(self):
+        """The post-import state renders the four-card stats grid."""
         with self.app.app_context():
             self._seed_conv("chatgpt", "Test")
             db.session.commit()
         html = self._get_workspace_html()
         self.assertIn("conversations", html.lower())
         self.assertIn("notes", html.lower())
-        self.assertIn("Browse everything together", html)
-        self.assertIn("See your summary", html)
+        self.assertIn("messages", html.lower())
+        # Stats live inside stat-card elements
+        self.assertIn("stat-card", html)
+        self.assertIn("stat-card__value", html)
 
-    def test_post_import_shows_hero_with_tagline(self):
+    def test_post_import_shows_sidebar_wordmark(self):
+        """The SoulPrint wordmark is always rendered in the sidebar brand."""
         with self.app.app_context():
             self._seed_conv("chatgpt", "Test")
             db.session.commit()
         html = self._get_workspace_html()
         self.assertIn("SoulPrint", html)
-        self.assertIn("SoulPrint brings them home", html)
+        self.assertIn("sidebar__wordmark", html)
 
     def test_post_import_provider_row_links_to_explorer(self):
         with self.app.app_context():
