@@ -60,6 +60,9 @@ pre code{padding:0;background:none}
   padding:var(--space-5) 0 var(--space-4);
   position:fixed;
   width:200px;
+  min-width:200px;
+  max-width:200px;
+  box-sizing:border-box;
   z-index:20;
   overflow-y:auto;overflow-x:hidden;
   scrollbar-width:thin;scrollbar-color:var(--t4) transparent;
@@ -671,14 +674,15 @@ body,.sidebar,.app-nav__link,.sidebar__brand,.badge,.page-header h1,.content-blo
 .workspace-stats{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:var(--space-3);
+  gap:0;
+  padding:var(--space-4) var(--space-5);
+  background:rgba(255,255,255,0.02);
   margin-bottom:var(--space-7);
 }
+[data-theme="light"] .workspace-stats{background:rgba(0,0,0,0.02)}
 .stat-card{
-  background:var(--surface);
-  padding:var(--space-4);
-  border-radius:4px;
-  border:none;
+  padding:0;
+  background:none;
 }
 .stat-card__label{
   display:block;
