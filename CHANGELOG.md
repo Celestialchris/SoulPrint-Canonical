@@ -2,6 +2,11 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## Manifesto Rewrite (2026-04-09)
+- Rewrote `docs/manifesto.md` with expanded positioning: extended cognition framing, security argument, and explicit principles (custody not access, provenance over convenience, local by architecture, intelligence without surveillance)
+- README "Why This Exists" now links to the full manifesto
+- Patch release 0.4.1 (docs-only; no behavioral or API changes)
+
 ## Gemini Takeout Parser (2026-03-30)
 - Added Google Takeout MyActivity.json parser for Gemini conversations
 - Time-proximity grouping reconstructs conversation boundaries from activity entries

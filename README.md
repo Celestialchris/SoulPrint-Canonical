@@ -52,6 +52,8 @@ AI conversations into *their* silos. SoulPrint does the opposite: it
 gives you a local file you own, with provenance you can verify, and
 intelligence you can export.
 
+Read the full [manifesto →](docs/manifesto.md)
+
 ---
 
 ## What It Does
