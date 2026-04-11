@@ -14,6 +14,7 @@ from ..config import Config, normalize_sqlite_uri
 from ..runtime import default_instance_dir, static_dir, templates_dir
 from .models import ImportedConversation, ImportedMessage, MemoryEntry
 from .citation_handoff import build_answer_trace_citation_view
+from .decorators import require_license
 from .licensing import get_license_status, is_licensed
 from .viewmodels import build_workspace_summary
 from sqlalchemy import func
@@ -681,6 +682,7 @@ def create_app():
         )
 
     @app.route("/ask", methods=["GET", "POST"])
+    @require_license
     def ask():
         from ..answering.local import answer_from_federated_hits, retrieval_keyword_from_question
         from ..answering.trace import (
@@ -689,11 +691,6 @@ def create_app():
             default_trace_store_path,
             list_answer_traces,
         )
-
-        if not is_licensed(instance_dir=app.instance_path):
-            if request.method == "POST":
-                abort(403)
-            return render_template("upgrade.html")
 
         question = ""
         validation_error = None
@@ -783,10 +780,8 @@ def create_app():
         )
 
     @app.post("/intelligence/summarize/<int:conversation_id>")
+    @require_license
     def intelligence_summarize(conversation_id: int):
-        if not is_licensed(instance_dir=app.instance_path):
-            abort(403)
-
         from ..intelligence.provider import provider_from_config
         from ..intelligence.store import append_summary, default_summary_store_path
         from ..intelligence.summarizer import summarize_conversation
@@ -805,10 +800,8 @@ def create_app():
         return redirect(url_for("intelligence"))
 
     @app.post("/intelligence/scan-topics")
+    @require_license
     def intelligence_scan_topics():
-        if not is_licensed(instance_dir=app.instance_path):
-            abort(403)
-
         from ..intelligence.provider import provider_from_config
         from ..intelligence.store import append_topic_scan, default_topic_store_path
         from ..intelligence.topics import extract_topics
@@ -830,10 +823,8 @@ def create_app():
         return redirect(url_for("intelligence"))
 
     @app.post("/intelligence/digest/<int:topic_index>")
+    @require_license
     def intelligence_digest(topic_index: int):
-        if not is_licensed(instance_dir=app.instance_path):
-            abort(403)
-
         from ..intelligence.digest import generate_digest
         from ..intelligence.provider import provider_from_config
         from ..intelligence.store import (
@@ -914,10 +905,8 @@ def create_app():
     # ------------------------------------------------------------------
 
     @app.post("/intelligence/continuity/<int:conversation_id>")
+    @require_license
     def intelligence_continuity_generate(conversation_id: int):
-        if not is_licensed(instance_dir=app.instance_path):
-            abort(403)
-
         from ..intelligence.continuity.service import generate_continuity_packet
         from ..intelligence.continuity.store import default_continuity_store_path
         from ..intelligence.provider import provider_from_config
@@ -985,10 +974,8 @@ def create_app():
     # ------------------------------------------------------------------
 
     @app.route("/distill", methods=["GET", "POST"])
+    @require_license
     def distill():
-        if not is_licensed(instance_dir=app.instance_path):
-            return render_template("upgrade.html"), 200
-
         from ..intelligence.provider import provider_from_config
 
         provider = provider_from_config()
