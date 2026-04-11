@@ -14,7 +14,10 @@ authors = [
 ]
 dependencies = [
   "flask",
-  "flask-sqlalchemy"
+  "flask-sqlalchemy",
+  "beautifulsoup4",
+  "lxml",
+  "mcp[cli]"
 ]
 
 [project.optional-dependencies]
@@ -35,6 +38,7 @@ build = [
 
 [project.scripts]
 soulprint = "src.main:main"
+soulprint-mcp = "src.mcp_server:main"
 
 [tool.setuptools]
 include-package-data = true
