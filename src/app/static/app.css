@@ -124,18 +124,22 @@ pre code{padding:0;background:none}
 }
 .drop-zone--compact{
   display:block;position:relative;
-  border:1px dashed var(--t4);
-  border-radius:4px;
+  border:1px solid var(--line);
+  border-radius:6px;
   padding:var(--space-4) var(--space-3);
+  background:rgba(255,255,255,0.015);
   text-align:center;cursor:pointer;
-  transition:border-color var(--duration-fast) ease,background var(--duration-fast) ease;
+  transition:border-color var(--duration) var(--ease-out),background var(--duration) var(--ease-out);
 }
-.drop-zone--compact:hover{border-color:var(--t3)}
+[data-theme="light"] .drop-zone--compact{background:rgba(0,0,0,0.02)}
+.drop-zone--compact:hover{border-color:var(--t3);background:rgba(255,255,255,0.03)}
+[data-theme="light"] .drop-zone--compact:hover{background:rgba(0,0,0,0.04)}
 .drop-zone--compact.drop-zone--active{border-color:var(--accent);background:var(--accent-ghost)}
-.drop-zone--compact.drop-zone--has-file{border-style:solid;border-color:var(--accent)}
+.drop-zone--compact.drop-zone--has-file{border-color:var(--accent);background:var(--accent-ghost)}
 .drop-zone--compact .drop-zone__input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.drop-zone--compact .drop-zone__main{display:block;font-size:12px;font-weight:500;color:var(--t1)}
-.drop-zone--compact .drop-zone__sub{display:block;font-size:11px;color:var(--t3);margin-top:2px}
+.drop-zone--compact .drop-zone__main{display:block;font-size:12px;font-weight:500;color:var(--t2);transition:color var(--duration-fast) ease}
+.drop-zone--compact:hover .drop-zone__main{color:var(--t1)}
+.drop-zone--compact .drop-zone__sub{display:block;font-size:11px;color:var(--t3);margin-top:3px}
 .drop-zone--compact .drop-zone__filename{display:none;font-size:11px;color:var(--accent);word-break:break-all}
 .drop-zone--compact.drop-zone--has-file .drop-zone__prompt{display:none}
 .drop-zone--compact.drop-zone--has-file .drop-zone__filename{display:block}
@@ -297,10 +301,10 @@ button:active{transform:scale(0.98)}
 .content-list li a:hover{color:var(--accent)}
 
 /* Empty */
-.empty-state{padding:32px 20px;border:1px dashed var(--t4);border-radius:8px;background:none;text-align:center}
+.empty-state{padding:var(--space-8) var(--space-6);border:1px solid var(--line);border-radius:8px;background:var(--raised);text-align:center}
 .empty-state__title{margin:0;color:var(--t2);font-family:var(--font-body);font-size:15px;font-weight:500}
-.empty-state__text{margin:8px auto 0;max-width:40rem;color:var(--t3);font-size:14px;line-height:1.6}
-.empty-state .ghost-link{margin-top:12px;display:inline-flex}
+.empty-state__text{margin:var(--space-3) auto 0;max-width:32rem;color:var(--t3);font-size:14px;line-height:1.7}
+.empty-state .ghost-link{margin-top:var(--space-5);display:inline-flex}
 .empty-note{color:var(--t3);font-size:14px}
 
 /* Notes scratchpad */
@@ -645,29 +649,43 @@ body,.sidebar,.app-nav__link,.sidebar__brand,.badge,.page-header h1,.content-blo
 
 /* Workspace — first-run empty state */
 .workspace-firstrun{
-  max-width:520px;
-  padding:var(--space-8) 0;
+  max-width:480px;
+  margin:0 auto;
+  padding:calc(var(--space-8) * 2) 0 var(--space-8);
+  text-align:center;
 }
 .workspace-firstrun__title{
   font-family:var(--font-body);
-  font-size:24px;font-weight:500;
+  font-size:26px;font-weight:500;
   color:var(--t1);
-  letter-spacing:-0.01em;
-  margin:0 0 var(--space-4);
-  line-height:1.3;
+  letter-spacing:-0.02em;
+  margin:0 0 var(--space-5);
+  line-height:1.25;
 }
 .workspace-firstrun__tagline{
-  font-size:14px;font-weight:400;
+  font-size:15px;font-weight:400;
   color:var(--t2);
-  line-height:1.6;
-  margin:0 0 var(--space-4);
+  line-height:1.7;
+  margin:0 auto var(--space-6);
+  max-width:380px;
 }
 .workspace-firstrun__hint{
   font-size:13px;font-weight:400;
   color:var(--t3);
-  padding:var(--space-3) 0 0;
-  border-top:var(--hairline) solid var(--line);
+  padding:var(--space-4) var(--space-5);
+  background:var(--accent-ghost);
+  border-radius:6px;
   margin:0;
+}
+.workspace-firstrun__trust{
+  display:flex;
+  gap:var(--space-5);
+  justify-content:center;
+  margin-top:var(--space-7);
+  color:var(--t3);
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:0.04em;
 }
 
 /* Workspace — stats grid */

@@ -49,7 +49,7 @@ class WorkspaceHomeTest(unittest.TestCase):
         self.assertIn("SoulPrint", html)
         self.assertIn("Bring your conversations home", html)
         self.assertIn("No account", html)
-        self.assertIn("Drop an export file in the sidebar", html)
+        self.assertIn("Drop a ChatGPT, Claude, or Gemini export in the sidebar", html)
 
     def test_first_run_does_not_show_provider_stack(self):
         html = self._get_workspace_html()
