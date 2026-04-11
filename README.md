@@ -1,5 +1,3 @@
-![SoulPrint](docs/screenshots/banner.png)
-
 # SoulPrint
 
 [![Tests](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml/badge.svg)](https://github.com/Celestialchris/SoulPrint-Canonical/actions/workflows/tests.yml)
@@ -11,8 +9,6 @@
 [![Latest Release](https://img.shields.io/github/v/release/Celestialchris/SoulPrint-Canonical)](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest)
 
 **Your AI conversations are scattered everywhere. SoulPrint brings them home.**
-
-![Workspace](docs/screenshots/workspace.png)
 
 ---
 
