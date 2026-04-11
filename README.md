@@ -10,6 +10,8 @@
 
 **Your AI conversations are scattered everywhere. SoulPrint brings them home.**
 
+![Workspace](docs/screenshots/workspace.png)
+
 ---
 
 ## Get started in 60 seconds
