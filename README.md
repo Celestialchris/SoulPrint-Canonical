@@ -98,7 +98,7 @@ Layer C  Intelligence   Summaries, topics, distill, continuity. All derived.
 Layer D  Distribution   Web app, CLI, MCP server, landing page.
 ```
 
-647 tests. Every derived output traces back to canonical stable IDs. Derived layers never mutate canonical records.
+600+ tests. Every derived output traces back to canonical stable IDs. Derived layers never mutate canonical records.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, architecture, and development guidelines.
 
