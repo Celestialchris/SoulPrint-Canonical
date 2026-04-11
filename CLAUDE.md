@@ -35,7 +35,7 @@ Every derived output traces back to canonical stable IDs.
 
 ```bash
 # Run the app
-python -m src.run
+python -m src.main
 
 # Run tests
 python -m pytest tests/ -v

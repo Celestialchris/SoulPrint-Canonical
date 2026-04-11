@@ -29,7 +29,6 @@ hiddenimports = [
     "src.config",
     "src.runtime",
     "src.main",
-    "src.run",
     # -- src.app --
     "src.app",
     "src.app.citation_handoff",

@@ -70,7 +70,7 @@ soulprint
 Alternatively, for development without installing:
 
 ```bash
-python -m src.run
+python -m src.main
 ```
 
 On first boot, SoulPrint creates `instance/` if needed and initializes the canonical ledger at `instance/soulprint.db`.
