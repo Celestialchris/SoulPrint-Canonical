@@ -16,73 +16,58 @@
 
 ---
 
-## Download
-
-Grab the latest release for your platform from [GitHub Releases](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest):
-
-- **Windows:** `SoulPrint-Setup.exe` (installer) or `SoulPrint-windows.zip`
-- **macOS:** `SoulPrint-macos.zip` — unzip and move to Applications
-- **Linux:** `SoulPrint-linux.tar.gz` — extract and run
-
-Or use the bootstrap scripts in `bootstrap/` to automate the download and install.
-
-**From source:**
+## Get started in 60 seconds
 
 ```bash
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
 cd SoulPrint-Canonical
-pip install -r requirements.txt
-python -m src.run
-# Open http://127.0.0.1:5678
+pip install -e .
+soulprint
 ```
 
-Drop an export file on the Import page. Your conversations appear in seconds.
+Open `http://127.0.0.1:5678`. Drop an export file. Your conversations appear in seconds.
+
+**Or download a packaged build** from [GitHub Releases](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest):
+
+- **Windows:** `SoulPrint-Setup.exe` (installer) or `SoulPrint-windows.zip`
+- **macOS:** `SoulPrint-macos.zip`
+- **Linux:** `SoulPrint-linux.tar.gz`
 
 ---
 
-## Why This Exists
-
-I use ChatGPT, Claude, and Gemini every day. My conversation history, 
-research, decisions and creative work is scattered across three platforms
-that don't talk to each other. Their exports sit dead on disk as unusable
-zip files.
-
-In March 2026, Google and Anthropic both launched features to import your
-AI conversations into *their* silos. SoulPrint does the opposite: it
-gives you a local file you own, with provenance you can verify, and
-intelligence you can export.
-
-Read the full [manifesto →](docs/manifesto.md)
-
----
-
-## What It Does
+## What it does
 
 **Import.** Drop a ChatGPT `.zip`, Claude `.json`, or Gemini Takeout. Provider auto-detected. Deduplicated. Normalized into one SQLite file on your machine.
 
-**Browse and Search.** Workspace dashboard with stats and quick actions. Conversation list by provider. Transcript explorer with prompt-level TOC and minimap. Full-text search across all providers with message-level hits and highlighted snippets.
+**Browse and search.** Workspace dashboard, conversation list by provider, transcript explorer with prompt-level TOC and minimap, full-text search across all providers with highlighted snippets.
 
-**Distill.** Cross-conversation themes. Summaries. Multi-conversation distillation into a handoff briefing you can paste into your next AI chat and pick up where you left off. *(Pro)*
+**Distill.** Cross-conversation threads. Summaries. Multi-conversation distillation into a handoff briefing you paste into your next AI chat and pick up where you left off.
 
-**Export.** Memory Passport with manifest, canonical JSONL lanes, provenance index, and checksums. Validate any passport against the contract. The archive is a file you own.
+**Export.** Memory Passport with manifest, canonical JSONL, provenance index, and checksums. Validate any passport against the contract. The archive is a file you own.
+
+**MCP server.** Connect SoulPrint to Claude Code, Cursor, or any MCP-compatible AI tool. Your past conversations become searchable context in every coding session.
+
+```bash
+# Add to your .mcp.json or Claude Code settings:
+{
+  "mcpServers": {
+    "soulprint": {
+      "command": "python",
+      "args": ["-m", "src.mcp_server"]
+    }
+  }
+}
+```
 
 ---
 
-## What It's Not
+## Why this exists
 
-SoulPrint is not a hosted service, your data never leaves your machine.
-Not a developer SDK, this is for people, not infrastructure. 
-Not a browser extension, it's a local app with a canonical file you own.
+I use ChatGPT, Claude, and Gemini every day. My conversation history, research, decisions, and creative work is scattered across three platforms that don't talk to each other. Their exports sit dead on disk as unusable zip files.
 
----
+In March 2026, Google and Anthropic both launched features to import your AI conversations into *their* silos. SoulPrint does the opposite: it gives you a local file you own, with provenance you can verify, and intelligence you can export.
 
-## Trust
-
-SoulPrint makes no network calls. There is no analytics, no telemetry, no phone-home. Your archive is a SQLite file on your machine that you can open in any database viewer and verify yourself.
-
-The only exception: intelligence features (Ask, Distill, Themes) send conversation chunks to your configured LLM provider when you explicitly use them. This requires your own API key. Without a key, everything else works fully offline.
-
-See [SECURITY.md](SECURITY.md) for architecture details and vulnerability reporting.
+Read the full [manifesto](docs/manifesto.md).
 
 ---
 
@@ -96,16 +81,28 @@ See [SECURITY.md](SECURITY.md) for architecture details and vulnerability report
 
 ---
 
-## Roadmap
+## Trust
 
-SoulPrint v0.1 ships with 3-provider import, full-text search, grounded answering, continuity engine, and Memory Passport export.
+SoulPrint makes no network calls. No analytics, no telemetry, no phone-home. Your archive is a SQLite file on your machine that you can open in any database viewer and verify yourself.
 
-**Coming next:**
-- Cross-model compare: same topic, different providers, side by side
-- Paste-into-AI handoff loop
-- More providers, more export formats
+The only exception: intelligence features (Ask, Distill, Themes) send conversation chunks to your configured LLM provider when you explicitly use them. This requires your own API key. Without a key, everything else works fully offline.
 
-[Full roadmap →](ROADMAP.md)
+See [SECURITY.md](SECURITY.md) for architecture details and vulnerability reporting.
+
+---
+
+## Architecture
+
+```
+Layer A  Truth          SQLite ledger. Stable IDs. Source provenance.
+Layer B  Legibility     Browse, search, inspect, trace, export. Read-only.
+Layer C  Intelligence   Summaries, topics, distill, continuity. All derived.
+Layer D  Distribution   Web app, CLI, MCP server, landing page.
+```
+
+647 tests. Every derived output traces back to canonical stable IDs. Derived layers never mutate canonical records.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, architecture, and development guidelines.
 
 ---
 
@@ -113,21 +110,15 @@ SoulPrint v0.1 ships with 3-provider import, full-text search, grounded answerin
 
 SoulPrint is built by one person. If it's useful to you:
 
-⭐ **Star this repo** — it helps people find it
-🐛 **[Report a bug](https://github.com/Celestialchris/SoulPrint-Canonical/issues)** — every report makes it better
-📣 **Tell someone** — word of mouth is everything for indie tools
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, architecture, test commands, and PR guidelines.
+- **Star this repo** to help people find it
+- **[Report a bug](https://github.com/Celestialchris/SoulPrint-Canonical/issues)** to make it better
+- **Tell someone** because word of mouth is everything for indie tools
 
 ---
 
 ## License
 
-Apache-2.0 — [inspect the code yourself](LICENSE).
+Apache-2.0. [Inspect the code yourself](LICENSE).
 
 ---
 
