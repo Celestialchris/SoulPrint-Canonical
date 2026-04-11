@@ -169,7 +169,7 @@ def create_app():
 
         ensure_fts_tables(_sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"]))
     except Exception:
-        pass  # FTS is best-effort; app works without it
+        logger.warning("FTS indexing failed", exc_info=True)
 
     # Jinja filters
     @app.template_filter("format_ts")
@@ -314,7 +314,7 @@ def create_app():
                 entry.id,
             )
         except Exception:
-            pass
+            logger.warning("FTS indexing failed", exc_info=True)
 
         return jsonify({"ok": True, "id": entry.id})
 
@@ -360,7 +360,7 @@ def create_app():
                 entry.id,
             )
         except Exception:
-            pass
+            logger.warning("FTS indexing failed", exc_info=True)
 
         return jsonify({"status": "ok", "note_id": entry.id})
 
@@ -598,6 +598,7 @@ def create_app():
                 if fts_query:
                     fts_results = search_fts(sqlite_path, fts_query, limit=50)
             except Exception:
+                logger.warning("FTS indexing failed", exc_info=True)
                 fts_results = []
 
         if fts_results:
