@@ -30,7 +30,7 @@ intelligence = [
   "openai>=1.0.0"
 ]
 dev = [
-  "pytest>=8.0"
+  "pytest>=9.0.3"
 ]
 build = [
   "pyinstaller>=6.0,<7"
