@@ -33,7 +33,7 @@ dev = [
   "pytest>=9.0.3"
 ]
 build = [
-  "pyinstaller>=6.0,<7"
+  "pyinstaller>=6.19.0,<7"
 ]
 
 [project.scripts]
