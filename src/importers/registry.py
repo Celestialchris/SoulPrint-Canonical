@@ -17,6 +17,7 @@ from .contracts import (
     PROVIDER_CHATGPT,
     PROVIDER_CLAUDE,
     PROVIDER_GEMINI,
+    PROVIDER_GROK,
     ConversationImporter,
     NormalizedConversation,
     validate_provider_id,
@@ -27,9 +28,10 @@ from .errors import (
     UnsupportedImportFormatError,
 )
 from .gemini import GeminiImporter, DEFAULT_TITLE as GEMINI_DEFAULT_TITLE, looks_like_gemini_export
+from .grok import GrokImporter, DEFAULT_TITLE as GROK_DEFAULT_TITLE, looks_like_grok_export
 
 
-_DEFAULT_TITLES = frozenset({CHATGPT_DEFAULT_TITLE, CLAUDE_DEFAULT_TITLE, GEMINI_DEFAULT_TITLE})
+_DEFAULT_TITLES = frozenset({CHATGPT_DEFAULT_TITLE, CLAUDE_DEFAULT_TITLE, GEMINI_DEFAULT_TITLE, GROK_DEFAULT_TITLE})
 
 
 @dataclass(frozen=True)
@@ -65,6 +67,11 @@ _PROVIDER_SPECS: dict[str, ImportProviderSpec] = {
         provider_id=PROVIDER_GEMINI,
         importer=GeminiImporter(),
         detector=looks_like_gemini_export,
+    ),
+    PROVIDER_GROK: ImportProviderSpec(
+        provider_id=PROVIDER_GROK,
+        importer=GrokImporter(),
+        detector=looks_like_grok_export,
     ),
 }
 
@@ -181,7 +188,7 @@ def _resolve_provider_spec(
             "Import provider detection matched multiple providers; rerun with --provider."
         )
     raise ImportProviderDetectionError(
-        "Could not detect import provider from JSON. Supported auto-detect formats: chatgpt, claude, and gemini. "
+        "Could not detect import provider from JSON. Supported auto-detect formats: chatgpt, claude, gemini, and grok. "
         "Use --provider to force a recognized provider."
     )
 

@@ -1,0 +1,102 @@
+{
+  "conversations": [
+    {
+      "conversation": {
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "user_id": "user_example",
+        "create_time": "2025-01-20T14:00:00.000Z",
+        "modify_time": "2025-01-20T14:05:30.000Z",
+        "title": "Machine Learning Basics",
+        "summary": "",
+        "starred": false,
+        "system_prompt_name": "normal"
+      },
+      "responses": [
+        {
+          "response": {
+            "_id": "resp_001",
+            "conversation_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "message": "What is supervised learning?",
+            "sender": "human",
+            "create_time": {
+              "$date": {
+                "$numberLong": "1737381600000"
+              }
+            },
+            "model": "grok-3"
+          }
+        },
+        {
+          "response": {
+            "_id": "resp_002",
+            "conversation_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "message": "Supervised learning is a type of machine learning where the algorithm learns from labeled training data. Each example in the dataset has an input and a known correct output, allowing the model to learn the mapping between them.",
+            "sender": "assistant",
+            "create_time": {
+              "$date": {
+                "$numberLong": "1737381615000"
+              }
+            },
+            "model": "grok-3"
+          }
+        },
+        {
+          "response": {
+            "_id": "resp_003",
+            "conversation_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "message": "Can you give me a concrete example?",
+            "sender": "human",
+            "create_time": {
+              "$date": {
+                "$numberLong": "1737381630000"
+              }
+            },
+            "model": "grok-3"
+          }
+        },
+        {
+          "response": {
+            "_id": "resp_004",
+            "conversation_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "message": "Sure! Email spam detection is a classic example. The training data consists of emails labeled as spam or not spam. The model learns patterns from these labeled examples and can then classify new emails it has never seen before.",
+            "sender": "assistant",
+            "create_time": {
+              "$date": {
+                "$numberLong": "1737381645000"
+              }
+            },
+            "model": "grok-3"
+          }
+        }
+      ]
+    },
+    {
+      "conversation": {
+        "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "user_id": "user_example",
+        "create_time": "2025-01-21T09:00:00.000Z",
+        "modify_time": "2025-01-21T09:01:00.000Z",
+        "title": "",
+        "summary": "",
+        "starred": false,
+        "system_prompt_name": "normal"
+      },
+      "responses": [
+        {
+          "response": {
+            "_id": "resp_005",
+            "conversation_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+            "message": "Hello, who are you?",
+            "sender": "human",
+            "create_time": {
+              "$date": {
+                "$numberLong": "1737450000000"
+              }
+            },
+            "model": "grok-3"
+          }
+        }
+      ]
+    }
+  ]
+}
