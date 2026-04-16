@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoulPrint — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Discord-derived structure grays */
+    --bg-darkest: #111113;
+    --bg-dark: #18181b;
+    --bg-mid: #1e1e22;
+    --bg-light: #27272b;
+    --bg-hover: #2e2e33;
+
+    /* Bun-derived accent — hot pink / magenta */
+    --accent: #f472b6;
+    --accent-dim: #be4b8a;
+    --accent-soft: rgba(244, 114, 182, 0.12);
+    --accent-glow: rgba(244, 114, 182, 0.06);
+
+    /* Secondary accent — electric green (from Discord's online indicator) */
+    --green: #4ade80;
+    --green-soft: rgba(74, 222, 128, 0.12);
+
+    /* Text hierarchy */
+    --t1: rgba(250, 250, 250, 0.92);
+    --t2: rgba(250, 250, 250, 0.56);
+    --t3: rgba(250, 250, 250, 0.32);
+    --t4: rgba(250, 250, 250, 0.14);
+
+    /* Borders */
+    --line: rgba(250, 250, 250, 0.07);
+    --line-strong: rgba(250, 250, 250, 0.12);
+
+    /* Provider lane colors */
+    --lane-chatgpt: #5a8a6a;
+    --lane-claude: #c9a84c;
+    --lane-gemini: #5a7a9a;
+
+    /* Typography */
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Radii — Bun uses subtle rounding */
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--t1);
+    background: var(--bg-darkest);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== SHELL ===== */
+  .shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ===== COLUMN 1: Workspace rail (Discord server bar) ===== */
+  .rail {
+    width: 64px;
+    flex-shrink: 0;
+    background: var(--bg-darkest);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 6px;
+    border-right: 1px solid var(--line);
+  }
+
+  .rail-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-radius 0.2s, background 0.2s;
+    position: relative;
+    font-size: 16px;
+    color: var(--t2);
+    background: var(--bg-light);
+  }
+
+  .rail-icon:hover {
+    border-radius: var(--r-md);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .rail-icon.active {
+    border-radius: var(--r-md);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .rail-icon.active::before {
+    content: '';
+    position: absolute;
+    left: -15px;
+    width: 4px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .rail-sep {
+    width: 28px;
+    height: 1px;
+    background: var(--line-strong);
+    margin: 4px 0;
+  }
+
+  .rail-bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* ===== COLUMN 2: Sidebar (Discord channels / Bun nav) ===== */
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--bg-dark);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--line);
+  }
+
+  .sidebar-header {
+    height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--t1);
+  }
+
+  .sidebar-search {
+    padding: 10px 12px;
+  }
+
+  .sidebar-search input {
+    width: 100%;
+    background: var(--bg-darkest);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    padding: 7px 10px 7px 30px;
+    color: var(--t2);
+    font-family: var(--font-body);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .sidebar-search input:focus {
+    border-color: var(--accent-dim);
+  }
+
+  .sidebar-search {
+    position: relative;
+  }
+
+  .sidebar-search::before {
+    content: '⌘K';
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--t3);
+    background: var(--bg-light);
+    padding: 2px 5px;
+    border-radius: 3px;
+  }
+
+  .sidebar-group {
+    padding: 0 8px;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-group-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--t3);
+    padding: 16px 8px 6px;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: var(--r-sm);
+    color: var(--t2);
+    cursor: pointer;
+    font-size: 13.5px;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .sidebar-item:hover {
+    background: var(--bg-hover);
+    color: var(--t1);
+  }
+
+  .sidebar-item.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .sidebar-item .lane {
+    width: 3px;
+    height: 16px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-item .badge {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--t3);
+  }
+
+  .sidebar-item .unread {
+    margin-left: auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 10px 12px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-footer .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--t2);
+  }
+
+  .sidebar-footer .user-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sidebar-footer .user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--t1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-footer .user-status {
+    font-size: 11px;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .sidebar-footer .user-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  .scrollable {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-light) transparent;
+  }
+
+  /* ===== COLUMN 3: Main content ===== */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-darkest);
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .main-header {
+    height: 48px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .main-header .page-title {
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--t1);
+  }
+
+  .main-header .page-desc {
+    font-size: 13px;
+    color: var(--t3);
+    margin-left: 8px;
+  }
+
+  .main-header .header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--t2);
+    padding: 5px 12px;
+    border-radius: var(--r-sm);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-ghost:hover {
+    background: var(--bg-hover);
+    color: var(--t1);
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 5px 14px;
+    border-radius: var(--r-sm);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-accent:hover {
+    background: var(--accent-dim);
+  }
+
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-light) transparent;
+  }
+
+  /* ===== WORKSPACE / DASHBOARD VIEW ===== */
+  .workspace-greeting {
+    margin-bottom: 32px;
+  }
+
+  .workspace-greeting h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--t1);
+    margin-bottom: 6px;
+  }
+
+  .workspace-greeting p {
+    color: var(--t2);
+    font-size: 14px;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: var(--bg-dark);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover {
+    border-color: var(--line-strong);
+  }
+
+  .stat-card .stat-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--t3);
+    margin-bottom: 8px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--t1);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-card .stat-sub {
+    font-size: 12px;
+    color: var(--t3);
+    margin-top: 4px;
+  }
+
+  .stat-card .stat-value .accent {
+    color: var(--accent);
+  }
+
+  /* Bun-style card grid */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+
+  .card {
+    background: var(--bg-dark);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 20px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .card:hover {
+    border-color: var(--accent-dim);
+    background: var(--bg-light);
+  }
+
+  .card h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--t1);
+    margin-bottom: 6px;
+  }
+
+  .card p {
+    font-size: 13px;
+    color: var(--t2);
+    line-height: 1.5;
+  }
+
+  .card .card-meta {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--t3);
+  }
+
+  /* Recent conversations list */
+  .convo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .convo-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+
+  .convo-item:hover {
+    background: var(--bg-dark);
+  }
+
+  .convo-item .lane-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .convo-item .convo-title {
+    flex: 1;
+    font-size: 13.5px;
+    color: var(--t1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .convo-item .convo-provider {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--t3);
+  }
+
+  .convo-item .convo-date {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--t3);
+    flex-shrink: 0;
+  }
+
+  /* ===== COLUMN 4: Context panel ===== */
+  .context-panel {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--bg-dark);
+    border-left: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .context-panel-header {
+    height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--t2);
+  }
+
+  .context-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .context-section-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--t3);
+    margin-bottom: 10px;
+  }
+
+  .context-tag {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--t2);
+    background: var(--bg-light);
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin: 0 4px 4px 0;
+  }
+
+  .context-provider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+  }
+
+  .context-provider .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .context-provider .name {
+    font-size: 13px;
+    color: var(--t1);
+  }
+
+  .context-provider .count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--t3);
+    margin-left: auto;
+  }
+
+  .activity-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .activity-item:last-child {
+    border-bottom: none;
+  }
+
+  .activity-item .activity-text {
+    font-size: 12.5px;
+    color: var(--t2);
+    line-height: 1.45;
+  }
+
+  .activity-item .activity-time {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--t3);
+    margin-top: 3px;
+  }
+
+  .highlight {
+    color: var(--accent);
+  }
+
+  /* Bun-style warm atmospheric glow */
+  .main::before {
+    content: '';
+    position: absolute;
+    top: -180px;
+    left: -10%;
+    width: 120%;
+    height: 500px;
+    background:
+      radial-gradient(ellipse 60% 50% at 35% 0%, rgba(180, 50, 80, 0.35) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 45% at 55% 0%, rgba(220, 60, 100, 0.20) 0%, transparent 65%),
+      radial-gradient(ellipse 80% 40% at 45% 0%, rgba(140, 30, 60, 0.18) 0%, transparent 80%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Grain overlay like Bun */
+  .main::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+  }
+
+  .main > * {
+    position: relative;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- COLUMN 1: Workspace rail -->
+  <div class="rail">
+    <div class="rail-icon active" title="SoulPrint">SP</div>
+    <div class="rail-sep"></div>
+    <div class="rail-icon" title="Claude exports">C</div>
+    <div class="rail-icon" title="ChatGPT exports">G</div>
+    <div class="rail-icon" title="Gemini exports">Ge</div>
+    <div class="rail-bottom">
+      <div class="rail-sep"></div>
+      <div class="rail-icon" title="Import new">+</div>
+      <div class="rail-icon" title="Settings">⚙</div>
+    </div>
+  </div>
+
+  <!-- COLUMN 2: Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">SoulPrint</div>
+    <div class="sidebar-search">
+      <input type="text" placeholder="Search memory..." />
+    </div>
+    <div class="scrollable">
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Sanctum</div>
+        <div class="sidebar-item active">
+          Workspace
+        </div>
+        <div class="sidebar-item">
+          Ask your memory
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Memory</div>
+        <div class="sidebar-item">
+          <span class="lane" style="background: var(--lane-claude)"></span>
+          What you've discussed
+          <span class="badge">247</span>
+        </div>
+        <div class="sidebar-item">
+          Your own notes
+          <span class="badge">12</span>
+        </div>
+        <div class="sidebar-item">
+          Everything, together
+          <span class="unread"></span>
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Interpretation</div>
+        <div class="sidebar-item">
+          Themes & patterns
+        </div>
+        <div class="sidebar-item">
+          Distill
+        </div>
+        <div class="sidebar-item">
+          Answer traces
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-label">Continuity</div>
+        <div class="sidebar-item">
+          Import
+        </div>
+        <div class="sidebar-item">
+          Take it with you
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="avatar">C</div>
+      <div class="user-info">
+        <div class="user-name">Chris</div>
+        <div class="user-status">local-first</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLUMN 3: Main content -->
+  <div class="main">
+    <div class="main-header">
+      <span class="page-title">Workspace</span>
+      <span class="page-desc">Your memory at a glance</span>
+      <div class="header-actions">
+        <button class="btn-ghost">Export</button>
+        <button class="btn-accent">Import</button>
+      </div>
+    </div>
+    <div class="main-content">
+
+      <div class="workspace-greeting">
+        <h1>Good afternoon, Chris</h1>
+        <p>3 providers connected, 247 conversations imported, 1,842 messages indexed.</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Conversations</div>
+          <div class="stat-value">247</div>
+          <div class="stat-sub">across 3 providers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Messages</div>
+          <div class="stat-value">1,842</div>
+          <div class="stat-sub">fully indexed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Themes found</div>
+          <div class="stat-value"><span class="accent">14</span></div>
+          <div class="stat-sub">last analyzed 2h ago</div>
+        </div>
+      </div>
+
+      <div class="section-label">Quick Actions</div>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Ask your memory</h3>
+          <p>Search across all conversations using natural language.</p>
+          <div class="card-meta">FTS5 + semantic</div>
+        </div>
+        <div class="card">
+          <h3>Import conversations</h3>
+          <p>Bring in exports from Claude, ChatGPT, or Gemini.</p>
+          <div class="card-meta">JSON / ZIP</div>
+        </div>
+        <div class="card">
+          <h3>Memory Passport</h3>
+          <p>Export a portable snapshot of your knowledge.</p>
+          <div class="card-meta">take it with you</div>
+        </div>
+      </div>
+
+      <div class="section-label">Recent Conversations</div>
+      <div class="convo-list">
+        <div class="convo-item">
+          <div class="lane-dot" style="background: var(--lane-claude)"></div>
+          <div class="convo-title">SoulPrint workspace redesign, sprint planning</div>
+          <div class="convo-provider">Claude</div>
+          <div class="convo-date">2h ago</div>
+        </div>
+        <div class="convo-item">
+          <div class="lane-dot" style="background: var(--lane-chatgpt)"></div>
+          <div class="convo-title">Permafrost Bolt Witchhunter build optimization</div>
+          <div class="convo-provider">ChatGPT</div>
+          <div class="convo-date">5h ago</div>
+        </div>
+        <div class="convo-item">
+          <div class="lane-dot" style="background: var(--lane-claude)"></div>
+          <div class="convo-title">Ollama privacy policy and cloud features review</div>
+          <div class="convo-provider">Claude</div>
+          <div class="convo-date">Today</div>
+        </div>
+        <div class="convo-item">
+          <div class="lane-dot" style="background: var(--lane-gemini)"></div>
+          <div class="convo-title">Gemma4 local model evaluation and benchmarks</div>
+          <div class="convo-provider">Gemini</div>
+          <div class="convo-date">Yesterday</div>
+        </div>
+        <div class="convo-item">
+          <div class="lane-dot" style="background: var(--lane-claude)"></div>
+          <div class="convo-title">FTS5 search implementation and vector backend design</div>
+          <div class="convo-provider">Claude</div>
+          <div class="convo-date">Apr 12</div>
+        </div>
+        <div class="convo-item">
+          <div class="lane-dot" style="background: var(--lane-chatgpt)"></div>
+          <div class="convo-title">Discord bot setup and DiscordChatExporter config</div>
+          <div class="convo-provider">ChatGPT</div>
+          <div class="convo-date">Apr 10</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- COLUMN 4: Context panel -->
+  <div class="context-panel">
+    <div class="context-panel-header">Context</div>
+    <div class="scrollable">
+      <div class="context-section">
+        <div class="context-section-label">Providers</div>
+        <div class="context-provider">
+          <div class="dot" style="background: var(--lane-claude)"></div>
+          <div class="name">Claude</div>
+          <div class="count">148</div>
+        </div>
+        <div class="context-provider">
+          <div class="dot" style="background: var(--lane-chatgpt)"></div>
+          <div class="name">ChatGPT</div>
+          <div class="count">72</div>
+        </div>
+        <div class="context-provider">
+          <div class="dot" style="background: var(--lane-gemini)"></div>
+          <div class="name">Gemini</div>
+          <div class="count">27</div>
+        </div>
+      </div>
+      <div class="context-section">
+        <div class="context-section-label">Top Themes</div>
+        <span class="context-tag">SoulPrint dev</span>
+        <span class="context-tag">PoE2 builds</span>
+        <span class="context-tag">local AI stack</span>
+        <span class="context-tag">prompt craft</span>
+        <span class="context-tag">philosophy</span>
+        <span class="context-tag">PowerShell</span>
+      </div>
+      <div class="context-section">
+        <div class="context-section-label">Recent Activity</div>
+        <div class="activity-item">
+          <div class="activity-text">Imported <span class="highlight">12 conversations</span> from Claude export</div>
+          <div class="activity-time">2 hours ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-text">Theme analysis found <span class="highlight">2 new patterns</span></div>
+          <div class="activity-time">3 hours ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-text">Memory Passport generated</div>
+          <div class="activity-time">Yesterday</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
