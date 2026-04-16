@@ -2,12 +2,13 @@
 {% from "_ui.html" import badge %}
 
 {% block title %}Memory Passport · SoulPrint{% endblock %}
+{% block page_title %}Take it with you{% endblock %}
+{% block page_desc %}export and validate your Memory Passport{% endblock %}
 
 {% block content %}
   <section class="page-header">
     <p class="page-eyebrow">Continuity / Provenance</p>
     <div class="page-header__row">
-      <h1>Memory Passport</h1>
       <div class="page-badges">
         {{ badge("Your archive", "canonical") }}
         {{ badge("Validation-ready", "accent") }}

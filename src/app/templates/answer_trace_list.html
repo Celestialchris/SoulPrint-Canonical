@@ -2,6 +2,8 @@
 {% from "_ui.html" import badge, empty_state %}
 
 {% block title %}Answer Traces · SoulPrint{% endblock %}
+{% block page_title %}Answer traces{% endblock %}
+{% block page_desc %}how answers were found{% endblock %}
 
 {% block content %}
   <section class="page-header">
@@ -10,7 +12,6 @@
     </div>
     <p class="page-eyebrow">Answer audit</p>
     <div class="page-header__row">
-      <h1>How answers were found</h1>
       <div class="page-badges">
         {{ badge("Generated", "derived") }}
       </div>

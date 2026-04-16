@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% from "_ui.html" import badge, empty_state %}
 
-{% block title %}Notes · SoulPrint{% endblock %}
+{% block title %}Themes & patterns · SoulPrint{% endblock %}
+{% block page_title %}Themes & patterns{% endblock %}
+{% block page_desc %}what you've been thinking about{% endblock %}
 
 {% block content %}
   <section class="page-header">
@@ -10,7 +12,6 @@
     </div>
     <p class="page-eyebrow">Themes & patterns</p>
     <div class="page-header__row">
-      <h1>Themes & patterns</h1>
       <div class="page-badges">
         {{ badge("Generated", "derived") }}
       </div>

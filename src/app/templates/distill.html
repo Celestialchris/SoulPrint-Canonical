@@ -2,6 +2,8 @@
 {% from "_ui.html" import badge, empty_state %}
 
 {% block title %}Distill · SoulPrint{% endblock %}
+{% block page_title %}Distill{% endblock %}
+{% block page_desc %}compress a thread into a briefing{% endblock %}
 
 {% block content %}
   <section class="page-header">
@@ -10,7 +12,6 @@
     </div>
     <p class="page-eyebrow">Distill</p>
     <div class="page-header__row">
-      <h1>Distill conversations</h1>
       <div class="page-badges">
         {{ badge("Pro", "accent") }}
       </div>

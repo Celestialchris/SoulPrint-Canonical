@@ -2,6 +2,8 @@
 {% from "_ui.html" import badge, empty_state %}
 
 {% block title %}Continuity · {{ conversation.title }}{% endblock %}
+{% block page_title %}{{ conversation.title }}{% endblock %}
+{% block page_desc %}typed continuity artifact{% endblock %}
 
 {% block content %}
   <section class="page-header">
@@ -12,7 +14,6 @@
     </div>
     <p class="page-eyebrow">Continuity</p>
     <div class="page-header__row">
-      <h1>{{ conversation.title }}</h1>
       <div class="page-badges">
         {{ badge("Generated", "derived") }}
       </div>

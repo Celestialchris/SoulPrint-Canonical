@@ -2,6 +2,8 @@
 {% from "_ui.html" import badge %}
 
 {% block title %}{{ stable_id }} · Native Memory{% endblock %}
+{% block page_title %}{{ stable_id }}{% endblock %}
+{% block page_desc %}your own note{% endblock %}
 
 {% block content %}
   <section class="page-header">
@@ -13,7 +15,6 @@
     </div>
     <p class="page-eyebrow">Your note</p>
     <div class="page-header__row">
-      <h1>{{ stable_id }}</h1>
       <div class="page-badges">
         {{ badge("Your archive", "canonical") }}
         {{ badge("Your note", "native") }}
