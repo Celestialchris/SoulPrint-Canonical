@@ -60,6 +60,8 @@ def parse_grok_export(payload: Any) -> list[NormalizedConversation]:
 
     if not isinstance(payload, dict) or "conversations" not in payload:
         raise ValueError("Grok export payload must be a dict with a 'conversations' key")
+    if not isinstance(payload["conversations"], list):
+        raise ValueError("Grok export 'conversations' must be a list, got: " + type(payload["conversations"]).__name__)
     return _parse_wrapped_conversations(payload)
 
 
@@ -133,7 +135,7 @@ def _parse_wrapped_conversations(payload: dict) -> list[NormalizedConversation]:
     items = payload.get("conversations", [])
     result: list[NormalizedConversation] = []
 
-    for item in items:
+    for idx, item in enumerate(items):
         if not isinstance(item, dict):
             continue
 
@@ -142,7 +144,7 @@ def _parse_wrapped_conversations(payload: dict) -> list[NormalizedConversation]:
         if not isinstance(conv, dict) or not isinstance(responses, list) or not responses:
             continue
 
-        conv_id = str(conv.get("id") or f"grok-conv-{len(result)}")
+        conv_id = str(conv.get("id") or f"grok-conv-{idx}")
         raw_title = conv.get("title")
         title = (
             raw_title.strip()
