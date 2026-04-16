@@ -72,15 +72,21 @@ Use instead: continuity, exportability, interoperability, local ownership, Memor
 
 ## Visual Direction
 
-Design system: "USB Drive." See `docs/product/brand.md` and `docs/product/visual-direction.md`.
+Design system: **Magenta Sanctum v2** (since v0.6.0).
+See `docs/product/design-doctrine-magenta-sanctum.md`.
 
-- Near-black background (#0e0f11), green (#4ade80) as trust accent, system sans-serif body, Forum wordmark, JetBrains Mono labels
-- Green is a deliberate trust signal — not decoration
-- Calm, fluid, low-clutter. Typography carries hierarchy.
-- No metrics theater, no noisy admin-panel energy
-- No ornamental AI gimmicks
-- If style conflicts with clarity, choose clarity
-- The live `app.css` is always authoritative over any doc file
+Shell is editorial (pink brand accent, flat dark canvas with rail and sidebar lifted, display serif for personality, magenta wordmark on gradient chip). Data is flat (rows, hairline dividers, mono labels, tabular nums, no decoration on row data). Cards live only for navigation surfaces (stat cards, action cards on workspace). Supersedes the pre-v0.6.0 "USB Drive" doctrine.
+
+Lane palette (vibrant, restored Phase 5.6):
+
+- ChatGPT: `#4ade80` (green)
+- Claude:  `#a78bfa` (violet)
+- Gemini:  `#60a5fa` (blue)
+- Grok:    `#e879f9` (magenta, dormant)
+
+Magenta is the brand accent; green is the import CTA color only (scoped under `--cta-alive-*` tokens — see `.cta-primary`). No icons in nav. No font-weight above 500. No box-shadows on containers.
+
+`src/app/static/app.css` is always authoritative over any doc file.
 
 ## Git Workflow
 
