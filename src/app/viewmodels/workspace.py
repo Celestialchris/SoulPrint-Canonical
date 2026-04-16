@@ -75,7 +75,7 @@ def build_workspace_summary(*, trace_store_path: str | Path) -> WorkspaceSummary
         })
 
     recent_imported_rows = (
-        ImportedConversation.query.order_by(ImportedConversation.id.desc()).limit(5).all()
+        ImportedConversation.query.order_by(ImportedConversation.id.desc()).limit(6).all()
     )
     recent_imported = [
         {

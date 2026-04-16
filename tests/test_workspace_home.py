@@ -44,12 +44,11 @@ class WorkspaceHomeTest(unittest.TestCase):
     # ── First-run state ──
 
     def test_first_run_shows_tagline_and_sidebar_hint(self):
-        """The first-run empty state tells the user to use the sidebar drop zone."""
+        """The first-run empty state tells the user how to get started."""
         html = self._get_workspace_html()
         self.assertIn("SoulPrint", html)
-        self.assertIn("Bring your conversations home", html)
-        self.assertIn("No account", html)
-        self.assertIn("Drop a ChatGPT, Claude, or Gemini export in the sidebar", html)
+        self.assertIn("No conversations yet", html)
+        self.assertIn("Drop a ChatGPT, Claude, or Gemini export", html)
 
     def test_first_run_does_not_show_provider_stack(self):
         html = self._get_workspace_html()
