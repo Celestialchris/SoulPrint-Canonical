@@ -1399,7 +1399,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .shell .rail-icon--placeholder[title*="Claude"]  { color: var(--lane-claude); }
 .shell .rail-icon--placeholder[title*="Gemini"]  { color: var(--lane-gemini); }
 
-/* Topbar action buttons (workspace page_actions block) */
+/* Topbar action buttons (workspace page_actions block) — no old definition, leave unscoped */
 .topbar-action {
   display: inline-flex;
   align-items: center;
@@ -1425,6 +1425,10 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 .topbar-action--primary:hover { filter: brightness(1.08); }
 
+/* Workspace content — scoped under .workspace-canvas to beat pre-Phase-4
+   rules for .workspace-stats / .stat-card that otherwise leak padding,
+   background, and column count through to the new layout. */
+
 /* Greeting */
 .workspace-greeting { margin-bottom: 32px; }
 .workspace-greeting__title {
@@ -1443,14 +1447,17 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   line-height: 1.55;
 }
 
-/* Stat cards */
-.workspace-stats {
+/* Stat cards (scoped — old .workspace-stats/.stat-card at ~751 would leak
+   4-col grid, padding, and transparent background otherwise) */
+.workspace-canvas .workspace-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 8px;
+  padding: 0;
+  background: none;
 }
-.stat-card {
+.workspace-canvas .stat-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1458,23 +1465,27 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   border-radius: var(--r-md);
   padding: 18px 20px;
 }
-.stat-card__label {
+.workspace-canvas .stat-card__label {
+  display: block;
   font-family: var(--font-mono);
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--t3);
+  margin-bottom: 0;
 }
-.stat-card__value {
+.workspace-canvas .stat-card__value {
+  display: block;
   font-family: var(--font-display);
   font-size: 1.8rem;
   font-weight: 500;
   color: var(--t1);
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
+  letter-spacing: 0;
 }
-.stat-card__value--accent { color: var(--accent); }
-.stat-card__sub {
+.workspace-canvas .stat-card__value--accent { color: var(--accent); }
+.workspace-canvas .stat-card__sub {
   font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--t3);
@@ -1493,13 +1504,13 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 .workspace-section__label--accent { color: var(--accent); }
 
-/* Quick-action cards */
+/* Quick-action cards (scoped) */
 .workspace-actions__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
-.action-card {
+.workspace-canvas .action-card {
   display: block;
   background: var(--surface);
   border-radius: var(--r-md);
@@ -1508,22 +1519,22 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   color: inherit;
   transition: background 0.15s var(--ease-out);
 }
-.action-card:hover { background: var(--bg-hover); }
-.action-card__title {
+.workspace-canvas .action-card:hover { background: var(--bg-hover); }
+.workspace-canvas .action-card__title {
   font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 500;
   color: var(--t1);
   margin: 0;
 }
-.action-card__desc {
+.workspace-canvas .action-card__desc {
   font-family: var(--font-body);
   font-size: 0.9rem;
   color: var(--t2);
   line-height: 1.5;
   margin: 6px 0 0;
 }
-.action-card__hint {
+.workspace-canvas .action-card__hint {
   display: block;
   margin-top: 14px;
   font-family: var(--font-mono);
@@ -1533,24 +1544,24 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   color: var(--t4);
 }
 
-/* Recent conversations list */
+/* Recent conversations list (scoped) */
 .workspace-recent { margin-top: 32px; }
-.recent-list { list-style: none; margin: 0; padding: 0; }
-.recent-list__row {
+.workspace-canvas .recent-list { list-style: none; margin: 0; padding: 0; }
+.workspace-canvas .recent-list__row {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid var(--line);
 }
-.recent-list__row:last-child { border-bottom: none; }
-.recent-list__dot {
+.workspace-canvas .recent-list__row:last-child { border-bottom: none; }
+.workspace-canvas .recent-list__dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.recent-list__title {
+.workspace-canvas .recent-list__title {
   flex: 1;
   color: var(--t1);
   font-family: var(--font-body);
@@ -1561,8 +1572,8 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   text-overflow: ellipsis;
   transition: color 0.15s var(--ease-out);
 }
-.recent-list__title:hover { color: var(--accent); }
-.recent-list__provider {
+.workspace-canvas .recent-list__title:hover { color: var(--accent); }
+.workspace-canvas .recent-list__provider {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--t3);
@@ -1570,17 +1581,17 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   letter-spacing: 0.1em;
   flex-shrink: 0;
 }
-.recent-list__time {
+.workspace-canvas .recent-list__time {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--t3);
   flex-shrink: 0;
 }
 
-/* Right panel — three context blocks */
-.context-block { margin-bottom: 24px; padding: 0 16px; }
-.context-block:first-of-type { padding-top: 16px; }
-.context-block__label {
+/* Right panel — scoped under .context-panel. .provider-list collides at ~792. */
+.context-panel .context-block { margin-bottom: 24px; padding: 0 16px; }
+.context-panel .context-block:first-of-type { padding-top: 16px; }
+.context-panel .context-block__label {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -1588,32 +1599,33 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   color: var(--t4);
   margin: 0 0 10px;
 }
-.provider-list, .activity-list { list-style: none; margin: 0; padding: 0; }
-.provider-list__row {
+.context-panel .provider-list,
+.context-panel .activity-list { list-style: none; margin: 0; padding: 0; }
+.context-panel .provider-list__row {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 0;
 }
-.provider-list__dot {
+.context-panel .provider-list__dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.provider-list__name {
+.context-panel .provider-list__name {
   flex: 1;
   font-family: var(--font-body);
   font-size: 0.9rem;
   color: var(--t1);
 }
-.provider-list__count {
+.context-panel .provider-list__count {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--t3);
 }
-.theme-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.theme-chip {
+.context-panel .theme-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.context-panel .theme-chip {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 999px;
@@ -1622,21 +1634,21 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   font-family: var(--font-body);
   font-size: 0.75rem;
 }
-.activity-list__row {
+.context-panel .activity-list__row {
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
 }
-.activity-list__row:last-child { border-bottom: none; }
-.activity-list__text {
+.context-panel .activity-list__row:last-child { border-bottom: none; }
+.context-panel .activity-list__text {
   font-family: var(--font-body);
   font-size: 0.85rem;
   color: var(--t2);
   line-height: 1.4;
 }
-.activity-list__time {
+.context-panel .activity-list__time {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--t4);
@@ -1644,6 +1656,6 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 
 /* Mobile: collapse workspace grids */
 @media (max-width: 639px) {
-  .workspace-stats,
+  .workspace-canvas .workspace-stats,
   .workspace-actions__grid { grid-template-columns: 1fr; }
 }

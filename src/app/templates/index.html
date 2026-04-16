@@ -12,6 +12,8 @@
 
 {% block content %}
 
+<div class="workspace-canvas">
+
 {# ── Greeting ── #}
 <section class="workspace-greeting">
   <h2 class="workspace-greeting__title">Good {{ time_of_day }}, Chris</h2>
@@ -83,6 +85,8 @@
   </ul>
 </section>
 {% endif %}
+
+</div>{# /.workspace-canvas #}
 
 {% endblock %}
 
