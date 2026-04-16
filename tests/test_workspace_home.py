@@ -88,7 +88,7 @@ class WorkspaceHomeTest(unittest.TestCase):
             self._seed_conv("chatgpt", "Test")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("Everything together", html)
+        self.assertIn("Everything, together", html)
         self.assertIn('href="/federated"', html)
 
     def test_post_import_shows_stats_grid(self):
@@ -111,7 +111,7 @@ class WorkspaceHomeTest(unittest.TestCase):
             db.session.commit()
         html = self._get_workspace_html()
         self.assertIn("SoulPrint", html)
-        self.assertIn("sidebar__wordmark", html)
+        self.assertIn("sidebar-header__brand", html)
 
     def test_post_import_provider_row_links_to_explorer(self):
         with self.app.app_context():

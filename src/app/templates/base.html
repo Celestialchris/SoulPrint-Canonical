@@ -1,4 +1,4 @@
-{% from "_ui.html" import nav_link %}
+{% from "_ui.html" import sidebar_item %}
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -6,96 +6,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}SoulPrint{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=7">
   <script>(function(){var t=localStorage.getItem('soulprint-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)})()</script>
   {% block head_extra %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar__header">
-        <a class="sidebar__brand" href="{{ url_for('home') }}">
-          <span class="sidebar__mark" aria-hidden="true">SP</span>
-          <span class="sidebar__wordmark">SoulPrint</span>
+  <div class="shell">
+
+    {# Column A: Workspace rail (64px) — brand + provider shortcuts + utilities #}
+    <aside class="rail" aria-label="Workspaces">
+      <a class="rail-icon rail-icon--active" href="{{ url_for('home') }}" title="SoulPrint">
+        <span class="rail-icon__label">SP</span>
+      </a>
+      <div class="rail-sep" aria-hidden="true"></div>
+      {# Provider shortcuts — visual placeholders for v1, wire in later phase #}
+      <span class="rail-icon rail-icon--placeholder" title="Claude exports" aria-disabled="true">C</span>
+      <span class="rail-icon rail-icon--placeholder" title="ChatGPT exports" aria-disabled="true">G</span>
+      <span class="rail-icon rail-icon--placeholder" title="Gemini exports" aria-disabled="true">Ge</span>
+      <div class="rail-bottom">
+        <div class="rail-sep" aria-hidden="true"></div>
+        <a class="rail-icon" href="{{ url_for('import_conversations') }}" title="Import new">
+          <span class="rail-icon__label">+</span>
         </a>
-      </div>
-
-      <nav class="sidebar__nav" aria-label="Primary">
-        <span class="nav-group-label">Workspace</span>
-        {{ nav_link(url_for('home'), 'Workspace', request.path == url_for('home')) }}
-        {{ nav_link(url_for('imported_conversations'), 'Imported conversations', request.path.startswith('/imported')) }}
-        {{ nav_link(url_for('chats'), 'Your own notes', request.path.startswith(url_for('chats')) or request.path.startswith('/memory/')) }}
-        {{ nav_link(url_for('federated_browser'), 'Everything together', request.path.startswith('/federated')) }}
-
-        <span class="nav-group-label">Intelligence</span>
-        {{ nav_link(url_for('ask'), 'Ask your memory', request.path.startswith('/ask')) }}
-        {{ nav_link(url_for('intelligence'), 'Themes and patterns', request.path.startswith('/intelligence')) }}
-        {{ nav_link(url_for('distill'), 'Distill', request.path.startswith('/distill')) }}
-        {{ nav_link(url_for('answer_trace_list'), 'How answers were found', request.path.startswith('/answer-traces')) }}
-
-        <span class="nav-group-label">Export</span>
-        {{ nav_link(url_for('passport_surface'), 'Take it with you', request.path.startswith('/passport')) }}
-      </nav>
-
-      <form class="sidebar__import" method="post" action="{{ url_for('import_conversations') }}" enctype="multipart/form-data" id="sidebar-import-form">
-        <label class="drop-zone drop-zone--compact" for="sidebar-export-file" id="sidebar-drop-zone">
-          <input class="drop-zone__input" id="sidebar-export-file" name="export_file" type="file" accept="application/json,.json,.zip">
-          <span class="drop-zone__prompt" id="sidebar-drop-zone-prompt">
-            <span class="drop-zone__main">Drop export here</span>
-            <span class="drop-zone__sub">or click to browse</span>
-          </span>
-          <span class="drop-zone__filename" id="sidebar-drop-zone-filename"></span>
-        </label>
-        <button type="submit" class="sidebar__import-submit" hidden id="sidebar-import-submit">Import</button>
-      </form>
-
-      <div class="sidebar__footer">
-        <span class="sidebar__version">v0.5.0</span>
-        <span class="sidebar__footer-sep">·</span>
-        <button class="theme-toggle" type="button" aria-label="Toggle theme"
-          onclick="(function(){var h=document.documentElement,c=h.getAttribute('data-theme')==='light'?'dark':'light';h.setAttribute('data-theme',c);localStorage.setItem('soulprint-theme',c);this.textContent=c}).call(this)">dark</button>
+        <span class="rail-icon rail-icon--placeholder" title="Settings (coming soon)" aria-disabled="true">⚙</span>
       </div>
     </aside>
 
-    {# Mobile nav toggle #}
-    <header class="mobile-bar">
-      <a class="mobile-bar__brand" href="{{ url_for('home') }}">
-        <span class="sidebar__mark" aria-hidden="true">SP</span>
-        <span>SoulPrint</span>
-      </a>
-      <button class="mobile-bar__toggle" type="button" aria-label="Menu"
-        onclick="document.getElementById('sidebar').classList.toggle('sidebar--open')">
-        <span></span><span></span><span></span>
-      </button>
-    </header>
+    {# Column B: Sidebar (240px) #}
+    <aside class="sidebar" id="sidebar" aria-label="Primary">
+      <div class="sidebar-header">
+        <a class="sidebar-header__brand" href="{{ url_for('home') }}">SoulPrint</a>
+      </div>
 
-    <main class="main-content {% block page_class %}{% endblock %}">
-      <div class="main-content__inner">
-        <header class="topbar">
-          <form class="topbar__search" method="get" action="{{ url_for('federated_browser') }}" role="search">
-            <input
-              class="topbar__search-input"
-              type="search"
-              name="q"
-              value="{{ request.args.get('q', '') }}"
-              placeholder="Search everything"
-              aria-label="Search">
-          </form>
-        </header>
+      <div class="sidebar-search">
+        <form method="get" action="{{ url_for('federated_browser') }}" role="search">
+          <input
+            class="sidebar-search__input"
+            type="search"
+            name="q"
+            value="{{ request.args.get('q', '') }}"
+            placeholder="Search memory..."
+            aria-label="Search memory">
+        </form>
+      </div>
+
+      <div class="sidebar-scroll">
+        <nav class="sidebar-group" aria-label="Sanctum">
+          <span class="sidebar-group__label">Sanctum</span>
+          {{ sidebar_item(url_for('home'), 'Workspace', request.path == url_for('home')) }}
+          {{ sidebar_item(url_for('ask'), 'Ask your memory', request.path.startswith('/ask')) }}
+        </nav>
+
+        <nav class="sidebar-group" aria-label="Memory">
+          <span class="sidebar-group__label">Memory</span>
+          {{ sidebar_item(url_for('imported_conversations'), "What you've discussed", request.path.startswith('/imported')) }}
+          {{ sidebar_item(url_for('chats'), 'Your own notes', request.path.startswith(url_for('chats')) or request.path.startswith('/memory/')) }}
+          {{ sidebar_item(url_for('federated_browser'), 'Everything, together', request.path.startswith('/federated')) }}
+        </nav>
+
+        <nav class="sidebar-group" aria-label="Interpretation">
+          <span class="sidebar-group__label">Interpretation</span>
+          {{ sidebar_item(url_for('intelligence'), 'Themes & patterns', request.path.startswith('/intelligence')) }}
+          {{ sidebar_item(url_for('distill'), 'Distill', request.path.startswith('/distill')) }}
+          {{ sidebar_item(url_for('answer_trace_list'), 'Answer traces', request.path.startswith('/answer-traces')) }}
+        </nav>
+
+        <nav class="sidebar-group" aria-label="Continuity">
+          <span class="sidebar-group__label">Continuity</span>
+          {{ sidebar_item(url_for('import_conversations'), 'Import', request.path.startswith('/import')) }}
+          {{ sidebar_item(url_for('passport_surface'), 'Take it with you', request.path.startswith('/passport')) }}
+        </nav>
+      </div>
+
+      {# Sidebar footer: avatar + user info + compact theme toggle
+         "Chris" and "C" are placeholders — replace when OAuth username ships. #}
+      <div class="sidebar-footer">
+        <div class="sidebar-footer__avatar" aria-hidden="true">C</div>
+        <div class="sidebar-footer__user">
+          <div class="sidebar-footer__name">Chris</div>
+          <div class="sidebar-footer__status">local-first</div>
+        </div>
+        <button
+          class="theme-toggle"
+          type="button"
+          aria-label="Toggle theme"
+          title="Toggle theme"
+          onclick="(function(){var h=document.documentElement,c=h.getAttribute('data-theme')==='light'?'dark':'light';h.setAttribute('data-theme',c);localStorage.setItem('soulprint-theme',c);this.textContent=c==='light'?'☀':'☾'}).call(this)">☾</button>
+      </div>
+    </aside>
+
+    {# Column C: Main content #}
+    <main class="main {% block page_class %}{% endblock %}">
+      <header class="main-header">
+        <span class="main-header__title">{% block page_title %}SoulPrint{% endblock %}</span>
+        <span class="main-header__desc">{% block page_desc %}{% endblock %}</span>
+        <div class="main-header__actions">
+          {% block page_actions %}{% endblock %}
+        </div>
+      </header>
+      <div class="main-scroll">
         {% block content %}{% endblock %}
       </div>
     </main>
+
+    {# Column D: Right context panel (optional per page) — hidden via :empty when unused #}
+    <aside class="context-panel" aria-label="Context">{% block right_panel %}{% endblock %}</aside>
+
   </div>
 
   <script>
     (function(){
-      var b=document.querySelector('.theme-toggle');
-      if(b) b.textContent=document.documentElement.getAttribute('data-theme')||'dark';
-      document.querySelectorAll('.sidebar__nav .app-nav__link').forEach(function(a){
-        a.addEventListener('click', function(){
-          document.getElementById('sidebar').classList.remove('sidebar--open');
-        });
-      });
+      // Initialize theme-toggle button text based on current theme
+      var b = document.querySelector('.theme-toggle');
+      if (b) {
+        var t = document.documentElement.getAttribute('data-theme') || 'dark';
+        b.textContent = t === 'light' ? '☀' : '☾';
+      }
     })();
   </script>
   <script src="{{ url_for('static', filename='sidebar-import.js') }}?v=1" defer></script>
