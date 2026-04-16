@@ -53,7 +53,7 @@
   <a class="spine-loop-row" href="{{ url_for('distill') }}">
     <span class="spine-loop-row__step">03</span>
     <span class="spine-loop-row__verb">Distill</span>
-    <span class="spine-loop-row__state">{{ (distill_count ~ ' packets saved') if distill_count else 'Run your first distillation' }}</span>
+    <span class="spine-loop-row__state">{{ (distill_count ~ '+ packets saved') if distill_count == 10000 else ((distill_count ~ ' packets saved') if distill_count else 'Run your first distillation') }}</span>
     <span class="spine-loop-row__arrow">→</span>
   </a>
   <a class="spine-loop-row" href="{{ url_for('passport_surface') }}">

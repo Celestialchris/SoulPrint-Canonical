@@ -198,16 +198,19 @@ def create_app():
         trace_store = default_trace_store_path(db_path)
         workspace = build_workspace_summary(trace_store_path=trace_store)
 
-        # distill_count
-        _distill_recs = list_distillations(default_distillation_store_path(db_path), limit=1000)
+        # distill_count — limit=10_000 so the display reflects reality for large archives
+        _distill_recs = list_distillations(default_distillation_store_path(db_path), limit=10_000)
         distill_count = len(_distill_recs)
 
         # last_passport_date (YYYY-MM-DD or None)
         _passport_manifest = _Path(db_path).parent / "exports" / "passports" / "memory-passport-v1" / "manifest.json"
         last_passport_date = None
         if _passport_manifest.exists():
-            with open(_passport_manifest) as _f:
-                last_passport_date = _json.load(_f).get("created_at", "")[:10]
+            try:
+                with open(_passport_manifest) as _f:
+                    last_passport_date = _json.load(_f).get("created_at", "")[:10]
+            except (_json.JSONDecodeError, OSError, ValueError):
+                logger.warning("Could not parse passport manifest", exc_info=True)
 
         # top_themes (up to 8 labels from most recent topic scan)
         _topic_scans = list_topic_scans(default_topic_store_path(db_path), limit=1)
