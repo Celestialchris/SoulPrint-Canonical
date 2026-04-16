@@ -1,23 +1,56 @@
 /* SoulPrint — USB Drive Design System */
 
 [data-theme="dark"], :root {
-  --bg: #0e0f11; --surface: #141518; --raised: #1a1b1f;
-  --accent: #4ade80; --accent-dim: #22c55e;
-  --accent-muted: rgba(74,222,128,0.15); --accent-ghost: rgba(74,222,128,0.06);
-  --t1: rgba(240,242,238,0.88); --t2: rgba(240,242,238,0.55);
-  --t3: rgba(240,242,238,0.35); --t4: rgba(240,242,238,0.15);
-  --line: rgba(255,255,255,0.08);
+  /* Background scale — Discord-derived grays */
+  --bg-darkest: #111113; --bg-dark: #18181b; --bg-mid: #1e1e22;
+  --bg-light: #27272b; --bg-hover: #2e2e33;
+  /* Legacy aliases (kept so existing selectors keep working through the migration) */
+  --bg: var(--bg-darkest); --surface: var(--bg-dark); --raised: var(--bg-mid);
+
+  /* Brand — hot pink accent */
+  --accent: #f472b6; --accent-dim: #be4b8a;
+  --accent-soft: rgba(244,114,182,0.12); --accent-glow: rgba(244,114,182,0.06);
+  /* Legacy names kept as aliases */
+  --accent-muted: var(--accent-soft); --accent-ghost: var(--accent-glow);
+
+  /* Secondary — green presence indicator (local-first status only) */
+  --green: #4ade80; --green-soft: rgba(74,222,128,0.12);
+
+  /* Text hierarchy */
+  --t1: rgba(250,250,250,0.92); --t2: rgba(250,250,250,0.56);
+  --t3: rgba(250,250,250,0.32); --t4: rgba(250,250,250,0.14);
+
+  /* Lines */
+  --line: rgba(250,250,250,0.07); --line-strong: rgba(250,250,250,0.12);
   --hairline: 0.5px;
-  --lane-chatgpt: #534AB7; --lane-claude: #1D9E75; --lane-gemini: #378ADD; --lane-native: #378ADD;
-  --selection: rgba(74,222,128,0.20); --input-focus: var(--accent);
-  --cta-bg: var(--accent); --cta-text: #0e0f11;
-  --cta-hover-bg: var(--accent-dim); --cta-hover-text: #0e0f11;
+
+  /* Provider lanes — muted, logo-derived */
+  --lane-chatgpt: #5a8a6a; --lane-claude: #c9a84c;
+  --lane-gemini: #5a7a9a; --lane-native: #5a7a9a;
+
+  /* Selection & focus */
+  --selection: rgba(244,114,182,0.20); --input-focus: var(--accent-dim);
+
+  /* CTA tokens (flow through --accent automatically) */
+  --cta-bg: var(--accent); --cta-text: #ffffff;
+  --cta-hover-bg: var(--accent-dim); --cta-hover-text: #ffffff;
   --cta-border: var(--accent); --cta-outline-text: var(--accent);
-  --sidebar-bg: var(--bg); --sidebar-brand: var(--accent);
-  --brand-mark-bg: #4F46E5; --brand-mark-fg: #ffffff; --brand-mark-radius: 6px;
-  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --font-display: var(--font-body);
+
+  /* Sidebar */
+  --sidebar-bg: var(--bg-dark); --sidebar-brand: var(--accent);
+
+  /* Brand mark (solid pink — no gradient in app shell) */
+  --brand-mark-bg: var(--accent); --brand-mark-fg: #ffffff; --brand-mark-radius: 10px;
+
+  /* Typography — system fallbacks until Phase 1b bundles web fonts */
+  --font-display: 'Playfair Display', ui-serif, Georgia, Cambria, "Times New Roman", serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Radii */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+
+  /* Layout & motion */
   --content-width: 1040px; --content-wide: 1380px;
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
   --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
@@ -25,17 +58,31 @@
 }
 
 [data-theme="light"] {
-  --bg: #f4f5f0; --surface: #eaebe5; --raised: #ffffff;
-  --accent: #16a34a; --accent-dim: #15803d;
-  --accent-muted: rgba(22,163,74,0.12); --accent-ghost: rgba(22,163,74,0.04);
-  --t1: rgba(14,15,17,0.88); --t2: rgba(14,15,17,0.55);
-  --t3: rgba(14,15,17,0.35); --t4: rgba(14,15,17,0.12);
-  --line: rgba(0,0,0,0.10);
-  --lane-chatgpt: #534AB7; --lane-claude: #1D9E75; --lane-gemini: #378ADD; --lane-native: #378ADD;
-  --selection: rgba(22,163,74,0.15);
-  --cta-bg: var(--accent); --cta-text: #fff; --cta-hover-bg: var(--accent-dim); --cta-hover-text: #fff;
+  --bg-darkest: #f4f5f0; --bg-dark: #eaebe5; --bg-mid: #ffffff;
+  --bg-light: #e4e5df; --bg-hover: #dcddd7;
+  --bg: var(--bg-darkest); --surface: var(--bg-dark); --raised: var(--bg-mid);
+
+  --accent: #db2777; --accent-dim: #9d174d;
+  --accent-soft: rgba(219,39,119,0.12); --accent-glow: rgba(219,39,119,0.05);
+  --accent-muted: var(--accent-soft); --accent-ghost: var(--accent-glow);
+
+  --green: #16a34a; --green-soft: rgba(22,163,74,0.12);
+
+  --t1: rgba(14,15,17,0.92); --t2: rgba(14,15,17,0.56);
+  --t3: rgba(14,15,17,0.32); --t4: rgba(14,15,17,0.14);
+
+  --line: rgba(0,0,0,0.08); --line-strong: rgba(0,0,0,0.14);
+
+  --lane-chatgpt: #5a8a6a; --lane-claude: #c9a84c;
+  --lane-gemini: #5a7a9a; --lane-native: #5a7a9a;
+
+  --selection: rgba(219,39,119,0.18); --input-focus: var(--accent-dim);
+
+  --cta-bg: var(--accent); --cta-text: #ffffff;
+  --cta-hover-bg: var(--accent-dim); --cta-hover-text: #ffffff;
   --cta-border: var(--accent); --cta-outline-text: var(--accent);
-  --sidebar-bg: var(--bg); --sidebar-brand: var(--accent);
+
+  --sidebar-bg: var(--bg-dark); --sidebar-brand: var(--accent);
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
