@@ -189,6 +189,41 @@ class GrokEdgeCaseTest(unittest.TestCase):
         result = parse_grok_export(payload)
         self.assertEqual(len(result), 0)
 
+    def test_conversations_not_a_list_raises_value_error(self):
+        with self.assertRaises(ValueError) as ctx:
+            parse_grok_export({"conversations": {"not": "a list"}})
+        self.assertIn("list", str(ctx.exception))
+
+    def test_fallback_id_stable_when_first_conv_is_malformed(self):
+        """Skipping a malformed first conv must not shift the fallback ID of later convs."""
+        payload = {
+            "conversations": [
+                # index 0 — malformed (no 'conversation' key), will be skipped
+                {"responses": []},
+                # index 1 — valid, no explicit id → should get grok-conv-1, not grok-conv-0
+                {
+                    "conversation": {
+                        "title": "Second",
+                        "create_time": "2025-01-01T00:00:00.000Z",
+                        "modify_time": "2025-01-01T00:00:00.000Z",
+                    },
+                    "responses": [
+                        {
+                            "response": {
+                                "_id": "r1",
+                                "message": "Hello",
+                                "sender": "human",
+                                "create_time": {"$date": {"$numberLong": "1735689600000"}},
+                            }
+                        }
+                    ],
+                },
+            ]
+        }
+        result = parse_grok_export(payload)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].source_conversation_id, "grok-conv-1")
+
     def test_grok_empty_message_text_skipped(self):
         payload = {
             "conversations": [
