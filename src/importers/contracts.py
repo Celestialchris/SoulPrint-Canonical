@@ -14,11 +14,13 @@ from typing import Any, Protocol
 PROVIDER_CHATGPT = "chatgpt"
 PROVIDER_CLAUDE = "claude"
 PROVIDER_GEMINI = "gemini"
+PROVIDER_GROK = "grok"
 SUPPORTED_IMPORT_PROVIDERS = frozenset(
     {
         PROVIDER_CHATGPT,
         PROVIDER_CLAUDE,
         PROVIDER_GEMINI,
+        PROVIDER_GROK,
     }
 )
 
