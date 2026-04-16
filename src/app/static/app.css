@@ -1169,9 +1169,11 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   flex-shrink: 0;
 }
 .shell .main-header__title {
+  margin: 0;
   font-family: var(--font-body);
   font-weight: 500;
   font-size: 15px;
+  line-height: 1;
   color: var(--t1);
 }
 .shell .main-header__desc {
@@ -1379,10 +1381,13 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 
 /* ── Phase 4 — Import page + secondary coherence ── */
+/* "alive" = green tokens for local-first actions (Magenta Sanctum §2 doctrine carve-out).
+   Namespaced away from the global --cta-bg/--cta-text family (magenta) which drives every
+   other button in the app. Do not rename back. */
 :root {
-  --cta-bg: #4ade80;
-  --cta-fg: #111;
-  --cta-bg-hover: #22c55e;
+  --cta-alive-bg: #4ade80;
+  --cta-alive-fg: #111;
+  --cta-alive-bg-hover: #22c55e;
 }
 
 .trust-line {
@@ -1446,8 +1451,8 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   display: block;
   width: 100%;
   padding: 12px 18px;
-  background: var(--cta-bg);
-  color: var(--cta-fg);
+  background: var(--cta-alive-bg);
+  color: var(--cta-alive-fg);
   border: none;
   border-radius: var(--r-sm);
   font-family: var(--font-body);
@@ -1456,4 +1461,4 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   cursor: pointer;
   transition: background 0.15s var(--ease-out);
 }
-.cta-primary:hover { background: var(--cta-bg-hover); }
+.cta-primary:hover { background: var(--cta-alive-bg-hover); }
