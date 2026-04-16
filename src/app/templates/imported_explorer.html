@@ -4,6 +4,7 @@
 {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
 
 {% block title %}{{ display_title }} · Transcript Explorer{% endblock %}
+{% block page_title %}{{ display_title }}{% endblock %}
 {% block page_class %}page--explorer{% endblock %}
 
 {% block content %}
@@ -13,7 +14,6 @@
     </div>
     <p class="page-eyebrow">Transcript explorer</p>
     <div class="page-header__row">
-      <h1>{{ display_title }}</h1>
       <div class="page-badges">
         {{ badge("Imported", "imported") }}
         {{ badge("Provider: " ~ conversation.source, "neutral") }}

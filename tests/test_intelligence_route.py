@@ -131,7 +131,7 @@ class IntelligenceRouteTest(unittest.TestCase):
             response = self.client.get("/intelligence")
 
         html = response.get_data(as_text=True)
-        self.assertIn("Notes", html)
+        self.assertIn("Your own notes", html)
         self.assertIn("/intelligence", html)
 
     def test_explorer_shows_summarize_button_when_configured(self):

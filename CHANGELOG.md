@@ -2,6 +2,15 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## Phase 4: Secondary Pages Coherence Pass (2026-04-16)
+- 15 non-workspace templates now populate the Phase 2 shell's `page_title` and `page_desc` blocks instead of duplicating the page title inside the body. Topbar carries identity; body carries content.
+- Removed duplicate `<h1>` heroes from every secondary template (imported list/explorer, federated, ask, intelligence, distill, distill_result, passport, answer traces list/detail, continuity detail, notes list, memory detail, import, import_flash)
+- `/import` rebuilt with the pre-Magenta warm-welcome design inside the new shell: centered trust line, dashed dropzone with lane-colored format chips (ChatGPT green, Claude gold, Gemini blue), and a green "local-first" CTA (`.cta-primary` — documented doctrine carve-out per Magenta Sanctum §2)
+- Topbar title (`.main-header__title`) promoted from `<span>` to `<h1>` so every page has exactly one page landmark for screen readers (a11y regression fix caught in pre-landing review)
+- New CSS tokens namespaced as `--cta-alive-bg/fg/bg-hover` so the green import CTA doesn't shadow the app-wide magenta `--cta-bg` family
+- CSS cachebust bumped `?v=8 → ?v=10`
+- Test assertions updated for the page-title restructure: `test_imported_explorer_falls_back_for_blank_title` now asserts the topbar `<h1 class="main-header__title">` instead of a body `<h1>`; `test_nav_includes_notes` now asserts the actual nav label "Your own notes" instead of the retired `<title>Notes · SoulPrint</title>` string
+
 ## Manifesto Rewrite (2026-04-09)
 - Rewrote `docs/manifesto.md` with expanded positioning: extended cognition framing, security argument, and explicit principles (custody not access, provenance over convenience, local by architecture, intelligence without surveillance)
 - README "Why This Exists" now links to the full manifesto

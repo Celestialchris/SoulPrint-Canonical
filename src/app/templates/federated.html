@@ -2,12 +2,13 @@
 {% from "_ui.html" import badge, empty_state %}
 
 {% block title %}Everything, together · SoulPrint{% endblock %}
+{% block page_title %}Everything, together{% endblock %}
+{% block page_desc %}across every provider{% endblock %}
 
 {% block content %}
   <section class="page-header">
     <p class="page-eyebrow">All providers</p>
     <div class="page-header__row">
-      <h1>Everything, together</h1>
       <div class="page-badges">
         {{ badge("Your notes", "native") }}
         {{ badge("Imported", "imported") }}

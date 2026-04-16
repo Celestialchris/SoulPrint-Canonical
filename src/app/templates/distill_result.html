@@ -2,6 +2,8 @@
 {% from "_ui.html" import badge %}
 
 {% block title %}Distillation · SoulPrint{% endblock %}
+{% block page_title %}Handoff ready{% endblock %}
+{% block page_desc %}briefing ready to paste{% endblock %}
 
 {% block content %}
   <section class="page-header">
@@ -11,7 +13,6 @@
     </div>
     <p class="page-eyebrow">Distillation result</p>
     <div class="page-header__row">
-      <h1>Handoff ready</h1>
       <div class="page-badges">
         {{ badge("Derived", "derived") }}
         {{ badge(result.conversation_count ~ " conversations", "neutral") }}

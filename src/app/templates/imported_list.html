@@ -2,13 +2,14 @@
 {% from "_ui.html" import badge, empty_state %}
 
 {% block title %}Imported Conversations · SoulPrint{% endblock %}
+{% block page_title %}Imported{% endblock %}
+{% block page_desc %}conversations from your providers{% endblock %}
 
 
 {% block content %}
   <section class="page-header">
     <p class="page-eyebrow">Your imported history</p>
     <div class="page-header__row">
-      <h1>What you've discussed</h1>
       <div class="page-badges">
         {{ badge("Your archive", "canonical") }}
         {{ badge("Imported", "imported") }}

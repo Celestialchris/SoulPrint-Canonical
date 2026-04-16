@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}SoulPrint{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=9">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=10">
   <script>(function(){var t=localStorage.getItem('soulprint-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)})()</script>
   {% block head_extra %}{% endblock %}
 </head>
@@ -98,7 +98,7 @@
     {# Column C: Main content #}
     <main class="main {% block page_class %}{% endblock %}">
       <header class="main-header">
-        <span class="main-header__title">{% block page_title %}SoulPrint{% endblock %}</span>
+        <h1 class="main-header__title">{% block page_title %}SoulPrint{% endblock %}</h1>
         <span class="main-header__desc">{% block page_desc %}{% endblock %}</span>
         <div class="main-header__actions">
           {% block page_actions %}{% endblock %}

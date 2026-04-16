@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 
 {% block title %}Import · SoulPrint{% endblock %}
+{% block page_title %}Bring conversations home{% endblock %}
+{% block page_desc %}ChatGPT, Claude, or Gemini{% endblock %}
 
 {% block content %}
   {% if result %}
     <section class="import-result">
-      <h1>Import complete</h1>
+      <h2>Import complete</h2>
       <div class="metadata-badges">
         <span class="badge badge--imported">Provider: {{ result.provider_id }}</span>
         <span class="badge">Conversations imported: {{ result.imported_conversations }}</span>
@@ -46,19 +48,22 @@
     </section>
 
   {% else %}
-    <section class="page-header">
-      <p class="page-eyebrow">Import</p>
-      <h1>Bring conversations home</h1>
-      <p class="page-summary">
-        Upload an export file to import conversations from ChatGPT, Claude, or Gemini.
-        Files are processed locally. Duplicates are safely skipped.
-      </p>
-    </section>
+    <p class="trust-line">LOCAL-ONLY · NOTHING LEAVES YOUR MACHINE</p>
 
     <form method="post" action="{{ url_for('import_conversations') }}" enctype="multipart/form-data" class="import-form">
-      <label for="import-export-file" class="field-label">Export file</label>
-      <input id="import-export-file" name="export_file" type="file" accept="application/json,.json,.zip" required>
-      <button type="submit" class="btn-accent">Import</button>
+      <label for="import-export-file" class="dropzone">
+        <span class="dropzone__icon" aria-hidden="true">&#x2193;</span>
+        <h3 class="dropzone__title">Drop your export file here</h3>
+        <p class="dropzone__hint">or click to browse</p>
+        <div class="format-chip-row">
+          <span class="format-chip format-chip--chatgpt">ChatGPT .zip</span>
+          <span class="format-chip format-chip--claude">Claude .json</span>
+          <span class="format-chip format-chip--gemini">Gemini .json</span>
+        </div>
+        <input id="import-export-file" name="export_file" type="file"
+               accept="application/json,.json,.zip" required class="dropzone__input">
+      </label>
+      <button type="submit" class="cta-primary">Import selected file</button>
     </form>
   {% endif %}
 {% endblock %}
