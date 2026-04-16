@@ -35,6 +35,33 @@ def federated_search(*args, **kwargs):
     return _federated_search(*args, **kwargs)
 
 
+def _relative_time_from_unix(unix_ts) -> str:
+    """Short relative-time label for a unix seconds timestamp."""
+
+    if unix_ts is None:
+        return ""
+    try:
+        ts = float(unix_ts)
+    except (TypeError, ValueError):
+        return ""
+
+    now = datetime.now(timezone.utc).timestamp()
+    diff = int(now - ts)
+    if diff < 0:
+        return "just now"
+    if diff < 60:
+        return "just now"
+    if diff < 3600:
+        return f"{diff // 60}m ago"
+    if diff < 86400:
+        return f"{diff // 3600}h ago"
+    if diff < 2592000:
+        return f"{diff // 86400}d ago"
+    if diff < 31536000:
+        return f"{diff // 2592000}mo ago"
+    return f"{diff // 31536000}y ago"
+
+
 def _memory_timestamp_to_unix(entry: MemoryEntry) -> float | None:
     """Normalize native memory timestamps for UI display."""
 
@@ -183,6 +210,11 @@ def create_app():
         dt = datetime.fromtimestamp(float(unix_ts), tz=timezone.utc)
         return dt.strftime("%b %d, %Y").replace(" 0", " ")
 
+    @app.template_filter("relative_time")
+    def _relative_time(unix_ts):
+        """Render a unix timestamp as a short relative string ('2h ago', '3d ago')."""
+        return _relative_time_from_unix(unix_ts)
+
     @app.get("/")
     def home():
         from ..answering.trace import default_trace_store_path
@@ -227,6 +259,24 @@ def create_app():
             _activity.append({"text": "Theme scan completed", "time_unix": None, "time_iso": _topic_scans[0].get("generation_timestamp", "")})
         recent_activity = _activity[:3]
 
+        # Greeting: time-of-day from local system clock
+        _hour = datetime.now().hour
+        time_of_day = "morning" if _hour < 12 else "afternoon" if _hour < 18 else "evening"
+
+        # Recent conversations (across providers): shape workspace.recent_imported
+        # into the template contract (id/title/provider/relative_time).
+        recent_conversations = [
+            {
+                "id": row["id"],
+                "title": row.get("title") or "Untitled",
+                "provider": row.get("source", ""),
+                "relative_time": _relative_time_from_unix(
+                    row.get("updated_at_unix") or row.get("created_at_unix")
+                ),
+            }
+            for row in workspace.recent_imported
+        ]
+
         license_status = get_license_status(instance_dir=app.instance_path)
         return render_template(
             "index.html",
@@ -236,6 +286,8 @@ def create_app():
             last_passport_date=last_passport_date,
             top_themes=top_themes,
             recent_activity=recent_activity,
+            time_of_day=time_of_day,
+            recent_conversations=recent_conversations,
         )
 
     @app.get("/passport")
