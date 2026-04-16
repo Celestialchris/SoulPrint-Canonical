@@ -50,9 +50,15 @@
       <p class="page-eyebrow">Import</p>
       <h1>Bring conversations home</h1>
       <p class="page-summary">
-        Drop an export file in the sidebar to import conversations from ChatGPT, Claude, or Gemini.
+        Upload an export file to import conversations from ChatGPT, Claude, or Gemini.
         Files are processed locally. Duplicates are safely skipped.
       </p>
     </section>
+
+    <form method="post" action="{{ url_for('import_conversations') }}" enctype="multipart/form-data" class="import-form">
+      <label for="import-export-file" class="field-label">Export file</label>
+      <input id="import-export-file" name="export_file" type="file" accept="application/json,.json,.zip" required>
+      <button type="submit" class="btn-accent">Import</button>
+    </form>
   {% endif %}
 {% endblock %}

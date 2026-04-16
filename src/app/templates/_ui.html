@@ -21,3 +21,16 @@
     {% endif %}
   </section>
 {%- endmacro %}
+
+{% macro sidebar_item(href, label, active=False, lane=None, badge=None, unread=False) -%}
+  <a
+    class="sidebar-item{% if active %} sidebar-item--active{% endif %}"
+    href="{{ href }}"
+    {% if active %}aria-current="page"{% endif %}
+  >
+    {% if lane -%}<span class="sidebar-item__lane" style="background: var(--lane-{{ lane }})" aria-hidden="true"></span>{%- endif %}
+    <span class="sidebar-item__label">{{ label }}</span>
+    {% if badge is not none -%}<span class="sidebar-item__badge">{{ badge }}</span>{%- endif %}
+    {% if unread -%}<span class="sidebar-item__unread" aria-label="unread"></span>{%- endif %}
+  </a>
+{%- endmacro %}

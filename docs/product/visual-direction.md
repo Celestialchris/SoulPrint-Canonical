@@ -8,7 +8,7 @@ Do not alter product architecture, lane honesty, provenance display rules, or wo
 
 The live `src/app/static/app.css` is always the authoritative source for design tokens, colors, fonts, and spacing. If this file and any documentation file disagree, the CSS wins.
 
-Current system: "USB Drive" — see `docs/product/brand.md` for documented tokens.
+Current system: "Magenta Sanctum" — see `docs/product/design-doctrine-magenta-sanctum.md` for the authoritative doctrine.
 
 ## Where aesthetic prompting applies
 
