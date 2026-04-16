@@ -1150,14 +1150,30 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .shell .main::before {
   content: '';
   position: absolute;
-  top: -200px;
-  right: 100px;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  top: -180px;
+  left: -10%;
+  width: 120%;
+  height: 500px;
+  background:
+    radial-gradient(ellipse 60% 50% at 35% 0%, rgba(180, 50, 80, 0.35) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 45% at 55% 0%, rgba(220, 60, 100, 0.20) 0%, transparent 65%),
+    radial-gradient(ellipse 80% 40% at 45% 0%, rgba(140, 30, 60, 0.18) 0%, transparent 80%);
   pointer-events: none;
   z-index: 0;
 }
+.shell .main::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+[data-theme="light"] .shell .main::before { opacity: 0.35; }
+[data-theme="light"] .shell .main::after { opacity: 0.015; }
 .shell .main > * { position: relative; z-index: 1; }
 .shell .main-header {
   height: 48px;
