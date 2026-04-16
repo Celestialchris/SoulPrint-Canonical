@@ -2,88 +2,148 @@
 
 {% block title %}SoulPrint Workspace{% endblock %}
 
+{% block page_title %}Workspace{% endblock %}
+
 {% block content %}
+
+{# ── Section 1: Identity strip ── #}
+<section class="spine-identity">
+  <h1 class="spine-identity__h1">SoulPrint</h1>
+  <p class="spine-identity__tagline">Your AI conversations are scattered everywhere. SoulPrint brings them home.</p>
+  <p class="spine-identity__trust">LOCAL-ONLY · NOTHING LEAVES YOUR MACHINE</p>
   {% if not workspace.has_any_data %}
-    <section class="workspace-firstrun">
-      <h1 class="workspace-firstrun__title">Bring your conversations home</h1>
-      <p class="workspace-firstrun__tagline">
-        SoulPrint imports your AI chat history and keeps it on your machine.
-        No account, no cloud, no telemetry.
-      </p>
-      <p class="workspace-firstrun__hint">
-        Drop a ChatGPT, Claude, or Gemini export in the sidebar to get started.
-      </p>
-      <div class="workspace-firstrun__trust">
-        <span>local-first</span>
-        <span>offline-capable</span>
-        <span>your data stays yours</span>
-      </div>
-    </section>
-
-  {% else %}
-    <section class="workspace-stats">
-      <div class="stat-card">
-        <span class="stat-card__label">conversations</span>
-        <span class="stat-card__value">{{ workspace.imported_conversation_count }}</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-card__label">messages</span>
-        <span class="stat-card__value">{{ workspace.imported_message_count }}</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-card__label">providers</span>
-        <span class="stat-card__value">{{ workspace.provider_recent|length }}</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-card__label">notes</span>
-        <span class="stat-card__value">{{ workspace.native_count }}</span>
-      </div>
-    </section>
-
-    {% if workspace.provider_recent %}
-      <section class="workspace-providers">
-        <h2 class="workspace-section__title">By provider</h2>
-        <ul class="provider-list">
-          {% for entry in workspace.provider_recent %}
-            <li class="provider-row">
-              <a class="provider-row__link" href="{{ url_for('imported_conversations') }}?provider={{ entry.provider }}">
-                <span class="provider-row__dot" style="background: var(--lane-{{ entry.provider }});"></span>
-                <span class="provider-row__name">{{ entry.provider }}</span>
-                <span class="provider-row__count">{{ entry.count }}</span>
-              </a>
-              {% if entry.recent_title and entry.recent_id %}
-                <a class="provider-row__recent" href="{{ url_for('imported_explorer', conversation_id=entry.recent_id) }}">
-                  {{ entry.recent_title }}
-                </a>
-              {% endif %}
-            </li>
-          {% endfor %}
-        </ul>
-      </section>
-    {% endif %}
-
-    {% if workspace.recent_imported %}
-      <section class="workspace-recent">
-        <h2 class="workspace-section__title">Recent conversations</h2>
-        <ul class="conversation-list">
-          {% for row in workspace.recent_imported[:6] %}
-            <li class="conversation-row">
-              <span class="conversation-row__dot" style="background: var(--lane-{{ row.source }});"></span>
-              <a class="conversation-row__title" href="{{ url_for('imported_explorer', conversation_id=row.id) }}">{{ row.title }}</a>
-              <span class="conversation-row__badge">{{ row.source }}</span>
-              <span class="conversation-row__time" data-unix="{{ row.updated_at_unix }}">—</span>
-            </li>
-          {% endfor %}
-        </ul>
-      </section>
-    {% endif %}
+  <p class="spine-firstrun-hint">Bring your conversations home. Drop a ChatGPT, Claude, or Gemini export in the sidebar to get started. No account, no cloud, no telemetry.</p>
   {% endif %}
+</section>
+
+{# ── Section 2: Stats row ── #}
+<section class="spine-stats-row">
+  <div class="stat-card">
+    <span class="stat-card__value">{{ workspace.imported_conversation_count if workspace.imported_conversation_count else '—' }}</span>
+    <span class="stat-card__label">conversations</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-card__value">{{ workspace.imported_message_count if workspace.imported_message_count else '—' }}</span>
+    <span class="stat-card__label">messages</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-card__value">{{ workspace.provider_recent|length if workspace.provider_recent else '—' }}</span>
+    <span class="stat-card__label">providers</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-card__value">{{ workspace.native_count if workspace.native_count else '—' }}</span>
+    <span class="stat-card__label">notes</span>
+  </div>
+</section>
+
+{# ── Section 3: Product loop ── #}
+<section class="spine-loop">
+  <a class="spine-loop-row" href="{{ url_for('import_conversations') }}">
+    <span class="spine-loop-row__step">01</span>
+    <span class="spine-loop-row__verb">Import</span>
+    <span class="spine-loop-row__state">{{ (workspace.provider_recent|length ~ ' providers ready') if workspace.provider_recent else 'No imports yet' }}</span>
+    <span class="spine-loop-row__arrow">→</span>
+  </a>
+  <a class="spine-loop-row" href="{{ url_for('federated_browser') }}">
+    <span class="spine-loop-row__step">02</span>
+    <span class="spine-loop-row__verb">Browse</span>
+    <span class="spine-loop-row__state">{{ (workspace.imported_conversation_count ~ ' conversations') if workspace.imported_conversation_count else 'Nothing to browse yet' }}</span>
+    <span class="spine-loop-row__arrow">→</span>
+  </a>
+  <a class="spine-loop-row" href="{{ url_for('distill') }}">
+    <span class="spine-loop-row__step">03</span>
+    <span class="spine-loop-row__verb">Distill</span>
+    <span class="spine-loop-row__state">{{ (distill_count ~ ' packets saved') if distill_count else 'Run your first distillation' }}</span>
+    <span class="spine-loop-row__arrow">→</span>
+  </a>
+  <a class="spine-loop-row" href="{{ url_for('passport_surface') }}">
+    <span class="spine-loop-row__step">04</span>
+    <span class="spine-loop-row__verb">Export</span>
+    <span class="spine-loop-row__state">{{ ('Last passport: ' ~ last_passport_date) if last_passport_date else 'No passport yet' }}</span>
+    <span class="spine-loop-row__arrow">→</span>
+  </a>
+</section>
+
+{# ── Section 4: Provider block (skip when no imports) ── #}
+{% if workspace.provider_recent %}
+<section class="spine-providers">
+  {% for entry in workspace.provider_recent %}
+  <div class="spine-provider-block">
+    <div class="spine-provider-block__header">
+      <span class="spine-provider-block__name" style="color: var(--lane-{{ entry.provider }})">{{ entry.provider }}</span>
+      <span class="spine-provider-block__count">{{ entry.count }} conversations</span>
+    </div>
+    {% if entry.recent_title and entry.recent_id %}
+    <a class="spine-provider-block__last" href="{{ url_for('imported_explorer', conversation_id=entry.recent_id) }}">last: "{{ entry.recent_title }}" →</a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{# ── Section 5: Passport status strip ── #}
+<section class="spine-passport">
+  {% if last_passport_date %}
+  <a class="spine-passport__row" href="{{ url_for('passport_surface') }}">
+    Memory Passport · last export {{ last_passport_date }} · file at instance/soulprint.db →
+  </a>
+  {% else %}
+  <a class="spine-passport__row" href="{{ url_for('passport_surface') }}">
+    Your archive is a file at instance/soulprint.db — export a passport to take it anywhere →
+  </a>
+  {% endif %}
+</section>
+
+{% endblock %}
+
+{% block right_panel %}
+<div class="context-panel__header">Context</div>
+
+{# Block A: Providers #}
+{% if workspace.provider_recent %}
+<section class="context-section">
+  <div class="context-section__label">Providers</div>
+  {% for entry in workspace.provider_recent %}
+  <div class="context-provider">
+    <span class="context-provider__dot" style="background: var(--lane-{{ entry.provider }})"></span>
+    <span class="context-provider__name">{{ entry.provider }}</span>
+    <span class="context-provider__count">{{ entry.count }}</span>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{# Block B: Top themes #}
+<section class="context-section">
+  <div class="context-section__label">Top Themes</div>
+  {% if top_themes %}
+    {% for theme in top_themes %}<span class="context-tag">{{ theme }}</span>{% endfor %}
+  {% else %}
+  <span class="context-section__empty">No theme scan yet — <a href="{{ url_for('intelligence') }}">run one →</a></span>
+  {% endif %}
+</section>
+
+{# Block C: Recent activity (skip heading when empty) #}
+{% if recent_activity %}
+<section class="context-section">
+  <div class="context-section__label">Recent Activity</div>
+  {% for event in recent_activity %}
+  <div class="activity-item">
+    <div class="activity-item__text">{{ event.text }}</div>
+    <div class="activity-item__time">
+      {% if event.time_unix %}<span data-unix="{{ event.time_unix }}">—</span>
+      {% elif event.time_iso %}{{ event.time_iso[:10] }}
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script>
 (function(){
-  // Format data-unix timestamps as short relative times ("2h", "3d", "5mo")
   function relativeShort(unixSeconds) {
     if (!unixSeconds) return '—';
     var now = Math.floor(Date.now() / 1000);
