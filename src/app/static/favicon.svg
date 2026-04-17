@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-  <rect x="0" y="0" width="16" height="16" rx="4" fill="#f472b6"/>
+  <rect x="0" y="0" width="16" height="16" rx="4" fill="#A25B47"/>
   <text x="8" y="11" font-family="system-ui, sans-serif"
-        font-size="9" font-weight="700" fill="#ffffff"
+        font-size="9" font-weight="700" fill="#E7C98A"
         text-anchor="middle">S</text>
 </svg>

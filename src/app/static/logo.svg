@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <rect x="0" y="0" width="32" height="32" rx="10" fill="#f472b6"/>
+  <rect x="0" y="0" width="32" height="32" rx="10" fill="#A25B47"/>
   <text x="16" y="21" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-        font-size="13" font-weight="600" fill="#ffffff"
+        font-size="13" font-weight="600" fill="#E7C98A"
         text-anchor="middle" letter-spacing="0.5">SP</text>
 </svg>

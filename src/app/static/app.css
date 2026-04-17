@@ -28,8 +28,8 @@
   /* Wordmark — gold identity (glow recipe applied in Phase 2) */
   --wordmark-gold: #E7C98A; --wordmark-glow: rgba(231,201,138,0.28);
 
-  /* Secondary — green presence indicator (local-first status only) */
-  --green: #4ade80; --green-soft: rgba(74,222,128,0.12);
+  /* Secondary — green presence indicator (local-first status only; matches --lane-chatgpt so the system has one canonical green) */
+  --green: #23955D; --green-soft: rgba(35,149,93,0.12);
 
   /* Text hierarchy — warm cream on warm black */
   --t1: rgba(244,238,229,0.92); --t2: rgba(244,238,229,0.62);
@@ -84,7 +84,7 @@
 
   --wordmark-gold: #B08A3E; --wordmark-glow: rgba(176,138,62,0.22);
 
-  --green: #16a34a; --green-soft: rgba(22,163,74,0.12);
+  --green: #1C7A4C; --green-soft: rgba(28,122,76,0.12);
 
   --t1: rgba(26,22,18,0.92); --t2: rgba(26,22,18,0.62);
   --t3: rgba(26,22,18,0.34); --t4: rgba(26,22,18,0.16);
@@ -364,8 +364,21 @@ button:active{transform:scale(0.98)}
 .pagination__link--disabled{opacity:.3;cursor:default;pointer-events:none}
 .pagination__ellipsis{padding:6px 4px;color:var(--t3);font-family:var(--font-mono);font-size:12px}
 
-/* Hero */
-.page-header .hero-wordmark{color:var(--t1);font-family:var(--font-body);font-size:clamp(2rem,4vw,2.8rem);font-weight:500;letter-spacing:-0.5px;line-height:1}
+/* Hero — Torchlight wordmark (Quiet Archive identity moment; dark mode glows, light mode solid) */
+.page-header .hero-wordmark{
+  color:var(--wordmark-gold);
+  font-family:var(--font-display);
+  font-size:clamp(2rem,4vw,2.8rem);
+  font-weight:500;
+  letter-spacing:-0.5px;
+  line-height:1;
+  text-shadow:
+    0 0 7px rgba(220,140,70,0.50),
+    0 0 20px rgba(210,120,60,0.35),
+    0 0 50px rgba(200,100,50,0.18),
+    0 0 100px rgba(180,80,40,0.07),
+    0 2px 4px rgba(0,0,0,0.4);
+}
 [data-theme="light"] .page-header .hero-wordmark{text-shadow:none}
 
 /* Lane labels */
@@ -677,9 +690,16 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   font-size: 17px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: var(--t1);
+  color: var(--wordmark-gold);
   text-decoration: none;
+  text-shadow:
+    0 0 7px rgba(220,140,70,0.50),
+    0 0 20px rgba(210,120,60,0.35),
+    0 0 50px rgba(200,100,50,0.18),
+    0 0 100px rgba(180,80,40,0.07),
+    0 2px 4px rgba(0,0,0,0.4);
 }
+[data-theme="light"] .shell .sidebar-header__brand { text-shadow: none; }
 .shell .sidebar-search {
   position: relative;
   padding: 10px 12px;
@@ -1009,13 +1029,14 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 
 /* ── Phase 4 — Import page + secondary coherence ── */
-/* "alive" = green tokens for local-first actions (Magenta Sanctum §2 doctrine carve-out).
-   Namespaced away from the global --cta-bg/--cta-text family (magenta) which drives every
-   other button in the app. Do not rename back. */
+/* cta-alive tokens were green (USB Drive / Magenta Sanctum era); Quiet Archive v3 repoints
+   them to the clay accent so the Import CTA reads brand, not provider-green. Token names kept
+   for backward compatibility with existing selectors (.cta-primary etc.); fg stays dark for
+   contrast on clay. */
 :root {
-  --cta-alive-bg: #4ade80;
-  --cta-alive-fg: #111;
-  --cta-alive-bg-hover: #22c55e;
+  --cta-alive-bg: var(--accent);
+  --cta-alive-fg: #ffffff;
+  --cta-alive-bg-hover: var(--accent-dim);
 }
 
 .trust-line {

@@ -5,29 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SoulPrint — Your AI Memory</title>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=15">
   <style>
-    :root {
-      --bg: #111113;
-      --surface: #18181b;
-      --raised: #1e1e22;
-      --accent: #f472b6;
-      --accent-dim: #be4b8a;
-      --accent-muted: rgba(244,114,182,0.12);
-      --accent-ghost: rgba(244,114,182,0.06);
-      --t1: rgba(250,250,250,0.92);
-      --t2: rgba(250,250,250,0.56);
-      --t3: rgba(250,250,250,0.32);
-      --t4: rgba(250,250,250,0.14);
-      --line: rgba(250,250,250,0.07);
-      --lane-chatgpt: #4ade80;
-      --lane-claude: #c9a84c;
-      --lane-gemini: #60a5fa;
-      --lane-native: #60a5fa;
-      --font-display: 'Playfair Display', ui-serif, Georgia, Cambria, "Times New Roman", serif;
-      --font-body: 'DM Sans', system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --font-mono: 'JetBrains Mono', ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    }
+    /* Wrapped inherits shell tokens from app.css — no local overrides.
+       Quiet Archive v3: clay accent, warm-black canvas, gold wordmark. */
 
     *, *::before, *::after {
       margin: 0;
@@ -36,7 +17,7 @@
     }
 
     ::selection {
-      background: rgba(244,114,182,0.20);
+      background: var(--selection);
     }
 
     html {
@@ -76,13 +57,20 @@
     }
 
     .hero-wordmark {
-      color: var(--t1);
-      font-family: var(--font-body);
+      color: var(--wordmark-gold);
+      font-family: var(--font-display);
       font-size: clamp(1.6rem, 4vw, 2rem);
-      font-weight: 600;
+      font-weight: 500;
       letter-spacing: 0.3px;
       margin-bottom: 0.4rem;
+      text-shadow:
+        0 0 7px rgba(220,140,70,0.50),
+        0 0 20px rgba(210,120,60,0.35),
+        0 0 50px rgba(200,100,50,0.18),
+        0 0 100px rgba(180,80,40,0.07),
+        0 2px 4px rgba(0,0,0,0.4);
     }
+    [data-theme="light"] .hero-wordmark { text-shadow: none; }
 
     .hero-subtitle {
       font-family: var(--font-body);
@@ -462,7 +450,7 @@
     {# ---- Provider Breakdown ---- #}
     <div class="providers-section">
       <div class="section-heading">Your providers</div>
-      {%- set lane_colors = {"chatgpt": "#4ade80", "claude": "#c9a84c", "gemini": "#60a5fa", "native": "#60a5fa"} -%}
+      {%- set lane_colors = {"chatgpt": "#23955D", "claude": "#C69224", "gemini": "#2D6FE8", "native": "#2D6FE8"} -%}
       {% for provider in wrapped.providers %}
       <div class="provider-row">
         <span class="provider-name">{{ provider.name }}</span>
