@@ -122,11 +122,13 @@ def _build_multi_transcript(
         block = header + "\n" + "\n".join(lines)
         separator_cost = 2 if parts else 0  # "\n\n" only between blocks
         if i == 0:
-            # Always include the most recent conversation even if it exceeds the budget.
-            parts.append(block)
-            used += len(block)
+            # Always include the most recent conversation, but cap it at max_chars.
             if len(block) > max_chars:
+                parts.append(block[:max_chars])
                 truncated = True
+            else:
+                parts.append(block)
+            used = len(parts[0])
             continue
         if used + separator_cost + len(block) > max_chars:
             truncated = True

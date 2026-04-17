@@ -82,12 +82,15 @@ class BuildMultiTranscriptTest(unittest.TestCase):
         transcript, _ = _build_multi_transcript(convs, max_chars=100_000)
         self.assertIn("\n\n", transcript)
 
-    def test_oversized_single_block_still_included(self):
-        # A single conversation larger than max_chars must still appear in the
-        # transcript — the first block is always included to avoid empty LLM input.
+    def test_oversized_single_block_capped_at_max_chars(self):
+        # A conversation larger than max_chars must still produce a non-empty
+        # transcript, capped at exactly max_chars — the cap is never exceeded.
+        # max_chars=50: the block header is ~57 chars + body, so it will be sliced.
+        # "HugeConversation" starts at char 19 in the header and fits in [:50].
         conv = _make_conv(1, "HugeConversation", "x" * 500, ts=1)
-        transcript, truncated = _build_multi_transcript([conv], max_chars=10)
+        transcript, truncated = _build_multi_transcript([conv], max_chars=50)
         self.assertTrue(len(transcript) > 0)
+        self.assertLessEqual(len(transcript), 50)
         self.assertIn("HugeConversation", transcript)
         self.assertTrue(truncated)
 
