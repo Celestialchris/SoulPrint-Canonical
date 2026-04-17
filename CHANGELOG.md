@@ -2,6 +2,21 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## v0.6.1 — Distill input overflow guard + complete() interface (2026-04-17)
+
+### Fixed
+- `distill_conversations()` previously passed all conversations to `provider.summarize()` with no input size cap, producing 1M-token prompts when importing 44+ conversations. Ollama silently truncated to its 65k context and returned prose instead of the structured handoff format.
+- `provider.summarize()` re-wrapped all content into a flat transcript string and discarded the structured `_SYSTEM_PROMPT` from `distill.py`, replacing it with a hardcoded "be concise" system prompt. Distillation output was generic summaries, not the six-section handoff document.
+
+### Added
+- `MAX_INPUT_CHARS = 180_000` cap in `distill.py`. Conversations are sorted most-recent-first so the newest context always survives truncation.
+- `LLMProvider.complete(system_prompt, user_message)` method on all three providers (`StubProvider`, `AnthropicProvider`, `OpenAIProvider`). Passes the system prompt as a true API system role without re-wrapping or flattening. `max_tokens` raised from 1024 → 4096 to accommodate the 2K-6K token distillation target.
+- `DistillationResult.input_truncated: bool` field — set when one or more conversations were dropped due to the input budget. Flows into the result for downstream use.
+
+### Tests
+- 15 tests in `tests/test_intelligence_distill.py` covering truncation budget, recency sorting, empty input, missing timestamps, and end-to-end `DistillationResult` fields.
+- 13 tests in `tests/test_intelligence_provider_complete.py` verifying system prompt passthrough (no re-wrapping), role structure, and max_tokens for all three providers. Suite: 686 → 714 passing.
+
 ## Local LLM + Single Conversation Export (2026-04-17)
 ### Added
 - Single-conversation markdown export: `GET /imported/<id>/export` returns a downloadable `.md` with metadata, provenance, and all messages. "Export as markdown" link surfaces on the transcript explorer.
