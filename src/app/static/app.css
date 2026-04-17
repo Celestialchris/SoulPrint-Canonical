@@ -35,7 +35,7 @@
   --hairline: 0.5px;
 
   /* Provider lanes — vibrant palette */
-  --lane-chatgpt: #4ade80; --lane-claude: #a78bfa;
+  --lane-chatgpt: #4ade80; --lane-claude: #c9a84c;
   --lane-gemini: #60a5fa; --lane-native: #60a5fa;
   --lane-grok: #e879f9;
 
@@ -84,7 +84,7 @@
 
   --line: rgba(0,0,0,0.08); --line-strong: rgba(0,0,0,0.14);
 
-  --lane-chatgpt: #16a34a; --lane-claude: #7c5cbf;
+  --lane-chatgpt: #16a34a; --lane-claude: #c9a84c;
   --lane-gemini: #2563eb; --lane-native: #2563eb;
   --lane-grok: #c026d3;
 

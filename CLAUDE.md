@@ -80,7 +80,7 @@ Shell is editorial (pink brand accent, flat dark canvas with rail and sidebar li
 Lane palette (vibrant, restored Phase 5.6):
 
 - ChatGPT: `#4ade80` (green)
-- Claude:  `#a78bfa` (violet)
+- Claude:  `#c9a84c` (gold)
 - Gemini:  `#60a5fa` (blue)
 - Grok:    `#e879f9` (magenta, dormant)
 
