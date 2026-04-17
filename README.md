@@ -29,7 +29,8 @@ SoulPrint imports your ChatGPT, Claude, and Gemini history into a single searcha
 ```bash
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
 cd SoulPrint-Canonical
-pip install -e .
+pip install -e .                    # core: import, browse, search, export
+pip install -e ".[intelligence]"    # + Ask, Distill, Themes (requires Ollama or API key)
 soulprint
 ```
 
