@@ -23,7 +23,11 @@
 - [Repair notes](reference/history/repair-notes.md)
 - [Repo audit baseline](reference/history/repo-audit-baseline.md)
 - [Future directions](reference/ideas/future-directions.md) *(speculative)*
-- [Executable packaging](reference/ideas/executable-packaging-overview.md) *(speculative)*
+
+## Releases
+- [v0.1.0 release notes](releases/RELEASE-v0.1.0.md)
+- [Launch playbook](releases/LAUNCH-PLAYBOOK.md)
+- [30-day vision](releases/SOULPRINT-30-DAY-VISION.md)
 
 ## Archive
 - [Pre-continuity README](archive/README.pre-continuity.md)

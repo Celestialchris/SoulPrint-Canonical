@@ -68,7 +68,7 @@ Keep Codex lean:
 3. Phase 1 completed: baseline harness installation.
 4. Phase 2 completed: SoulPrint-specific adaptation.
 5. Phase 3 began: operational workflow testing.
-6. Answering Layer work started with a safe additive retrieval change (“Phase A”).
+6. Answering Layer work started with a safe additive retrieval change ("Phase A").
 
 ## What Phase A did
 Phase A improved the retrieval side without changing schema or stable ID semantics.
@@ -111,7 +111,7 @@ What is already true:
 1. Evidence text is ignored in ranking.
    Imported conversations with generic titles can score lower than they should, even when a message matched strongly.
 2. Evidence text is ignored in display.
-   Users see a title like “Weekly standup notes” instead of the actual matched sentence.
+   Users see a title like "Weekly standup notes" instead of the actual matched sentence.
 3. Fallback asymmetry.
    `evidence_text` can be `None`, especially for native memory hits or imported hits without message-level evidence.
 4. Ambiguity thresholds may later need recalibration once evidence text participates in overlap scoring.
@@ -189,4 +189,3 @@ If there is any uncertainty, trust these principles in order:
 ---
 
 End of continuity prompt.
-
