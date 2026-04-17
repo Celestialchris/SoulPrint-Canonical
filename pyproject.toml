@@ -17,7 +17,8 @@ dependencies = [
   "flask-sqlalchemy",
   "beautifulsoup4",
   "lxml",
-  "mcp[cli]"
+  "mcp[cli]",
+  "openai>=1.0.0"
 ]
 
 [project.optional-dependencies]
