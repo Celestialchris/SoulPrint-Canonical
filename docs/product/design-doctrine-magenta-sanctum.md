@@ -69,16 +69,17 @@ For backward compatibility during the phase-by-phase migration, the legacy token
 --raised: var(--bg-mid);
 ```
 
-### Provider lanes (muted, logo-derived)
+### Provider lanes (vibrant, restored Phase 5.6)
 
 | Provider | Value | Inspiration |
 |---|---|---|
-| `--lane-chatgpt` | `#5a8a6a` | OpenAI green, desaturated |
-| `--lane-claude` | `#c9a84c` | Anthropic clay/gold, desaturated |
-| `--lane-gemini` | `#5a7a9a` | Google blue, desaturated |
-| `--lane-native` | `#5a7a9a` | Matches Gemini for now; revisit if native notes gain their own identity |
+| `--lane-chatgpt` | `#4ade80` | OpenAI green |
+| `--lane-claude` | `#c9a84c` | Anthropic gold |
+| `--lane-gemini` | `#60a5fa` | Google blue |
+| `--lane-native` | `#60a5fa` | Matches Gemini for now |
+| `--lane-grok` | `#e879f9` | xAI magenta (dormant) |
 
-**Note on Claude = gold, not purple.** Stored memory descriptions reference Claude as purple/violet. That description is retired — the app uses gold per this doctrine. The lane colors are intentionally muted so they sit *behind* the pink accent rather than competing with it. Data colors should never outshine brand color.
+**Note:** The doctrine originally specified muted, desaturated lane colors. These were reverted to vibrant in Phase 5.6. Claude's lane was later changed from violet (`#a78bfa`) to gold (`#c9a84c`) per the original doctrine intent — gold reads as the correct Anthropic brand association. Lane colors mark data identity, not brand.
 
 ### Text hierarchy
 

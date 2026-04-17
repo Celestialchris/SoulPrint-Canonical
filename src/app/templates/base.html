@@ -68,7 +68,7 @@
           <span class="sidebar-group__label">Interpretation</span>
           {{ sidebar_item(url_for('intelligence'), 'Themes & patterns', request.path.startswith('/intelligence')) }}
           {{ sidebar_item(url_for('distill'), 'Distill', request.path.startswith('/distill')) }}
-          {{ sidebar_item(url_for('answer_trace_list'), 'Answer traces', request.path.startswith('/answer-traces')) }}
+          {{ sidebar_item(url_for('answer_trace_list'), 'How answers were found', request.path.startswith('/answer-traces')) }}
         </nav>
 
         <nav class="sidebar-group" aria-label="Continuity">

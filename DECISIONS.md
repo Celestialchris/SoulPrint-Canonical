@@ -30,10 +30,10 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-03 | Design direction: "USB Drive." Near-black background (#0e0f11), green (#4ade80) trust accent, system sans-serif body, Forum wordmark, JetBrains Mono for labels. | Green communicates safety and trust for users handing over conversation history. Clean, minimal, not dashboard. |
-| 2026-03 | Green (#4ade80) is the primary accent. Purple (#a78bfa) marks derived/generated surfaces. | Two-accent system. Green = action/trust. Purple = "this was generated." |
+| 2026-03 | Design direction: "Magenta Sanctum v2." Near-black backgrounds (#111113–#1e1e22), pink (#f472b6) brand accent, Playfair Display / DM Sans / JetBrains Mono bundled locally. See docs/product/design-doctrine-magenta-sanctum.md. | Pink is the brand accent. Shell is editorial (serif personality, ambient glow), data is flat (mono labels, hairline dividers). Discord four-column structure, Bun editorial restraint. |
+| 2026-03 | Pink (#f472b6) is the brand accent. Provider lane colors (vibrant, restored Phase 5.6): ChatGPT green, Claude gold (post-Task-8), Gemini blue. Lane colors mark data identity, not brand. | Brand accent and lane colors live separately — brand is pink chrome, lanes are per-provider data identity. |
 | 2026-03 | No box-shadows, no icons in nav, no font-weight above 500. Flat rows with border-bottom dividers. | Content sits on the dark background with typography and spacing creating structure. |
-| 2026-03 | Provider lane colors: ChatGPT green (#4ade80), Claude purple (#a78bfa), Gemini blue (#60a5fa). | Lane identity through color, consistent with accent palette. |
+| 2026-03 | Provider lane colors: ChatGPT green (#4ade80), Claude gold (#c9a84c), Gemini blue (#60a5fa). | Lane identity through color, consistent with accent palette. |
 | 2026-03 | The live `app.css` is always authoritative over doc files. | Prevents coherence drift between docs and implementation. |
 
 ## Product

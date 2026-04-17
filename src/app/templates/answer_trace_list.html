@@ -2,14 +2,11 @@
 {% from "_ui.html" import badge, empty_state %}
 
 {% block title %}Answer Traces · SoulPrint{% endblock %}
-{% block page_title %}Answer traces{% endblock %}
-{% block page_desc %}how answers were found{% endblock %}
+{% block page_title %}How answers were found{% endblock %}
+{% block page_desc %}audit trail for every answer{% endblock %}
 
 {% block content %}
   <section class="page-header">
-    <div class="back-links" aria-label="Back navigation">
-      <a class="back-link" href="/">Back to home</a>
-    </div>
     <p class="page-eyebrow">Answer audit</p>
     <div class="page-header__row">
       <div class="page-badges">
@@ -25,12 +22,12 @@
       {% for trace in traces %}
         <a class="record-card record-card--link record-card--derived" href="/answer-traces/{{ trace.trace_id }}">
           <div class="record-card__header">
-            <h2 class="record-card__title">{{ trace.trace_id }}</h2>
+            <h2 class="record-card__title">{{ trace.question|default('', true)|trim or trace.trace_id }}</h2>
             <div class="metadata-badges">
               {{ badge("Status: " ~ trace.status, "derived") }}
             </div>
           </div>
-          <p class="metadata-line">{{ trace.trace_id }} · {{ trace.created_at }} · Status: {{ trace.status }}</p>
+          <p class="metadata-line">{{ trace.created_at }} · Status: {{ trace.status }}</p>
           <p class="metadata-line">{{ trace.question|default('', true)|trim or "(no question captured)" }}</p>
           <p class="metadata-line">Sources: {{ trace.source_lanes|join(', ') if trace.source_lanes else "none" }}</p>
         </a>
