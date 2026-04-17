@@ -29,13 +29,13 @@ Routes are unchanged — only the visible text changes.
 
 | Route             | Nav Label                   | Page Heading                  |
 |-------------------|-----------------------------|-------------------------------|
-| `/`               | Workspace                   | Workspace                     |
+| `/`               | Workspace                   | Search your archive           |
 | `/ask`            | Ask your memory             | Ask your memory               |
 | `/imported`       | What you've discussed       | What you've discussed         |
 | `/chats`          | Your own notes              | Your own notes                |
 | `/federated`      | Everything, together        | Everything, together          |
-| `/intelligence`   | Themes & patterns           | Themes & patterns             |
-| `/distill`        | Distill                     | Distill                       |
+| `/intelligence`   | Recurring themes            | Recurring themes              |
+| `/distill`        | Create a digest             | Create a digest               |
 | `/answer-traces`  | How answers were found      | How answers were found        |
 | `/import`         | Import                      | Bring conversations home      |
 | `/passport`       | Take it with you            | Memory Passport               |

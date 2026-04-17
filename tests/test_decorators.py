@@ -33,7 +33,7 @@ class RequireLicenseDecoratorTest(unittest.TestCase):
         response = self.client.get("/ask")
         self.assertEqual(response.status_code, 200)
         # The ask form should render, not the upgrade page.
-        self.assertNotIn(b"Go deeper", response.data)
+        self.assertNotIn(b"Unlock Ask, themes, and continuity", response.data)
 
     @patch("src.app.is_licensed", return_value=True)
     def test_licensed_post_passes_through(self, _mock):
@@ -47,7 +47,7 @@ class RequireLicenseDecoratorTest(unittest.TestCase):
         """Unlicensed GET shows the upgrade page with 200."""
         response = self.client.get("/ask")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Go deeper", response.data)
+        self.assertIn(b"Unlock Ask, themes, and continuity", response.data)
 
     @patch("src.app.is_licensed", return_value=False)
     def test_unlicensed_post_returns_403(self, _mock):
@@ -72,4 +72,4 @@ class RequireLicenseDecoratorTest(unittest.TestCase):
         """Unlicensed GET /distill shows upgrade page."""
         response = self.client.get("/distill")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Go deeper", response.data)
+        self.assertIn(b"Unlock Ask, themes, and continuity", response.data)

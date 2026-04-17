@@ -1,25 +1,24 @@
 {% extends "base.html" %}
 {% from "_ui.html" import badge, empty_state %}
 
-{% block title %}Distill · SoulPrint{% endblock %}
-{% block page_title %}Distill{% endblock %}
-{% block page_desc %}compress a thread into a briefing{% endblock %}
+{% block title %}Create a digest · SoulPrint{% endblock %}
+{% block page_title %}Create a digest{% endblock %}
+{% block page_desc %}condense selected conversations into a handoff{% endblock %}
 
 {% block content %}
   <section class="page-header">
     <div class="back-links" aria-label="Back navigation">
       <a class="back-link" href="/">Back to home</a>
     </div>
-    <p class="page-eyebrow">Distill</p>
+    <p class="page-eyebrow">Create a digest</p>
     <div class="page-header__row">
       <div class="page-badges">
         {{ badge("Pro", "accent") }}
       </div>
     </div>
     <p class="page-summary">
-      Select conversations to condense into a single paste-ready handoff.
-      The result is a compact markdown document you can paste into a new AI chat
-      so it never starts from zero.
+      Select conversations to condense into a compact handoff you can paste into a new AI chat.
+      The result never starts from zero.
     </p>
   </section>
 

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}SoulPrint Workspace{% endblock %}
+{% block title %}Search · SoulPrint{% endblock %}
 
-{% block page_title %}Workspace{% endblock %}
-{% block page_desc %}Your memory at a glance{% endblock %}
+{% block page_title %}Search your archive{% endblock %}
+{% block page_desc %}recover conversations across providers{% endblock %}
 
 {% block page_actions %}
   <a class="topbar-action topbar-action--ghost" href="{{ url_for('passport_surface') }}">Export</a>
@@ -14,49 +14,50 @@
 
 <div class="workspace-canvas">
 
-{# ── Greeting ──
-   "Chris" is a placeholder — replace when OAuth username ships
-   (mirrors the same placeholder in the sidebar footer in base.html). #}
 <section class="workspace-greeting">
-  <h2 class="workspace-greeting__title">Good {{ time_of_day }}, Chris</h2>
-  <p class="workspace-greeting__sub">
-    {% if workspace.has_any_data %}
-      {{ workspace.provider_recent|length }} provider{% if workspace.provider_recent|length != 1 %}s{% endif %} connected,
-      {{ workspace.imported_conversation_count }} conversations imported,
-      {{ workspace.imported_message_count }} messages indexed.
-    {% else %}
-      No conversations yet. Drop a ChatGPT, Claude, or Gemini export to get started.
-    {% endif %}
-  </p>
+  {% if workspace.has_any_data %}
+    <p class="workspace-greeting__sub">
+      Recover conversations across providers, inspect where they came from, and continue without starting from zero.
+    </p>
+  {% else %}
+    <h2 class="workspace-greeting__title">Bring your conversations home</h2>
+    <p class="workspace-greeting__sub">
+      Import your ChatGPT, Claude, or Gemini history and keep it on your machine. Everything stays local, searchable, and yours.
+    </p>
+  {% endif %}
 </section>
 
-{# ── Stat cards ── #}
-<section class="workspace-stats">
-  <div class="stat-card">
-    <span class="stat-card__label">CONVERSATIONS</span>
-    <span class="stat-card__value">{{ workspace.imported_conversation_count if workspace.imported_conversation_count else '—' }}</span>
-    <span class="stat-card__sub">across {{ workspace.provider_recent|length if workspace.provider_recent else 0 }} provider{% if not workspace.provider_recent or workspace.provider_recent|length != 1 %}s{% endif %}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-card__label">MESSAGES</span>
-    <span class="stat-card__value">{{ workspace.imported_message_count if workspace.imported_message_count else '—' }}</span>
-    <span class="stat-card__sub">fully indexed</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-card__label">THEMES FOUND</span>
-    <span class="stat-card__value stat-card__value--accent">{{ top_themes|length if top_themes else '—' }}</span>
-    <span class="stat-card__sub">{% if top_themes %}last analyzed recently{% else %}run a scan to begin{% endif %}</span>
-  </div>
+<section class="workspace-search-hero">
+  <form method="get" action="{{ url_for('federated_browser') }}" class="ask-form">
+    <div class="ask-form__row">
+      <input
+        type="search"
+        name="q"
+        placeholder="Search across all your conversations..."
+        autocomplete="off"
+        aria-label="Search your archive"
+      >
+      <button type="submit">Search</button>
+    </div>
+  </form>
 </section>
+
+{% if workspace.has_any_data %}
+<p class="metadata-line" style="margin-bottom: 1.5rem;">
+  {{ workspace.provider_recent|length }} provider{{ 's' if workspace.provider_recent|length != 1 }} connected ·
+  {{ workspace.imported_conversation_count }} conversations imported ·
+  {{ workspace.imported_message_count }} messages indexed
+</p>
+{% endif %}
 
 {# ── Quick actions ── #}
 <section class="workspace-actions">
-  <h3 class="workspace-section__label">QUICK ACTIONS</h3>
+  <h3 class="workspace-section__label">START HERE</h3>
   <div class="workspace-actions__grid">
     <a class="action-card" href="{{ url_for('ask') }}">
       <h4 class="action-card__title">Ask your memory</h4>
-      <p class="action-card__desc">Search across all conversations using natural language.</p>
-      <span class="action-card__hint">FTS5 + keyword</span>
+      <p class="action-card__desc">Get answers from your conversations, with citations you can inspect.</p>
+      <span class="action-card__hint">answers + citations</span>
     </a>
     <a class="action-card" href="{{ url_for('import_conversations') }}">
       <h4 class="action-card__title">Import conversations</h4>
@@ -65,8 +66,8 @@
     </a>
     <a class="action-card" href="{{ url_for('passport_surface') }}">
       <h4 class="action-card__title">Memory Passport</h4>
-      <p class="action-card__desc">Export a portable snapshot of your knowledge.</p>
-      <span class="action-card__hint">take it with you</span>
+      <p class="action-card__desc">Export a validated snapshot of your archive.</p>
+      <span class="action-card__hint">export + validate</span>
     </a>
   </div>
 </section>
@@ -93,7 +94,7 @@
 {% endblock %}
 
 {% block right_panel %}
-<div class="context-panel__header">Context</div>
+<div class="context-panel__header">Archive status</div>
 
 {% if workspace.provider_recent %}
 <section class="context-block">

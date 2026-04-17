@@ -47,8 +47,8 @@ class WorkspaceHomeTest(unittest.TestCase):
         """The first-run empty state tells the user how to get started."""
         html = self._get_workspace_html()
         self.assertIn("SoulPrint", html)
-        self.assertIn("No conversations yet", html)
-        self.assertIn("Drop a ChatGPT, Claude, or Gemini export", html)
+        self.assertIn("Bring your conversations home", html)
+        self.assertIn("Import your ChatGPT, Claude, or Gemini history", html)
 
     def test_first_run_does_not_show_provider_stack(self):
         html = self._get_workspace_html()
@@ -99,9 +99,9 @@ class WorkspaceHomeTest(unittest.TestCase):
         self.assertIn("conversations", html.lower())
         self.assertIn("notes", html.lower())
         self.assertIn("messages", html.lower())
-        # Stats live inside stat-card elements
-        self.assertIn("stat-card", html)
-        self.assertIn("stat-card__value", html)
+        # Stats now render inline in a metadata line, not stat-card elements.
+        self.assertIn("conversations imported", html)
+        self.assertIn("messages indexed", html)
 
     def test_post_import_shows_sidebar_wordmark(self):
         """The SoulPrint wordmark is always rendered in the sidebar brand."""
