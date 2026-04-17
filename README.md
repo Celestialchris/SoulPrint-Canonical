@@ -8,13 +8,23 @@
 [![Local Only](https://img.shields.io/badge/Cloud-None-brightgreen)]()
 [![Latest Release](https://img.shields.io/github/v/release/Celestialchris/SoulPrint-Canonical)](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest)
 
-**Your AI conversations are scattered everywhere. SoulPrint brings them home.**
+**Your AI conversations, home.**
+
+SoulPrint imports your ChatGPT, Claude, and Gemini history into a single searchable archive on your machine. No cloud. No accounts. No telemetry. The archive is a file you own — one SQLite database you can open in any tool and verify yourself.
 
 ![Workspace](docs/screenshots/workspace.png)
 
 ---
 
-## Get started in 60 seconds
+## Download
+
+**Non-technical?** Download a packaged build from [GitHub Releases](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest).
+
+- Windows: `SoulPrint-Setup.exe` (installer) or `SoulPrint-windows.zip`
+- macOS: `SoulPrint-macos.zip`
+- Linux: `SoulPrint-linux.tar.gz`
+
+**Developer?** Install from source in 60 seconds:
 
 ```bash
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
@@ -24,12 +34,6 @@ soulprint
 ```
 
 Open `http://127.0.0.1:5678`. Drop an export file. Your conversations appear in seconds.
-
-**Or download a packaged build** from [GitHub Releases](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest):
-
-- **Windows:** `SoulPrint-Setup.exe` (installer) or `SoulPrint-windows.zip`
-- **macOS:** `SoulPrint-macos.zip`
-- **Linux:** `SoulPrint-linux.tar.gz`
 
 ---
 
@@ -42,20 +46,6 @@ Open `http://127.0.0.1:5678`. Drop an export file. Your conversations appear in 
 **Distill.** Cross-conversation threads. Summaries. Multi-conversation distillation into a handoff briefing you paste into your next AI chat and pick up where you left off.
 
 **Export.** Memory Passport with manifest, canonical JSONL, provenance index, and checksums. Validate any passport against the contract. The archive is a file you own.
-
-**MCP server.** Connect SoulPrint to Claude Code, Cursor, or any MCP-compatible AI tool. Your past conversations become searchable context in every coding session.
-
-```bash
-# Add to your .mcp.json or Claude Code settings:
-{
-  "mcpServers": {
-    "soulprint": {
-      "command": "python",
-      "args": ["-m", "src.mcp_server"]
-    }
-  }
-}
-```
 
 ---
 
@@ -79,6 +69,24 @@ Read the full [manifesto](docs/manifesto.md).
 
 ---
 
+## MCP server
+
+Connect SoulPrint to Claude Code, Cursor, or any MCP-compatible AI tool. Your past conversations become searchable context in every coding session.
+
+```bash
+# Add to your .mcp.json or Claude Code settings:
+{
+  "mcpServers": {
+    "soulprint": {
+      "command": "python",
+      "args": ["-m", "src.mcp_server"]
+    }
+  }
+}
+```
+
+---
+
 ## Trust
 
 SoulPrint makes no network calls. No analytics, no telemetry, no phone-home. Your archive is a SQLite file on your machine that you can open in any database viewer and verify yourself.
@@ -91,16 +99,7 @@ See [SECURITY.md](SECURITY.md) for architecture details and vulnerability report
 
 ## Architecture
 
-```
-Layer A  Truth          SQLite ledger. Stable IDs. Source provenance.
-Layer B  Legibility     Browse, search, inspect, trace, export. Read-only.
-Layer C  Intelligence   Summaries, topics, distill, continuity. All derived.
-Layer D  Distribution   Web app, CLI, MCP server, landing page.
-```
-
-600+ tests. Every derived output traces back to canonical stable IDs. Derived layers never mutate canonical records.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, architecture, and development guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, setup, and development guidelines.
 
 ---
 
@@ -117,7 +116,3 @@ SoulPrint is built by one person. If it's useful to you:
 ## License
 
 Apache-2.0. [Inspect the code yourself](LICENSE).
-
----
-
-*Your memory, on your machine, under your custody.*
