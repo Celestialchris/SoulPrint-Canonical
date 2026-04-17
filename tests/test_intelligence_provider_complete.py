@@ -54,7 +54,6 @@ class OpenAIProviderCompleteTest(unittest.TestCase):
             provider.complete(SYSTEM, USER)
 
         call_kwargs = mock_client.chat.completions.create.call_args
-        messages = call_kwargs.kwargs.get("messages") or call_kwargs.args[0]
         messages = call_kwargs.kwargs["messages"]
         self.assertEqual(messages[0]["role"], "system")
         self.assertEqual(messages[0]["content"], SYSTEM)
