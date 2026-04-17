@@ -113,7 +113,7 @@ def _build_multi_transcript(
     parts: list[str] = []
     used = 0
     truncated = False
-    for conv in sorted_convs:
+    for i, conv in enumerate(sorted_convs):
         title = conv.title or "Untitled"
         source = getattr(conv, "source", "unknown")
         sorted_msgs = sorted(conv.messages, key=lambda m: m.sequence_index)
@@ -121,6 +121,13 @@ def _build_multi_transcript(
         header = f"=== Conversation: {title} (provider: {source}) ==="
         block = header + "\n" + "\n".join(lines)
         separator_cost = 2 if parts else 0  # "\n\n" only between blocks
+        if i == 0:
+            # Always include the most recent conversation even if it exceeds the budget.
+            parts.append(block)
+            used += len(block)
+            if len(block) > max_chars:
+                truncated = True
+            continue
         if used + separator_cost + len(block) > max_chars:
             truncated = True
             break
