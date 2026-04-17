@@ -19,14 +19,34 @@
   {% if not llm_configured %}
     {{ empty_state(
       "LLM provider not configured",
-      "To generate conversation summaries, set the following environment variables before starting SoulPrint:"
+      "Install Ollama and pull a model to enable summaries, themes, and digests — entirely local."
     ) }}
     <div class="config-guidance">
-      <ul class="metadata-line">
-        <li><code>SOULPRINT_LLM_PROVIDER</code> — one of <code>stub</code>, <code>anthropic</code>, or <code>openai</code></li>
-        <li><code>SOULPRINT_LLM_API_KEY</code> — your API key (not needed for <code>stub</code>)</li>
-      </ul>
-      <p class="metadata-line">Example: <code>SOULPRINT_LLM_PROVIDER=stub python -m src.main</code></p>
+      <h3>Recommended: Ollama + Gemma 4 (local, free, private)</h3>
+      <p class="metadata-line">Install <a href="https://ollama.com/download">Ollama</a>, then pull a model:</p>
+      <pre class="passport-command"><code>ollama pull gemma4           # 9.6 GB, runs on 6+ GB VRAM (recommended default)
+ollama pull gemma4:26b       # 18 GB, runs on 12+ GB VRAM (better quality, 256K context)</code></pre>
+
+      <p class="metadata-line" style="margin-top: 1rem;">Then set these environment variables before starting SoulPrint:</p>
+      <pre class="passport-command"><code>SOULPRINT_LLM_PROVIDER=openai
+SOULPRINT_LLM_BASE_URL=http://localhost:11434/v1
+SOULPRINT_LLM_MODEL=gemma4</code></pre>
+
+      <details style="margin-top: 1rem;">
+        <summary class="metadata-line" style="cursor: pointer;">Other options: cloud providers</summary>
+        <p class="metadata-line" style="margin-top: 0.5rem;">
+          Any OpenAI-compatible API works. Set <code>SOULPRINT_LLM_API_KEY</code> and optionally
+          <code>SOULPRINT_LLM_BASE_URL</code>. Note: cloud providers send conversation excerpts
+          to external servers.
+        </p>
+        <pre class="passport-command"><code># OpenAI direct
+SOULPRINT_LLM_PROVIDER=openai
+SOULPRINT_LLM_API_KEY=sk-...
+
+# Anthropic
+SOULPRINT_LLM_PROVIDER=anthropic
+SOULPRINT_LLM_API_KEY=sk-ant-...</code></pre>
+      </details>
     </div>
 
     {# Topic scanning works even without an LLM (keyword fallback) #}

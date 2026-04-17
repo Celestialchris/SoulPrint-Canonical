@@ -64,24 +64,39 @@ class AnthropicProvider:
 
 
 class OpenAIProvider:
-    """Uses the openai SDK to call GPT for summarization."""
+    """Uses the openai SDK to call any OpenAI-compatible API.
+
+    Works with OpenAI directly, Ollama (local), OpenRouter, and any
+    endpoint that implements the /v1/chat/completions contract.
+
+    Env vars:
+        SOULPRINT_LLM_BASE_URL — override the API endpoint (e.g. http://localhost:11434/v1)
+        SOULPRINT_LLM_MODEL    — override the model (e.g. gemma4, gemma4:26b). Defaults to gpt-4o-mini.
+    """
 
     def __init__(self, api_key: str) -> None:
         self._api_key = api_key
+        self._base_url = os.environ.get("SOULPRINT_LLM_BASE_URL", "").strip() or None
+        self._model = os.environ.get("SOULPRINT_LLM_MODEL", "").strip() or "gpt-4o-mini"
 
     @property
     def provider_name(self) -> str:
-        return "openai"
+        if self._base_url:
+            return f"openai-compat/{self._model}"
+        return f"openai/{self._model}"
 
     def summarize(self, messages: list[dict]) -> str:
         import openai
 
-        client = openai.OpenAI(api_key=self._api_key)
+        client = openai.OpenAI(
+            api_key=self._api_key,
+            base_url=self._base_url,
+        )
         transcript = "\n".join(
             f"[{m.get('role', 'unknown')}]: {m.get('content', '')}" for m in messages
         )
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=self._model,
             max_tokens=1024,
             messages=[
                 {
@@ -112,7 +127,13 @@ def provider_from_config() -> LLMProvider | None:
 
     api_key = os.environ.get("SOULPRINT_LLM_API_KEY", "").strip()
     if not api_key:
-        return None
+        # Ollama and some local servers don't need a real API key.
+        # If a base_url is set, use "ollama" as a dummy key.
+        base_url = os.environ.get("SOULPRINT_LLM_BASE_URL", "").strip()
+        if base_url and provider_name == "openai":
+            api_key = "ollama"
+        else:
+            return None
 
     if provider_name == "anthropic":
         return AnthropicProvider(api_key)

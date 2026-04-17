@@ -54,7 +54,27 @@ python -m src.retrieval.cli --db instance/soulprint.db "search term"
 
 # Answering
 python -m src.answering.cli --db instance/soulprint.db "question"
+
+# Run with local LLM (Ollama + Gemma 4)
+SOULPRINT_LLM_PROVIDER=openai SOULPRINT_LLM_BASE_URL=http://localhost:11434/v1 SOULPRINT_LLM_MODEL=gemma4 python -m src.main
 ```
+
+## LLM Configuration
+
+Intelligence features (Ask, Distill, Recurring themes) require an LLM.
+Default local path: Ollama + Gemma 4 via the OpenAI-compatible endpoint.
+
+    SOULPRINT_LLM_PROVIDER=openai
+    SOULPRINT_LLM_BASE_URL=http://localhost:11434/v1
+    SOULPRINT_LLM_MODEL=gemma4          # or gemma4:26b for better quality
+
+Gemma 4 model sizes:
+    gemma4 (e4b)  — 9.6 GB, 6+ GB VRAM, 128K context — recommended default
+    gemma4:26b    — 18 GB, 12+ GB VRAM, 256K context — better summarization
+    gemma4:e2b    — 7.2 GB, 4+ GB VRAM, 128K context — low-end hardware
+    gemma4:31b    — 20 GB, 16+ GB VRAM, 256K context — marginal gain over 26b
+
+No API key needed for Ollama. For cloud providers, set SOULPRINT_LLM_API_KEY.
 
 ## Anti-Patterns
 
