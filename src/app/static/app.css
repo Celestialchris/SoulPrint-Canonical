@@ -1,4 +1,6 @@
-/* SoulPrint — Magenta Sanctum v2 Design System (v0.6.0) */
+/* SoulPrint — Quiet Archive v3 Design System (v0.7.0-alpha.1)
+   Supersedes Magenta Sanctum v2. Phase 1: tokens only (no structural change).
+   Authoritative doctrine: docs/product/design-doctrine-quiet-archive.md */
 
 /* ===== Local web fonts (bundled, no CDN) ===== */
 @font-face { font-family: 'Playfair Display'; src: url('fonts/playfair-display-v40-latin-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
@@ -11,36 +13,39 @@
 @font-face { font-family: 'JetBrains Mono'; src: url('fonts/jetbrains-mono-v24-latin-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
 
 [data-theme="dark"], :root {
-  /* Background scale — Discord-derived grays */
-  --bg-darkest: #111113; --bg-dark: #18181b; --bg-mid: #1e1e22;
-  --bg-light: #27272b; --bg-hover: #2e2e33;
+  /* Background scale — warm-black parchment (Quiet Archive v3) */
+  --bg-darkest: #0F0D0B; --bg-dark: #151210; --bg-mid: #1B1714;
+  --bg-light: #26211D; --bg-hover: #2E2823;
   /* Legacy aliases (kept so existing selectors keep working through the migration) */
   --bg: var(--bg-darkest); --surface: var(--bg-dark); --raised: var(--bg-mid);
 
-  /* Brand — hot pink accent */
-  --accent: #f472b6; --accent-dim: #be4b8a;
-  --accent-soft: rgba(244,114,182,0.12); --accent-glow: rgba(244,114,182,0.06);
+  /* Brand — clay accent */
+  --accent: #A25B47; --accent-dim: #8E5748;
+  --accent-soft: rgba(162,91,71,0.12); --accent-glow: rgba(162,91,71,0.05);
   /* Legacy names kept as aliases */
   --accent-muted: var(--accent-soft); --accent-ghost: var(--accent-glow);
+
+  /* Wordmark — gold identity (glow recipe applied in Phase 2) */
+  --wordmark-gold: #E7C98A; --wordmark-glow: rgba(231,201,138,0.28);
 
   /* Secondary — green presence indicator (local-first status only) */
   --green: #4ade80; --green-soft: rgba(74,222,128,0.12);
 
-  /* Text hierarchy */
-  --t1: rgba(250,250,250,0.92); --t2: rgba(250,250,250,0.56);
-  --t3: rgba(250,250,250,0.32); --t4: rgba(250,250,250,0.14);
+  /* Text hierarchy — warm cream on warm black */
+  --t1: rgba(244,238,229,0.92); --t2: rgba(244,238,229,0.62);
+  --t3: rgba(244,238,229,0.34); --t4: rgba(244,238,229,0.16);
 
   /* Lines */
-  --line: rgba(250,250,250,0.07); --line-strong: rgba(250,250,250,0.12);
+  --line: rgba(244,238,229,0.08); --line-strong: rgba(244,238,229,0.14);
   --hairline: 0.5px;
 
-  /* Provider lanes — vibrant palette */
-  --lane-chatgpt: #4ade80; --lane-claude: #c9a84c;
-  --lane-gemini: #60a5fa; --lane-native: #60a5fa;
-  --lane-grok: #e879f9;
+  /* Provider lanes — Quiet Archive palette */
+  --lane-chatgpt: #23955D; --lane-claude: #C69224;
+  --lane-gemini: #2D6FE8; --lane-native: #2D6FE8;
+  --lane-grok: #6F47E6;
 
   /* Selection & focus */
-  --selection: rgba(244,114,182,0.20); --input-focus: var(--accent-dim);
+  --selection: rgba(162,91,71,0.20); --input-focus: var(--accent-dim);
 
   /* CTA tokens (flow through --accent automatically) */
   --cta-bg: var(--accent); --cta-text: #ffffff;
@@ -50,7 +55,7 @@
   /* Sidebar */
   --sidebar-bg: var(--bg-dark); --sidebar-brand: var(--accent);
 
-  /* Brand mark (solid pink — no gradient in app shell) */
+  /* Brand mark (solid clay — no gradient in app shell) */
   --brand-mark-bg: var(--accent); --brand-mark-fg: #ffffff; --brand-mark-radius: 10px;
 
   /* Typography — system fallbacks until Phase 1b bundles web fonts */
@@ -69,26 +74,28 @@
 }
 
 [data-theme="light"] {
-  --bg-darkest: #f4f5f0; --bg-dark: #eaebe5; --bg-mid: #ffffff;
-  --bg-light: #e4e5df; --bg-hover: #dcddd7;
+  --bg-darkest: #F4EFE5; --bg-dark: #ECE6D9; --bg-mid: #FFFFFF;
+  --bg-light: #E4DECF; --bg-hover: #DCD6C7;
   --bg: var(--bg-darkest); --surface: var(--bg-dark); --raised: var(--bg-mid);
 
-  --accent: #db2777; --accent-dim: #9d174d;
-  --accent-soft: rgba(219,39,119,0.12); --accent-glow: rgba(219,39,119,0.05);
+  --accent: #8E4F3E; --accent-dim: #6F3D30;
+  --accent-soft: rgba(142,79,62,0.12); --accent-glow: rgba(142,79,62,0.05);
   --accent-muted: var(--accent-soft); --accent-ghost: var(--accent-glow);
+
+  --wordmark-gold: #B08A3E; --wordmark-glow: rgba(176,138,62,0.22);
 
   --green: #16a34a; --green-soft: rgba(22,163,74,0.12);
 
-  --t1: rgba(14,15,17,0.92); --t2: rgba(14,15,17,0.56);
-  --t3: rgba(14,15,17,0.32); --t4: rgba(14,15,17,0.14);
+  --t1: rgba(26,22,18,0.92); --t2: rgba(26,22,18,0.62);
+  --t3: rgba(26,22,18,0.34); --t4: rgba(26,22,18,0.16);
 
-  --line: rgba(0,0,0,0.08); --line-strong: rgba(0,0,0,0.14);
+  --line: rgba(26,22,18,0.08); --line-strong: rgba(26,22,18,0.14);
 
-  --lane-chatgpt: #16a34a; --lane-claude: #c9a84c;
-  --lane-gemini: #2563eb; --lane-native: #2563eb;
-  --lane-grok: #c026d3;
+  --lane-chatgpt: #1C7A4C; --lane-claude: #A7791E;
+  --lane-gemini: #235FCC; --lane-native: #235FCC;
+  --lane-grok: #5B3BC0;
 
-  --selection: rgba(219,39,119,0.18); --input-focus: var(--accent-dim);
+  --selection: rgba(142,79,62,0.18); --input-focus: var(--accent-dim);
 
   --cta-bg: var(--accent); --cta-text: #ffffff;
   --cta-hover-bg: var(--accent-dim); --cta-hover-text: #ffffff;
@@ -557,9 +564,9 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
    ask/distill/passport surfaces) that live inside .shell .main.
    ===================================================================== */
 
-/* Grok lane color — 4th provider added in Phase 2 */
-:root { --lane-grok: #a78bfa; }
-[data-theme="light"] { --lane-grok: #7c3aed; }
+/* Grok lane color — 4th provider (Quiet Archive v3 values override the shell baseline) */
+:root { --lane-grok: #6F47E6; }
+[data-theme="light"] { --lane-grok: #5B3BC0; }
 
 /* Shell container */
 .shell {

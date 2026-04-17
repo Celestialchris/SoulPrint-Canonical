@@ -35,6 +35,7 @@
 | 2026-03 | No box-shadows, no icons in nav, no font-weight above 500. Flat rows with border-bottom dividers. | Content sits on the dark background with typography and spacing creating structure. |
 | 2026-03 | Provider lane colors: ChatGPT green (#4ade80), Claude gold (#c9a84c), Gemini blue (#60a5fa). | Lane identity through color, consistent with accent palette. |
 | 2026-03 | The live `app.css` is always authoritative over doc files. | Prevents coherence drift between docs and implementation. |
+| 2026-04-17 | Design direction supersession: **Quiet Archive v3** (clay accent `#A25B47` on warm black `#0F0D0B`, gold wordmark `#E7C98A` with Torchlit orange-red glow applied in Phase 2) replaces **Magenta Sanctum v2**. Provider lanes move to `--lane-chatgpt #23955D / --lane-claude #C69224 / --lane-gemini #2D6FE8 / --lane-grok #6F47E6`. See `docs/product/design-doctrine-quiet-archive.md`. Magenta Sanctum is retired; the doc stays in-repo until Phase 4 archival. Prior Magenta and lane-color rows in this section are superseded by this row. | The pink brand read as loud and generic; clay + warm black reads as a lived-in personal archive, matching "Your AI Memory" product truth. Tokens frozen by the user; Phase 1 is a CSS value swap with no structural change. |
 
 ## Product
 

@@ -96,19 +96,19 @@ Use instead: continuity, exportability, interoperability, local ownership, Memor
 
 ## Visual Direction
 
-Design system: **Magenta Sanctum v2** (since v0.6.0).
-See `docs/product/design-doctrine-magenta-sanctum.md`.
+Design system: **Quiet Archive v3** (since v0.7.0-alpha.1). Retired: Magenta Sanctum v2 (v0.6.0–v0.6.1). Before that: USB Drive (v0.5.x and earlier).
+See `docs/product/design-doctrine-quiet-archive.md`.
 
-Shell is editorial (pink brand accent, flat dark canvas with rail and sidebar lifted, display serif for personality, magenta wordmark on gradient chip). Data is flat (rows, hairline dividers, mono labels, tabular nums, no decoration on row data). Cards live only for navigation surfaces (stat cards, action cards on workspace). Supersedes the pre-v0.6.0 "USB Drive" doctrine.
+Design law: **"Glow for identity, flatness for usage."** Identity surfaces (wordmark, hero, empty states, landing) carry warmth — clay accents, gold wordmark, ember glow. Data surfaces (conversation rows, message lists, stats, search results, traces) stay flat — hairline dividers, mono labels, tabular nums, no cards wrapping rows, no shadows. Cards live only for navigation surfaces (stat cards, action cards on workspace).
 
-Lane palette (vibrant, restored Phase 5.6):
+Lane palette (Quiet Archive):
 
-- ChatGPT: `#4ade80` (green)
-- Claude:  `#c9a84c` (gold)
-- Gemini:  `#60a5fa` (blue)
-- Grok:    `#e879f9` (magenta, dormant)
+- ChatGPT: `#23955D` (deeper green)
+- Claude:  `#C69224` (warmer gold)
+- Gemini:  `#2D6FE8` (Google blue, desaturated)
+- Grok:    `#6F47E6` (xAI violet, dormant)
 
-Magenta is the brand accent; green is the import CTA color only (scoped under `--cta-alive-*` tokens — see `.cta-primary`). No icons in nav. No font-weight above 500. No box-shadows on containers.
+Clay (`#A25B47`) is the brand accent; gold (`#E7C98A`) is the wordmark color only; green is the alive/local-first status color only. No icons in nav. No font-weight above 500. No box-shadows on containers.
 
 `src/app/static/app.css` is always authoritative over any doc file.
 
