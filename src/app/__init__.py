@@ -218,10 +218,7 @@ def create_app():
     @app.get("/")
     def home():
         from ..answering.trace import default_trace_store_path
-        from ..intelligence.store import (
-            default_distillation_store_path, list_distillations,
-            default_topic_store_path, list_topic_scans,
-        )
+        from ..intelligence.store import default_distillation_store_path, list_distillations
         import json as _json
         from pathlib import Path as _Path
 
@@ -243,21 +240,6 @@ def create_app():
                     last_passport_date = _json.load(_f).get("created_at", "")[:10]
             except (_json.JSONDecodeError, OSError, ValueError):
                 logger.warning("Could not parse passport manifest", exc_info=True)
-
-        # top_themes (up to 8 labels from most recent topic scan)
-        _topic_scans = list_topic_scans(default_topic_store_path(db_path), limit=1)
-        top_themes = [c["topic_label"] for c in _topic_scans[0].get("clusters", [])[:8]] if _topic_scans else []
-
-        # recent_activity (up to 3 derived events)
-        _activity: list[dict] = []
-        if workspace.recent_imported:
-            _ri = workspace.recent_imported[0]
-            _activity.append({"text": "Conversation imported", "time_unix": _ri.get("updated_at_unix") or _ri.get("created_at_unix"), "time_iso": None})
-        if _distill_recs:
-            _activity.append({"text": "Distillation saved", "time_unix": None, "time_iso": _distill_recs[0].get("generation_timestamp", "")})
-        if _topic_scans:
-            _activity.append({"text": "Theme scan completed", "time_unix": None, "time_iso": _topic_scans[0].get("generation_timestamp", "")})
-        recent_activity = _activity[:3]
 
         # Greeting: time-of-day from local system clock
         _hour = datetime.now().hour
@@ -284,8 +266,6 @@ def create_app():
             license_status=license_status,
             distill_count=distill_count,
             last_passport_date=last_passport_date,
-            top_themes=top_themes,
-            recent_activity=recent_activity,
             time_of_day=time_of_day,
             recent_conversations=recent_conversations,
         )
