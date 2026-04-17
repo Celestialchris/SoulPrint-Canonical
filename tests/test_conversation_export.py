@@ -84,3 +84,80 @@ class TestConversationExport(unittest.TestCase):
     def test_export_404_for_nonexistent(self):
         response = self.client.get("/imported/99999/export")
         self.assertEqual(response.status_code, 404)
+
+
+class TestConversationExportEdgeCases(unittest.TestCase):
+    """Edge cases: missing title, null timestamps, filename sanitization."""
+
+    def setUp(self):
+        self.workdir = make_test_temp_dir(self, "conv-export-edge")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.workdir}/edge.db"
+        self.addCleanup(self._restore_sqlite_uri)
+
+        self.app = create_app()
+        self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+
+    def _restore_sqlite_uri(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+
+    def _create_conv(self, title: str, *, created=None, messages=None):
+        with self.app.app_context():
+            db.create_all()
+            conv = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id=f"edge-{title or 'empty'}",
+                title=title,
+                created_at_unix=1700000000,
+                updated_at_unix=1700001000,
+            )
+            db.session.add(conv)
+            db.session.flush()
+            for i, (role, content, ts) in enumerate(messages or []):
+                db.session.add(ImportedMessage(
+                    conversation_id=conv.id,
+                    source_message_id=f"m{i}",
+                    role=role,
+                    content=content,
+                    sequence_index=i,
+                    created_at_unix=ts,
+                ))
+            db.session.commit()
+            return conv.id
+
+    def test_empty_title_falls_back_to_untitled(self):
+        conv_id = self._create_conv("", messages=[("user", "hi", 1700000000)])
+        response = self.client.get(f"/imported/{conv_id}/export")
+        self.assertEqual(response.status_code, 200)
+        text = response.data.decode("utf-8")
+        self.assertIn("# Untitled conversation", text)
+        self.assertIn("Untitled conversation", response.headers["Content-Disposition"])
+
+    def test_title_with_only_illegal_chars_uses_generic_filename(self):
+        conv_id = self._create_conv("/<>", messages=[("user", "hi", 1700000000)])
+        response = self.client.get(f"/imported/{conv_id}/export")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('filename="conversation.md"', response.headers["Content-Disposition"])
+
+    def test_message_with_no_timestamp_has_no_italic_line(self):
+        conv_id = self._create_conv("Plain", messages=[("user", "text", None)])
+        response = self.client.get(f"/imported/{conv_id}/export")
+        text = response.data.decode("utf-8")
+        self.assertIn("### User", text)
+        self.assertIn("text", text)
+        lines = text.split("\n")
+        user_idx = lines.index("### User")
+        self.assertFalse(lines[user_idx + 1].startswith("*"))
+
+    def test_special_chars_in_title_sanitized(self):
+        conv_id = self._create_conv(
+            "Project/Alpha: v2 <beta>",
+            messages=[("user", "x", 1700000000)],
+        )
+        response = self.client.get(f"/imported/{conv_id}/export")
+        dispo = response.headers["Content-Disposition"]
+        self.assertNotIn("/", dispo.split("filename=")[1])
+        self.assertNotIn("<", dispo)
+        self.assertNotIn(">", dispo)
+        self.assertIn(".md", dispo)
