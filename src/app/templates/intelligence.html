@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 {% from "_ui.html" import badge, empty_state %}
 
-{% block title %}Themes & patterns · SoulPrint{% endblock %}
-{% block page_title %}Themes & patterns{% endblock %}
-{% block page_desc %}what you've been thinking about{% endblock %}
+{% block title %}Recurring themes · SoulPrint{% endblock %}
+{% block page_title %}Recurring themes{% endblock %}
+{% block page_desc %}generated from your archive{% endblock %}
 
 {% block content %}
   <section class="page-header">
-    <p class="page-eyebrow">Themes & patterns</p>
+    <p class="page-eyebrow">Recurring themes</p>
     <div class="page-header__row">
       <div class="page-badges">
         {{ badge("Generated", "derived") }}
       </div>
     </div>
-    <p class="page-summary">Conversation summaries, shared topics, and cross-conversation digests — generated from your history, always traceable to source.</p>
+    <p class="page-summary">Generated from your archive. Always traceable to source.</p>
   </section>
 
   {% if not llm_configured %}

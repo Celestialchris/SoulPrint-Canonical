@@ -2,8 +2,8 @@
 {% from "_ui.html" import badge, empty_state %}
 
 {% block title %}Imported Conversations · SoulPrint{% endblock %}
-{% block page_title %}What you've discussed{% endblock %}
-{% block page_desc %}conversations from your providers{% endblock %}
+{% block page_title %}Imported conversations{% endblock %}
+{% block page_desc %}browse by provider or search by content{% endblock %}
 
 
 {% block content %}
@@ -15,7 +15,7 @@
         {{ badge("Imported", "imported") }}
       </div>
     </div>
-    <p class="page-summary">Browse your imported conversations by provider, search by title or content.</p>
+    <p class="page-summary">Browse by provider or search by title and message text.</p>
   </section>
 
   <nav class="provider-tabs" aria-label="Filter by provider">

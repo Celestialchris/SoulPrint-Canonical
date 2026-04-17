@@ -47,7 +47,7 @@ class UnlicensedAskGatingTest(_FreemiumTestBase):
     def test_ask_get_shows_upgrade_when_unlicensed(self):
         response = self.client.get("/ask")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Go deeper", response.data)
+        self.assertIn(b"Unlock Ask, themes, and continuity", response.data)
 
     def test_ask_post_returns_403_when_unlicensed(self):
         response = self.client.post("/ask", data={"question": "test"})
