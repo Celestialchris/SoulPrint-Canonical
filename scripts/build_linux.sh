@@ -19,8 +19,7 @@ source .venv/bin/activate
 
 echo "Installing dependencies..."
 python3 -m pip install --upgrade pip
-pip install -r requirements.txt
-pip install -e ".[build,full,dev]"
+pip install -e ".[build,full,dev,intelligence]"
 
 echo
 echo "Running tests..."

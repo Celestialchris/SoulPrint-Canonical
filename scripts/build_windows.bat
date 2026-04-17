@@ -20,8 +20,7 @@ call .venv\Scripts\activate.bat
 
 echo Installing dependencies...
 python -m pip install --upgrade pip
-pip install -r requirements.txt
-pip install -e ".[build,full,dev]"
+pip install -e ".[build,full,dev,intelligence]"
 
 echo.
 echo Running tests...
