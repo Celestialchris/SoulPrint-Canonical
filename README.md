@@ -44,7 +44,7 @@ Open `http://127.0.0.1:5678`. Drop an export file. Your conversations appear in 
 
 **Browse and search.** Workspace dashboard, conversation list by provider, transcript explorer with prompt-level TOC and minimap, full-text search across all providers with highlighted snippets. Clip moments from any conversation into personal notes with full source provenance.
 
-**Distill.** Cross-conversation threads. Summaries. Multi-conversation distillation into a handoff briefing you paste into your next AI chat and pick up where you left off.
+**Distill.** Select any set of conversations and get a paste-ready handoff document — what was decided, what was built, what's open. Paste it into a new chat and pick up exactly where you left off. No more starting from zero after a model update.
 
 **Export.** Memory Passport with manifest, canonical JSONL, provenance index, and checksums. Validate any passport against the contract. The archive is a file you own.
 
@@ -67,6 +67,7 @@ Read the full [manifesto](docs/manifesto.md).
 | ChatGPT | `.zip` from OpenAI | Supported |
 | Claude | `.json` from Anthropic | Supported |
 | Gemini | Google Takeout `MyActivity.json` or Chrome extension JSON | Supported |
+| Grok | `.json` from xAI export | Supported |
 
 ---
 
@@ -106,11 +107,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, setup, and development 
 
 ## Support
 
-SoulPrint is built by one person. If it's useful to you:
-
+SoulPrint is built by one person. If it's useful:
 - **Star this repo** to help people find it
+- **[Buy me a coffee](https://buymeacoffee.com/chrsp)** to keep it going
 - **[Report a bug](https://github.com/Celestialchris/SoulPrint-Canonical/issues)** to make it better
-- **Tell someone** because word of mouth is everything for indie tools
+- **Tell someone** — word of mouth is everything for indie tools
 
 ---
 

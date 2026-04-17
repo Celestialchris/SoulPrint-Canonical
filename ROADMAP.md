@@ -19,9 +19,11 @@
 ## Current Milestone
 
 ### Phase 11 — Soft launch
-- Execute launch playbook (staggered platform posts)
-- Capture fresh screenshots with real imported data
-- Verify /imported route with 882+ conversation database
+- Multi-select export (checkboxes on /imported, bulk markdown download)
+- Fresh screenshots for docs + README with real imported data
+- Landing page refresh (soulprint.dev)
+- Reddit posts: r/MyBoyfriendIsAI · r/ChatGPT · r/ClaudeAI
+- Resolve deferred P1: loopback restriction on SOULPRINT_LLM_BASE_URL
 
 ## Not In Current Milestone
 
@@ -32,6 +34,6 @@
 
 ## Detail References
 
-- Release notes: `roadmap/RELEASE-v0.1.0.md`
+- Release notes: `docs/releases/RELEASE-v0.1.0.md`
 - Frozen decisions: `DECISIONS.md`
 - Obsidian Bridge spec: `docs/specs/obsidian-bridge-spec.md`
