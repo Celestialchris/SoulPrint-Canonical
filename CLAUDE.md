@@ -34,6 +34,10 @@ Every derived output traces back to canonical stable IDs.
 ## Commands
 
 ```bash
+# Install
+pip install -e .                    # core: import, browse, search, export
+pip install -e ".[intelligence]"    # + Ask, Distill, Themes (requires Ollama or API key)
+
 # Run the app
 python -m src.main
 
