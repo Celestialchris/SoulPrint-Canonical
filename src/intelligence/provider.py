@@ -12,6 +12,8 @@ class LLMProvider(Protocol):
 
     def summarize(self, messages: list[dict]) -> str: ...
 
+    def complete(self, system_prompt: str, user_message: str) -> str: ...
+
     @property
     def provider_name(self) -> str: ...
 
@@ -30,6 +32,12 @@ class StubProvider:
             f"[Stub summary] This conversation contains {msg_count} messages "
             f"across roles: {', '.join(sorted(roles))}. "
             "Key topics and decisions would be extracted by a real LLM provider."
+        )
+
+    def complete(self, system_prompt: str, user_message: str) -> str:
+        return (
+            "[Stub complete] Received system prompt and user message. "
+            "A real LLM would process these as separate roles."
         )
 
 
@@ -59,6 +67,18 @@ class AnthropicProvider:
                 "action items. Be factual and brief."
             ),
             messages=[{"role": "user", "content": transcript}],
+        )
+        return response.content[0].text
+
+    def complete(self, system_prompt: str, user_message: str) -> str:
+        import anthropic
+
+        client = anthropic.Anthropic(api_key=self._api_key)
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}],
         )
         return response.content[0].text
 
@@ -108,6 +128,23 @@ class OpenAIProvider:
                     ),
                 },
                 {"role": "user", "content": transcript},
+            ],
+        )
+        return response.choices[0].message.content
+
+    def complete(self, system_prompt: str, user_message: str) -> str:
+        import openai
+
+        client = openai.OpenAI(
+            api_key=self._api_key,
+            base_url=self._base_url,
+        )
+        response = client.chat.completions.create(
+            model=self._model,
+            max_tokens=4096,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
             ],
         )
         return response.choices[0].message.content

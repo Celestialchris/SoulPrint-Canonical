@@ -24,6 +24,7 @@ from .provider import LLMProvider
 PROMPT_TEMPLATE_VERSION = "distill-v1"
 
 MAX_DISTILL_CHARS = 24_000  # ~6K tokens, enough context without overwhelming
+MAX_INPUT_CHARS = 180_000   # safe for 65k-context local models (~45k tokens)
 
 
 # ---------------------------------------------------------------------------
@@ -47,6 +48,7 @@ class DistillationResult:
     total_message_count: int
     derived_from: str = "canonical_imported_conversations"
     artifact_kind: str = "distillation_v1"
+    input_truncated: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -92,21 +94,39 @@ _SYSTEM_PROMPT = (
 )
 
 
-def _build_multi_transcript(conversations: list) -> str:
-    """Format multiple conversations into a compact multi-transcript string.
+def _build_multi_transcript(
+    conversations: list, max_chars: int
+) -> tuple[str, bool]:
+    """Format conversations into a multi-transcript string, capped at *max_chars*.
 
-    Each ``conversation`` must expose ``.id``, ``.title``, ``.source``,
-    and ``.messages`` (each with ``.role``, ``.content``, ``.sequence_index``).
+    Conversations are sorted most-recent-first by ``created_at_unix`` so the
+    newest context survives when budget is exhausted.
+
+    Returns ``(transcript, truncated)`` where *truncated* is True when one or
+    more conversations were dropped due to the budget.
     """
+    sorted_convs = sorted(
+        conversations,
+        key=lambda c: getattr(c, "created_at_unix", 0) or 0,
+        reverse=True,
+    )
     parts: list[str] = []
-    for conv in conversations:
+    used = 0
+    truncated = False
+    for conv in sorted_convs:
         title = conv.title or "Untitled"
         source = getattr(conv, "source", "unknown")
         sorted_msgs = sorted(conv.messages, key=lambda m: m.sequence_index)
         lines = [f"[{m.role}]: {m.content}" for m in sorted_msgs]
         header = f"=== Conversation: {title} (provider: {source}) ==="
-        parts.append(header + "\n" + "\n".join(lines))
-    return "\n\n".join(parts)
+        block = header + "\n" + "\n".join(lines)
+        separator_cost = 2 if parts else 0  # "\n\n" only between blocks
+        if used + separator_cost + len(block) > max_chars:
+            truncated = True
+            break
+        parts.append(block)
+        used += separator_cost + len(block)
+    return "\n\n".join(parts), truncated
 
 
 def _truncate(text: str, max_chars: int) -> str:
@@ -170,28 +190,15 @@ def distill_conversations(
             providers.append(source)
         total_messages += len(conv.messages)
 
-    transcript = _build_multi_transcript(conversations)
+    transcript, truncated = _build_multi_transcript(conversations, MAX_INPUT_CHARS)
 
-    # Build the message payload for the provider
-    messages = [
-        {
-            "role": "user",
-            "content": (
-                f"Distill the following {len(conversations)} conversations "
-                f"({total_messages} total messages) into a single compact "
-                f"continuation handoff document.\n\n{transcript}"
-            ),
-        }
-    ]
+    user_message = (
+        f"Distill the following {len(conversations)} conversations "
+        f"({total_messages} total messages) into a single compact "
+        f"continuation handoff document.\n\n{transcript}"
+    )
 
-    # The provider.summarize() method accepts messages and returns text.
-    # We prepend the system prompt as a user-role framing message
-    # since the summarize interface takes a flat message list.
-    framed_messages = [
-        {"role": "user", "content": _SYSTEM_PROMPT},
-    ] + messages
-
-    distilled_text = provider.summarize(framed_messages)
+    distilled_text = provider.complete(_SYSTEM_PROMPT, user_message)
     distilled_text = _truncate(distilled_text, MAX_DISTILL_CHARS)
 
     return DistillationResult(
@@ -205,4 +212,5 @@ def distill_conversations(
         distilled_text=distilled_text,
         conversation_count=len(conversations),
         total_message_count=total_messages,
+        input_truncated=truncated,
     )
