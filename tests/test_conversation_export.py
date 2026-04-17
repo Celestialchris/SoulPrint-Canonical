@@ -180,3 +180,16 @@ class TestConversationExportEdgeCases(unittest.TestCase):
         self.assertNotIn("<", dispo)
         self.assertNotIn(">", dispo)
         self.assertIn(".md", dispo)
+
+    def test_non_ascii_title_falls_back_to_generic_filename(self):
+        conv_id = self._create_conv(
+            "\u4f1a\u8a71\u30ed\u30b0", messages=[("user", "hi", 1700000000)]
+        )
+        response = self.client.get(f"/imported/{conv_id}/export")
+        self.assertEqual(response.status_code, 200)
+        dispo = response.headers["Content-Disposition"]
+        self.assertIn('filename="conversation.md"', dispo)
+        self.assertTrue(
+            dispo.isascii(),
+            f"Content-Disposition must be ASCII-only, got: {dispo!r}",
+        )

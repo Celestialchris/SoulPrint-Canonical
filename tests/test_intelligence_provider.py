@@ -116,6 +116,34 @@ class OllamaFallbackTest(unittest.TestCase):
         self.assertIsNone(provider)
 
 
+class ModelMissingWarningTest(unittest.TestCase):
+    """Warn when SOULPRINT_LLM_BASE_URL is set without SOULPRINT_LLM_MODEL."""
+
+    def test_warns_when_base_url_set_without_model(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_PROVIDER"] = "openai"
+        env["SOULPRINT_LLM_BASE_URL"] = "http://localhost:11434/v1"
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertLogs("src.intelligence.provider", level="WARNING") as captured:
+                provider_from_config()
+        self.assertTrue(
+            any("SOULPRINT_LLM_MODEL" in msg for msg in captured.output),
+            f"Expected a MODEL warning, got: {captured.output!r}",
+        )
+
+    def test_no_warning_when_model_is_set(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_PROVIDER"] = "openai"
+        env["SOULPRINT_LLM_BASE_URL"] = "http://localhost:11434/v1"
+        env["SOULPRINT_LLM_MODEL"] = "gemma4"
+        with patch.dict(os.environ, env, clear=True):
+            import logging
+            logger = logging.getLogger("src.intelligence.provider")
+            with patch.object(logger, "warning") as mock_warn:
+                provider_from_config()
+                mock_warn.assert_not_called()
+
+
 class IsLlmConfiguredTest(unittest.TestCase):
     def test_true_when_stub_configured(self):
         with patch.dict(os.environ, {"SOULPRINT_LLM_PROVIDER": "stub"}, clear=False):

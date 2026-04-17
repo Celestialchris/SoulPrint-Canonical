@@ -126,14 +126,22 @@ def provider_from_config() -> LLMProvider | None:
         return StubProvider()
 
     api_key = os.environ.get("SOULPRINT_LLM_API_KEY", "").strip()
+    base_url = os.environ.get("SOULPRINT_LLM_BASE_URL", "").strip()
     if not api_key:
         # Ollama and some local servers don't need a real API key.
         # If a base_url is set, use "ollama" as a dummy key.
-        base_url = os.environ.get("SOULPRINT_LLM_BASE_URL", "").strip()
         if base_url and provider_name == "openai":
             api_key = "ollama"
         else:
             return None
+
+    if base_url and not os.environ.get("SOULPRINT_LLM_MODEL", "").strip():
+        import logging
+        logging.getLogger(__name__).warning(
+            "SOULPRINT_LLM_BASE_URL is set without SOULPRINT_LLM_MODEL — "
+            "defaulting to gpt-4o-mini which may not exist on your endpoint. "
+            "Set SOULPRINT_LLM_MODEL=gemma4 (or your model name)."
+        )
 
     if provider_name == "anthropic":
         return AnthropicProvider(api_key)

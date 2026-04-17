@@ -552,7 +552,7 @@ def create_app():
 
         content = "\n".join(lines)
 
-        safe_title = "".join(c if c.isalnum() or c in " -_." else "" for c in title)[:60].strip()
+        safe_title = "".join(c if c.isascii() and (c.isalnum() or c in " -_.") else "" for c in title)[:60].strip()
         filename = f"{safe_title or 'conversation'}.md"
 
         return Response(
