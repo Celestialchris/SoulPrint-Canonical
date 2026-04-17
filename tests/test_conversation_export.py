@@ -150,6 +150,25 @@ class TestConversationExportEdgeCases(unittest.TestCase):
         user_idx = lines.index("### User")
         self.assertFalse(lines[user_idx + 1].startswith("*"))
 
+    def test_epoch_zero_timestamp_still_emits_italic_line(self):
+        conv_id = self._create_conv("Epoch", messages=[("user", "hi", 0)])
+        response = self.client.get(f"/imported/{conv_id}/export")
+        text = response.data.decode("utf-8")
+        lines = text.split("\n")
+        user_idx = lines.index("### User")
+        self.assertTrue(
+            lines[user_idx + 1].startswith("*"),
+            f"Expected italic timestamp line for epoch=0, got: {lines[user_idx + 1]!r}",
+        )
+
+    def test_dots_in_title_are_preserved_in_filename(self):
+        conv_id = self._create_conv(
+            "My.notes.v2", messages=[("user", "hi", 1700000000)]
+        )
+        response = self.client.get(f"/imported/{conv_id}/export")
+        dispo = response.headers["Content-Disposition"]
+        self.assertIn("My.notes.v2.md", dispo)
+
     def test_special_chars_in_title_sanitized(self):
         conv_id = self._create_conv(
             "Project/Alpha: v2 <beta>",

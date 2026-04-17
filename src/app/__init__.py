@@ -540,7 +540,7 @@ def create_app():
 
         for msg in messages:
             role_label = msg.role.capitalize() if msg.role else "Unknown"
-            ts = format_timestamp(msg.created_at_unix) if msg.created_at_unix else ""
+            ts = format_timestamp(msg.created_at_unix) if msg.created_at_unix is not None else ""
             lines.append(f"### {role_label}")
             if ts:
                 lines.append(f"*{ts}*")
@@ -552,7 +552,7 @@ def create_app():
 
         content = "\n".join(lines)
 
-        safe_title = "".join(c if c.isalnum() or c in " -_" else "" for c in title)[:60].strip()
+        safe_title = "".join(c if c.isalnum() or c in " -_." else "" for c in title)[:60].strip()
         filename = f"{safe_title or 'conversation'}.md"
 
         return Response(
