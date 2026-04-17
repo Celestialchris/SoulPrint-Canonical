@@ -50,8 +50,8 @@
 </p>
 {% endif %}
 
-{# ── Quick actions (empty-state orientation only) ── #}
-{% if not workspace.has_any_data %}
+{# ── Quick actions: visible until first conversation is imported ── #}
+{% if workspace.imported_conversation_count == 0 %}
 <section class="workspace-actions">
   <h3 class="workspace-section__label">START HERE</h3>
   <div class="workspace-actions__grid">

@@ -159,6 +159,29 @@ class WorkspaceHomeTest(unittest.TestCase):
         # Providers block must still render
         self.assertIn("PROVIDERS", html)
 
+    def test_workspace_shows_action_tiles_when_only_traces_exist(self):
+        """Traces alone must not gate orientation tiles — only imported conversations do.
+
+        Guards against Codex P2 on PR #111: a user with only answer traces (or only
+        native notes) and zero imported conversations should still see Start Here.
+        """
+        from pathlib import Path as _Path
+        trace_path = _Path(self.workdir) / "answer_traces.jsonl"
+        trace_path.write_text(
+            json.dumps({
+                "trace_id": "answer_trace:seed",
+                "created_at": "2026-04-17T00:00:00+00:00",
+                "question": "seed question",
+                "status": "grounded",
+            }) + "\n",
+            encoding="utf-8",
+        )
+        html = self._get_workspace_html()
+        self.assertIn("START HERE", html)
+        self.assertIn("Ask your memory", html)
+        self.assertIn("Import conversations", html)
+        self.assertIn("Memory Passport", html)
+
 
 if __name__ == "__main__":
     unittest.main()
