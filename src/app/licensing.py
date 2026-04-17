@@ -2,7 +2,7 @@
 
 License file: ``instance/license.key``
 Valid key prefix: ``SP-``
-Dev override: ``SOULPRINT_LICENSE_OVERRIDE=true`` bypasses file check.
+Dev overrides: ``SOULPRINT_DEV_MODE=1`` or ``SOULPRINT_LICENSE_OVERRIDE=true`` bypass the file check.
 """
 
 import os
@@ -12,7 +12,9 @@ from ..runtime import default_instance_dir
 
 
 def is_licensed(*, instance_dir: str | None = None) -> bool:
-    """Return True when a valid license key is present or the dev override is active."""
+    """Return True when a valid license key is present or a dev override is active."""
+    if os.environ.get("SOULPRINT_DEV_MODE") == "1":
+        return True
     if os.environ.get("SOULPRINT_LICENSE_OVERRIDE", "").lower() == "true":
         return True
 

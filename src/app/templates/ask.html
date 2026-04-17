@@ -98,7 +98,7 @@
       <ul class="content-list">
         {% for trace in recent_traces %}
           <li>
-            <a class="citation-link" href="{{ url_for('answer_trace_detail', trace_id=trace.trace_id) }}">{{ trace.trace_id }}</a>
+            <a class="citation-link" href="{{ url_for('answer_trace_detail', trace_id=trace.trace_id) }}">{{ trace.question|default('', true)|trim or trace.trace_id }}</a>
             · status: {{ trace.status }}
             {% if trace.question %}· question: {{ trace.question }}{% endif %}
           </li>

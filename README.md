@@ -41,7 +41,7 @@ Open `http://127.0.0.1:5678`. Drop an export file. Your conversations appear in 
 
 **Import.** Drop a ChatGPT `.zip`, Claude `.json`, or Gemini Takeout. Provider auto-detected. Deduplicated. Normalized into one SQLite file on your machine.
 
-**Browse and search.** Workspace dashboard, conversation list by provider, transcript explorer with prompt-level TOC and minimap, full-text search across all providers with highlighted snippets.
+**Browse and search.** Workspace dashboard, conversation list by provider, transcript explorer with prompt-level TOC and minimap, full-text search across all providers with highlighted snippets. Clip moments from any conversation into personal notes with full source provenance.
 
 **Distill.** Cross-conversation threads. Summaries. Multi-conversation distillation into a handoff briefing you paste into your next AI chat and pick up where you left off.
 

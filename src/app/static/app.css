@@ -1139,6 +1139,14 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   line-height: 1.55;
 }
 
+/* Search hero */
+.workspace-search-hero {
+  max-width: 720px;
+  margin-bottom: var(--space-6);
+}
+.workspace-search-hero .ask-form__row { gap: var(--space-3); }
+.workspace-search-hero input[type="search"] { font-size: 15px; }
+
 /* Stat cards (scoped — old .workspace-stats/.stat-card at ~751 would leak
    4-col grid, padding, and transparent background otherwise) */
 .workspace-canvas .workspace-stats {
