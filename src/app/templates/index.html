@@ -50,7 +50,8 @@
 </p>
 {% endif %}
 
-{# ── Quick actions ── #}
+{# ── Quick actions (empty-state orientation only) ── #}
+{% if not workspace.has_any_data %}
 <section class="workspace-actions">
   <h3 class="workspace-section__label">START HERE</h3>
   <div class="workspace-actions__grid">
@@ -71,6 +72,7 @@
     </a>
   </div>
 </section>
+{% endif %}
 
 {# ── Recent conversations ── #}
 {% if recent_conversations %}
@@ -105,35 +107,6 @@
       <span class="provider-list__dot" style="background-color: var(--lane-{{ entry.provider }})"></span>
       <span class="provider-list__name">{{ entry.provider }}</span>
       <span class="provider-list__count">{{ entry.count }}</span>
-    </li>
-    {% endfor %}
-  </ul>
-</section>
-{% endif %}
-
-{% if top_themes %}
-<section class="context-block">
-  <h4 class="context-block__label">TOP THEMES</h4>
-  <div class="theme-chips">
-    {% for theme in top_themes %}
-    <span class="theme-chip">{{ theme }}</span>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{% if recent_activity %}
-<section class="context-block">
-  <h4 class="context-block__label">RECENT ACTIVITY</h4>
-  <ul class="activity-list">
-    {% for event in recent_activity %}
-    <li class="activity-list__row">
-      <span class="activity-list__text">{{ event.text }}</span>
-      <span class="activity-list__time">
-        {% if event.time_unix %}{{ event.time_unix | relative_time }}
-        {% elif event.time_iso %}{{ event.time_iso[:10] }}
-        {% endif %}
-      </span>
     </li>
     {% endfor %}
   </ul>

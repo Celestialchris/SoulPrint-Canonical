@@ -120,6 +120,45 @@ class WorkspaceHomeTest(unittest.TestCase):
         html = self._get_workspace_html()
         self.assertIn(f'/imported/{conv_id}/explorer', html)
 
+    # ── Phase 3: search-first workspace ──
+
+    def test_workspace_search_hero_renders_before_action_tiles(self):
+        """Search hero appears above the Start-here action tiles in the source order."""
+        html = self._get_workspace_html()
+        search_idx = html.find("workspace-search-hero")
+        action_idx = html.find("workspace-actions")
+        self.assertNotEqual(search_idx, -1, "search hero should render")
+        self.assertNotEqual(action_idx, -1, "action tiles should render in empty state")
+        self.assertLess(search_idx, action_idx, "search hero must precede action tiles")
+
+    def test_workspace_shows_start_here_when_archive_empty(self):
+        """Action tiles orient a fresh user on first run."""
+        html = self._get_workspace_html()
+        self.assertIn("START HERE", html)
+        self.assertIn("Ask your memory", html)
+        self.assertIn("Import conversations", html)
+        self.assertIn("Memory Passport", html)
+
+    def test_workspace_hides_start_here_when_archive_populated(self):
+        """Action tiles are hidden once the archive has any imported conversations."""
+        with self.app.app_context():
+            self._seed_conv("chatgpt", "Test")
+            db.session.commit()
+        html = self._get_workspace_html()
+        self.assertNotIn("START HERE", html)
+        self.assertNotIn("action-card__title", html)
+
+    def test_workspace_rail_omits_top_themes_and_recent_activity(self):
+        """Phase 3 removes derived surfaces from the workspace rail — only Providers remains."""
+        with self.app.app_context():
+            self._seed_conv("chatgpt", "Test")
+            db.session.commit()
+        html = self._get_workspace_html()
+        self.assertNotIn("TOP THEMES", html)
+        self.assertNotIn("RECENT ACTIVITY", html)
+        # Providers block must still render
+        self.assertIn("PROVIDERS", html)
+
 
 if __name__ == "__main__":
     unittest.main()
