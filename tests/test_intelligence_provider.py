@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from src.intelligence.provider import (
+    OpenAIProvider,
     StubProvider,
     is_llm_configured,
     provider_from_config,
@@ -58,6 +59,89 @@ class ProviderFromConfigTest(unittest.TestCase):
             provider = provider_from_config()
 
         self.assertIsNone(provider)
+
+
+class OpenAIProviderEnvVarTest(unittest.TestCase):
+    """Verify OpenAIProvider reads SOULPRINT_LLM_BASE_URL and SOULPRINT_LLM_MODEL."""
+
+    def test_defaults_when_env_unset(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        with patch.dict(os.environ, env, clear=True):
+            provider = OpenAIProvider(api_key="sk-test")
+        self.assertIsNone(provider._base_url)
+        self.assertEqual(provider._model, "gpt-4o-mini")
+
+    def test_reads_base_url_and_model_from_env(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_BASE_URL"] = "http://localhost:11434/v1"
+        env["SOULPRINT_LLM_MODEL"] = "gemma4"
+        with patch.dict(os.environ, env, clear=True):
+            provider = OpenAIProvider(api_key="ollama")
+        self.assertEqual(provider._base_url, "http://localhost:11434/v1")
+        self.assertEqual(provider._model, "gemma4")
+
+    def test_provider_name_without_base_url(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        with patch.dict(os.environ, env, clear=True):
+            provider = OpenAIProvider(api_key="sk-test")
+        self.assertEqual(provider.provider_name, "openai/gpt-4o-mini")
+
+    def test_provider_name_with_base_url(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_BASE_URL"] = "http://localhost:11434/v1"
+        env["SOULPRINT_LLM_MODEL"] = "gemma4:26b"
+        with patch.dict(os.environ, env, clear=True):
+            provider = OpenAIProvider(api_key="ollama")
+        self.assertEqual(provider.provider_name, "openai-compat/gemma4:26b")
+
+
+class OllamaFallbackTest(unittest.TestCase):
+    """Provider factory fills a dummy api_key when base_url is set for Ollama."""
+
+    def test_fills_dummy_key_for_openai_with_base_url(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_PROVIDER"] = "openai"
+        env["SOULPRINT_LLM_BASE_URL"] = "http://localhost:11434/v1"
+        with patch.dict(os.environ, env, clear=True):
+            provider = provider_from_config()
+        self.assertIsNotNone(provider)
+        self.assertEqual(provider._api_key, "ollama")
+
+    def test_no_fallback_for_anthropic_with_base_url(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_PROVIDER"] = "anthropic"
+        env["SOULPRINT_LLM_BASE_URL"] = "http://localhost:11434/v1"
+        with patch.dict(os.environ, env, clear=True):
+            provider = provider_from_config()
+        self.assertIsNone(provider)
+
+
+class ModelMissingWarningTest(unittest.TestCase):
+    """Warn when SOULPRINT_LLM_BASE_URL is set without SOULPRINT_LLM_MODEL."""
+
+    def test_warns_when_base_url_set_without_model(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_PROVIDER"] = "openai"
+        env["SOULPRINT_LLM_BASE_URL"] = "http://localhost:11434/v1"
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertLogs("src.intelligence.provider", level="WARNING") as captured:
+                provider_from_config()
+        self.assertTrue(
+            any("SOULPRINT_LLM_MODEL" in msg for msg in captured.output),
+            f"Expected a MODEL warning, got: {captured.output!r}",
+        )
+
+    def test_no_warning_when_model_is_set(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_PROVIDER"] = "openai"
+        env["SOULPRINT_LLM_BASE_URL"] = "http://localhost:11434/v1"
+        env["SOULPRINT_LLM_MODEL"] = "gemma4"
+        with patch.dict(os.environ, env, clear=True):
+            import logging
+            logger = logging.getLogger("src.intelligence.provider")
+            with patch.object(logger, "warning") as mock_warn:
+                provider_from_config()
+                mock_warn.assert_not_called()
 
 
 class IsLlmConfiguredTest(unittest.TestCase):

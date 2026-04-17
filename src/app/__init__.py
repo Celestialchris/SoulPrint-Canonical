@@ -512,6 +512,55 @@ def create_app():
             lineage_suggestions=lineage_suggestions,
         )
 
+    @app.get("/imported/<int:conversation_id>/export")
+    def export_conversation_markdown(conversation_id: int):
+        """Export a single conversation as a downloadable markdown file."""
+        from flask import Response
+
+        conversation = ImportedConversation.query.get_or_404(conversation_id)
+        messages = (
+            ImportedMessage.query
+            .filter_by(conversation_id=conversation_id)
+            .order_by(ImportedMessage.sequence_index)
+            .all()
+        )
+
+        lines = []
+        title = conversation.title or "Untitled conversation"
+        lines.append(f"# {title}")
+        lines.append("")
+        lines.append(f"**Provider:** {conversation.source}")
+        lines.append(f"**Created:** {format_timestamp(conversation.created_at_unix)}")
+        lines.append(f"**Updated:** {format_timestamp(conversation.updated_at_unix)}")
+        lines.append(f"**Messages:** {len(messages)}")
+        lines.append(f"**Exported from:** SoulPrint")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+
+        for msg in messages:
+            role_label = msg.role.capitalize() if msg.role else "Unknown"
+            ts = format_timestamp(msg.created_at_unix) if msg.created_at_unix is not None else ""
+            lines.append(f"### {role_label}")
+            if ts:
+                lines.append(f"*{ts}*")
+            lines.append("")
+            lines.append(msg.content or "")
+            lines.append("")
+            lines.append("---")
+            lines.append("")
+
+        content = "\n".join(lines)
+
+        safe_title = "".join(c if c.isascii() and (c.isalnum() or c in " -_.") else "" for c in title)[:60].strip()
+        filename = f"{safe_title or 'conversation'}.md"
+
+        return Response(
+            content,
+            mimetype="text/markdown",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
     @app.get("/imported")
     def imported_conversations():
         from ..importers.contracts import SUPPORTED_IMPORT_PROVIDERS

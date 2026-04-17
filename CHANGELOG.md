@@ -2,6 +2,26 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## Local LLM + Single Conversation Export (2026-04-17)
+### Added
+- Single-conversation markdown export: `GET /imported/<id>/export` returns a downloadable `.md` with metadata, provenance, and all messages. "Export as markdown" link surfaces on the transcript explorer.
+- OpenAI-compatible endpoint support: `OpenAIProvider` now reads `SOULPRINT_LLM_BASE_URL` and `SOULPRINT_LLM_MODEL`. Works with Ollama (local), OpenRouter, or any `/v1/chat/completions` contract. Dummy api_key auto-filled for keyless local servers.
+- `provider_name` now carries the model in provenance: `openai/gpt-4o-mini`, `openai-compat/gemma4`, etc. — flows into every derived artifact's `llm_provider_used`.
+- Recurring themes empty state now leads with Ollama + Gemma 4 as the default local path; cloud providers tucked into a `<details>` disclosure.
+- CLAUDE.md: new LLM Configuration section with Gemma 4 model-size matrix and run command.
+
+### Fixed
+- Single-conversation export: messages with `created_at_unix == 0` (epoch) no longer silently drop their timestamp line.
+- Single-conversation export: dots in conversation titles preserved in the download filename (e.g., `my.notes.v2.md` instead of `mynotesv2.md`).
+
+### Tests
+- 10 tests for conversation export (happy path, 404, empty/sanitized titles, null/epoch timestamps, attachment header).
+- 7 tests for provider env-var reading, `provider_name` labeling, and Ollama fallback gating. Suite: 676 → 686 passing.
+
+### Known limitations (P1 followups)
+- Ollama keyless fallback accepts any `SOULPRINT_LLM_BASE_URL`, not just loopback. A real api_key would be forwarded to a hostile URL if the operator mis-configures `BASE_URL`.
+- When `BASE_URL` is set without `SOULPRINT_LLM_MODEL`, `provider_name` defaults to `openai-compat/gpt-4o-mini` while the call actually hits whatever the endpoint's default model is — mislabels the audit trail.
+
 ## Magenta Sanctum UI Chain (2026-04-17)
 - **v0.6.0 release.** Six-phase UI revamp landing as a single authored product: Magenta Sanctum tokens + brand mark (Phase 1), local web fonts (Phase 1b), four-column shell (Phase 2), workspace as canonical spine (Phase 3), secondary pages coherence (Phase 4), workspace composition redesigned to mockup (Phase 5.6), and dead-code/doctrine/release finalize (Phase 5)
 - Design doctrine now `docs/product/design-doctrine-magenta-sanctum.md`; supersedes the pre-0.6.0 "USB Drive" doctrine
