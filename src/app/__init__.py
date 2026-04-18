@@ -171,6 +171,65 @@ def _sqlite_path_from_uri(sqlite_uri: str) -> str:
     return sqlite_uri.removeprefix("sqlite:///")
 
 
+def render_conversation_markdown(conversation, messages) -> tuple[str, str]:
+    """Return (markdown_content, safe_filename) for a conversation + messages."""
+
+    lines = []
+    title = conversation.title or "Untitled conversation"
+    lines.append(f"# {title}")
+    lines.append("")
+    lines.append(f"**Provider:** {conversation.source}")
+    lines.append(f"**Created:** {format_timestamp(conversation.created_at_unix)}")
+    lines.append(f"**Updated:** {format_timestamp(conversation.updated_at_unix)}")
+    lines.append(f"**Messages:** {len(messages)}")
+    lines.append(f"**Exported from:** SoulPrint")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+
+    for msg in messages:
+        role_label = msg.role.capitalize() if msg.role else "Unknown"
+        ts = format_timestamp(msg.created_at_unix) if msg.created_at_unix is not None else ""
+        lines.append(f"### {role_label}")
+        if ts:
+            lines.append(f"*{ts}*")
+        lines.append("")
+        lines.append(msg.content or "")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+
+    content = "\n".join(lines)
+    safe_title = "".join(c if c.isascii() and (c.isalnum() or c in " -_.") else "" for c in title)[:60].strip()
+    filename = f"{safe_title or 'conversation'}.md"
+    return content, filename
+
+
+def _pick_unique_filename(base: str, conv_id: int, taken) -> str:
+    """Return base, or a disambiguated variant that `taken(name)` rejects.
+
+    First tries `<stem>-<conv_id>.<ext>`, then `<stem>-<conv_id>-<n>.<ext>`
+    for n = 2, 3, … until an unused name is found. Safe against the case
+    where the first-try suffix happens to collide with another batch entry
+    whose title already contained the same id suffix.
+    """
+
+    if not taken(base):
+        return base
+    stem, _, ext = base.rpartition(".")
+    ext = ext or "md"
+    stem = stem or base
+    candidate = f"{stem}-{conv_id}.{ext}"
+    if not taken(candidate):
+        return candidate
+    n = 2
+    while True:
+        candidate = f"{stem}-{conv_id}-{n}.{ext}"
+        if not taken(candidate):
+            return candidate
+        n += 1
+
+
 def create_app():
     instance_dir = default_instance_dir()
     app = Flask(
@@ -505,40 +564,103 @@ def create_app():
             .all()
         )
 
-        lines = []
-        title = conversation.title or "Untitled conversation"
-        lines.append(f"# {title}")
-        lines.append("")
-        lines.append(f"**Provider:** {conversation.source}")
-        lines.append(f"**Created:** {format_timestamp(conversation.created_at_unix)}")
-        lines.append(f"**Updated:** {format_timestamp(conversation.updated_at_unix)}")
-        lines.append(f"**Messages:** {len(messages)}")
-        lines.append(f"**Exported from:** SoulPrint")
-        lines.append("")
-        lines.append("---")
-        lines.append("")
-
-        for msg in messages:
-            role_label = msg.role.capitalize() if msg.role else "Unknown"
-            ts = format_timestamp(msg.created_at_unix) if msg.created_at_unix is not None else ""
-            lines.append(f"### {role_label}")
-            if ts:
-                lines.append(f"*{ts}*")
-            lines.append("")
-            lines.append(msg.content or "")
-            lines.append("")
-            lines.append("---")
-            lines.append("")
-
-        content = "\n".join(lines)
-
-        safe_title = "".join(c if c.isascii() and (c.isalnum() or c in " -_.") else "" for c in title)[:60].strip()
-        filename = f"{safe_title or 'conversation'}.md"
+        content, filename = render_conversation_markdown(conversation, messages)
 
         return Response(
             content,
             mimetype="text/markdown",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
+    @app.post("/imported/export-selected")
+    def export_selected_conversations():
+        """Export multiple conversations as markdown — to a configured
+        directory when SOULPRINT_EXPORT_DIR is set, otherwise as a zip."""
+        import io
+        import zipfile
+        from flask import Response
+
+        raw_ids = request.form.getlist("conversation_ids")
+        ids: list[int] = []
+        for raw in raw_ids:
+            try:
+                ids.append(int(raw))
+            except (TypeError, ValueError):
+                continue
+
+        if not ids:
+            session["export_error"] = "No conversations selected."
+            return redirect(url_for("imported_conversations"))
+
+        conversations = (
+            ImportedConversation.query
+            .filter(ImportedConversation.id.in_(ids))
+            .all()
+        )
+
+        if not conversations:
+            session["export_error"] = "No conversations selected."
+            return redirect(url_for("imported_conversations"))
+
+        rendered: list[tuple[int, str, str]] = []
+        for conversation in conversations:
+            messages = (
+                ImportedMessage.query
+                .filter_by(conversation_id=conversation.id)
+                .order_by(ImportedMessage.sequence_index)
+                .all()
+            )
+            content, base_filename = render_conversation_markdown(conversation, messages)
+            rendered.append((conversation.id, content, base_filename))
+
+        export_dir = app.config.get("SOULPRINT_EXPORT_DIR", "") or ""
+        dest = Path(export_dir).resolve() if export_dir else None
+
+        if dest is not None and dest.is_dir():
+            used: set[str] = set()
+            written = 0
+            try:
+                for conv_id, content, base_filename in rendered:
+                    name = _pick_unique_filename(
+                        base_filename,
+                        conv_id,
+                        lambda n: n in used or (dest / n).exists(),
+                    )
+                    (dest / name).write_text(content, encoding="utf-8")
+                    used.add(name)
+                    written += 1
+            except OSError as exc:
+                detail = (
+                    f" {written} of {len(rendered)} conversations were written before the failure."
+                    if written > 0
+                    else ""
+                )
+                session["export_error"] = (
+                    f"Failed to write to {dest}: {exc}."
+                    f"{detail} Check that the path exists and is writable."
+                )
+                return redirect(url_for("imported_conversations"))
+            session["export_notice"] = (
+                f"Exported {len(rendered)} conversations to {dest}"
+            )
+            return redirect(url_for("imported_conversations"))
+
+        zip_used: set[str] = set()
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            for conv_id, content, base_filename in rendered:
+                name = _pick_unique_filename(
+                    base_filename, conv_id, zip_used.__contains__
+                )
+                zf.writestr(name, content)
+                zip_used.add(name)
+        count = len(rendered)
+        return Response(
+            buf.getvalue(),
+            mimetype="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="soulprint-export-{count}.zip"'
+            },
         )
 
     @app.get("/imported")
@@ -589,6 +711,9 @@ def create_app():
             .all()
         )
 
+        export_notice = session.pop("export_notice", None)
+        export_error = session.pop("export_error", None)
+
         return render_template(
             "imported_list.html",
             rows=rows,
@@ -598,6 +723,8 @@ def create_app():
             page=page,
             total_pages=total_pages,
             total=total,
+            export_notice=export_notice,
+            export_error=export_error,
         )
 
     @app.route("/import", methods=["GET", "POST"])

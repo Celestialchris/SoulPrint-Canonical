@@ -33,3 +33,4 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = str(default_upload_dir())
+    SOULPRINT_EXPORT_DIR = os.environ.get("SOULPRINT_EXPORT_DIR", "")

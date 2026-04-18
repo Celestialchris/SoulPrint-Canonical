@@ -106,12 +106,10 @@ def generate_continuity_packet(
         )
 
     transcript = _build_transcript(conversation)
-    messages = [
-        {"role": "user", "content": f"{_SYSTEM_PROMPT}\n\n--- Transcript ---\n{transcript}"},
-    ]
+    user_message = f"--- Transcript ---\n{transcript}"
 
     try:
-        raw_response = provider.summarize(messages)
+        raw_response = provider.complete(_SYSTEM_PROMPT, user_message)
     except Exception as exc:
         return ContinuityPacketResult(
             conversation_stable_id=stable_id,

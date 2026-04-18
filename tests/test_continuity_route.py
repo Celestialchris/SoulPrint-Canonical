@@ -89,7 +89,7 @@ class ContinuityRouteTest(unittest.TestCase):
         """POST to generate a continuity packet with a stub returning valid JSON."""
         with patch.dict(os.environ, {"SOULPRINT_LLM_PROVIDER": "stub"}, clear=False):
             with patch.object(
-                StubProvider, "summarize", return_value=_STUB_CONTINUITY_RESPONSE
+                StubProvider, "complete", return_value=_STUB_CONTINUITY_RESPONSE
             ):
                 return self.client.post(f"/intelligence/continuity/{conv_id}")
 
