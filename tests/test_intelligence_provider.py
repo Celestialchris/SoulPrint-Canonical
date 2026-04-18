@@ -45,7 +45,7 @@ class ProviderFromConfigTest(unittest.TestCase):
 
     def test_returns_none_when_anthropic_without_key(self):
         env_patch = {"SOULPRINT_LLM_PROVIDER": "anthropic"}
-        env_remove = {k: v for k, v in os.environ.items() if k != "SOULPRINT_LLM_API_KEY"}
+        env_remove = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
         env_remove.update(env_patch)
         with patch.dict(os.environ, env_remove, clear=True):
             provider = provider_from_config()
@@ -54,7 +54,7 @@ class ProviderFromConfigTest(unittest.TestCase):
 
     def test_returns_none_when_openai_without_key(self):
         env_patch = {"SOULPRINT_LLM_PROVIDER": "openai"}
-        env_remove = {k: v for k, v in os.environ.items() if k != "SOULPRINT_LLM_API_KEY"}
+        env_remove = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
         env_remove.update(env_patch)
         with patch.dict(os.environ, env_remove, clear=True):
             provider = provider_from_config()
