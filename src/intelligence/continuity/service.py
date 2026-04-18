@@ -109,7 +109,12 @@ def generate_continuity_packet(
     user_message = f"--- Transcript ---\n{transcript}"
 
     try:
-        raw_response = provider.complete(_SYSTEM_PROMPT, user_message)
+        # Continuity packets emit a multi-section JSON structure that can run
+        # long; override the 4096 default so the response isn't truncated
+        # mid-object and fails JSON parsing.
+        raw_response = provider.complete(
+            _SYSTEM_PROMPT, user_message, max_tokens=16384
+        )
     except Exception as exc:
         return ContinuityPacketResult(
             conversation_stable_id=stable_id,

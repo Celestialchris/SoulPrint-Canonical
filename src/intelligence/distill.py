@@ -207,7 +207,11 @@ def distill_conversations(
         f"continuation handoff document.\n\n{transcript}"
     )
 
-    distilled_text = provider.complete(_SYSTEM_PROMPT, user_message)
+    # Handoff documents emit 2K-6K tokens of structured markdown; override
+    # the 4096 default to give the model headroom for the six-section format.
+    distilled_text = provider.complete(
+        _SYSTEM_PROMPT, user_message, max_tokens=16384
+    )
     distilled_text = _truncate(distilled_text, MAX_DISTILL_CHARS)
 
     return DistillationResult(

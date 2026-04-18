@@ -6,13 +6,34 @@ import os
 from typing import Protocol, runtime_checkable
 
 
+DEFAULT_MAX_TOKENS = 4096
+"""Backend-safe default output budget.
+
+Works across OpenAI, Anthropic, and Ollama/Gemma4 with typical input sizes
+without tripping the ``max_tokens + input_tokens <= context_window`` check
+that non-OpenAI and local backends enforce server-side.
+
+Distill and continuity-packet call sites override this explicitly with
+16384 when they need headroom for long structured output.
+"""
+
+
 @runtime_checkable
 class LLMProvider(Protocol):
     """Protocol for any LLM backend that can summarize messages."""
 
-    def summarize(self, messages: list[dict]) -> str: ...
+    def summarize(
+        self,
+        messages: list[dict],
+        max_tokens: int = DEFAULT_MAX_TOKENS,
+    ) -> str: ...
 
-    def complete(self, system_prompt: str, user_message: str) -> str: ...
+    def complete(
+        self,
+        system_prompt: str,
+        user_message: str,
+        max_tokens: int = DEFAULT_MAX_TOKENS,
+    ) -> str: ...
 
     @property
     def provider_name(self) -> str: ...
@@ -25,7 +46,11 @@ class StubProvider:
     def provider_name(self) -> str:
         return "stub"
 
-    def summarize(self, messages: list[dict]) -> str:
+    def summarize(
+        self,
+        messages: list[dict],
+        max_tokens: int = DEFAULT_MAX_TOKENS,
+    ) -> str:
         msg_count = len(messages)
         roles = {m.get("role", "unknown") for m in messages}
         return (
@@ -34,7 +59,12 @@ class StubProvider:
             "Key topics and decisions would be extracted by a real LLM provider."
         )
 
-    def complete(self, system_prompt: str, user_message: str) -> str:
+    def complete(
+        self,
+        system_prompt: str,
+        user_message: str,
+        max_tokens: int = DEFAULT_MAX_TOKENS,
+    ) -> str:
         return (
             "[Stub complete] Received system prompt and user message. "
             "A real LLM would process these as separate roles."
@@ -51,7 +81,11 @@ class AnthropicProvider:
     def provider_name(self) -> str:
         return "anthropic"
 
-    def summarize(self, messages: list[dict]) -> str:
+    def summarize(
+        self,
+        messages: list[dict],
+        max_tokens: int = DEFAULT_MAX_TOKENS,
+    ) -> str:
         import anthropic
 
         client = anthropic.Anthropic(api_key=self._api_key)
@@ -88,13 +122,18 @@ class AnthropicProvider:
         )
         return response.content[0].text
 
-    def complete(self, system_prompt: str, user_message: str) -> str:
+    def complete(
+        self,
+        system_prompt: str,
+        user_message: str,
+        max_tokens: int = DEFAULT_MAX_TOKENS,
+    ) -> str:
         import anthropic
 
         client = anthropic.Anthropic(api_key=self._api_key)
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=4096,
+            max_tokens=max_tokens,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}],
         )
@@ -123,7 +162,11 @@ class OpenAIProvider:
             return f"openai-compat/{self._model}"
         return f"openai/{self._model}"
 
-    def summarize(self, messages: list[dict]) -> str:
+    def summarize(
+        self,
+        messages: list[dict],
+        max_tokens: int = DEFAULT_MAX_TOKENS,
+    ) -> str:
         import openai
 
         client = openai.OpenAI(
@@ -168,7 +211,12 @@ class OpenAIProvider:
         )
         return response.choices[0].message.content
 
-    def complete(self, system_prompt: str, user_message: str) -> str:
+    def complete(
+        self,
+        system_prompt: str,
+        user_message: str,
+        max_tokens: int = DEFAULT_MAX_TOKENS,
+    ) -> str:
         import openai
 
         client = openai.OpenAI(
@@ -177,7 +225,7 @@ class OpenAIProvider:
         )
         response = client.chat.completions.create(
             model=self._model,
-            max_tokens=4096,
+            max_tokens=max_tokens,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
