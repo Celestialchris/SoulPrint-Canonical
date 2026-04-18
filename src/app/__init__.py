@@ -547,6 +547,83 @@ def create_app():
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
+    @app.post("/imported/export-selected")
+    def export_selected_conversations():
+        """Export multiple conversations as markdown — to a configured
+        directory when SOULPRINT_EXPORT_DIR is set, otherwise as a zip."""
+        import io
+        import zipfile
+        from flask import Response
+
+        raw_ids = request.form.getlist("conversation_ids")
+        ids: list[int] = []
+        for raw in raw_ids:
+            try:
+                ids.append(int(raw))
+            except (TypeError, ValueError):
+                continue
+
+        if not ids:
+            session["export_error"] = "No conversations selected."
+            return redirect(url_for("imported_conversations"))
+
+        conversations = (
+            ImportedConversation.query
+            .filter(ImportedConversation.id.in_(ids))
+            .all()
+        )
+
+        if not conversations:
+            session["export_error"] = "No conversations selected."
+            return redirect(url_for("imported_conversations"))
+
+        rendered: list[tuple[int, str, str]] = []
+        used_names: set[str] = set()
+        for conversation in conversations:
+            messages = (
+                ImportedMessage.query
+                .filter_by(conversation_id=conversation.id)
+                .order_by(ImportedMessage.sequence_index)
+                .all()
+            )
+            content, filename = render_conversation_markdown(conversation, messages)
+            if filename in used_names:
+                stem, _, ext = filename.rpartition(".")
+                filename = f"{stem or filename}-{conversation.id}.{ext or 'md'}"
+            used_names.add(filename)
+            rendered.append((conversation.id, content, filename))
+
+        export_dir = app.config.get("SOULPRINT_EXPORT_DIR", "") or ""
+        dest = Path(export_dir).resolve() if export_dir else None
+
+        if dest is not None and dest.is_dir():
+            disk_names: set[str] = set()
+            for conv_id, content, filename in rendered:
+                target = dest / filename
+                if target.exists() or filename in disk_names:
+                    stem, _, ext = filename.rpartition(".")
+                    filename = f"{stem or filename}-{conv_id}.{ext or 'md'}"
+                    target = dest / filename
+                target.write_text(content, encoding="utf-8")
+                disk_names.add(filename)
+            session["export_notice"] = (
+                f"Exported {len(rendered)} conversations to {dest}"
+            )
+            return redirect(url_for("imported_conversations"))
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            for _, content, filename in rendered:
+                zf.writestr(filename, content)
+        count = len(rendered)
+        return Response(
+            buf.getvalue(),
+            mimetype="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="soulprint-export-{count}.zip"'
+            },
+        )
+
     @app.get("/imported")
     def imported_conversations():
         from ..importers.contracts import SUPPORTED_IMPORT_PROVIDERS
@@ -595,6 +672,9 @@ def create_app():
             .all()
         )
 
+        export_notice = session.pop("export_notice", None)
+        export_error = session.pop("export_error", None)
+
         return render_template(
             "imported_list.html",
             rows=rows,
@@ -604,6 +684,8 @@ def create_app():
             page=page,
             total_pages=total_pages,
             total=total,
+            export_notice=export_notice,
+            export_error=export_error,
         )
 
     @app.route("/import", methods=["GET", "POST"])
