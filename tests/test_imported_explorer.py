@@ -140,6 +140,36 @@ class ImportedExplorerRouteTest(unittest.TestCase):
         self.assertIn("This imported conversation has no messages.", html)
         self.assertIn("No user prompts available.", html)
 
+    def test_export_link_has_no_download_attribute(self):
+        """The Export as markdown link must NOT carry a `download` attribute.
+
+        The route conditionally returns a redirect (SOULPRINT_EXPORT_DIR set)
+        or a Content-Disposition: attachment response (fallback). Browsers
+        that honor `download` on the <a> tag will try to save the redirect
+        target as a file — users see the /imported HTML page land in their
+        downloads folder instead of seeing the session notice. The link-side
+        attribute is both redundant (the header does the work when needed)
+        and actively harmful in redirect mode.
+        """
+        import re
+
+        conversation_id = self._create_conversation_with_messages()
+
+        response = self.client.get(f"/imported/{conversation_id}/explorer")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+
+        match = re.search(
+            rf'<a\s[^>]*href="/imported/{conversation_id}/export"[^>]*>',
+            html,
+        )
+        self.assertIsNotNone(match, "export link not found on explorer page")
+        self.assertNotIn(
+            "download",
+            match.group(0),
+            f"export link must not have `download` attribute: {match.group(0)!r}",
+        )
+
     def test_imported_explorer_shows_provider_identity_for_non_chatgpt_source(self):
         with self.app.app_context():
             conversation = ImportedConversation(

@@ -230,6 +230,26 @@ def _pick_unique_filename(base: str, conv_id: int, taken) -> str:
         n += 1
 
 
+def _atomic_write_text(target: Path, content: str) -> None:
+    """Write *content* to *target* via a ``.tmp`` sibling + atomic rename.
+
+    On OSError anywhere in the write/rename, best-effort-unlink the tmp
+    and re-raise. An existing file at *target* is preserved on failure
+    because the rename is the commit step.
+    """
+    tmp = target.with_suffix(target.suffix + ".tmp")
+    try:
+        tmp.write_text(content, encoding="utf-8")
+        tmp.replace(target)
+    except OSError:
+        if tmp.exists():
+            try:
+                tmp.unlink()
+            except OSError:
+                pass  # best-effort cleanup; don't mask the original error
+        raise
+
+
 def create_app():
     instance_dir = default_instance_dir()
     app = Flask(
@@ -553,7 +573,13 @@ def create_app():
 
     @app.get("/imported/<int:conversation_id>/export")
     def export_conversation_markdown(conversation_id: int):
-        """Export a single conversation as a downloadable markdown file."""
+        """Export a single conversation.
+
+        When SOULPRINT_EXPORT_DIR is set and points at a writable directory,
+        write the .md there and redirect to /imported with a confirmation
+        notice. Otherwise (or on filesystem write failure) serve a browser
+        download.
+        """
         from flask import Response
 
         conversation = ImportedConversation.query.get_or_404(conversation_id)
@@ -565,6 +591,29 @@ def create_app():
         )
 
         content, filename = render_conversation_markdown(conversation, messages)
+
+        export_dir = app.config.get("SOULPRINT_EXPORT_DIR", "") or ""
+        dest = Path(export_dir).resolve() if export_dir else None
+
+        if dest is not None and dest.is_dir():
+            try:
+                name = _pick_unique_filename(
+                    filename,
+                    conversation.id,
+                    lambda n: (dest / n).exists(),
+                )
+                _atomic_write_text(dest / name, content)
+            except OSError as exc:
+                app.logger.warning(
+                    "Single-conv export to %s failed: %s. Falling back to download.",
+                    dest, exc,
+                )
+            else:
+                session["export_notice"] = (
+                    f"Exported '{conversation.title or 'Untitled conversation'}' "
+                    f"to {dest / name}"
+                )
+                return redirect(url_for("imported_conversations"))
 
         return Response(
             content,
@@ -626,7 +675,7 @@ def create_app():
                         conv_id,
                         lambda n: n in used or (dest / n).exists(),
                     )
-                    (dest / name).write_text(content, encoding="utf-8")
+                    _atomic_write_text(dest / name, content)
                     used.add(name)
                     written += 1
             except OSError as exc:
