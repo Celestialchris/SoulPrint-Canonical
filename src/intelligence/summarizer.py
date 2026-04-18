@@ -24,7 +24,7 @@ class DerivedSummary:
     artifact_kind: str
 
 
-PROMPT_TEMPLATE_VERSION = "v1"
+PROMPT_TEMPLATE_VERSION = "v2"
 
 
 def summarize_conversation(conversation, provider: LLMProvider) -> DerivedSummary:
