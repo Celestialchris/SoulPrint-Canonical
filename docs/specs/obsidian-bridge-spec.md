@@ -352,7 +352,7 @@ The bridge generates a minimal `.obsidian/` folder on first export:
 - `app.json` — sets attachment folder to `Attachments/`
 - `daily-notes.json` — sets daily note folder to `Daily/`, format `YYYY-MM-DD`
 - `templates.json` — sets template folder to `Templates/`
-- `appearance.json` — dark theme default (matches USB Drive)
+- `appearance.json`: dark theme default (matches Quiet Archive)
 - `community-plugins.json` — empty array (Dataview recommended but not required)
 
 This gives the user a working vault on first open. They can customize freely after.

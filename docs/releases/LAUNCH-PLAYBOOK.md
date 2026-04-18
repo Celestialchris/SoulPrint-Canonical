@@ -31,7 +31,7 @@ Complete ALL of these before posting anywhere:
 - [ ] **Requirements cleaned** — no phantom `chromadb`/`sentence-transformers`
 - [ ] **CI badge is green** on main
 - [ ] **Quick start actually works** — fresh clone, install, run, import in < 2 minutes
-- [ ] **Landing page matches brand** — USB Drive palette, green accent
+- [ ] **Landing page matches brand**: Quiet Archive v3 palette, clay accent on warm black
 
 ---
 

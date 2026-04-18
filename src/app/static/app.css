@@ -1,6 +1,6 @@
-/* SoulPrint — Quiet Archive v3 Design System (v0.7.0-alpha.1)
-   Supersedes Magenta Sanctum v2. Phase 1: tokens only (no structural change).
-   Authoritative doctrine: docs/product/design-doctrine-quiet-archive.md */
+/* SoulPrint Quiet Archive v3 Design System (v0.7.0-alpha.1)
+   Live authority for all design tokens.
+   Doctrine: docs/product/design-doctrine-quiet-archive.md */
 
 /* ===== Local web fonts (bundled, no CDN) ===== */
 @font-face { font-family: 'Playfair Display'; src: url('fonts/playfair-display-v40-latin-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
@@ -571,10 +571,10 @@ body { font-family: var(--font-body); }
 code, pre, kbd, samp { font-family: var(--font-mono); }
 
 /* =====================================================================
-   Magenta Sanctum Shell — Phase 2. Scoped under .shell so the four-column
-   shell owns sidebar/main/context-panel layout. Remaining unscoped rules
-   above this block are shared utilities (page-header, badges, records,
-   ask/distill/passport surfaces) that live inside .shell .main.
+   Four-column app shell. Scoped under .shell so the four-column shell
+   owns sidebar, main, and context-panel layout. Unscoped rules above
+   this block are shared utilities (page-header, badges, records,
+   ask, distill, passport surfaces) that live inside .shell .main.
    ===================================================================== */
 
 /* Grok lane color — 4th provider (Quiet Archive v3 values override the shell baseline) */
@@ -1029,10 +1029,9 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 
 /* ── Phase 4 — Import page + secondary coherence ── */
-/* cta-alive tokens were green (USB Drive / Magenta Sanctum era); Quiet Archive v3 repoints
-   them to the clay accent so the Import CTA reads brand, not provider-green. Token names kept
-   for backward compatibility with existing selectors (.cta-primary etc.); fg stays dark for
-   contrast on clay. */
+/* cta-alive token names kept for backward compatibility with existing selectors
+   (.cta-primary etc.). Values flow through --accent so the CTA reads as brand clay.
+   Foreground stays white for contrast on clay. */
 :root {
   --cta-alive-bg: var(--accent);
   --cta-alive-fg: #ffffff;
