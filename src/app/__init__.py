@@ -205,6 +205,31 @@ def render_conversation_markdown(conversation, messages) -> tuple[str, str]:
     return content, filename
 
 
+def _pick_unique_filename(base: str, conv_id: int, taken) -> str:
+    """Return base, or a disambiguated variant that `taken(name)` rejects.
+
+    First tries `<stem>-<conv_id>.<ext>`, then `<stem>-<conv_id>-<n>.<ext>`
+    for n = 2, 3, … until an unused name is found. Safe against the case
+    where the first-try suffix happens to collide with another batch entry
+    whose title already contained the same id suffix.
+    """
+
+    if not taken(base):
+        return base
+    stem, _, ext = base.rpartition(".")
+    ext = ext or "md"
+    stem = stem or base
+    candidate = f"{stem}-{conv_id}.{ext}"
+    if not taken(candidate):
+        return candidate
+    n = 2
+    while True:
+        candidate = f"{stem}-{conv_id}-{n}.{ext}"
+        if not taken(candidate):
+            return candidate
+        n += 1
+
+
 def create_app():
     instance_dir = default_instance_dir()
     app = Flask(
@@ -578,7 +603,6 @@ def create_app():
             return redirect(url_for("imported_conversations"))
 
         rendered: list[tuple[int, str, str]] = []
-        used_names: set[str] = set()
         for conversation in conversations:
             messages = (
                 ImportedMessage.query
@@ -586,35 +610,50 @@ def create_app():
                 .order_by(ImportedMessage.sequence_index)
                 .all()
             )
-            content, filename = render_conversation_markdown(conversation, messages)
-            if filename in used_names:
-                stem, _, ext = filename.rpartition(".")
-                filename = f"{stem or filename}-{conversation.id}.{ext or 'md'}"
-            used_names.add(filename)
-            rendered.append((conversation.id, content, filename))
+            content, base_filename = render_conversation_markdown(conversation, messages)
+            rendered.append((conversation.id, content, base_filename))
 
         export_dir = app.config.get("SOULPRINT_EXPORT_DIR", "") or ""
         dest = Path(export_dir).resolve() if export_dir else None
 
         if dest is not None and dest.is_dir():
-            disk_names: set[str] = set()
-            for conv_id, content, filename in rendered:
-                target = dest / filename
-                if target.exists() or filename in disk_names:
-                    stem, _, ext = filename.rpartition(".")
-                    filename = f"{stem or filename}-{conv_id}.{ext or 'md'}"
-                    target = dest / filename
-                target.write_text(content, encoding="utf-8")
-                disk_names.add(filename)
+            used: set[str] = set()
+            written = 0
+            try:
+                for conv_id, content, base_filename in rendered:
+                    name = _pick_unique_filename(
+                        base_filename,
+                        conv_id,
+                        lambda n: n in used or (dest / n).exists(),
+                    )
+                    (dest / name).write_text(content, encoding="utf-8")
+                    used.add(name)
+                    written += 1
+            except OSError as exc:
+                detail = (
+                    f" {written} of {len(rendered)} conversations were written before the failure."
+                    if written > 0
+                    else ""
+                )
+                session["export_error"] = (
+                    f"Failed to write to {dest}: {exc}."
+                    f"{detail} Check that the path exists and is writable."
+                )
+                return redirect(url_for("imported_conversations"))
             session["export_notice"] = (
                 f"Exported {len(rendered)} conversations to {dest}"
             )
             return redirect(url_for("imported_conversations"))
 
+        zip_used: set[str] = set()
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-            for _, content, filename in rendered:
-                zf.writestr(filename, content)
+            for conv_id, content, base_filename in rendered:
+                name = _pick_unique_filename(
+                    base_filename, conv_id, zip_used.__contains__
+                )
+                zf.writestr(name, content)
+                zip_used.add(name)
         count = len(rendered)
         return Response(
             buf.getvalue(),

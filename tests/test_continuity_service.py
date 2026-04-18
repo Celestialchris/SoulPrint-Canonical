@@ -60,7 +60,7 @@ class StructuredStubProvider:
     def provider_name(self) -> str:
         return "structured_stub"
 
-    def summarize(self, messages: list[dict]) -> str:
+    def complete(self, system: str, user: str) -> str:
         return _STRUCTURED_RESPONSE
 
 
@@ -71,7 +71,7 @@ class MarkdownFencedProvider:
     def provider_name(self) -> str:
         return "fenced_stub"
 
-    def summarize(self, messages: list[dict]) -> str:
+    def complete(self, system: str, user: str) -> str:
         return f"```json\n{_STRUCTURED_RESPONSE}\n```"
 
 
@@ -82,7 +82,7 @@ class EmptyFieldsProvider:
     def provider_name(self) -> str:
         return "empty_fields_stub"
 
-    def summarize(self, messages: list[dict]) -> str:
+    def complete(self, system: str, user: str) -> str:
         return json.dumps({
             "summary": "Brief discussion.",
             "decisions": [],
@@ -92,13 +92,13 @@ class EmptyFieldsProvider:
 
 
 class BrokenProvider:
-    """Raises an exception on summarize."""
+    """Raises an exception on complete."""
 
     @property
     def provider_name(self) -> str:
         return "broken"
 
-    def summarize(self, messages: list[dict]) -> str:
+    def complete(self, system: str, user: str) -> str:
         raise RuntimeError("Simulated provider failure")
 
 
@@ -109,7 +109,7 @@ class GarbageProvider:
     def provider_name(self) -> str:
         return "garbage"
 
-    def summarize(self, messages: list[dict]) -> str:
+    def complete(self, system: str, user: str) -> str:
         return "This is not JSON at all."
 
 
