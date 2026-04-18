@@ -60,7 +60,7 @@ class StructuredStubProvider:
     def provider_name(self) -> str:
         return "structured_stub"
 
-    def complete(self, system: str, user: str) -> str:
+    def complete(self, system: str, user: str, **_kwargs) -> str:
         return _STRUCTURED_RESPONSE
 
 
@@ -71,7 +71,7 @@ class MarkdownFencedProvider:
     def provider_name(self) -> str:
         return "fenced_stub"
 
-    def complete(self, system: str, user: str) -> str:
+    def complete(self, system: str, user: str, **_kwargs) -> str:
         return f"```json\n{_STRUCTURED_RESPONSE}\n```"
 
 
@@ -82,7 +82,7 @@ class EmptyFieldsProvider:
     def provider_name(self) -> str:
         return "empty_fields_stub"
 
-    def complete(self, system: str, user: str) -> str:
+    def complete(self, system: str, user: str, **_kwargs) -> str:
         return json.dumps({
             "summary": "Brief discussion.",
             "decisions": [],
@@ -98,7 +98,7 @@ class BrokenProvider:
     def provider_name(self) -> str:
         return "broken"
 
-    def complete(self, system: str, user: str) -> str:
+    def complete(self, system: str, user: str, **_kwargs) -> str:
         raise RuntimeError("Simulated provider failure")
 
 
@@ -109,7 +109,7 @@ class GarbageProvider:
     def provider_name(self) -> str:
         return "garbage"
 
-    def complete(self, system: str, user: str) -> str:
+    def complete(self, system: str, user: str, **_kwargs) -> str:
         return "This is not JSON at all."
 
 

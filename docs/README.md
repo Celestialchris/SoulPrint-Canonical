@@ -20,6 +20,9 @@
 - [Obsidian Bridge](specs/obsidian-bridge-spec.md)
 - [Intent Prompts v1](specs/intent-prompts-spec.md)
 
+## Guides
+- [Obsidian raw inbox bridge](obsidian-raw-inbox.md) — feeding a Kepano-style vault
+
 ## Reference
 - [Project status (2026-03-09)](reference/history/project-status-2026-03-09.md)
 - [Repair notes](reference/history/repair-notes.md)
