@@ -40,7 +40,7 @@ Open `http://127.0.0.1:5678`. Drop an export file. Your conversations appear in 
 
 ### Optional: fully local intelligence (Ollama + Gemma 4)
 
-Ask, Distill, and Recurring Themes run against any OpenAI-compatible endpoint. For a fully local setup — zero cloud calls, no API key — point SoulPrint at [Ollama](https://ollama.com) running Gemma 4.
+Ask, Distill, and Recurring Themes run against any OpenAI-compatible endpoint. For a fully local setup with zero cloud calls and no API key, point SoulPrint at [Ollama](https://ollama.com) running Gemma 4.
 
 **One-time:** `ollama pull gemma4`
 

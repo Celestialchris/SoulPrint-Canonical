@@ -1,5 +1,7 @@
 # SoulPrint — Agent Instructions
 
+> For the full contributor reference, including design system, terminology, git workflow, and LLM configuration, see [CLAUDE.md](CLAUDE.md).
+
 ## Project Identity
 SoulPrint is a local-first memory ledger and answering system.
 Preserve provenance, stable IDs, portability, and deterministic retrieval behavior.

@@ -2,6 +2,31 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## v0.7.0-alpha.1 — Quiet Archive v3 (2026-04-18)
+
+### Design
+- **Quiet Archive v3** design system replaces Magenta Sanctum v2. Clay accent (`#A25B47`) on warm-black parchment (`#0F0D0B`), gold wordmark (`#E7C98A`) with five-stop ember text-shadow in dark mode, warm cream text hierarchy. Light theme added.
+- Lane palette desaturated: ChatGPT `#23955D`, Claude `#C69224`, Gemini `#2D6FE8`, Grok `#6F47E6`.
+- Search-first workspace hero replaces the Phase 5.6 greeting composition.
+
+### Added
+- **Grok importer** (4th provider). Handles four xAI timestamp variants: MongoDB BSON `$numberLong`, ISO string in `$date` wrapper, direct ISO string, raw epoch. Auto-detection and full test suite.
+- `docs/product/landscape.md`: Karpathy knowledge-base positioning, MyChatArchive competitive breakdown, two-audience segmentation, cloud-silo differentiation.
+- `docs/specs/intent-prompts-spec.md` v1 locked. Four decisions committed: Option A workflow-stage taxonomy (7 values), Option 1 curation (derived prompts + annotations keyed on source_message_id), "Directive prompts" UI label at `/prompts`, on-demand classifier trigger only.
+- `ROADMAP.md` Next Milestone section with three-shapes taxonomy: composition features, capture pipeline, model infrastructure.
+- Ollama + Gemma 4 quickstart in README with macOS/Linux and Windows PowerShell variants.
+- `OLLAMA_CONTEXT_LENGTH` caveat documented in CLAUDE.md and README.
+
+### Docs
+- `docs/product/brand.md` and `docs/product/visual-direction.md` rewritten for Quiet Archive v3.
+- Phase 4 archival: retired Magenta Sanctum doctrine and USB Drive mockup moved to `docs/archive/`, SP-drive.svg files removed, `ops/sessions/` and `ops/learned/` scaffolding created, `.gitignore` sweep for dev debris.
+- Stale "Magenta Sanctum" and "USB Drive" references scrubbed from `app.css` comments, `LAUNCH-PLAYBOOK.md`, `obsidian-bridge-spec.md`.
+- `docs/README.md` index updated with landscape, intent-prompts-spec entries; archive section repointed at `docs/archive/`.
+- Fresh Quiet Archive v3 screenshots replace Magenta Sanctum era images.
+
+### Tests
+- Suite: 714 passing (unchanged from v0.6.1 baseline). No test changes in this release.
+
 ## v0.6.1 — Distill input overflow guard + complete() interface (2026-04-17)
 
 ### Fixed

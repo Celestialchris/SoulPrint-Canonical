@@ -17,7 +17,7 @@ A local-first memory continuity system for AI users. Import AI conversation hist
 - Each provider needs: adapter, detector, fixture, registry entry, tests
 - Tests use `make_test_temp_dir()` and `release_app_db_handles()`
 - Provider IDs: lowercase strings in `SUPPORTED_IMPORT_PROVIDERS`
-- Current providers: `chatgpt`, `claude`, `gemini`
+- Current providers: `chatgpt`, `claude`, `gemini`, `grok`
 - Answer traces: JSONL append-only, non-canonical, always labeled "Derived"
 - Citation handoff: `memory:<id>` → `/memory/<id>`, `imported_conversation:<id>` → `/imported/<id>/explorer`
 - Continuity packets: typed artifacts (summary, decisions, open loops, entity map, bridge packet) stored with provenance
@@ -123,7 +123,7 @@ Clay (`#A25B47`) is the brand accent; gold (`#E7C98A`) is the wordmark color onl
 
 - Always run the full test suite (`pytest`) after completing each task before committing. All tests must pass before any git commit.
 
-- This project uses Python (Flask), Jinja2 templates, HTML/CSS, and Markdown documentation. The test suite uses pytest. There are 500+ tests. Run `pytest` from the repo root.
+- This project uses Python (Flask), Jinja2 templates, HTML/CSS, and Markdown documentation. The test suite uses pytest. There are 700+ tests. Run `pytest` from the repo root.
 
 ## Feedback Loop
 
