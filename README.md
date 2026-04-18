@@ -143,13 +143,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, setup, and development 
 
 ## Support
 
-~ If your conversations with an AI have become meaningful to you, this tool is for you too. Maybe you've worried about a platform update changing how your companion talks, or about losing months of chat history when a service shuts down. Download the installer above. Drop your ChatGPT or Claude export. That's it. Your conversations now live as a file on your computer. Nobody can update them away.~
+If your conversations with an AI have become meaningful to you, this tool is for you too. Maybe you've worried about a platform update changing how your companion talks, or about losing months of chat history when a service shuts down. Download the installer above. Drop your ChatGPT or Claude export. That's it. Your conversations now live as a file on your computer. Nobody can update them away.
 
 SoulPrint is built by one person. If it's useful:
-- **Star this repo** ~ to help people find it
-- **[Buy me a coffee](https://buymeacoffee.com/chrsp)** ~ to keep it going
-- **[Report a bug](https://github.com/Celestialchris/SoulPrint-Canonical/issues)** ~ to make it better
-- **Tell someone** ~ word of mouth is everything for indie tools
+- **Star this repo** to help people find it
+- **[Buy me a coffee](https://buymeacoffee.com/chrsp)** to keep it going
+- **[Report a bug](https://github.com/Celestialchris/SoulPrint-Canonical/issues)** to make it better
+- **Tell someone** word of mouth is everything for indie tools
 
 ---
 
