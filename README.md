@@ -10,7 +10,7 @@
 
 **Your AI conversations, home.**
 
-SoulPrint imports your ChatGPT, Claude, and Gemini history into a single searchable archive on your machine. No cloud. No accounts. No telemetry. The archive is a file you own — one SQLite database you can open in any tool and verify yourself.
+SoulPrint imports your ChatGPT, Claude, and Gemini history into a single searchable archive on your machine. No cloud. No accounts. No telemetry. The archive is a file you own, one SQLite database you can open in any tool and verify yourself.
 
 ![Workspace](docs/screenshots/workspace.png)
 
@@ -80,7 +80,7 @@ soulprint
 
 **Browse and search.** Workspace dashboard, conversation list by provider, transcript explorer with prompt-level TOC and minimap, full-text search across all providers with highlighted snippets. Clip moments from any conversation into personal notes with full source provenance.
 
-**Distill.** Select any set of conversations and get a paste-ready handoff document — what was decided, what was built, what's open. Paste it into a new chat and pick up exactly where you left off. No more starting from zero after a model update.
+**Distill.** Select any set of conversations and get a paste-ready handoff document, what was decided, what was built, what's open. Paste it into a new chat and pick up exactly where you left off. No more starting from zero after a model update.
 
 **Export.** Memory Passport with manifest, canonical JSONL, provenance index, and checksums. Validate any passport against the contract. The archive is a file you own.
 
@@ -143,11 +143,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture, setup, and development 
 
 ## Support
 
+~ If your conversations with an AI have become meaningful to you, this tool is for you too. Maybe you've worried about a platform update changing how your companion talks, or about losing months of chat history when a service shuts down. Download the installer above. Drop your ChatGPT or Claude export. That's it. Your conversations now live as a file on your computer. Nobody can update them away.~
+
 SoulPrint is built by one person. If it's useful:
-- **Star this repo** to help people find it
-- **[Buy me a coffee](https://buymeacoffee.com/chrsp)** to keep it going
-- **[Report a bug](https://github.com/Celestialchris/SoulPrint-Canonical/issues)** to make it better
-- **Tell someone** — word of mouth is everything for indie tools
+- **Star this repo** ~ to help people find it
+- **[Buy me a coffee](https://buymeacoffee.com/chrsp)** ~ to keep it going
+- **[Report a bug](https://github.com/Celestialchris/SoulPrint-Canonical/issues)** ~ to make it better
+- **Tell someone** ~ word of mouth is everything for indie tools
 
 ---
 
