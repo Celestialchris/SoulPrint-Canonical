@@ -15,8 +15,10 @@ class TestConversationExport(unittest.TestCase):
     def setUp(self):
         self.workdir = make_test_temp_dir(self, "conv-export")
         self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        self._old_export_dir = Config.SOULPRINT_EXPORT_DIR
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.workdir}/export_test.db"
-        self.addCleanup(self._restore_sqlite_uri)
+        Config.SOULPRINT_EXPORT_DIR = ""
+        self.addCleanup(self._restore_config)
 
         self.app = create_app()
         self.client = self.app.test_client()
@@ -53,8 +55,9 @@ class TestConversationExport(unittest.TestCase):
             db.session.commit()
             self.conv_id = conv.id
 
-    def _restore_sqlite_uri(self):
+    def _restore_config(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+        Config.SOULPRINT_EXPORT_DIR = self._old_export_dir
 
     def test_export_returns_markdown(self):
         response = self.client.get(f"/imported/{self.conv_id}/export")
@@ -92,15 +95,18 @@ class TestConversationExportEdgeCases(unittest.TestCase):
     def setUp(self):
         self.workdir = make_test_temp_dir(self, "conv-export-edge")
         self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        self._old_export_dir = Config.SOULPRINT_EXPORT_DIR
         Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.workdir}/edge.db"
-        self.addCleanup(self._restore_sqlite_uri)
+        Config.SOULPRINT_EXPORT_DIR = ""
+        self.addCleanup(self._restore_config)
 
         self.app = create_app()
         self.client = self.app.test_client()
         self.addCleanup(release_app_db_handles, self.app, drop_all=True)
 
-    def _restore_sqlite_uri(self):
+    def _restore_config(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+        Config.SOULPRINT_EXPORT_DIR = self._old_export_dir
 
     def _create_conv(self, title: str, *, created=None, messages=None):
         with self.app.app_context():
