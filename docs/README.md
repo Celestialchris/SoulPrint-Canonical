@@ -6,6 +6,7 @@
 ## Product
 - [Manifesto](manifesto.md)
 - [Positioning](product/positioning.md)
+- [Landscape](product/landscape.md)
 - [Brand guide](product/brand.md)
 - [Visual direction](product/visual-direction.md)
 
@@ -17,6 +18,7 @@
 ## Specs
 - [Memory Passport v1](specs/memory-passport-spec.md)
 - [Obsidian Bridge](specs/obsidian-bridge-spec.md)
+- [Intent Prompts v1](specs/intent-prompts-spec.md)
 
 ## Reference
 - [Project status (2026-03-09)](reference/history/project-status-2026-03-09.md)
@@ -30,7 +32,5 @@
 - [30-day vision](releases/SOULPRINT-30-DAY-VISION.md)
 
 ## Archive
-- [Pre-continuity README](archive/README.pre-continuity.md)
-- [Pre-continuity roadmap](archive/ROADMAP.pre-continuity.md)
-- [Dual-theme spec (superseded)](archive/dual-theme-spec.md)
-- [Execution plan (March 2026)](archive/execution-plan-march-2026.md) *(archived — contains stale design prompts)*
+
+Frozen artifacts from retired design systems and superseded execution plans. See [`archive/`](archive/).
