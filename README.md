@@ -84,6 +84,8 @@ soulprint
 
 **Export.** Memory Passport with manifest, canonical JSONL, provenance index, and checksums. Validate any passport against the contract. The archive is a file you own.
 
+**Obsidian** users: see [docs/obsidian-raw-inbox.md](docs/obsidian-raw-inbox.md) for the raw-inbox bridge.
+
 ---
 
 ## Why this exists
