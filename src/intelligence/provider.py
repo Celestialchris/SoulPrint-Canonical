@@ -94,7 +94,7 @@ class AnthropicProvider:
         )
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=4096,
+            max_tokens=max_tokens,
             system=(
                 "You are summarizing one AI chat conversation for a personal archive. "
                 "The user will re-read this summary months or years later to remember what happened. "
@@ -178,7 +178,7 @@ class OpenAIProvider:
         )
         response = client.chat.completions.create(
             model=self._model,
-            max_tokens=4096,
+            max_tokens=max_tokens,
             messages=[
                 {
                     "role": "system",
