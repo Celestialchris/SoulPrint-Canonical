@@ -1,6 +1,6 @@
 # Quiet Archive — SoulPrint Design Doctrine v3
 
-**Status:** Active (since v0.7.0-alpha.1). Supersedes Magenta Sanctum v2 (`docs/product/design-doctrine-magenta-sanctum.md` — retired).
+**Status:** Active (since v0.7.0-alpha.1). Supersedes Magenta Sanctum v2 (`docs/archive/design-doctrine-magenta-sanctum.md` — retired).
 
 **Precedence rule:** If any committed doc contradicts this file, this file wins. If this file contradicts `src/app/static/app.css`, the CSS wins — live code is always the final authority.
 
