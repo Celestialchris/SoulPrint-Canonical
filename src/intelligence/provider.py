@@ -60,7 +60,7 @@ class AnthropicProvider:
         )
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=1024,
+            max_tokens=16384,
             system=(
                 "You are a concise summarizer. Given a conversation transcript, "
                 "produce a clear summary preserving key topics, decisions, and "
@@ -76,7 +76,7 @@ class AnthropicProvider:
         client = anthropic.Anthropic(api_key=self._api_key)
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=4096,
+            max_tokens=16384,
             system=system_prompt,
             messages=[{"role": "user", "content": user_message}],
         )
@@ -117,7 +117,7 @@ class OpenAIProvider:
         )
         response = client.chat.completions.create(
             model=self._model,
-            max_tokens=1024,
+            max_tokens=16384,
             messages=[
                 {
                     "role": "system",
@@ -141,7 +141,7 @@ class OpenAIProvider:
         )
         response = client.chat.completions.create(
             model=self._model,
-            max_tokens=4096,
+            max_tokens=16384,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
