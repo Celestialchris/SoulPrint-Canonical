@@ -17,12 +17,14 @@ class TestIsLicensed:
     """is_licensed() returns True only when a valid SP- key file exists."""
 
     def test_returns_false_when_no_file(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("SOULPRINT_DEV_MODE", raising=False)
         monkeypatch.setenv("SOULPRINT_LICENSE_OVERRIDE", "false")
         from src.app.licensing import is_licensed
 
         assert is_licensed(instance_dir=str(tmp_path)) is False
 
     def test_returns_false_when_file_empty(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("SOULPRINT_DEV_MODE", raising=False)
         monkeypatch.setenv("SOULPRINT_LICENSE_OVERRIDE", "false")
         _write_key(str(tmp_path), "")
         from src.app.licensing import is_licensed
@@ -30,6 +32,7 @@ class TestIsLicensed:
         assert is_licensed(instance_dir=str(tmp_path)) is False
 
     def test_returns_false_when_invalid_prefix(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("SOULPRINT_DEV_MODE", raising=False)
         monkeypatch.setenv("SOULPRINT_LICENSE_OVERRIDE", "false")
         _write_key(str(tmp_path), "INVALID-KEY-1234")
         from src.app.licensing import is_licensed
@@ -56,6 +59,7 @@ class TestGetLicenseStatus:
     """get_license_status() returns a dict with licensed bool and tier string."""
 
     def test_free_tier_when_unlicensed(self, tmp_path, monkeypatch):
+        monkeypatch.delenv("SOULPRINT_DEV_MODE", raising=False)
         monkeypatch.setenv("SOULPRINT_LICENSE_OVERRIDE", "false")
         from src.app.licensing import get_license_status
 
