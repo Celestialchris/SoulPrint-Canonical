@@ -45,33 +45,56 @@
     </form>
   </section>
 
+  {% if export_notice %}
+    <p class="metadata-line" role="status" style="margin-bottom:0.75rem;">{{ export_notice }}</p>
+  {% endif %}
+  {% if export_error %}
+    <p class="metadata-line" role="alert" style="margin-bottom:0.75rem;">{{ export_error }}</p>
+  {% endif %}
+
   {% if rows %}
     <p class="metadata-line" style="margin-bottom:0.5rem;">
       Showing {{ (page - 1) * 50 + 1 }}–{{ (page - 1) * 50 + rows|length }} of {{ total }} conversations · Page {{ page }} of {{ total_pages }}
     </p>
 
-    <div class="container-card">
-      {% for conversation, message_count in rows %}
-        {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
-        <article class="record-card record-card--imported">
-          <div class="record-card__header">
-            <h2 class="record-card__title">
-              <a href="/imported/{{ conversation.id }}/explorer">{{ display_title }}</a>
-            </h2>
-            <div class="metadata-badges">
-              {{ badge("Provider: " ~ conversation.source, "imported") }}
-              {{ badge("Messages: " ~ message_count, "neutral") }}
+    <form method="post" action="/imported/export-selected" id="export-form">
+      <div class="distill-controls">
+        <div class="distill-controls__row">
+          <label class="distill-controls__select-all">
+            <input type="checkbox" id="select-all"> Select all on this page
+          </label>
+          <span class="distill-controls__count" id="selected-count"></span>
+          <button type="submit" class="distill-controls__submit" id="export-btn" disabled>
+            Export selected
+          </button>
+        </div>
+      </div>
+
+      <div class="container-card">
+        {% for conversation, message_count in rows %}
+          {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
+          <article class="record-card record-card--imported">
+            <input type="checkbox" name="conversation_ids" value="{{ conversation.id }}"
+                   class="export-checkbox" aria-label="Select {{ display_title }}">
+            <div class="record-card__header">
+              <h2 class="record-card__title">
+                <a href="/imported/{{ conversation.id }}/explorer">{{ display_title }}</a>
+              </h2>
+              <div class="metadata-badges">
+                {{ badge("Provider: " ~ conversation.source, "imported") }}
+                {{ badge("Messages: " ~ message_count, "neutral") }}
+              </div>
             </div>
-          </div>
-          <p class="metadata-line">
-            Provider: {{ conversation.source }} · ID: {{ conversation.id }} · Source ID: {{ conversation.source_conversation_id }}
-          </p>
-          <p class="metadata-line">
-            Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
-          </p>
-        </article>
-      {% endfor %}
-    </div>
+            <p class="metadata-line">
+              Provider: {{ conversation.source }} · ID: {{ conversation.id }} · Source ID: {{ conversation.source_conversation_id }}
+            </p>
+            <p class="metadata-line">
+              Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
+            </p>
+          </article>
+        {% endfor %}
+      </div>
+    </form>
 
     {% if total_pages > 1 %}
       <nav class="pagination" aria-label="Pagination">
@@ -100,6 +123,28 @@
         {% endif %}
       </nav>
     {% endif %}
+
+    <script>
+      (function() {
+        var all = document.getElementById('select-all');
+        var boxes = document.querySelectorAll('.export-checkbox');
+        var btn = document.getElementById('export-btn');
+        var count = document.getElementById('selected-count');
+        if (!all || !btn || !count) return;
+
+        function update() {
+          var n = document.querySelectorAll('.export-checkbox:checked').length;
+          btn.disabled = n === 0;
+          count.textContent = n > 0 ? n + ' selected' : '';
+        }
+
+        all.addEventListener('change', function() {
+          boxes.forEach(function(b) { b.checked = all.checked; });
+          update();
+        });
+        boxes.forEach(function(b) { b.addEventListener('change', update); });
+      })();
+    </script>
   {% else %}
     {{ empty_state(
       "No imported conversations found.",
