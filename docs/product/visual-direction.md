@@ -8,7 +8,15 @@ Do not alter product architecture, lane honesty, provenance display rules, or wo
 
 The live `src/app/static/app.css` is always the authoritative source for design tokens, colors, fonts, and spacing. If this file and any documentation file disagree, the CSS wins.
 
-Current system: "Magenta Sanctum" — see `docs/product/design-doctrine-magenta-sanctum.md` for the authoritative doctrine.
+**Current system: Quiet Archive v3** (since `v0.7.0-alpha.1`). Authoritative doctrine: [`docs/product/design-doctrine-quiet-archive.md`](design-doctrine-quiet-archive.md).
+
+**Lineage** (most recent first):
+
+- **Quiet Archive v3** — `v0.7.0-alpha.1+`. Clay accent (`#A25B47`) on warm-black parchment (`#0F0D0B`). Gold wordmark (`#E7C98A`). A lived-in personal archive.
+- **Magenta Sanctum v2** — `v0.6.0` – `v0.6.1`. *Retired.* Pink (`#f472b6`) accent on near-black. Doctrine file archived under [`docs/archive/design-doctrine-magenta-sanctum.md`](../archive/design-doctrine-magenta-sanctum.md).
+- **USB Drive** — `v0.1.0` – `v0.5.x`. *Retired.* Green (`#4ade80`) accent, hardware-adjacent flatness. Spec archived under [`docs/archive/dual-theme-spec.md`](../archive/dual-theme-spec.md).
+
+The supersession chain is recorded in `DECISIONS.md` under the Design section.
 
 ## Where aesthetic prompting applies
 
