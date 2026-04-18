@@ -71,6 +71,7 @@ Default local path: Ollama + Gemma 4 via the OpenAI-compatible endpoint.
     SOULPRINT_LLM_PROVIDER=openai
     SOULPRINT_LLM_BASE_URL=http://localhost:11434/v1
     SOULPRINT_LLM_MODEL=gemma4          # or gemma4:26b for better quality
+    OLLAMA_CONTEXT_LENGTH=65536          # set before `ollama serve`, not in the SoulPrint shell
 
 Gemma 4 model sizes:
     gemma4 (e4b)  — 9.6 GB, 6+ GB VRAM, 128K context — recommended default
@@ -136,6 +137,7 @@ Do not skip step 2. Every correction is a potential rule.
 ## Extended Rules
 
 See `.claude/rules/` for modular instruction files.
+`llm-hygiene.md` — general coding discipline (assumptions, simplicity, surgical edits, goal-driven execution)
 
 ## Skill routing
 

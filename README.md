@@ -38,6 +38,42 @@ Open `http://127.0.0.1:5678`. Drop an export file. Your conversations appear in 
 
 ---
 
+### Optional: fully local intelligence (Ollama + Gemma 4)
+
+Ask, Distill, and Recurring Themes run against any OpenAI-compatible endpoint. For a fully local setup — zero cloud calls, no API key — point SoulPrint at [Ollama](https://ollama.com) running Gemma 4.
+
+**One-time:** `ollama pull gemma4`
+
+**Every run — terminal A (Ollama server):**
+
+```bash
+# macOS / Linux
+OLLAMA_CONTEXT_LENGTH=65536 ollama serve
+
+# Windows (PowerShell)
+$env:OLLAMA_CONTEXT_LENGTH="65536"; ollama serve
+```
+
+**Every run — terminal B (SoulPrint):**
+
+```bash
+# macOS / Linux
+export SOULPRINT_LLM_PROVIDER=openai
+export SOULPRINT_LLM_BASE_URL=http://localhost:11434/v1
+export SOULPRINT_LLM_MODEL=gemma4
+soulprint
+
+# Windows (PowerShell)
+$env:SOULPRINT_LLM_PROVIDER="openai"
+$env:SOULPRINT_LLM_BASE_URL="http://localhost:11434/v1"
+$env:SOULPRINT_LLM_MODEL="gemma4"
+soulprint
+```
+
+`OLLAMA_CONTEXT_LENGTH` must be set in the shell that runs `ollama serve`, not the shell that runs SoulPrint. Skipping this caps context at 4096 tokens and silently truncates Distill output. See [CLAUDE.md § LLM Configuration](CLAUDE.md#llm-configuration) for the Gemma 4 model-size matrix and cloud alternatives.
+
+---
+
 ## What it does
 
 **Import.** Drop a ChatGPT `.zip`, Claude `.json`, or Gemini Takeout. Provider auto-detected. Deduplicated. Normalized into one SQLite file on your machine.

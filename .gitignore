@@ -46,3 +46,9 @@ PRIORITIES.md
 .codex/
 ops/
 openspec/
+
+# Dev debris (screenshot captures, scratch files, MCP caches)
+# Intentional screenshots live under docs/screenshots/, landing/assets/, src/app/static/.
+/*.png
+New Text Document*.txt
+.playwright-mcp/
