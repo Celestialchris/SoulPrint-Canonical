@@ -47,7 +47,7 @@ class SummarizeConversationTest(unittest.TestCase):
         self.assertEqual(result.source_conversation_title, "Test chat about groceries")
         self.assertTrue(len(result.generation_timestamp) > 0)
         self.assertEqual(result.llm_provider_used, "stub")
-        self.assertEqual(result.prompt_template_version, "v1")
+        self.assertEqual(result.prompt_template_version, "v2")
         self.assertTrue(len(result.summary_text) > 0)
         self.assertEqual(result.derived_from, "canonical_imported_conversation")
         self.assertEqual(result.artifact_kind, "derived_summary_v1")
@@ -56,9 +56,9 @@ class SummarizeConversationTest(unittest.TestCase):
         result = summarize_conversation(self.conversation, self.provider)
         self.assertTrue(result.source_conversation_stable_id.startswith("imported_conversation:"))
 
-    def test_prompt_template_version_is_v1(self):
+    def test_prompt_template_version_is_v2(self):
         result = summarize_conversation(self.conversation, self.provider)
-        self.assertEqual(result.prompt_template_version, "v1")
+        self.assertEqual(result.prompt_template_version, "v2")
 
 
 if __name__ == "__main__":

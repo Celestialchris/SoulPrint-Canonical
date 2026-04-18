@@ -60,11 +60,29 @@ class AnthropicProvider:
         )
         response = client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=1024,
+            max_tokens=4096,
             system=(
-                "You are a concise summarizer. Given a conversation transcript, "
-                "produce a clear summary preserving key topics, decisions, and "
-                "action items. Be factual and brief."
+                "You are summarizing one AI chat conversation for a personal archive. "
+                "The user will re-read this summary months or years later to remember what happened. "
+                "Shallow summaries fail that job.\n\n"
+                "Your output must include, in prose or labeled sections:\n"
+                "1. Starting point. What did the user bring to this conversation? "
+                "What problem, question, or context?\n"
+                "2. Specific questions asked. Quote or closely paraphrase the actual questions, "
+                "not categories of questions. 'User asked about X' is too vague; "
+                "'User asked whether X should use Y or Z given constraint W' is specific.\n"
+                "3. Decisions reached. What was decided, and why? Include reasoning, not just outcome.\n"
+                "4. Concrete artifacts. Name specific files, commands, URLs, library names, "
+                "code snippets, people, or places that came up. Preserve them.\n"
+                "5. Unresolved threads. What questions were raised but not answered? "
+                "What was deferred or explicitly left open?\n"
+                "6. Notable moments. One or two places where the conversation surprised, "
+                "pivoted, or crystallized. A disagreement, a 'wait, actually,' a moment of insight.\n\n"
+                "Write at minimum 400 words. For long or complex conversations, write more. "
+                "Do not pad for length. Fill the space with specificity. "
+                "Short conversations (fewer than 20 messages) may need less. Trust the material.\n\n"
+                "Start directly with the substance. No preamble like 'in this conversation' "
+                "or 'the user and assistant discussed.'"
             ),
             messages=[{"role": "user", "content": transcript}],
         )
@@ -117,14 +135,32 @@ class OpenAIProvider:
         )
         response = client.chat.completions.create(
             model=self._model,
-            max_tokens=1024,
+            max_tokens=4096,
             messages=[
                 {
                     "role": "system",
                     "content": (
-                        "You are a concise summarizer. Given a conversation transcript, "
-                        "produce a clear summary preserving key topics, decisions, and "
-                        "action items. Be factual and brief."
+                        "You are summarizing one AI chat conversation for a personal archive. "
+                        "The user will re-read this summary months or years later to remember what happened. "
+                        "Shallow summaries fail that job.\n\n"
+                        "Your output must include, in prose or labeled sections:\n"
+                        "1. Starting point. What did the user bring to this conversation? "
+                        "What problem, question, or context?\n"
+                        "2. Specific questions asked. Quote or closely paraphrase the actual questions, "
+                        "not categories of questions. 'User asked about X' is too vague; "
+                        "'User asked whether X should use Y or Z given constraint W' is specific.\n"
+                        "3. Decisions reached. What was decided, and why? Include reasoning, not just outcome.\n"
+                        "4. Concrete artifacts. Name specific files, commands, URLs, library names, "
+                        "code snippets, people, or places that came up. Preserve them.\n"
+                        "5. Unresolved threads. What questions were raised but not answered? "
+                        "What was deferred or explicitly left open?\n"
+                        "6. Notable moments. One or two places where the conversation surprised, "
+                        "pivoted, or crystallized. A disagreement, a 'wait, actually,' a moment of insight.\n\n"
+                        "Write at minimum 400 words. For long or complex conversations, write more. "
+                        "Do not pad for length. Fill the space with specificity. "
+                        "Short conversations (fewer than 20 messages) may need less. Trust the material.\n\n"
+                        "Start directly with the substance. No preamble like 'in this conversation' "
+                        "or 'the user and assistant discussed.'"
                     ),
                 },
                 {"role": "user", "content": transcript},
