@@ -171,6 +171,40 @@ def _sqlite_path_from_uri(sqlite_uri: str) -> str:
     return sqlite_uri.removeprefix("sqlite:///")
 
 
+def render_conversation_markdown(conversation, messages) -> tuple[str, str]:
+    """Return (markdown_content, safe_filename) for a conversation + messages."""
+
+    lines = []
+    title = conversation.title or "Untitled conversation"
+    lines.append(f"# {title}")
+    lines.append("")
+    lines.append(f"**Provider:** {conversation.source}")
+    lines.append(f"**Created:** {format_timestamp(conversation.created_at_unix)}")
+    lines.append(f"**Updated:** {format_timestamp(conversation.updated_at_unix)}")
+    lines.append(f"**Messages:** {len(messages)}")
+    lines.append(f"**Exported from:** SoulPrint")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+
+    for msg in messages:
+        role_label = msg.role.capitalize() if msg.role else "Unknown"
+        ts = format_timestamp(msg.created_at_unix) if msg.created_at_unix is not None else ""
+        lines.append(f"### {role_label}")
+        if ts:
+            lines.append(f"*{ts}*")
+        lines.append("")
+        lines.append(msg.content or "")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+
+    content = "\n".join(lines)
+    safe_title = "".join(c if c.isascii() and (c.isalnum() or c in " -_.") else "" for c in title)[:60].strip()
+    filename = f"{safe_title or 'conversation'}.md"
+    return content, filename
+
+
 def create_app():
     instance_dir = default_instance_dir()
     app = Flask(
@@ -505,35 +539,7 @@ def create_app():
             .all()
         )
 
-        lines = []
-        title = conversation.title or "Untitled conversation"
-        lines.append(f"# {title}")
-        lines.append("")
-        lines.append(f"**Provider:** {conversation.source}")
-        lines.append(f"**Created:** {format_timestamp(conversation.created_at_unix)}")
-        lines.append(f"**Updated:** {format_timestamp(conversation.updated_at_unix)}")
-        lines.append(f"**Messages:** {len(messages)}")
-        lines.append(f"**Exported from:** SoulPrint")
-        lines.append("")
-        lines.append("---")
-        lines.append("")
-
-        for msg in messages:
-            role_label = msg.role.capitalize() if msg.role else "Unknown"
-            ts = format_timestamp(msg.created_at_unix) if msg.created_at_unix is not None else ""
-            lines.append(f"### {role_label}")
-            if ts:
-                lines.append(f"*{ts}*")
-            lines.append("")
-            lines.append(msg.content or "")
-            lines.append("")
-            lines.append("---")
-            lines.append("")
-
-        content = "\n".join(lines)
-
-        safe_title = "".join(c if c.isascii() and (c.isalnum() or c in " -_.") else "" for c in title)[:60].strip()
-        filename = f"{safe_title or 'conversation'}.md"
+        content, filename = render_conversation_markdown(conversation, messages)
 
         return Response(
             content,
