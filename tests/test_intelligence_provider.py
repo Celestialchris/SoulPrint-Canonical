@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from src.intelligence.provider import (
+    AnthropicProvider,
     OpenAIProvider,
     StubProvider,
     is_llm_configured,
@@ -142,6 +143,93 @@ class ModelMissingWarningTest(unittest.TestCase):
             with patch.object(logger, "warning") as mock_warn:
                 provider_from_config()
                 mock_warn.assert_not_called()
+
+
+class OpenAIProviderSummarizeMaxTokensTest(unittest.TestCase):
+    """The summarize() default is 4096 and explicit overrides pass through.
+
+    Guards against regressions where a pushed-up default would reserve too
+    much output budget on non-OpenAI backends (Anthropic, Ollama/Gemma4)
+    that enforce ``max_tokens + input_tokens <= context_window`` server-side.
+    """
+
+    def _make_provider(self) -> OpenAIProvider:
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        with patch.dict(os.environ, env, clear=True):
+            return OpenAIProvider(api_key="sk-test")
+
+    def _make_mock_response(self, text: str = "summary") -> MagicMock:
+        mock_resp = MagicMock()
+        mock_resp.choices[0].message.content = text
+        return mock_resp
+
+    def test_uses_max_tokens_4096_by_default(self):
+        provider = self._make_provider()
+        mock_resp = self._make_mock_response()
+
+        with patch("openai.OpenAI") as mock_cls:
+            mock_client = mock_cls.return_value
+            mock_client.chat.completions.create.return_value = mock_resp
+            provider.summarize([{"role": "user", "content": "hi"}])
+
+        kwargs = mock_client.chat.completions.create.call_args.kwargs
+        self.assertEqual(kwargs["max_tokens"], 4096)
+
+    def test_accepts_explicit_max_tokens(self):
+        provider = self._make_provider()
+        mock_resp = self._make_mock_response()
+
+        with patch("openai.OpenAI") as mock_cls:
+            mock_client = mock_cls.return_value
+            mock_client.chat.completions.create.return_value = mock_resp
+            provider.summarize(
+                [{"role": "user", "content": "hi"}],
+                max_tokens=16384,
+            )
+
+        kwargs = mock_client.chat.completions.create.call_args.kwargs
+        self.assertEqual(kwargs["max_tokens"], 16384)
+
+
+class AnthropicProviderSummarizeMaxTokensTest(unittest.TestCase):
+    """Anthropic summarize() honors the default and explicit overrides."""
+
+    def _make_context(self, text: str = "summary"):
+        import sys
+
+        mock_resp = MagicMock()
+        mock_resp.content[0].text = text
+        fake_anthropic = MagicMock()
+        mock_client = fake_anthropic.Anthropic.return_value
+        mock_client.messages.create.return_value = mock_resp
+        return fake_anthropic, mock_client
+
+    def test_uses_max_tokens_4096_by_default(self):
+        import sys
+
+        fake_anthropic, mock_client = self._make_context()
+        provider = AnthropicProvider(api_key="sk-ant-test")
+
+        with patch.dict(sys.modules, {"anthropic": fake_anthropic}):
+            provider.summarize([{"role": "user", "content": "hi"}])
+
+        kwargs = mock_client.messages.create.call_args.kwargs
+        self.assertEqual(kwargs["max_tokens"], 4096)
+
+    def test_accepts_explicit_max_tokens(self):
+        import sys
+
+        fake_anthropic, mock_client = self._make_context()
+        provider = AnthropicProvider(api_key="sk-ant-test")
+
+        with patch.dict(sys.modules, {"anthropic": fake_anthropic}):
+            provider.summarize(
+                [{"role": "user", "content": "hi"}],
+                max_tokens=16384,
+            )
+
+        kwargs = mock_client.messages.create.call_args.kwargs
+        self.assertEqual(kwargs["max_tokens"], 16384)
 
 
 class IsLlmConfiguredTest(unittest.TestCase):

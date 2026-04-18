@@ -109,6 +109,18 @@ class OpenAIProviderCompleteTest(unittest.TestCase):
         kwargs = mock_client.chat.completions.create.call_args.kwargs
         self.assertEqual(kwargs["max_tokens"], 4096)
 
+    def test_accepts_explicit_max_tokens(self):
+        provider = self._make_provider()
+        mock_resp = self._make_mock_response()
+
+        with patch("openai.OpenAI") as mock_cls:
+            mock_client = mock_cls.return_value
+            mock_client.chat.completions.create.return_value = mock_resp
+            provider.complete(SYSTEM, USER, max_tokens=16384)
+
+        kwargs = mock_client.chat.completions.create.call_args.kwargs
+        self.assertEqual(kwargs["max_tokens"], 16384)
+
 
 class AnthropicProviderCompleteTest(unittest.TestCase):
     """Anthropic is a lazy import inside complete(); patch via sys.modules."""
@@ -184,6 +196,18 @@ class AnthropicProviderCompleteTest(unittest.TestCase):
 
         kwargs = mock_client.messages.create.call_args.kwargs
         self.assertEqual(kwargs["max_tokens"], 4096)
+
+    def test_accepts_explicit_max_tokens(self):
+        import sys
+
+        fake_anthropic, mock_client, _ = self._make_context()
+        provider = AnthropicProvider(api_key="sk-ant-test")
+
+        with patch.dict(sys.modules, {"anthropic": fake_anthropic}):
+            provider.complete(SYSTEM, USER, max_tokens=16384)
+
+        kwargs = mock_client.messages.create.call_args.kwargs
+        self.assertEqual(kwargs["max_tokens"], 16384)
 
 
 if __name__ == "__main__":
