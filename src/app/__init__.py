@@ -230,6 +230,26 @@ def _pick_unique_filename(base: str, conv_id: int, taken) -> str:
         n += 1
 
 
+def _atomic_write_text(target: Path, content: str) -> None:
+    """Write *content* to *target* via a ``.tmp`` sibling + atomic rename.
+
+    On OSError anywhere in the write/rename, best-effort-unlink the tmp
+    and re-raise. An existing file at *target* is preserved on failure
+    because the rename is the commit step.
+    """
+    tmp = target.with_suffix(target.suffix + ".tmp")
+    try:
+        tmp.write_text(content, encoding="utf-8")
+        tmp.replace(target)
+    except OSError:
+        if tmp.exists():
+            try:
+                tmp.unlink()
+            except OSError:
+                pass  # best-effort cleanup; don't mask the original error
+        raise
+
+
 def create_app():
     instance_dir = default_instance_dir()
     app = Flask(
@@ -582,7 +602,7 @@ def create_app():
                     conversation.id,
                     lambda n: (dest / n).exists(),
                 )
-                (dest / name).write_text(content, encoding="utf-8")
+                _atomic_write_text(dest / name, content)
             except OSError as exc:
                 app.logger.warning(
                     "Single-conv export to %s failed: %s. Falling back to download.",
@@ -655,7 +675,7 @@ def create_app():
                         conv_id,
                         lambda n: n in used or (dest / n).exists(),
                     )
-                    (dest / name).write_text(content, encoding="utf-8")
+                    _atomic_write_text(dest / name, content)
                     used.add(name)
                     written += 1
             except OSError as exc:

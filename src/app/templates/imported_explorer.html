@@ -29,7 +29,7 @@
       Messages: {{ messages|length }}
     </p>
     <div class="inline-action" style="margin-top: 0.5rem;">
-      <a class="ghost-link" href="/imported/{{ conversation.id }}/export" download>Export as markdown</a>
+      <a class="ghost-link" href="/imported/{{ conversation.id }}/export">Export as markdown</a>
     </div>
     {% if llm_configured|default(false) and licensed|default(false) %}
       <form method="post" action="/intelligence/summarize/{{ conversation.id }}" class="inline-action">

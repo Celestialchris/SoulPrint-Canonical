@@ -328,3 +328,33 @@ class TestConversationExportFilesystemMode(unittest.TestCase):
         body = response.data.decode("utf-8")
         self.assertIn("# Vault Export", body)
         self.assertEqual(list(self.export_dir.glob("*.md")), [])
+
+    def test_write_failure_cleans_up_partial_tmp_file(self):
+        """If write_text fails mid-write after creating a .tmp file on disk,
+        atomic-rename logic must unlink the partial tmp so the vault never
+        sees a corrupt artifact. The previous test uses a mock that raises
+        BEFORE writing anything; this one writes partial bytes then fails,
+        which is the realistic disk-full scenario the cleanup was built for.
+        """
+        from unittest.mock import patch
+
+        def _partial_then_fail(self_path, content, encoding="utf-8"):
+            # Write real partial bytes to disk, then simulate the disk
+            # giving out before the write could finish.
+            with open(self_path, "w", encoding=encoding) as fh:
+                fh.write(content[: max(1, len(content) // 2)])
+            raise OSError("simulated disk full mid-write")
+
+        with patch.object(Path, "write_text", _partial_then_fail):
+            response = self.client.get(f"/imported/{self.conv_id}/export")
+
+        # Route falls back to the browser-download path on OSError.
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/markdown", response.content_type)
+
+        # Neither the target file nor a leftover .tmp file should remain.
+        leftovers = sorted(p.name for p in self.export_dir.iterdir())
+        self.assertEqual(
+            leftovers, [],
+            f"expected empty export dir after OSError, found: {leftovers}",
+        )
