@@ -91,6 +91,9 @@
             <p class="metadata-line">
               Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
             </p>
+            <p class="metadata-line">
+              <a href="/imported/{{ conversation.id }}/delete" style="color: var(--accent);">Delete</a>
+            </p>
           </article>
         {% endfor %}
       </div>

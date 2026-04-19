@@ -113,6 +113,12 @@ def delete_summaries_for_conversation(store_path: str | Path, stable_id: str) ->
     return deleted
 
 
+def list_summaries_for_conversation(store_path: str | Path, stable_id: str) -> list[dict]:
+    """Return all summaries referencing *stable_id*."""
+    all_rows = _list_jsonl(Path(store_path), limit=9999)
+    return [r for r in all_rows if r.get("source_conversation_stable_id") == stable_id]
+
+
 # ---------------------------------------------------------------------------
 # Topic scans (Phase 7.2)
 # ---------------------------------------------------------------------------
@@ -167,6 +173,15 @@ def delete_topic_scans_for_conversation(store_path: str | Path, stable_id: str) 
     return deleted
 
 
+def list_topic_scans_for_conversation(store_path: str | Path, stable_id: str) -> list[dict]:
+    """Return all topic scans where any cluster references *stable_id*."""
+    all_rows = _list_jsonl(Path(store_path), limit=9999)
+    return [
+        r for r in all_rows
+        if any(stable_id in c.get("conversation_stable_ids", []) for c in r.get("clusters", []))
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Digests (Phase 7.2)
 # ---------------------------------------------------------------------------
@@ -215,6 +230,12 @@ def delete_digests_for_conversation(store_path: str | Path, stable_id: str) -> i
     return deleted
 
 
+def list_digests_for_conversation(store_path: str | Path, stable_id: str) -> list[dict]:
+    """Return all digests referencing *stable_id*."""
+    all_rows = _list_jsonl(Path(store_path), limit=9999)
+    return [r for r in all_rows if stable_id in r.get("source_conversation_stable_ids", [])]
+
+
 # ---------------------------------------------------------------------------
 # Distillations (multi-conversation distillation)
 # ---------------------------------------------------------------------------
@@ -261,3 +282,9 @@ def delete_distillations_for_conversation(store_path: str | Path, stable_id: str
         return 0
     _rewrite_jsonl_atomically(path, kept)
     return deleted
+
+
+def list_distillations_for_conversation(store_path: str | Path, stable_id: str) -> list[dict]:
+    """Return all distillations referencing *stable_id*."""
+    all_rows = _list_jsonl(Path(store_path), limit=9999)
+    return [r for r in all_rows if stable_id in r.get("source_conversation_stable_ids", [])]
