@@ -27,7 +27,7 @@ full = [
   "cryptography"
 ]
 intelligence = [
-  "anthropic>=0.39.0",
+  "anthropic>=0.95.0",
   "openai>=1.0.0"
 ]
 dev = [
