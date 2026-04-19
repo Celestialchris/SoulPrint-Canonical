@@ -921,7 +921,11 @@ def create_app():
         distillation_id_map = _resolve_stable_ids(distillations)
 
         raw_return = request.args.get("return_url", "")
-        return_url = raw_return if raw_return.startswith("/") else url_for("imported_conversations")
+        return_url = (
+            raw_return
+            if raw_return.startswith("/") and not raw_return.startswith("//")
+            else url_for("imported_conversations")
+        )
 
         return render_template(
             "imported_delete_confirm.html",
