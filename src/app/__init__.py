@@ -885,7 +885,7 @@ def create_app():
         topic_scans = list_topic_scans_for_conversation(default_topic_store_path(db_path), stable_id)
         digests = list_digests_for_conversation(default_digest_store_path(db_path), stable_id)
         distillations = list_distillations_for_conversation(default_distillation_store_path(db_path), stable_id)
-        continuity = list_artifacts_for_conversation(default_continuity_store_path(db_path), stable_id)
+        continuity = list_artifacts_for_conversation(default_continuity_store_path(db_path), stable_id, limit=None)
 
         def _resolve_stable_ids(artifacts: list[dict]) -> dict[str, str]:
             all_ids: set[str] = set()
