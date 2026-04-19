@@ -860,11 +860,117 @@ def create_app():
         entries = q.limit(100).all()
         return render_template("view.html", entries=entries)
 
+    @app.get("/imported/<int:conv_id>/delete")
+    def delete_imported_confirm(conv_id: int):
+        from ..intelligence.store import (
+            default_digest_store_path,
+            default_distillation_store_path,
+            default_summary_store_path,
+            default_topic_store_path,
+            list_digests_for_conversation,
+            list_distillations_for_conversation,
+            list_summaries_for_conversation,
+            list_topic_scans_for_conversation,
+        )
+        from ..intelligence.continuity.store import (
+            default_continuity_store_path,
+            list_artifacts_for_conversation,
+        )
+
+        conversation = ImportedConversation.query.get_or_404(conv_id)
+        stable_id = f"imported_conversation:{conv_id}"
+        db_path = _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"])
+
+        summaries = list_summaries_for_conversation(default_summary_store_path(db_path), stable_id)
+        topic_scans = list_topic_scans_for_conversation(default_topic_store_path(db_path), stable_id)
+        digests = list_digests_for_conversation(default_digest_store_path(db_path), stable_id)
+        distillations = list_distillations_for_conversation(default_distillation_store_path(db_path), stable_id)
+        continuity = list_artifacts_for_conversation(default_continuity_store_path(db_path), stable_id, limit=None)
+
+        def _resolve_stable_ids(artifacts: list[dict]) -> dict[str, str]:
+            all_ids: set[str] = set()
+            for r in artifacts:
+                all_ids.update(r.get("source_conversation_stable_ids", []))
+            result: dict[str, str] = {}
+            for sid in all_ids:
+                parts = sid.split(":", 1)
+                if len(parts) == 2 and parts[1].isdigit():
+                    conv = ImportedConversation.query.get(int(parts[1]))
+                    result[sid] = conv.title or "Untitled" if conv else sid
+                else:
+                    result[sid] = sid
+            return result
+
+        digest_id_map = _resolve_stable_ids(digests)
+        distillation_id_map = _resolve_stable_ids(distillations)
+
+        return render_template(
+            "imported_delete_confirm.html",
+            conversation=conversation,
+            stable_id=stable_id,
+            summaries=summaries,
+            topic_scans=topic_scans,
+            digests=digests,
+            distillations=distillations,
+            continuity=continuity,
+            digest_id_map=digest_id_map,
+            distillation_id_map=distillation_id_map,
+            format_timestamp=format_timestamp,
+        )
+
+    @app.post("/imported/<int:conv_id>/delete")
+    def delete_imported_conversation(conv_id: int):
+        from ..intelligence.store import (
+            default_digest_store_path,
+            default_distillation_store_path,
+            default_summary_store_path,
+            default_topic_store_path,
+            delete_digests_for_conversation,
+            delete_distillations_for_conversation,
+            delete_summaries_for_conversation,
+            delete_topic_scans_for_conversation,
+        )
+        from ..intelligence.continuity.store import (
+            default_continuity_store_path,
+            delete_artifacts_for_conversation,
+        )
+        from ..retrieval.fts import remove_conversation_from_fts
+
+        conversation = ImportedConversation.query.get_or_404(conv_id)
+        stable_id = f"imported_conversation:{conv_id}"
+        title = conversation.title or "Untitled conversation"
+        db_path = _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"])
+
+        s = delete_summaries_for_conversation(default_summary_store_path(db_path), stable_id)
+        t = delete_topic_scans_for_conversation(default_topic_store_path(db_path), stable_id)
+        d = delete_digests_for_conversation(default_digest_store_path(db_path), stable_id)
+        x = delete_distillations_for_conversation(default_distillation_store_path(db_path), stable_id)
+        c = delete_artifacts_for_conversation(default_continuity_store_path(db_path), stable_id)
+
+        db.session.delete(conversation)
+        db.session.commit()
+
+        try:
+            remove_conversation_from_fts(db_path, conv_id)
+        except Exception:
+            pass
+
+        session["export_notice"] = (
+            f"Deleted conversation '{title}' and {s} summaries, {t} topic scans, "
+            f"{d} digests, {x} distillations, {c} continuity artifacts."
+        )
+        return redirect(url_for("imported_conversations"))
+
     @app.post("/memory/<int:memory_id>/delete")
     def delete_memory(memory_id: int):
         entry = MemoryEntry.query.get_or_404(memory_id)
         db.session.delete(entry)
         db.session.commit()
+        try:
+            from ..retrieval.fts import remove_note_from_fts
+            remove_note_from_fts(_sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"]), memory_id)
+        except Exception:
+            pass
         return redirect(url_for("chats"))
 
     @app.get("/memory/<int:entry_id>")

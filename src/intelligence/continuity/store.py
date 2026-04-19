@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import json
 from pathlib import Path
 
-from ..store import _append_jsonl, _get_jsonl, _list_jsonl
+from ..store import _append_jsonl, _get_jsonl, _list_jsonl, _rewrite_jsonl_atomically
 from .models import ContinuityArtifact
 
 
@@ -53,3 +54,22 @@ def list_artifacts_for_conversation(
         if conversation_stable_id in r.get("source_conversation_ids", [])
     ]
     return filtered[:limit]
+
+
+def delete_artifacts_for_conversation(store_path: str | Path, stable_id: str) -> int:
+    """Delete all continuity artifacts referencing *stable_id*. Returns count deleted."""
+    path = Path(store_path)
+    if not path.exists():
+        return 0
+    rows: list[dict] = []
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            cleaned = line.strip()
+            if cleaned:
+                rows.append(json.loads(cleaned))
+    kept = [r for r in rows if stable_id not in r.get("source_conversation_ids", [])]
+    deleted = len(rows) - len(kept)
+    if deleted == 0:
+        return 0
+    _rewrite_jsonl_atomically(path, kept)
+    return deleted

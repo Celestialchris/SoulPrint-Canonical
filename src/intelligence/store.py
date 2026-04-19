@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import json
+import os
 from pathlib import Path
 
 from .summarizer import DerivedSummary
@@ -54,6 +55,16 @@ def _get_jsonl(path: Path, id_field: str, id_value: str) -> dict | None:
     return None
 
 
+def _rewrite_jsonl_atomically(path: Path, rows: list[dict]) -> None:
+    """Atomic JSONL rewrite via temp file + os.replace."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True))
+            handle.write("\n")
+    os.replace(tmp, path)
+
+
 # ---------------------------------------------------------------------------
 # Summaries (Phase 7.1 — unchanged public API)
 # ---------------------------------------------------------------------------
@@ -81,6 +92,31 @@ def get_summary(store_path: str | Path, summary_id: str) -> dict | None:
     """Lookup one summary by id by scanning the full JSONL store."""
 
     return _get_jsonl(Path(store_path), "summary_id", summary_id)
+
+
+def delete_summaries_for_conversation(store_path: str | Path, stable_id: str) -> int:
+    """Delete all summaries referencing *stable_id*. Returns count deleted."""
+    path = Path(store_path)
+    if not path.exists():
+        return 0
+    rows: list[dict] = []
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            cleaned = line.strip()
+            if cleaned:
+                rows.append(json.loads(cleaned))
+    kept = [r for r in rows if r.get("source_conversation_stable_id") != stable_id]
+    deleted = len(rows) - len(kept)
+    if deleted == 0:
+        return 0
+    _rewrite_jsonl_atomically(path, kept)
+    return deleted
+
+
+def list_summaries_for_conversation(store_path: str | Path, stable_id: str) -> list[dict]:
+    """Return all summaries referencing *stable_id*."""
+    all_rows = _list_jsonl(Path(store_path), limit=9999)
+    return [r for r in all_rows if r.get("source_conversation_stable_id") == stable_id]
 
 
 # ---------------------------------------------------------------------------
@@ -112,6 +148,40 @@ def get_topic_scan(store_path: str | Path, scan_id: str) -> dict | None:
     return _get_jsonl(Path(store_path), "scan_id", scan_id)
 
 
+def delete_topic_scans_for_conversation(store_path: str | Path, stable_id: str) -> int:
+    """Delete all topic scans where any cluster references *stable_id*. Returns count deleted."""
+    path = Path(store_path)
+    if not path.exists():
+        return 0
+    rows: list[dict] = []
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            cleaned = line.strip()
+            if cleaned:
+                rows.append(json.loads(cleaned))
+    kept = [
+        r for r in rows
+        if not any(
+            stable_id in c.get("conversation_stable_ids", [])
+            for c in r.get("clusters", [])
+        )
+    ]
+    deleted = len(rows) - len(kept)
+    if deleted == 0:
+        return 0
+    _rewrite_jsonl_atomically(path, kept)
+    return deleted
+
+
+def list_topic_scans_for_conversation(store_path: str | Path, stable_id: str) -> list[dict]:
+    """Return all topic scans where any cluster references *stable_id*."""
+    all_rows = _list_jsonl(Path(store_path), limit=9999)
+    return [
+        r for r in all_rows
+        if any(stable_id in c.get("conversation_stable_ids", []) for c in r.get("clusters", []))
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Digests (Phase 7.2)
 # ---------------------------------------------------------------------------
@@ -141,6 +211,31 @@ def get_digest(store_path: str | Path, digest_id: str) -> dict | None:
     return _get_jsonl(Path(store_path), "digest_id", digest_id)
 
 
+def delete_digests_for_conversation(store_path: str | Path, stable_id: str) -> int:
+    """Delete all digests referencing *stable_id*. Returns count deleted."""
+    path = Path(store_path)
+    if not path.exists():
+        return 0
+    rows: list[dict] = []
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            cleaned = line.strip()
+            if cleaned:
+                rows.append(json.loads(cleaned))
+    kept = [r for r in rows if stable_id not in r.get("source_conversation_stable_ids", [])]
+    deleted = len(rows) - len(kept)
+    if deleted == 0:
+        return 0
+    _rewrite_jsonl_atomically(path, kept)
+    return deleted
+
+
+def list_digests_for_conversation(store_path: str | Path, stable_id: str) -> list[dict]:
+    """Return all digests referencing *stable_id*."""
+    all_rows = _list_jsonl(Path(store_path), limit=9999)
+    return [r for r in all_rows if stable_id in r.get("source_conversation_stable_ids", [])]
+
+
 # ---------------------------------------------------------------------------
 # Distillations (multi-conversation distillation)
 # ---------------------------------------------------------------------------
@@ -168,3 +263,28 @@ def get_distillation(store_path: str | Path, distillation_id: str) -> dict | Non
     """Lookup one distillation by id."""
 
     return _get_jsonl(Path(store_path), "distillation_id", distillation_id)
+
+
+def delete_distillations_for_conversation(store_path: str | Path, stable_id: str) -> int:
+    """Delete all distillations referencing *stable_id*. Returns count deleted."""
+    path = Path(store_path)
+    if not path.exists():
+        return 0
+    rows: list[dict] = []
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            cleaned = line.strip()
+            if cleaned:
+                rows.append(json.loads(cleaned))
+    kept = [r for r in rows if stable_id not in r.get("source_conversation_stable_ids", [])]
+    deleted = len(rows) - len(kept)
+    if deleted == 0:
+        return 0
+    _rewrite_jsonl_atomically(path, kept)
+    return deleted
+
+
+def list_distillations_for_conversation(store_path: str | Path, stable_id: str) -> list[dict]:
+    """Return all distillations referencing *stable_id*."""
+    all_rows = _list_jsonl(Path(store_path), limit=9999)
+    return [r for r in all_rows if stable_id in r.get("source_conversation_stable_ids", [])]

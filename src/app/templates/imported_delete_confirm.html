@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
+
+{% block title %}Delete · {{ display_title }} · SoulPrint{% endblock %}
+{% block page_title %}Delete conversation{% endblock %}
+{% block page_desc %}review what will be removed{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div class="back-links" aria-label="Back navigation">
+      <a class="back-link" href="/imported">Back to imported conversations</a>
+    </div>
+    <p class="page-eyebrow">Cascade delete</p>
+    <div class="page-header__row">
+      <div class="page-badges">
+        {{ badge("Provider: " ~ conversation.source, "imported") }}
+      </div>
+    </div>
+    <p class="page-summary" style="color: var(--t1);">{{ display_title }}</p>
+    <p class="metadata-line">
+      Stable ID: <span style="font-family: var(--font-mono); font-size: 0.8em;">{{ stable_id }}</span>
+    </p>
+  </section>
+
+  <section style="margin-bottom: 2rem;">
+    <p style="color: var(--t2); font-size: 0.9rem; line-height: 1.6;">
+      The following derived artifacts will be removed along with all messages in this conversation.
+      This action cannot be undone.
+    </p>
+  </section>
+
+  <div style="border-top: 1px solid var(--line); margin-bottom: 2rem;">
+
+    <div style="padding: 1rem 0; border-bottom: 1px solid var(--line);">
+      <p class="metadata-line" style="color: var(--t2); margin-bottom: 0.5rem;">
+        Summaries &mdash; {{ summaries|length }}
+      </p>
+      {% if summaries %}
+        {% for s in summaries %}
+          <p class="metadata-line" style="font-family: var(--font-mono); font-size: 0.8em; padding-left: 1rem;">
+            {{ s.get("summary_id", "—") }}
+          </p>
+        {% endfor %}
+      {% else %}
+        <p class="metadata-line" style="padding-left: 1rem; color: var(--t3);">None</p>
+      {% endif %}
+    </div>
+
+    <div style="padding: 1rem 0; border-bottom: 1px solid var(--line);">
+      <p class="metadata-line" style="color: var(--t2); margin-bottom: 0.5rem;">
+        Topic scans &mdash; {{ topic_scans|length }}
+      </p>
+      {% if topic_scans %}
+        {% for ts in topic_scans %}
+          <p class="metadata-line" style="font-family: var(--font-mono); font-size: 0.8em; padding-left: 1rem;">
+            {{ ts.get("scan_id", "—") }}
+          </p>
+        {% endfor %}
+      {% else %}
+        <p class="metadata-line" style="padding-left: 1rem; color: var(--t3);">None</p>
+      {% endif %}
+    </div>
+
+    <div style="padding: 1rem 0; border-bottom: 1px solid var(--line);">
+      <p class="metadata-line" style="color: var(--t2); margin-bottom: 0.5rem;">
+        Digests &mdash; {{ digests|length }}
+      </p>
+      {% if digests %}
+        {% for dg in digests %}
+          <p class="metadata-line" style="padding-left: 1rem;">
+            <span style="font-family: var(--font-mono); font-size: 0.8em;">{{ dg.get("digest_id", "—") }}</span>
+            {% set src_ids = dg.get("source_conversation_stable_ids", []) %}
+            {% if src_ids %}
+              <span style="color: var(--t3);">
+                — sources:
+                {% for sid in src_ids %}
+                  {{ digest_id_map.get(sid, sid) }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+              </span>
+            {% endif %}
+          </p>
+        {% endfor %}
+      {% else %}
+        <p class="metadata-line" style="padding-left: 1rem; color: var(--t3);">None</p>
+      {% endif %}
+    </div>
+
+    <div style="padding: 1rem 0; border-bottom: 1px solid var(--line);">
+      <p class="metadata-line" style="color: var(--t2); margin-bottom: 0.5rem;">
+        Distillations &mdash; {{ distillations|length }}
+      </p>
+      {% if distillations %}
+        {% for dt in distillations %}
+          <p class="metadata-line" style="padding-left: 1rem;">
+            <span style="font-family: var(--font-mono); font-size: 0.8em;">{{ dt.get("distillation_id", "—") }}</span>
+            {% set src_ids = dt.get("source_conversation_stable_ids", []) %}
+            {% if src_ids %}
+              <span style="color: var(--t3);">
+                — sources:
+                {% for sid in src_ids %}
+                  {{ distillation_id_map.get(sid, sid) }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+              </span>
+            {% endif %}
+          </p>
+        {% endfor %}
+      {% else %}
+        <p class="metadata-line" style="padding-left: 1rem; color: var(--t3);">None</p>
+      {% endif %}
+    </div>
+
+    <div style="padding: 1rem 0; border-bottom: 1px solid var(--line);">
+      <p class="metadata-line" style="color: var(--t2); margin-bottom: 0.5rem;">
+        Continuity artifacts &mdash; {{ continuity|length }}
+      </p>
+      {% if continuity %}
+        {% for a in continuity %}
+          <p class="metadata-line" style="font-family: var(--font-mono); font-size: 0.8em; padding-left: 1rem;">
+            {{ a.get("artifact_type", "—") }} · {{ a.get("artifact_id", "—") }}
+          </p>
+        {% endfor %}
+      {% else %}
+        <p class="metadata-line" style="padding-left: 1rem; color: var(--t3);">None</p>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+    <form method="post" action="">
+      <button
+        type="submit"
+        style="
+          background: var(--accent);
+          color: var(--t1);
+          border: none;
+          padding: 0.6rem 1.4rem;
+          font-family: var(--font-body);
+          font-size: 0.9rem;
+          cursor: pointer;
+        "
+      >Delete conversation</button>
+    </form>
+    <a
+      href="/imported/{{ conversation.id }}/explorer"
+      style="color: rgba(244,238,229,0.62); font-size: 0.9rem; text-decoration: none;"
+    >Cancel</a>
+  </div>
+{% endblock %}
