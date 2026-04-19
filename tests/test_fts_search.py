@@ -17,6 +17,8 @@ from src.retrieval.fts import (
     populate_fts_messages,
     populate_fts_notes,
     rebuild_fts,
+    remove_conversation_from_fts,
+    remove_note_from_fts,
     sanitize_fts_query,
     search_fts,
 )
@@ -323,6 +325,100 @@ class FTSFederatedRouteIntegrationTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn("soulprint", html)
         self.assertIn("Note", html)
+
+
+class FTSRemovalTest(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = make_test_temp_dir(self, "fts-removal")
+        self.db_path = str(self.tmpdir / "fts_removal_test.db")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.db_path}"
+        self.app = create_app()
+        self.ids = _seed_test_data(self.app)
+        rebuild_fts(self.db_path)
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+        self.addCleanup(self._restore_uri)
+
+    def _restore_uri(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+
+    def _count_fts_messages_for_conv(self, conv_id):
+        conn = sqlite3.connect(self.db_path)
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM fts_messages WHERE conversation_id = ?",
+                (str(conv_id),),
+            ).fetchone()
+            return row[0]
+        finally:
+            conn.close()
+
+    def _count_fts_notes_for_note(self, note_id):
+        conn = sqlite3.connect(self.db_path)
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM fts_notes WHERE note_id = ?",
+                (str(note_id),),
+            ).fetchone()
+            return row[0]
+        finally:
+            conn.close()
+
+    def test_remove_conversation_deletes_all_its_messages(self):
+        remove_conversation_from_fts(self.db_path, self.ids["conv1_id"])
+        self.assertEqual(self._count_fts_messages_for_conv(self.ids["conv1_id"]), 0)
+
+    def test_remove_conversation_leaves_other_conversations_intact(self):
+        remove_conversation_from_fts(self.db_path, self.ids["conv1_id"])
+        self.assertGreater(self._count_fts_messages_for_conv(self.ids["conv2_id"]), 0)
+
+    def test_remove_conversation_returns_correct_count(self):
+        count = remove_conversation_from_fts(self.db_path, self.ids["conv1_id"])
+        # conv1 has 2 messages seeded
+        self.assertEqual(count, 2)
+
+    def test_remove_conversation_nonexistent_returns_zero(self):
+        count = remove_conversation_from_fts(self.db_path, 999999)
+        self.assertEqual(count, 0)
+
+    def test_remove_conversation_with_int_id_matches_str_stored_rows(self):
+        # Pass an int directly — coercion to str must happen inside the helper
+        # or the DELETE matches nothing and returns 0 (indistinguishable from nonexistent)
+        count = remove_conversation_from_fts(self.db_path, int(self.ids["conv1_id"]))
+        self.assertEqual(count, 2)
+
+    def test_remove_note_deletes_one_row(self):
+        remove_note_from_fts(self.db_path, self.ids["note_id"])
+        self.assertEqual(self._count_fts_notes_for_note(self.ids["note_id"]), 0)
+
+    def test_remove_note_leaves_other_notes_intact(self):
+        # Seed a second note and index it
+        with self.app.app_context():
+            note2 = MemoryEntry(
+                timestamp=datetime(2024, 4, 1, tzinfo=timezone.utc),
+                role="user",
+                content="Second note content for removal test",
+                tags="test",
+            )
+            db.session.add(note2)
+            db.session.commit()
+            note2_id = note2.id
+        index_new_note(self.db_path, note2_id)
+
+        remove_note_from_fts(self.db_path, self.ids["note_id"])
+        self.assertEqual(self._count_fts_notes_for_note(self.ids["note_id"]), 0)
+        self.assertEqual(self._count_fts_notes_for_note(note2_id), 1)
+
+    def test_remove_note_nonexistent_returns_zero(self):
+        count = remove_note_from_fts(self.db_path, 999999)
+        self.assertEqual(count, 0)
+
+    def test_search_no_longer_returns_removed_content(self):
+        # After removing conv1, DCA content should not appear in search
+        remove_conversation_from_fts(self.db_path, self.ids["conv1_id"])
+        results = search_fts(self.db_path, '"DCA"')
+        conv_ids = [r["conversation_id"] for r in results if r["source_type"] == "imported_message"]
+        self.assertNotIn(str(self.ids["conv1_id"]), conv_ids)
 
 
 if __name__ == "__main__":
