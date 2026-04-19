@@ -979,17 +979,25 @@ def create_app():
             default_distillation_store_path,
             default_summary_store_path,
             default_topic_store_path,
-            list_digests_for_conversation,
-            list_distillations_for_conversation,
-            list_summaries_for_conversation,
-            list_topic_scans_for_conversation,
+            list_digests,
+            list_distillations,
+            list_summaries,
+            list_topic_scans,
         )
         from ..intelligence.continuity.store import (
             default_continuity_store_path,
-            list_artifacts_for_conversation,
+            list_artifacts,
         )
 
         db_path = _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"])
+
+        # Load each store once; filter per conversation in memory to avoid N×full-file scans.
+        all_summaries = list_summaries(default_summary_store_path(db_path), limit=9999)
+        all_topic_scans = list_topic_scans(default_topic_store_path(db_path), limit=9999)
+        all_digests = list_digests(default_digest_store_path(db_path), limit=9999)
+        all_distillations = list_distillations(default_distillation_store_path(db_path), limit=9999)
+        all_artifacts = list_artifacts(default_continuity_store_path(db_path), limit=9999)
+
         rows = []
         for conv in conversations:
             sid = f"imported_conversation:{conv.id}"
@@ -998,11 +1006,14 @@ def create_app():
                 "title": conv.title or "(untitled)",
                 "provider": conv.source,
                 "created_at_unix": conv.created_at_unix,
-                "summary_count": len(list_summaries_for_conversation(default_summary_store_path(db_path), sid)),
-                "topic_scan_count": len(list_topic_scans_for_conversation(default_topic_store_path(db_path), sid)),
-                "digest_count": len(list_digests_for_conversation(default_digest_store_path(db_path), sid)),
-                "distillation_count": len(list_distillations_for_conversation(default_distillation_store_path(db_path), sid)),
-                "continuity_count": len(list_artifacts_for_conversation(default_continuity_store_path(db_path), sid, limit=None)),
+                "summary_count": sum(1 for r in all_summaries if r.get("source_conversation_stable_id") == sid),
+                "topic_scan_count": sum(
+                    1 for r in all_topic_scans
+                    if any(sid in c.get("conversation_stable_ids", []) for c in r.get("clusters", []))
+                ),
+                "digest_count": sum(1 for r in all_digests if sid in r.get("source_conversation_stable_ids", [])),
+                "distillation_count": sum(1 for r in all_distillations if sid in r.get("source_conversation_stable_ids", [])),
+                "continuity_count": sum(1 for r in all_artifacts if sid in r.get("source_conversation_ids", [])),
             })
 
         return render_template("imported_bulk_delete_confirm.html", rows=rows, ids=ids)
@@ -1041,22 +1052,29 @@ def create_app():
                 continue
             sid = f"imported_conversation:{conv.id}"
             title = conv.title or "(untitled)"
+            # DB delete is the only hard-fail step. If it succeeds, the canonical
+            # record is gone; JSONL + FTS cleanup are best-effort so orphan artifacts
+            # never prevent reporting the conversation as deleted.
+            try:
+                db.session.delete(conv)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                failed_titles.append(title)
+                continue
             try:
                 delete_summaries_for_conversation(default_summary_store_path(db_path), sid)
                 delete_topic_scans_for_conversation(default_topic_store_path(db_path), sid)
                 delete_digests_for_conversation(default_digest_store_path(db_path), sid)
                 delete_distillations_for_conversation(default_distillation_store_path(db_path), sid)
                 delete_artifacts_for_conversation(default_continuity_store_path(db_path), sid)
-                db.session.delete(conv)
-                db.session.commit()
-                try:
-                    remove_conversation_from_fts(db_path, conv_id)
-                except Exception:
-                    pass
-                deleted_titles.append(title)
             except Exception:
-                db.session.rollback()
-                failed_titles.append(title)
+                pass
+            try:
+                remove_conversation_from_fts(db_path, conv_id)
+            except Exception:
+                pass
+            deleted_titles.append(title)
 
         parts = []
         if deleted_titles:

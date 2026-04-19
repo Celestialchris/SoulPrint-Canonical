@@ -422,12 +422,15 @@ class BulkDeleteExecuteTest(unittest.TestCase):
         self.assertEqual(summaries, [])
 
     def test_partial_failure_does_not_halt_loop(self):
+        # DB delete happens before JSONL cleanup. A JSONL failure is swallowed
+        # after the commit, so the canonical record is already gone and the
+        # conversation is counted as deleted — not as failed.
         call_count = {"n": 0}
 
         def _fail_on_second(store_path, stable_id):
             call_count["n"] += 1
             if call_count["n"] == 2:
-                raise RuntimeError("forced failure on second")
+                raise RuntimeError("forced jsonl failure on second")
 
         with patch("src.intelligence.store.delete_summaries_for_conversation", side_effect=_fail_on_second):
             resp = self.client.post(
@@ -441,11 +444,11 @@ class BulkDeleteExecuteTest(unittest.TestCase):
         self.assertEqual(resp.status_code, 302)
         with self.app.app_context():
             self.assertIsNone(ImportedConversation.query.get(self.conv_id_1))
-            self.assertIsNotNone(ImportedConversation.query.get(self.conv_id_2))
+            self.assertIsNone(ImportedConversation.query.get(self.conv_id_2))
             self.assertIsNone(ImportedConversation.query.get(self.conv_id_3))
         resp2 = self.client.get("/imported")
         html = resp2.get_data(as_text=True)
-        self.assertIn("Failed", html)
+        self.assertIn("Deleted 3", html)
 
     def test_swallows_fts_error(self):
         with patch("src.retrieval.fts.remove_conversation_from_fts", side_effect=RuntimeError("fts boom")):
