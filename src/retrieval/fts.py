@@ -237,6 +237,40 @@ def index_new_note(db_path: str, note_id: int | str) -> None:
         conn.close()
 
 
+def remove_conversation_from_fts(db_path: str, conversation_id: int | str) -> int:
+    """Delete all fts_messages rows for one conversation. Returns count deleted."""
+
+    ensure_fts_tables(db_path)
+    conv_id = str(int(conversation_id))
+    conn = sqlite3.connect(db_path)
+    try:
+        cur = conn.execute(
+            "DELETE FROM fts_messages WHERE conversation_id = ?",
+            (conv_id,),
+        )
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()
+
+
+def remove_note_from_fts(db_path: str, note_id: int | str) -> int:
+    """Delete the fts_notes row for one note. Returns count deleted (0 or 1)."""
+
+    ensure_fts_tables(db_path)
+    nid = str(int(note_id))
+    conn = sqlite3.connect(db_path)
+    try:
+        cur = conn.execute(
+            "DELETE FROM fts_notes WHERE note_id = ?",
+            (nid,),
+        )
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()
+
+
 def search_fts(db_path: str, query: str, limit: int = 50) -> list[dict]:
     """Full-text search across messages and notes.
 
