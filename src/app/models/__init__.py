@@ -21,6 +21,13 @@ class ImportedConversation(db.Model):
     title = db.Column(db.Text, nullable=False, default="Untitled Conversation")
     created_at_unix = db.Column(db.Float, nullable=True)
     updated_at_unix = db.Column(db.Float, nullable=True)
+    is_archived = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default="0",
+        index=True,
+    )
 
     messages = db.relationship(
         "ImportedMessage",

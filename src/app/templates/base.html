@@ -59,7 +59,8 @@
 
         <nav class="sidebar-group" aria-label="Memory">
           <span class="sidebar-group__label">Memory</span>
-          {{ sidebar_item(url_for('imported_conversations'), "What you've discussed", request.path.startswith('/imported')) }}
+          {{ sidebar_item(url_for('imported_conversations'), "What you've discussed", request.path.startswith('/imported') and not request.path.startswith('/imported/archived')) }}
+          {{ sidebar_item(url_for('imported_archived_conversations'), "Archived", request.path.startswith('/imported/archived')) }}
           {{ sidebar_item(url_for('chats'), 'Your own notes', request.path.startswith(url_for('chats')) or request.path.startswith('/memory/')) }}
           {{ sidebar_item(url_for('federated_browser'), 'Everything, together', request.path.startswith('/federated')) }}
         </nav>

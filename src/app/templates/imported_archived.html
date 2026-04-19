@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% block title %}Archived Conversations · SoulPrint{% endblock %}
+{% block page_title %}Archived conversations{% endblock %}
+{% block page_desc %}hidden from your main view, still searchable{% endblock %}
+
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Your archived history</p>
+    <div class="page-header__row">
+      <div class="page-badges">
+        {{ badge("Archived", "imported") }}
+        {{ badge("Imported", "neutral") }}
+      </div>
+    </div>
+    <p class="page-summary">Hidden from your main view. Everything here is still searchable and intact.</p>
+  </section>
+
+  <nav class="provider-tabs" aria-label="Filter by provider">
+    <a class="provider-tab{% if not provider %} provider-tab--active{% endif %}" href="/imported/archived{% if keyword %}?q={{ keyword|urlencode }}{% endif %}">All</a>
+    <a class="provider-tab provider-tab--chatgpt{% if provider == 'chatgpt' %} provider-tab--active{% endif %}" href="/imported/archived?provider=chatgpt{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">ChatGPT</a>
+    <a class="provider-tab provider-tab--claude{% if provider == 'claude' %} provider-tab--active{% endif %}" href="/imported/archived?provider=claude{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Claude</a>
+    <a class="provider-tab provider-tab--gemini{% if provider == 'gemini' %} provider-tab--active{% endif %}" href="/imported/archived?provider=gemini{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Gemini</a>
+  </nav>
+
+  <section class="surface-card filter-panel">
+    <form class="filter-form" method="get" action="/imported/archived">
+      {% if provider %}<input type="hidden" name="provider" value="{{ provider }}">{% endif %}
+      <div>
+        <label class="field-label" for="archived-query">Search archived conversations</label>
+        <div class="filter-row">
+          <input
+            id="archived-query"
+            type="search"
+            name="q"
+            placeholder="Search title or message text"
+            value="{{ keyword }}"
+            aria-label="Search archived conversations"
+          >
+          <button type="submit">Search</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  {% if export_notice %}
+    <p class="metadata-line" role="status" style="margin-bottom:0.75rem;">{{ export_notice }}</p>
+  {% endif %}
+  {% if export_error %}
+    <p class="metadata-line" role="alert" style="margin-bottom:0.75rem;">{{ export_error }}</p>
+  {% endif %}
+
+  {% if rows %}
+    <p class="metadata-line" style="margin-bottom:0.5rem;">
+      Showing {{ (page - 1) * 50 + 1 }}–{{ (page - 1) * 50 + rows|length }} of {{ total }} conversations · Page {{ page }} of {{ total_pages }}
+    </p>
+
+    <div class="container-card">
+      {% for conversation, message_count in rows %}
+        {% set display_title = conversation.title|default('', true)|trim or "Untitled conversation" %}
+        <article class="record-card record-card--imported">
+          <div class="record-card__header">
+            <h2 class="record-card__title">
+              <a href="/imported/{{ conversation.id }}/explorer">{{ display_title }}</a>
+            </h2>
+            <div class="metadata-badges">
+              {{ badge("Provider: " ~ conversation.source, "imported") }}
+              {{ badge("Messages: " ~ message_count, "neutral") }}
+            </div>
+          </div>
+          <p class="metadata-line">
+            Provider: {{ conversation.source }} · ID: {{ conversation.id }} · Source ID: {{ conversation.source_conversation_id }}
+          </p>
+          <p class="metadata-line">
+            Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
+          </p>
+          <p class="metadata-line">
+            <form method="post" action="/imported/{{ conversation.id }}/unarchive" style="display: inline;">
+              <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer; color: var(--accent); font-family: var(--font-body); font-size: inherit;">Unarchive</button>
+            </form>
+            <span style="color: var(--t3);"> · </span>
+            <a href="/imported/{{ conversation.id }}/delete?return_url={{ url_for('imported_archived_conversations')|urlencode }}" style="color: var(--accent);">Delete</a>
+          </p>
+        </article>
+      {% endfor %}
+    </div>
+
+    {% if total_pages > 1 %}
+      <nav class="pagination" aria-label="Pagination">
+        {% if page > 1 %}
+          <a class="pagination__link" href="/imported/archived?page={{ page - 1 }}{% if provider %}&provider={{ provider }}{% endif %}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">← Previous</a>
+        {% else %}
+          <span class="pagination__link pagination__link--disabled">← Previous</span>
+        {% endif %}
+
+        {% for p in range(1, total_pages + 1) %}
+          {% if p == page %}
+            <span class="pagination__link pagination__link--current">{{ p }}</span>
+          {% elif p <= 3 or p > total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+            <a class="pagination__link" href="/imported/archived?page={{ p }}{% if provider %}&provider={{ provider }}{% endif %}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">{{ p }}</a>
+          {% elif p == 4 and page > 5 %}
+            <span class="pagination__ellipsis">…</span>
+          {% elif p == total_pages - 2 and page < total_pages - 4 %}
+            <span class="pagination__ellipsis">…</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %}
+          <a class="pagination__link" href="/imported/archived?page={{ page + 1 }}{% if provider %}&provider={{ provider }}{% endif %}{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Next →</a>
+        {% else %}
+          <span class="pagination__link pagination__link--disabled">Next →</span>
+        {% endif %}
+      </nav>
+    {% endif %}
+
+  {% else %}
+    {{ empty_state(
+      "Nothing archived yet.",
+      "Conversations you hide from your main view appear here."
+    ) }}
+  {% endif %}
+{% endblock %}

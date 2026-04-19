@@ -142,7 +142,8 @@ class AnswerTraceBrowserRouteTest(unittest.TestCase):
         self.assertIn("web:abc123", html)
         self.assertIn("no direct handoff view yet", html)
         self.assertNotIn('href="/memory/', html)
-        self.assertNotIn('href="/imported/', html)
+        # sidebar now has /imported/archived; ensure no link to a specific conversation (numeric id)
+        self.assertNotRegex(html, r'href="/imported/\d+')
 
     def test_answer_trace_detail_malformed_stable_id_is_plain_text(self):
         trace_id = self._append_trace(

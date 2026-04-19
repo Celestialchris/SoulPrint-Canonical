@@ -270,6 +270,21 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    # One-time column guard for existing databases (no migration framework in use)
+    import sqlite3 as _sqlite3
+    _guard_path = _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"])
+    try:
+        _gc = _sqlite3.connect(_guard_path)
+        _cols = {r[1] for r in _gc.execute("PRAGMA table_info(imported_conversation)")}
+        if "is_archived" not in _cols:
+            _gc.execute(
+                "ALTER TABLE imported_conversation ADD COLUMN is_archived BOOLEAN NOT NULL DEFAULT 0"
+            )
+            _gc.commit()
+        _gc.close()
+    except Exception:
+        pass
+
     # Create FTS5 virtual tables (derived indexes, not canonical)
     try:
         from ..retrieval.fts import ensure_fts_tables
@@ -732,6 +747,7 @@ def create_app():
                 func.count(ImportedMessage.id).label("message_count"),
             )
             .outerjoin(ImportedConversation.messages)
+            .filter(ImportedConversation.is_archived.is_(False))
             .group_by(ImportedConversation.id)
         )
 
@@ -904,6 +920,9 @@ def create_app():
         digest_id_map = _resolve_stable_ids(digests)
         distillation_id_map = _resolve_stable_ids(distillations)
 
+        raw_return = request.args.get("return_url", "")
+        return_url = raw_return if raw_return.startswith("/") else url_for("imported_conversations")
+
         return render_template(
             "imported_delete_confirm.html",
             conversation=conversation,
@@ -916,6 +935,7 @@ def create_app():
             digest_id_map=digest_id_map,
             distillation_id_map=distillation_id_map,
             format_timestamp=format_timestamp,
+            return_url=return_url,
         )
 
     @app.post("/imported/<int:conv_id>/delete")
@@ -960,6 +980,89 @@ def create_app():
             f"{d} digests, {x} distillations, {c} continuity artifacts."
         )
         return redirect(url_for("imported_conversations"))
+
+    @app.post("/imported/<int:conv_id>/archive")
+    def archive_imported_conversation(conv_id: int):
+        conv = ImportedConversation.query.get_or_404(conv_id)
+        if not conv.is_archived:
+            conv.is_archived = True
+            db.session.commit()
+        session["export_notice"] = f"Archived '{conv.title or '(untitled)'}'."
+        return redirect(url_for("imported_conversations"))
+
+    @app.post("/imported/<int:conv_id>/unarchive")
+    def unarchive_imported_conversation(conv_id: int):
+        conv = ImportedConversation.query.get_or_404(conv_id)
+        if conv.is_archived:
+            conv.is_archived = False
+            db.session.commit()
+        session["export_notice"] = f"Restored '{conv.title or '(untitled)'}'."
+        return redirect(url_for("imported_archived_conversations"))
+
+    @app.get("/imported/archived")
+    def imported_archived_conversations():
+        from ..importers.contracts import SUPPORTED_IMPORT_PROVIDERS
+
+        PER_PAGE = 50
+        keyword = request.args.get("q", "").strip()
+        page = request.args.get("page", 1, type=int)
+        provider = request.args.get("provider", "").strip().lower()
+        if page < 1:
+            page = 1
+
+        if provider and provider not in SUPPORTED_IMPORT_PROVIDERS:
+            provider = ""
+
+        rows_query = (
+            db.session.query(
+                ImportedConversation,
+                func.count(ImportedMessage.id).label("message_count"),
+            )
+            .outerjoin(ImportedConversation.messages)
+            .filter(ImportedConversation.is_archived.is_(True))
+            .group_by(ImportedConversation.id)
+        )
+
+        if provider:
+            rows_query = rows_query.filter(ImportedConversation.source == provider)
+
+        if keyword:
+            pattern = f"%{keyword.lower()}%"
+            rows_query = rows_query.filter(
+                (func.lower(ImportedConversation.title).like(pattern))
+                | ImportedConversation.messages.any(
+                    func.lower(ImportedMessage.content).like(pattern)
+                )
+            )
+
+        total = rows_query.count()
+        total_pages = max(1, (total + PER_PAGE - 1) // PER_PAGE)
+        if page > total_pages:
+            page = total_pages
+
+        rows = (
+            rows_query
+            .order_by(ImportedConversation.id.desc())
+            .offset((page - 1) * PER_PAGE)
+            .limit(PER_PAGE)
+            .all()
+        )
+
+        export_notice = session.pop("export_notice", None)
+        export_error = session.pop("export_error", None)
+
+        return render_template(
+            "imported_archived.html",
+            rows=rows,
+            keyword=keyword,
+            provider=provider,
+            format_timestamp=format_timestamp,
+            page=page,
+            total_pages=total_pages,
+            total=total,
+            export_notice=export_notice,
+            export_error=export_error,
+        )
 
     @app.post("/imported/delete-selected")
     def delete_selected_imported_confirm():
