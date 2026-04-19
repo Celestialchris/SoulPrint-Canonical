@@ -2,6 +2,19 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## v0.7.0-alpha.2 — Cascade delete for imported conversations (2026-04-19)
+
+### Added
+- **Cascade delete route** for imported conversations (`GET/POST /imported/<id>/delete`). Confirm page shows all derived artifacts that will be removed: summaries, topic scans, digests, distillations, and continuity artifacts. POST deletes JSONL stores, canonical DB row (messages cascade via SQLAlchemy), and FTS index rows in that order.
+- **Delete link** (clay accent) on each row of the imported conversations list.
+- Four new `list_*_for_conversation` helpers in `src/intelligence/store.py`: `list_summaries_for_conversation`, `list_topic_scans_for_conversation`, `list_digests_for_conversation`, `list_distillations_for_conversation`.
+- FTS note cleanup on memory entry delete: `remove_note_from_fts` now runs best-effort after `/memory/<id>/delete`.
+
+### Tests
+- `tests/test_imported_delete_route.py` — new file, 6 test classes covering confirm page, cascade cascade, empty cascade, FTS survival (error non-blocking), FTS row removal (positive assertion), and memory FTS cleanup.
+- `tests/test_intelligence_store.py` — 4 new test classes for the `list_*_for_conversation` helpers.
+- Suite: 815 passing, 0 failures.
+
 ## v0.7.0-alpha.1 — Quiet Archive v3 (2026-04-18)
 
 ### Design
