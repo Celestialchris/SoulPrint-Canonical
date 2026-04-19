@@ -18,7 +18,7 @@ dependencies = [
   "beautifulsoup4",
   "lxml",
   "mcp[cli]",
-  "openai>=1.0.0"
+  "openai>=2.32.0"
 ]
 
 [project.optional-dependencies]
@@ -28,7 +28,7 @@ full = [
 ]
 intelligence = [
   "anthropic>=0.39.0",
-  "openai>=1.0.0"
+  "openai>=2.32.0"
 ]
 dev = [
   "pytest>=9.0.3"
