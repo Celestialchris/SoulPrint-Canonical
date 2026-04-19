@@ -96,6 +96,11 @@
               Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
             </p>
             <p class="metadata-line">
+              <button type="submit"
+                      formaction="/imported/{{ conversation.id }}/archive"
+                      formmethod="post"
+                      style="background: none; border: none; padding: 0; cursor: pointer; color: var(--accent); font-family: var(--font-body); font-size: inherit;">Archive</button>
+              <span style="color: var(--t3);"> · </span>
               <a href="/imported/{{ conversation.id }}/delete" style="color: var(--accent);">Delete</a>
             </p>
           </article>
