@@ -318,5 +318,151 @@ class ImportedDeleteFtsRowsTest(unittest.TestCase):
         self.assertEqual(self._count_fts_messages_for_conv(self.conv_id), 0)
 
 
+class BulkDeleteConfirmTest(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = make_test_temp_dir(self, "bulk-confirm")
+        self.db_path = str(self.tmpdir / "test.db")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.db_path}"
+        self.app = create_app()
+        self.client = self.app.test_client()
+        self.conv_id_1 = _seed_conversation(self.app, title="Bulk Alpha")
+        self.conv_id_2 = _seed_conversation(self.app, title="Bulk Beta")
+        self.conv_id_3 = _seed_conversation(self.app, title="Bulk Gamma")
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+        self.addCleanup(self._restore_uri)
+
+    def _restore_uri(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+
+    def test_renders_selected_conversations(self):
+        resp = self.client.post(
+            "/imported/delete-selected",
+            data={"conversation_ids": [
+                str(self.conv_id_1),
+                str(self.conv_id_2),
+                str(self.conv_id_3),
+            ]},
+        )
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("Bulk Alpha", html)
+        self.assertIn("Bulk Beta", html)
+        self.assertIn("Bulk Gamma", html)
+
+    def test_redirects_on_empty_selection(self):
+        resp = self.client.post("/imported/delete-selected", data={})
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("/imported", resp.headers["Location"])
+
+
+class BulkDeleteExecuteTest(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = make_test_temp_dir(self, "bulk-execute")
+        self.db_path = str(self.tmpdir / "test.db")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.db_path}"
+        self.app = create_app()
+        self.client = self.app.test_client()
+        self.conv_id_1 = _seed_conversation(self.app, title="Execute One")
+        self.conv_id_2 = _seed_conversation(self.app, title="Execute Two")
+        self.conv_id_3 = _seed_conversation(self.app, title="Execute Three")
+
+        db_dir = Path(self.db_path).parent
+        for cid in (self.conv_id_1, self.conv_id_2, self.conv_id_3):
+            sid = f"imported_conversation:{cid}"
+            _write_jsonl(db_dir / "derived_summaries.jsonl", [
+                {"summary_id": f"s-{cid}", "source_conversation_stable_id": sid},
+            ])
+            _write_jsonl(db_dir / "continuity_artifacts.jsonl", [
+                {"artifact_id": f"a-{cid}", "artifact_type": "summary", "source_conversation_ids": [sid]},
+            ])
+
+        ensure_fts_tables(self.db_path)
+        index_new_messages(self.db_path, self.conv_id_1)
+        index_new_messages(self.db_path, self.conv_id_2)
+        index_new_messages(self.db_path, self.conv_id_3)
+
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+        self.addCleanup(self._restore_uri)
+
+    def _restore_uri(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+
+    def _count_fts_for_conv(self, conv_id: int) -> int:
+        conn = sqlite3.connect(self.db_path)
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM fts_messages WHERE conversation_id = ?",
+                (str(conv_id),),
+            ).fetchone()
+            return row[0]
+        finally:
+            conn.close()
+
+    def test_cascade_deletes_all_selected(self):
+        resp = self.client.post(
+            "/imported/delete-selected/execute",
+            data={"conversation_ids": [
+                str(self.conv_id_1),
+                str(self.conv_id_2),
+                str(self.conv_id_3),
+            ]},
+        )
+        self.assertEqual(resp.status_code, 302)
+        with self.app.app_context():
+            self.assertIsNone(ImportedConversation.query.get(self.conv_id_1))
+            self.assertIsNone(ImportedConversation.query.get(self.conv_id_2))
+            self.assertIsNone(ImportedConversation.query.get(self.conv_id_3))
+        self.assertEqual(self._count_fts_for_conv(self.conv_id_1), 0)
+        self.assertEqual(self._count_fts_for_conv(self.conv_id_2), 0)
+        self.assertEqual(self._count_fts_for_conv(self.conv_id_3), 0)
+        db_dir = Path(self.db_path).parent
+        summaries = _read_jsonl(db_dir / "derived_summaries.jsonl")
+        self.assertEqual(summaries, [])
+
+    def test_partial_failure_does_not_halt_loop(self):
+        call_count = {"n": 0}
+
+        def _fail_on_second(store_path, stable_id):
+            call_count["n"] += 1
+            if call_count["n"] == 2:
+                raise RuntimeError("forced failure on second")
+
+        with patch("src.intelligence.store.delete_summaries_for_conversation", side_effect=_fail_on_second):
+            resp = self.client.post(
+                "/imported/delete-selected/execute",
+                data={"conversation_ids": [
+                    str(self.conv_id_1),
+                    str(self.conv_id_2),
+                    str(self.conv_id_3),
+                ]},
+            )
+        self.assertEqual(resp.status_code, 302)
+        with self.app.app_context():
+            self.assertIsNone(ImportedConversation.query.get(self.conv_id_1))
+            self.assertIsNotNone(ImportedConversation.query.get(self.conv_id_2))
+            self.assertIsNone(ImportedConversation.query.get(self.conv_id_3))
+        resp2 = self.client.get("/imported")
+        html = resp2.get_data(as_text=True)
+        self.assertIn("Failed", html)
+
+    def test_swallows_fts_error(self):
+        with patch("src.retrieval.fts.remove_conversation_from_fts", side_effect=RuntimeError("fts boom")):
+            resp = self.client.post(
+                "/imported/delete-selected/execute",
+                data={"conversation_ids": [
+                    str(self.conv_id_1),
+                    str(self.conv_id_2),
+                    str(self.conv_id_3),
+                ]},
+            )
+        self.assertEqual(resp.status_code, 302)
+        with self.app.app_context():
+            self.assertIsNone(ImportedConversation.query.get(self.conv_id_1))
+            self.assertIsNone(ImportedConversation.query.get(self.conv_id_2))
+            self.assertIsNone(ImportedConversation.query.get(self.conv_id_3))
+
+
 if __name__ == "__main__":
     unittest.main()

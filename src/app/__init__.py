@@ -961,6 +961,112 @@ def create_app():
         )
         return redirect(url_for("imported_conversations"))
 
+    @app.post("/imported/delete-selected")
+    def delete_selected_imported_confirm():
+        raw_ids = request.form.getlist("conversation_ids")
+        ids: list[int] = [int(r) for r in raw_ids if r.isdigit()]
+        if not ids:
+            session["export_error"] = "No conversations selected."
+            return redirect(url_for("imported_conversations"))
+
+        conversations = ImportedConversation.query.filter(ImportedConversation.id.in_(ids)).all()
+        if not conversations:
+            session["export_error"] = "No conversations selected."
+            return redirect(url_for("imported_conversations"))
+
+        from ..intelligence.store import (
+            default_digest_store_path,
+            default_distillation_store_path,
+            default_summary_store_path,
+            default_topic_store_path,
+            list_digests_for_conversation,
+            list_distillations_for_conversation,
+            list_summaries_for_conversation,
+            list_topic_scans_for_conversation,
+        )
+        from ..intelligence.continuity.store import (
+            default_continuity_store_path,
+            list_artifacts_for_conversation,
+        )
+
+        db_path = _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"])
+        rows = []
+        for conv in conversations:
+            sid = f"imported_conversation:{conv.id}"
+            rows.append({
+                "id": conv.id,
+                "title": conv.title or "(untitled)",
+                "provider": conv.source,
+                "created_at_unix": conv.created_at_unix,
+                "summary_count": len(list_summaries_for_conversation(default_summary_store_path(db_path), sid)),
+                "topic_scan_count": len(list_topic_scans_for_conversation(default_topic_store_path(db_path), sid)),
+                "digest_count": len(list_digests_for_conversation(default_digest_store_path(db_path), sid)),
+                "distillation_count": len(list_distillations_for_conversation(default_distillation_store_path(db_path), sid)),
+                "continuity_count": len(list_artifacts_for_conversation(default_continuity_store_path(db_path), sid, limit=None)),
+            })
+
+        return render_template("imported_bulk_delete_confirm.html", rows=rows, ids=ids)
+
+    @app.post("/imported/delete-selected/execute")
+    def delete_selected_imported_execute():
+        raw_ids = request.form.getlist("conversation_ids")
+        ids: list[int] = [int(r) for r in raw_ids if r.isdigit()]
+        if not ids:
+            session["export_error"] = "No conversations selected."
+            return redirect(url_for("imported_conversations"))
+
+        from ..intelligence.store import (
+            default_digest_store_path,
+            default_distillation_store_path,
+            default_summary_store_path,
+            default_topic_store_path,
+            delete_digests_for_conversation,
+            delete_distillations_for_conversation,
+            delete_summaries_for_conversation,
+            delete_topic_scans_for_conversation,
+        )
+        from ..intelligence.continuity.store import (
+            default_continuity_store_path,
+            delete_artifacts_for_conversation,
+        )
+        from ..retrieval.fts import remove_conversation_from_fts
+
+        db_path = _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"])
+        deleted_titles: list[str] = []
+        failed_titles: list[str] = []
+
+        for conv_id in ids:
+            conv = ImportedConversation.query.get(conv_id)
+            if conv is None:
+                continue
+            sid = f"imported_conversation:{conv.id}"
+            title = conv.title or "(untitled)"
+            try:
+                delete_summaries_for_conversation(default_summary_store_path(db_path), sid)
+                delete_topic_scans_for_conversation(default_topic_store_path(db_path), sid)
+                delete_digests_for_conversation(default_digest_store_path(db_path), sid)
+                delete_distillations_for_conversation(default_distillation_store_path(db_path), sid)
+                delete_artifacts_for_conversation(default_continuity_store_path(db_path), sid)
+                db.session.delete(conv)
+                db.session.commit()
+                try:
+                    remove_conversation_from_fts(db_path, conv_id)
+                except Exception:
+                    pass
+                deleted_titles.append(title)
+            except Exception:
+                db.session.rollback()
+                failed_titles.append(title)
+
+        parts = []
+        if deleted_titles:
+            n = len(deleted_titles)
+            parts.append(f"Deleted {n} conversation{'s' if n != 1 else ''}.")
+        if failed_titles:
+            parts.append(f"Failed: {', '.join(failed_titles)}.")
+        session["export_notice"] = " ".join(parts) if parts else "No conversations deleted."
+        return redirect(url_for("imported_conversations"))
+
     @app.post("/memory/<int:memory_id>/delete")
     def delete_memory(memory_id: int):
         entry = MemoryEntry.query.get_or_404(memory_id)

@@ -67,6 +67,10 @@
           <button type="submit" class="distill-controls__submit" id="export-btn" disabled>
             Export selected
           </button>
+          <button type="submit" class="distill-controls__submit distill-controls__submit--danger"
+                  id="delete-btn" formaction="/imported/delete-selected" disabled>
+            Delete selected
+          </button>
         </div>
       </div>
 
@@ -138,6 +142,8 @@
         function update() {
           var n = document.querySelectorAll('.export-checkbox:checked').length;
           btn.disabled = n === 0;
+          var dbtn = document.getElementById('delete-btn');
+          if (dbtn) dbtn.disabled = n === 0;
           count.textContent = n > 0 ? n + ' selected' : '';
         }
 

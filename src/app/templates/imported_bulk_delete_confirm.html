@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% block title %}Delete {{ rows|length }} conversation{% if rows|length != 1 %}s{% endif %} · SoulPrint{% endblock %}
+{% block page_title %}Delete conversations{% endblock %}
+{% block page_desc %}review what will be removed{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div class="back-links" aria-label="Back navigation">
+      <a class="back-link" href="/imported">Back to imported conversations</a>
+    </div>
+    <p class="page-eyebrow">Bulk cascade delete</p>
+    <p class="page-summary" style="color: var(--t1);">
+      {{ rows|length }} conversation{% if rows|length != 1 %}s{% endif %} selected
+    </p>
+  </section>
+
+  <section style="margin-bottom: 2rem;">
+    <p style="color: var(--t2); font-size: 0.9rem; line-height: 1.6;">
+      All messages and derived artifacts for the selected conversations will be permanently removed.
+      This action cannot be undone.
+    </p>
+  </section>
+
+  <div style="border-top: 1px solid var(--line); margin-bottom: 2rem;">
+    {% for row in rows %}
+      <div style="padding: 1rem 0; border-bottom: 1px solid var(--line);">
+        <p style="color: var(--t1); font-family: var(--font-body); font-size: 0.95rem; margin: 0 0 0.4rem 0;">
+          {{ row.title }}
+        </p>
+        <p class="metadata-line" style="margin-bottom: 0.4rem;">
+          <span style="
+            display: inline-block;
+            padding: 1px 7px;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 0.75em;
+            background: var(--lane-{{ row.provider }}, var(--bg-light));
+            color: var(--bg-darkest);
+          ">{{ row.provider }}</span>
+          <span style="font-family: var(--font-mono); font-size: 0.8em; color: var(--t3); margin-left: 0.5rem;">
+            {% if row.created_at_unix %}{{ (row.created_at_unix | int) | string }}{% else %}—{% endif %}
+          </span>
+        </p>
+        <p class="metadata-line" style="font-family: var(--font-mono); font-size: 0.8em; color: var(--t3);">
+          Summaries: {{ row.summary_count }} ·
+          Topic scans: {{ row.topic_scan_count }} ·
+          Digests: {{ row.digest_count }} ·
+          Distillations: {{ row.distillation_count }} ·
+          Continuity: {{ row.continuity_count }}
+        </p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <form method="post" action="/imported/delete-selected/execute">
+    {% for row in rows %}
+      <input type="hidden" name="conversation_ids" value="{{ row.id }}">
+    {% endfor %}
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+      <button
+        type="submit"
+        style="
+          background: var(--accent);
+          color: var(--t1);
+          border: none;
+          padding: 0.6rem 1.4rem;
+          font-family: var(--font-body);
+          font-size: 0.9rem;
+          cursor: pointer;
+        "
+      >Delete {{ rows|length }} conversation{% if rows|length != 1 %}s{% endif %}</button>
+      <a
+        href="/imported"
+        style="color: rgba(244,238,229,0.62); font-size: 0.9rem; text-decoration: none;"
+      >Cancel</a>
+    </div>
+  </form>
+{% endblock %}
