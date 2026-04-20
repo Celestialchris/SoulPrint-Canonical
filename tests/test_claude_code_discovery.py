@@ -182,6 +182,14 @@ class DiscoverSessionsTest(unittest.TestCase):
         self.assertEqual(proj_b[1].session_id, sid_b1)
 
 
+class NormalizeProjectsPathTest(unittest.TestCase):
+    def test_rejects_traversal_segments(self):
+        from src.importers.claude_code_discovery import normalize_projects_path
+        home = Path.home()
+        with self.assertRaises(ValueError):
+            normalize_projects_path(str(home / "valid" / ".." / ".." / "etc"))
+
+
 class ImportSelectedSessionsTest(unittest.TestCase):
     def setUp(self):
         self.tmpdir = make_test_temp_dir(self, "import-sel")
