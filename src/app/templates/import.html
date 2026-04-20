@@ -2,7 +2,7 @@
 
 {% block title %}Import · SoulPrint{% endblock %}
 {% block page_title %}Bring conversations home{% endblock %}
-{% block page_desc %}ChatGPT .zip, Claude .json, or Gemini export{% endblock %}
+{% block page_desc %}ChatGPT .zip, Claude .json, Claude Code .jsonl, or Gemini export{% endblock %}
 
 {% block content %}
   {% if result %}
@@ -58,10 +58,11 @@
         <div class="format-chip-row">
           <span class="format-chip format-chip--chatgpt">ChatGPT .zip</span>
           <span class="format-chip format-chip--claude">Claude .json</span>
+          <span class="format-chip format-chip--claude-code">Claude Code .jsonl</span>
           <span class="format-chip format-chip--gemini">Gemini .json</span>
         </div>
         <input id="import-export-file" name="export_file" type="file"
-               accept="application/json,.json,.zip" required class="dropzone__input">
+               accept="application/json,.json,.jsonl,.zip" required class="dropzone__input">
       </label>
       <button type="submit" class="cta-primary">Import selected file</button>
     </form>
