@@ -33,10 +33,10 @@ def default_claude_projects_dir() -> Path:
 
 
 def normalize_projects_path(raw: str) -> Path:
-    """Resolve a user-supplied path, constrained to under Path.home()."""
-    home = Path.home().resolve()
+    """Resolve a user-supplied path, constrained to under ~/.claude/projects."""
+    base_dir = default_claude_projects_dir().resolve()
     candidate = Path(raw).expanduser().resolve()
-    candidate.relative_to(home)  # raises ValueError if not under home
+    candidate.relative_to(base_dir)  # raises ValueError if not under Claude projects root
     return candidate
 
 
