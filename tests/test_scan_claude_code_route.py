@@ -153,11 +153,18 @@ class ScanClaudeCodePostTest(unittest.TestCase):
         self.assertIn("No sessions selected", body)
 
     def test_custom_path_preserved_through_post(self):
+        import shutil
+        import uuid
+        from pathlib import Path
         from src.app.models import ImportedConversation
 
+        # Must be under Path.home() so the handler's relative_to(home) check passes
+        # on all CI platforms (Windows CI tempdir may be on a different drive).
+        custom_base = Path.home() / ".soulprint-tests" / uuid.uuid4().hex
+        custom_base.mkdir(parents=True)
+        self.addCleanup(shutil.rmtree, custom_base, True)
+
         sid = "cccccccc-0000-0000-0000-000000000003"
-        custom_base = self.tmpdir / "custom"
-        custom_base.mkdir()
         info = _build_fake_projects(custom_base, {"C--proj-custom": [sid]})
         projects_dir = info["projects_dir"]
 
