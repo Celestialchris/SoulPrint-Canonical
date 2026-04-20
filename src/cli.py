@@ -108,12 +108,30 @@ def _cmd_info(args: argparse.Namespace) -> None:
 
 
 def _cmd_mcp_config(_args: argparse.Namespace) -> None:
-    db_path = str(_default_db().resolve())
+    import shutil
+
+    # P1: honor SOULPRINT_DB, matching src/mcp_server.py precedence.
+    env_db = os.environ.get("SOULPRINT_DB")
+    if env_db:
+        db_path = str(Path(env_db).resolve())
+    else:
+        db_path = str(_default_db().resolve())
+
+    # P2: prefer the installed soulprint-mcp entry point so the pasted config
+    # does not depend on whichever `python` happens to be first on PATH.
+    mcp_cmd = shutil.which("soulprint-mcp")
+    if mcp_cmd:
+        command = mcp_cmd
+        cmd_args: list[str] = []
+    else:
+        command = sys.executable
+        cmd_args = ["-m", "src.mcp_server"]
+
     obj = {
         "mcpServers": {
             "soulprint": {
-                "command": "python",
-                "args": ["-m", "src.mcp_server"],
+                "command": command,
+                "args": cmd_args,
                 "env": {"SOULPRINT_DB": db_path},
             }
         }

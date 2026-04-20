@@ -146,6 +146,21 @@ class CLIMcpConfigTest(unittest.TestCase):
         db_val = obj["mcpServers"]["soulprint"]["env"]["SOULPRINT_DB"]
         self.assertTrue(Path(db_val).is_absolute(), f"SOULPRINT_DB is not absolute: {db_val}")
         self.assertIn("soulprint.db", db_val)
+        command = obj["mcpServers"]["soulprint"]["command"]
+        self.assertTrue(os.path.isabs(command), f"command is not absolute: {command!r}")
+        self.assertNotEqual(command, "python")
+
+    def test_mcp_config_honors_soulprint_db_env(self) -> None:
+        from src.cli import main
+        custom_path = str(Path.cwd() / "custom_test_soulprint.db")
+        expected = str(Path(custom_path).resolve())
+        buf = io.StringIO()
+        with patch.dict(os.environ, {"SOULPRINT_DB": custom_path}):
+            with patch("sys.stdout", buf):
+                main(["mcp-config"])
+        obj = json.loads(buf.getvalue())
+        db_val = obj["mcpServers"]["soulprint"]["env"]["SOULPRINT_DB"]
+        self.assertEqual(db_val, expected)
 
 
 class CLIServeDispatchTest(unittest.TestCase):
