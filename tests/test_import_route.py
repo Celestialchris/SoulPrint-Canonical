@@ -40,7 +40,7 @@ class ImportRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("Choose an export JSON file before importing.", html)
+        self.assertIn("Choose an export file before importing.", html)
 
     def test_valid_supported_fixture_imports_successfully(self):
         fixture_bytes = Path("sample_data/chatgpt.json").read_bytes()

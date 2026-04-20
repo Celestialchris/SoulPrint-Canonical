@@ -803,11 +803,17 @@ def create_app():
 
             upload = request.files.get("export_file")
             if upload is None or upload.filename == "":
-                error_message = "Choose an export JSON file before importing."
+                error_message = "Choose an export file before importing."
             else:
                 temp_path: Path | None = None
                 try:
-                    suffix = ".zip" if (upload.filename and upload.filename.lower().endswith(".zip")) else ".json"
+                    filename_lower = (upload.filename or "").lower()
+                    if filename_lower.endswith(".zip"):
+                        suffix = ".zip"
+                    elif filename_lower.endswith(".jsonl"):
+                        suffix = ".jsonl"
+                    else:
+                        suffix = ".json"
                     with tempfile.NamedTemporaryFile(
                         mode="wb",
                         suffix=suffix,
@@ -844,7 +850,7 @@ def create_app():
                     }
                 except ImportProviderDetectionError:
                     error_message = (
-                        "We could not recognize this export format. Supported imports are ChatGPT, Claude, and Gemini conversation exports."
+                        "We could not recognize this export format. Supported imports are ChatGPT, Claude, Claude Code, Gemini, and Grok conversation exports."
                     )
                 except UnsupportedImportFormatError as exc:
                     error_message = f"This export format is not supported yet: {exc}"

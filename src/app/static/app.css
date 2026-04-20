@@ -1093,9 +1093,10 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   line-height: 1;
   background: transparent;
 }
-.format-chip--chatgpt { border: 1px solid var(--lane-chatgpt); color: var(--lane-chatgpt); }
-.format-chip--claude  { border: 1px solid var(--lane-claude);  color: var(--lane-claude); }
-.format-chip--gemini  { border: 1px solid var(--lane-gemini);  color: var(--lane-gemini); }
+.format-chip--chatgpt    { border: 1px solid var(--lane-chatgpt); color: var(--lane-chatgpt); }
+.format-chip--claude     { border: 1px solid var(--lane-claude);  color: var(--lane-claude); }
+.format-chip--claude-code { border: 1px solid var(--lane-claude);  color: var(--lane-claude); }
+.format-chip--gemini     { border: 1px solid var(--lane-gemini);  color: var(--lane-gemini); }
 
 .cta-primary {
   display: block;

@@ -13,9 +13,11 @@ from typing import Any, Callable
 
 from .chatgpt import ChatGPTImporter, DEFAULT_TITLE as CHATGPT_DEFAULT_TITLE, looks_like_chatgpt_export
 from .claude import ClaudeImporter, DEFAULT_TITLE as CLAUDE_DEFAULT_TITLE, looks_like_claude_export
+from .claude_code import ClaudeCodeImporter, looks_like_claude_code_export
 from .contracts import (
     PROVIDER_CHATGPT,
     PROVIDER_CLAUDE,
+    PROVIDER_CLAUDE_CODE,
     PROVIDER_GEMINI,
     PROVIDER_GROK,
     ConversationImporter,
@@ -73,6 +75,11 @@ _PROVIDER_SPECS: dict[str, ImportProviderSpec] = {
         importer=GrokImporter(),
         detector=looks_like_grok_export,
     ),
+    PROVIDER_CLAUDE_CODE: ImportProviderSpec(
+        provider_id=PROVIDER_CLAUDE_CODE,
+        importer=ClaudeCodeImporter(),
+        detector=looks_like_claude_code_export,
+    ),
 }
 
 
@@ -93,6 +100,9 @@ def parse_import_file(
 
     if path.suffix.lower() == ".zip":
         return _parse_zip_import(path, provider_hint=provider_hint)
+
+    if path.suffix.lower() == ".jsonl":
+        return _parse_jsonl_import(path, provider_hint=provider_hint)
 
     payload = _load_json_payload(path)
     spec = _resolve_provider_spec(payload, provider_hint=provider_hint)
@@ -119,6 +129,35 @@ def _load_json_payload(path: str | Path) -> Any:
             return json.load(handle)
     except JSONDecodeError as exc:
         raise MalformedImportFileError(f"Import file is not valid JSON: {exc}") from exc
+
+
+def _parse_jsonl_import(
+    path: Path,
+    *,
+    provider_hint: str | None = None,
+) -> ImportParseResult:
+    """Load and parse a JSONL provider export file."""
+    try:
+        raw_bytes = path.read_bytes()
+    except OSError as exc:
+        raise MalformedImportFileError(f"Cannot read JSONL file: {exc}") from exc
+
+    spec = _resolve_provider_spec(raw_bytes, provider_hint=provider_hint)
+
+    try:
+        conversations = spec.importer.parse_payload(raw_bytes)
+    except UnsupportedImportFormatError:
+        raise
+    except ValueError as exc:
+        raise MalformedImportFileError(
+            f"{spec.provider_id} import payload is malformed or unsupported: {exc}"
+        ) from exc
+
+    return ImportParseResult(
+        provider_id=spec.provider_id,
+        conversations=conversations,
+        warnings=_collect_import_warnings(spec.provider_id, conversations),
+    )
 
 
 def _parse_zip_import(

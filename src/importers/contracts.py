@@ -15,12 +15,14 @@ PROVIDER_CHATGPT = "chatgpt"
 PROVIDER_CLAUDE = "claude"
 PROVIDER_GEMINI = "gemini"
 PROVIDER_GROK = "grok"
+PROVIDER_CLAUDE_CODE = "claude_code"
 SUPPORTED_IMPORT_PROVIDERS = frozenset(
     {
         PROVIDER_CHATGPT,
         PROVIDER_CLAUDE,
         PROVIDER_GEMINI,
         PROVIDER_GROK,
+        PROVIDER_CLAUDE_CODE,
     }
 )
 
