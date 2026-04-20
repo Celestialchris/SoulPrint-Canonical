@@ -38,7 +38,7 @@ build = [
 ]
 
 [project.scripts]
-soulprint = "src.main:main"
+soulprint = "src.cli:main"
 soulprint-mcp = "src.mcp_server:main"
 
 [tool.setuptools]

@@ -1,0 +1,189 @@
+from __future__ import annotations
+
+import io
+import json
+import os
+import sqlite3
+import sys
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from tests.temp_helpers import make_test_temp_dir
+
+
+_CREATE_TABLES = """
+CREATE TABLE imported_conversation (
+    id INTEGER PRIMARY KEY,
+    source TEXT,
+    created_at_unix REAL
+);
+CREATE TABLE imported_message (
+    id INTEGER PRIMARY KEY,
+    conversation_id INTEGER
+);
+CREATE TABLE memory_entry (
+    id INTEGER PRIMARY KEY
+);
+"""
+
+
+def _make_db(path: Path) -> None:
+    conn = sqlite3.connect(str(path))
+    try:
+        conn.executescript(_CREATE_TABLES)
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _seed_db(path: Path, conversations: list[dict], messages: int = 0, notes: int = 0) -> None:
+    _make_db(path)
+    conn = sqlite3.connect(str(path))
+    try:
+        for c in conversations:
+            conn.execute(
+                "INSERT INTO imported_conversation (source, created_at_unix) VALUES (?, ?)",
+                (c["source"], c.get("ts")),
+            )
+        for i in range(messages):
+            conn.execute("INSERT INTO imported_message (conversation_id) VALUES (?)", (i + 1,))
+        for _ in range(notes):
+            conn.execute("INSERT INTO memory_entry DEFAULT VALUES")
+        conn.commit()
+    finally:
+        conn.close()
+
+
+class CLIInfoTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmpdir = make_test_temp_dir(self, "cli-info")
+        self.db_path = str(self.tmpdir / "test.db")
+
+    def _run_info(self, extra_args: list[str] | None = None) -> str:
+        from src.cli import main
+        args = ["info", "--db", self.db_path] + (extra_args or [])
+        buf = io.StringIO()
+        with patch("sys.stdout", buf):
+            main(args)
+        return buf.getvalue()
+
+    def test_info_fresh_db_prints_zeros(self) -> None:
+        _make_db(Path(self.db_path))
+        out = self._run_info()
+        self.assertIn("Conversations:", out)
+        self.assertIn("0", out)
+        self.assertIn("Date range: none", out)
+
+    def test_info_with_data(self) -> None:
+        _seed_db(
+            Path(self.db_path),
+            conversations=[
+                {"source": "chatgpt", "ts": 1_700_000_000.0},
+                {"source": "claude", "ts": 1_710_000_000.0},
+            ],
+            messages=3,
+            notes=1,
+        )
+        out = self._run_info()
+        self.assertIn("2", out)   # conversation count
+        self.assertIn("3", out)   # message count
+        self.assertIn("1", out)   # note count
+        self.assertIn("chatgpt", out)
+        self.assertIn("claude", out)
+
+    def test_info_json_output(self) -> None:
+        _seed_db(
+            Path(self.db_path),
+            conversations=[{"source": "chatgpt", "ts": 1_700_000_000.0}],
+            messages=2,
+            notes=0,
+        )
+        out = self._run_info(["--json"])
+        obj = json.loads(out)
+        self.assertIn("conversations", obj)
+        self.assertIn("messages", obj)
+        self.assertIn("notes", obj)
+        self.assertIn("providers", obj)
+        self.assertIn("date_range", obj)
+        self.assertIn("db_size_bytes", obj)
+        self.assertIn("intelligence", obj)
+        self.assertEqual(obj["conversations"], 1)
+        self.assertEqual(obj["messages"], 2)
+        self.assertIn("min", obj["date_range"])
+        self.assertIn("max", obj["date_range"])
+
+    def test_info_missing_db_exits_nonzero(self) -> None:
+        from src.cli import main
+        missing = str(self.tmpdir / "nonexistent.db")
+        err_buf = io.StringIO()
+        with patch("sys.stderr", err_buf):
+            with self.assertRaises(SystemExit) as cm:
+                main(["info", "--db", missing])
+        self.assertEqual(cm.exception.code, 1)
+        self.assertIn("Database not found", err_buf.getvalue())
+
+    def test_info_omits_zero_providers(self) -> None:
+        _seed_db(
+            Path(self.db_path),
+            conversations=[{"source": "chatgpt", "ts": 1_700_000_000.0}],
+        )
+        out = self._run_info()
+        self.assertIn("chatgpt", out)
+        self.assertNotIn("claude", out)
+        self.assertNotIn("gemini", out)
+        self.assertNotIn("grok", out)
+        self.assertNotIn("claude_code", out)
+
+
+class CLIMcpConfigTest(unittest.TestCase):
+    def test_mcp_config_prints_json(self) -> None:
+        from src.cli import main
+        buf = io.StringIO()
+        with patch("sys.stdout", buf):
+            main(["mcp-config"])
+        obj = json.loads(buf.getvalue())
+        db_val = obj["mcpServers"]["soulprint"]["env"]["SOULPRINT_DB"]
+        self.assertTrue(Path(db_val).is_absolute(), f"SOULPRINT_DB is not absolute: {db_val}")
+        self.assertIn("soulprint.db", db_val)
+
+
+class CLIServeDispatchTest(unittest.TestCase):
+    def test_bare_soulprint_invokes_serve_handler(self) -> None:
+        from src.cli import main
+        with patch("src.main.main") as mock_run:
+            main([])
+        mock_run.assert_called_once()
+
+    def test_serve_flags_bridge_to_env(self) -> None:
+        from src.cli import main
+        saved = {
+            "SOULPRINT_PORT": os.environ.get("SOULPRINT_PORT"),
+            "SOULPRINT_HOST": os.environ.get("SOULPRINT_HOST"),
+            "SOULPRINT_OPEN_BROWSER": os.environ.get("SOULPRINT_OPEN_BROWSER"),
+        }
+        try:
+            with patch("src.main.main"):
+                main(["serve", "--port", "6000", "--host", "0.0.0.0", "--no-browser"])
+            self.assertEqual(os.environ["SOULPRINT_PORT"], "6000")
+            self.assertEqual(os.environ["SOULPRINT_HOST"], "0.0.0.0")
+            self.assertEqual(os.environ["SOULPRINT_OPEN_BROWSER"], "0")
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_help_lists_subcommands(self) -> None:
+        from src.cli import main
+        buf = io.StringIO()
+        with patch("sys.stdout", buf):
+            with self.assertRaises(SystemExit):
+                main(["--help"])
+        out = buf.getvalue()
+        self.assertIn("serve", out)
+        self.assertIn("info", out)
+        self.assertIn("mcp-config", out)
+
+
