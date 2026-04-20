@@ -189,6 +189,16 @@ class NormalizeProjectsPathTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             normalize_projects_path(str(home / "valid" / ".." / ".." / "etc"))
 
+    def test_allows_safe_parent_segments_under_home(self):
+        from src.importers.claude_code_discovery import normalize_projects_path
+        result = normalize_projects_path("projects/../other")
+        self.assertEqual(result, (Path.home() / "other").resolve())
+
+    def test_rejects_parent_segments_that_escape_home(self):
+        from src.importers.claude_code_discovery import normalize_projects_path
+        with self.assertRaises(ValueError):
+            normalize_projects_path("../../etc")
+
 
 class ImportSelectedSessionsTest(unittest.TestCase):
     def setUp(self):

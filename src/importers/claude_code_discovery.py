@@ -36,20 +36,22 @@ def default_claude_projects_dir() -> Path:
 def normalize_projects_path(raw: str) -> Path:
     """Resolve a user-supplied path, constrained to under Path.home().
 
-    Validates the raw string before any filesystem operation. Rejects
-    traversal segments and absolute paths outside home at the string
-    level, then uses resolve() to finalize and re-checks via relative_to
-    as a defense-in-depth measure.
+    Validates the raw string before any filesystem operation:
+    1. Applies expanduser at string level (os.path, not Path — no filesystem call).
+    2. For absolute paths: resolves directly (catches /etc/passwd via relative_to).
+    3. For relative paths: anchors to home before resolve (composition with trusted root).
+    4. Final relative_to(home) as defense-in-depth for both branches.
     """
-    # String-level validation (pre-filesystem) to satisfy taint analysis.
     expanded_str = os.path.expanduser(raw)
-    # Reject explicit traversal segments before Path() touches the filesystem.
-    if ".." in Path(expanded_str).parts:
-        raise ValueError("Path traversal segments not allowed")
-
     home = Path.home().resolve()
-    candidate = Path(expanded_str).resolve()
-    # Defense-in-depth: validator still runs even if string check misses edge case.
+    p = Path(expanded_str)
+    if p.is_absolute():
+        # Absolute paths (including those from ~ expansion) resolve directly.
+        candidate = p.resolve()
+    else:
+        # Anchor relative paths to home before resolve — composition with trusted root.
+        candidate = (home / expanded_str).resolve()
+    # Defense-in-depth: raises ValueError if candidate is outside home.
     candidate.relative_to(home)
     return candidate
 
