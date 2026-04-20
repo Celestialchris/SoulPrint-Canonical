@@ -11,6 +11,7 @@ without changing the current schema or query shape.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -69,6 +70,7 @@ def persist_normalized_conversations(
             title=conversation.title,
             created_at_unix=conversation.created_at,
             updated_at_unix=conversation.updated_at,
+            source_metadata_json=json.dumps(conversation.source_metadata) if conversation.source_metadata else None,
         )
         db.session.add(db_conversation)
         db.session.flush()

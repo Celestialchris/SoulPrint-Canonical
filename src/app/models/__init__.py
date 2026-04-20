@@ -28,6 +28,7 @@ class ImportedConversation(db.Model):
         server_default="0",
         index=True,
     )
+    source_metadata_json = db.Column(db.Text, nullable=True)
 
     messages = db.relationship(
         "ImportedMessage",
