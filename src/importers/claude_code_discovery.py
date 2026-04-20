@@ -45,8 +45,11 @@ def normalize_projects_path(raw: str) -> Path:
         fullpath = os.path.realpath(expanded)
     else:
         fullpath = os.path.realpath(os.path.join(home, expanded))
-    # CodeQL-recognized sanitizer: realpath + startswith
-    if not (fullpath.startswith(home + os.sep) or fullpath == home):
+    # CodeQL-recognized sanitizer: realpath + startswith.
+    # Strip any trailing sep from home before appending one, so that a root
+    # home ("/", "C:\\") doesn't produce a doubled separator ("//", "C:\\\\").
+    home_prefix = home.rstrip(os.sep) + os.sep
+    if not (fullpath.startswith(home_prefix) or fullpath == home):
         raise ValueError("Path must be under home directory")
     return Path(fullpath)
 
