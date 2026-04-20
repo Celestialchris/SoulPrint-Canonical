@@ -1713,4 +1713,85 @@ def create_app():
             handoff_briefing=handoff_briefing,
         )
 
+    @app.get("/imported/scan-claude-code")
+    def scan_claude_code():
+        from ..importers.claude_code_discovery import (
+            default_claude_projects_dir,
+            discover_sessions,
+            normalize_projects_path,
+        )
+        error_message = session.pop("scan_error", None)
+        raw_path = request.args.get("path", "").strip()
+        if raw_path:
+            home = Path.home()
+            try:
+                candidate = normalize_projects_path(raw_path)
+                candidate.relative_to(home.resolve())
+            except (ValueError, OSError):
+                session["scan_error"] = "Projects path must be under your home directory."
+                return redirect(url_for("scan_claude_code"))
+            projects_dir = candidate
+        else:
+            projects_dir = default_claude_projects_dir()
+
+        discovered = discover_sessions(projects_dir)
+        projects: dict[str, dict] = {}
+        for s in discovered:
+            key = s.project_dir_name
+            if key not in projects:
+                projects[key] = {
+                    "dir_name": s.project_dir_name,
+                    "path_display": s.project_path or s.project_dir_name,
+                    "sessions": [],
+                }
+            projects[key]["sessions"].append(s)
+
+        return render_template(
+            "scan_claude_code.html",
+            projects=list(projects.values()),
+            projects_dir=str(projects_dir),
+            session_count=len(discovered),
+            error_message=error_message,
+        )
+
+    @app.post("/imported/scan-claude-code")
+    def scan_claude_code_import():
+        from ..importers.claude_code_discovery import (
+            default_claude_projects_dir,
+            discover_sessions,
+            import_selected_sessions,
+        )
+        selected_ids = set(request.form.getlist("session_ids"))
+        if not selected_ids:
+            session["scan_error"] = "No sessions selected."
+            return redirect(url_for("scan_claude_code"))
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        db_path = _sqlite_path_from_uri(sqlite_uri)
+        projects_dir = default_claude_projects_dir()
+        discovered = discover_sessions(projects_dir)
+        to_import = [s for s in discovered if s.session_id in selected_ids]
+
+        if not to_import:
+            session["scan_error"] = "Selected sessions no longer exist on disk."
+            return redirect(url_for("scan_claude_code"))
+
+        result = import_selected_sessions(to_import, db_path)
+        session["scan_result"] = {
+            "imported": result.imported,
+            "skipped_duplicate": result.skipped_duplicate,
+            "failed": [
+                {"session_id": sid, "error": msg}
+                for sid, msg in result.failed
+            ],
+        }
+        return redirect(url_for("scan_claude_code_results"))
+
+    @app.get("/imported/scan-claude-code/results")
+    def scan_claude_code_results():
+        scan_result = session.pop("scan_result", None)
+        if scan_result is None:
+            return redirect(url_for("scan_claude_code"))
+        return render_template("scan_claude_code_results.html", result=scan_result)
+
     return app
