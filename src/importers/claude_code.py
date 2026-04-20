@@ -47,8 +47,8 @@ class ClaudeCodeImporter(ConversationImporter):
 def looks_like_claude_code_export(payload: Any) -> bool:
     """Return True when payload is a Claude Code session JSONL file.
 
-    Inspects only the first non-empty line to keep detection fast.
-    Returns False immediately on any parse or type error.
+    Scans lines until a recognizable record is found, skipping malformed lines.
+    Returns False on a line that parses successfully but doesn't match the shape.
     """
     if not isinstance(payload, (bytes, bytearray)):
         return False
@@ -63,7 +63,7 @@ def looks_like_claude_code_export(payload: Any) -> bool:
         try:
             record = json.loads(line)
         except json.JSONDecodeError:
-            return False
+            continue  # malformed line — keep scanning
         if not isinstance(record, dict):
             return False
         t = record.get("type")
@@ -209,9 +209,11 @@ def _parse_claude_code_session(payload: bytes) -> list[NormalizedConversation]:
             session_id = sid
 
         seq = len(messages)
+        record_uuid = record.get("uuid")
+        source_message_id = record_uuid if record_uuid else f"{sid}:{seq}"
         messages.append(
             NormalizedMessage(
-                source_message_id=f"{sid}:{seq}",
+                source_message_id=source_message_id,
                 role=role,
                 content=text_content,
                 sequence_index=seq,

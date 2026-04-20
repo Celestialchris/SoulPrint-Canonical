@@ -37,6 +37,17 @@ class ClaudeCodeDetectorTest(unittest.TestCase):
         payload = _CLAUDE_JSON_FIXTURE.read_bytes()
         self.assertFalse(looks_like_claude_code_export(payload))
 
+    def test_detects_session_with_malformed_leading_line(self):
+        # A corrupted leading line must not prevent detection of valid records below it.
+        valid_line = json.dumps({
+            "type": "permission-mode",
+            "sessionId": _SESSION_ID,
+            "uuid": "perm-001",
+            "timestamp": "2026-04-19T10:00:00.000Z",
+        }).encode()
+        payload = b"THIS IS NOT JSON\n" + valid_line + b"\n"
+        self.assertTrue(looks_like_claude_code_export(payload))
+
     def test_rejects_invalid_utf8(self):
         self.assertFalse(looks_like_claude_code_export(b"\xff\xfe\xfd"))
 
