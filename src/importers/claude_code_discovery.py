@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -33,10 +34,25 @@ def default_claude_projects_dir() -> Path:
 
 
 def normalize_projects_path(raw: str) -> Path:
-    """Resolve a user-supplied path, constrained to under Path.home()."""
+    """Resolve a user-supplied path, constrained to under Path.home().
+
+    Validates the raw string before any filesystem operation:
+    1. Applies expanduser at string level (os.path, not Path — no filesystem call).
+    2. For absolute paths: resolves directly (catches /etc/passwd via relative_to).
+    3. For relative paths: anchors to home before resolve (composition with trusted root).
+    4. Final relative_to(home) as defense-in-depth for both branches.
+    """
+    expanded_str = os.path.expanduser(raw)
     home = Path.home().resolve()
-    candidate = Path(raw).expanduser().resolve()
-    candidate.relative_to(home)  # raises ValueError if not under home
+    p = Path(expanded_str)
+    if p.is_absolute():
+        # Absolute paths (including those from ~ expansion) resolve directly.
+        candidate = p.resolve()
+    else:
+        # Anchor relative paths to home before resolve — composition with trusted root.
+        candidate = (home / expanded_str).resolve()
+    # Defense-in-depth: raises ValueError if candidate is outside home.
+    candidate.relative_to(home)
     return candidate
 
 
