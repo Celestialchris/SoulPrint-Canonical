@@ -55,16 +55,6 @@ def normalize_projects_path(raw: str) -> Path:
 
 
 def discover_sessions(projects_dir: Path) -> list[DiscoveredSession]:
-    # Defense-in-depth sanitizer (CodeQL-recognized pattern: realpath + startswith).
-    # The actual security check runs earlier in normalize_projects_path, but CodeQL's
-    # taint model does not propagate sanitizers through function returns, so we
-    # re-validate here in the same scope as the filesystem sinks.
-    home = os.path.realpath(str(Path.home()))
-    resolved = os.path.realpath(str(projects_dir))
-    home_prefix = home.rstrip(os.sep) + os.sep
-    if not (resolved.startswith(home_prefix) or resolved == home):
-        return []
-
     if not projects_dir.exists() or not projects_dir.is_dir():
         return []
 
