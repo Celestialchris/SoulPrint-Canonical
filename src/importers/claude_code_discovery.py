@@ -36,24 +36,19 @@ def default_claude_projects_dir() -> Path:
 def normalize_projects_path(raw: str) -> Path:
     """Resolve a user-supplied path, constrained to under Path.home().
 
-    Validates the raw string before any filesystem operation:
-    1. Applies expanduser at string level (os.path, not Path — no filesystem call).
-    2. For absolute paths: resolves directly (catches /etc/passwd via relative_to).
-    3. For relative paths: anchors to home before resolve (composition with trusted root).
-    4. Final relative_to(home) as defense-in-depth for both branches.
+    Uses os.path.realpath + str.startswith — the sanitizer pattern
+    CodeQL's py/path-injection rule recognizes as stopping taint flow.
     """
-    expanded_str = os.path.expanduser(raw)
-    home = Path.home().resolve()
-    p = Path(expanded_str)
-    if p.is_absolute():
-        # Absolute paths (including those from ~ expansion) resolve directly.
-        candidate = p.resolve()
+    home = os.path.realpath(str(Path.home()))
+    expanded = os.path.expanduser(raw)
+    if os.path.isabs(expanded):
+        fullpath = os.path.realpath(expanded)
     else:
-        # Anchor relative paths to home before resolve — composition with trusted root.
-        candidate = (home / expanded_str).resolve()
-    # Defense-in-depth: raises ValueError if candidate is outside home.
-    candidate.relative_to(home)
-    return candidate
+        fullpath = os.path.realpath(os.path.join(home, expanded))
+    # CodeQL-recognized sanitizer: realpath + startswith
+    if not (fullpath.startswith(home + os.sep) or fullpath == home):
+        raise ValueError("Path must be under home directory")
+    return Path(fullpath)
 
 
 def discover_sessions(projects_dir: Path) -> list[DiscoveredSession]:
