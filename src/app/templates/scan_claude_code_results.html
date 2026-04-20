@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge %}
+
+{% block title %}Scan Results · SoulPrint{% endblock %}
+{% block page_title %}Import results{% endblock %}
+{% block page_desc %}Claude Code session scan{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div class="metadata-badges">
+      {{ badge(result.imported | length ~ " imported", "imported") }}
+      {{ badge(result.skipped_duplicate | length ~ " skipped", "neutral") }}
+      {% if result.failed %}
+        {{ badge(result.failed | length ~ " failed", "neutral") }}
+      {% endif %}
+    </div>
+  </section>
+
+  {% if result.imported %}
+    <section style="margin-bottom: 1.5rem;">
+      <h2 style="font-family: var(--font-body); font-weight: 500; font-size: 1rem; margin-bottom: 0.5rem;">
+        Imported ({{ result.imported | length }})
+      </h2>
+      <div class="container-card">
+        {% for sid in result.imported %}
+          <article class="record-card record-card--imported">
+            <p class="metadata-line" style="font-family: var(--font-mono); font-size: 0.85em;">{{ sid }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {% if result.skipped_duplicate %}
+    <section style="margin-bottom: 1.5rem;">
+      <h2 style="font-family: var(--font-body); font-weight: 500; font-size: 1rem; margin-bottom: 0.5rem; color: var(--t2);">
+        Already in archive — skipped ({{ result.skipped_duplicate | length }})
+      </h2>
+      <p class="metadata-line" style="color: var(--t3);">These sessions were already in your archive.</p>
+      <div class="container-card">
+        {% for sid in result.skipped_duplicate %}
+          <article class="record-card">
+            <p class="metadata-line" style="font-family: var(--font-mono); font-size: 0.85em; color: var(--t3);">{{ sid }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {% if result.failed %}
+    <section style="margin-bottom: 1.5rem;">
+      <h2 style="font-family: var(--font-body); font-weight: 500; font-size: 1rem; margin-bottom: 0.5rem; color: var(--t2);">
+        Failed ({{ result.failed | length }})
+      </h2>
+      <div class="container-card">
+        {% for item in result.failed %}
+          <article class="record-card">
+            <p class="metadata-line" style="font-family: var(--font-mono); font-size: 0.85em;">{{ item.session_id }}</p>
+            <p class="metadata-line" style="font-family: var(--font-mono); font-size: 0.8em; color: var(--t3);">{{ item.error }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {% if not result.imported and not result.skipped_duplicate and not result.failed %}
+    <p class="metadata-line" style="color: var(--t3);">No sessions were processed.</p>
+  {% endif %}
+
+  <div style="margin-top: 2rem;">
+    <a class="cta-primary" href="{{ url_for('imported_conversations') }}?provider=claude_code">Back to imported</a>
+  </div>
+{% endblock %}

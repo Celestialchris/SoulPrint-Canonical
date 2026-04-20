@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% block title %}Scan Claude Code · SoulPrint{% endblock %}
+{% block page_title %}Scan Claude Code sessions{% endblock %}
+{% block page_desc %}discover and import sessions from ~/.claude/projects/{% endblock %}
+
+{% block content %}
+  {% if error_message %}
+    <section class="empty-state" role="alert">
+      <h2 class="empty-state__title">Cannot import</h2>
+      <p class="empty-state__text">{{ error_message }}</p>
+    </section>
+  {% endif %}
+
+  {% if session_count == 0 %}
+    <section class="empty-state">
+      <h2 class="empty-state__title">No Claude Code sessions found</h2>
+      <p class="empty-state__text">
+        No Claude Code sessions found at <code>{{ projects_dir }}</code>.
+        If your projects directory is elsewhere, append <code>?path=…</code> to the URL.
+      </p>
+    </section>
+  {% else %}
+    <form method="post" action="{{ url_for('scan_claude_code_import') }}" id="scan-form">
+      <input type="hidden" name="projects_dir" value="{{ projects_dir }}">
+      <div class="distill-controls">
+        <div class="distill-controls__row">
+          <button type="button" id="select-all-btn">Select all</button>
+          <span class="distill-controls__count" id="selected-count"></span>
+          <button type="submit" class="distill-controls__submit" id="scan-import-btn" disabled>
+            Import selected
+          </button>
+        </div>
+      </div>
+
+      <div class="container-card">
+        {% for project in projects %}
+          <details class="record-card record-card--imported">
+            <summary class="record-card__header" style="cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.5rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" onclick="event.stopPropagation()">
+                <input type="checkbox" class="project-select-all" data-project="{{ project.dir_name }}">
+                <h2 class="record-card__title" style="margin: 0;">{{ project.path_display }}</h2>
+              </label>
+              <div class="metadata-badges">
+                {{ badge(project.sessions | length ~ " sessions", "neutral") }}
+              </div>
+            </summary>
+
+            {% for s in project.sessions %}
+              <article class="record-card" style="margin: 0.5rem 0 0 1.5rem; padding: 0.5rem 0.75rem;">
+                <label style="display: flex; align-items: flex-start; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" name="session_ids" value="{{ s.session_id }}"
+                         class="session-checkbox" data-project="{{ project.dir_name }}"
+                         aria-label="Import session {{ s.session_id[:8] }}">
+                  <div>
+                    <p class="metadata-line" style="font-family: var(--font-mono); font-size: 0.8em;">
+                      {{ s.session_id[:8] }}…
+                    </p>
+                    {% if s.summary %}
+                      <p class="metadata-line">{{ s.summary }}</p>
+                    {% endif %}
+                    <p class="metadata-line" style="color: var(--t3);">
+                      {% if s.created %}{{ s.created[:10] }}{% endif %}
+                      · {{ s.message_count_estimate }} messages est.
+                      · {{ (s.size_bytes / 1024) | round(1) }} KB
+                    </p>
+                  </div>
+                </label>
+              </article>
+            {% endfor %}
+          </details>
+        {% endfor %}
+      </div>
+    </form>
+
+    <script>
+    (function() {
+      function update() {
+        var n = document.querySelectorAll('input[name="session_ids"]:checked').length;
+        var btn = document.getElementById('scan-import-btn');
+        var count = document.getElementById('selected-count');
+        if (btn) btn.disabled = n === 0;
+        if (count) count.textContent = n > 0 ? n + ' selected' : '';
+      }
+
+      document.querySelectorAll('.project-select-all').forEach(function(projBox) {
+        projBox.addEventListener('change', function() {
+          var proj = this.dataset.project;
+          document.querySelectorAll('.session-checkbox[data-project="' + proj + '"]').forEach(function(cb) {
+            cb.checked = projBox.checked;
+          });
+          update();
+        });
+      });
+
+      var selectAllBtn = document.getElementById('select-all-btn');
+      if (selectAllBtn) {
+        var allSelected = false;
+        selectAllBtn.addEventListener('click', function() {
+          allSelected = !allSelected;
+          document.querySelectorAll('input[name="session_ids"]').forEach(function(cb) {
+            cb.checked = allSelected;
+          });
+          document.querySelectorAll('.project-select-all').forEach(function(cb) {
+            cb.checked = allSelected;
+          });
+          this.textContent = allSelected ? 'Deselect all' : 'Select all';
+          update();
+        });
+      }
+
+      document.querySelectorAll('input[name="session_ids"]').forEach(function(cb) {
+        cb.addEventListener('change', update);
+      });
+    })();
+    </script>
+  {% endif %}
+{% endblock %}
