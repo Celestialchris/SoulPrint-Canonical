@@ -23,6 +23,7 @@
     </section>
   {% else %}
     <form method="post" action="{{ url_for('scan_claude_code_import') }}" id="scan-form">
+      <input type="hidden" name="projects_dir" value="{{ projects_dir }}">
       <div class="distill-controls">
         <div class="distill-controls__row">
           <button type="button" id="select-all-btn">Select all</button>

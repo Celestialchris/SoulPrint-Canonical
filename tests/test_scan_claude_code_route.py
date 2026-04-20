@@ -152,6 +152,114 @@ class ScanClaudeCodePostTest(unittest.TestCase):
         body = response.data.decode()
         self.assertIn("No sessions selected", body)
 
+    def test_custom_path_preserved_through_post(self):
+        from src.app.models import ImportedConversation
+
+        sid = "cccccccc-0000-0000-0000-000000000003"
+        custom_base = self.tmpdir / "custom"
+        custom_base.mkdir()
+        info = _build_fake_projects(custom_base, {"C--proj-custom": [sid]})
+        projects_dir = info["projects_dir"]
+
+        # GET with custom path to see the session in the tree
+        response = self.client.get(
+            f"/imported/scan-claude-code?path={projects_dir}",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(sid[:8], response.data.decode())
+
+        # POST with session_ids + hidden projects_dir field (no mock needed -- real path)
+        resp = self.client.post(
+            "/imported/scan-claude-code",
+            data={"session_ids": [sid], "projects_dir": str(projects_dir)},
+            follow_redirects=True,
+        )
+        self.assertEqual(resp.status_code, 200)
+        with self.app.app_context():
+            row = ImportedConversation.query.filter_by(source="claude_code").first()
+            self.assertIsNotNone(row)
+
+
+class ScanClaudeCodeMigrationTest(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = make_test_temp_dir(self, "scan-migrate")
+        self.db_path = str(self.tmpdir / "test.db")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+
+    def _restore_uri(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+
+    def test_import_works_on_existing_db_without_metadata_column(self):
+        import sqlite3
+        from src.app.models import ImportedConversation
+
+        # Create old-schema DB without source_metadata_json
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("""
+            CREATE TABLE imported_conversation (
+                id INTEGER PRIMARY KEY,
+                source VARCHAR(32) NOT NULL,
+                source_conversation_id VARCHAR(128) NOT NULL,
+                title TEXT NOT NULL DEFAULT 'Untitled Conversation',
+                created_at_unix FLOAT,
+                updated_at_unix FLOAT,
+                is_archived BOOLEAN NOT NULL DEFAULT 0
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE imported_message (
+                id INTEGER PRIMARY KEY,
+                conversation_id INTEGER NOT NULL,
+                source_message_id VARCHAR(128) NOT NULL,
+                role VARCHAR(32) NOT NULL,
+                content TEXT NOT NULL,
+                sequence_index INTEGER NOT NULL,
+                created_at_unix FLOAT
+            )
+        """)
+        conn.commit()
+        conn.close()
+
+        # Verify column absent before app starts
+        conn = sqlite3.connect(self.db_path)
+        cols_before = {r[1] for r in conn.execute("PRAGMA table_info(imported_conversation)")}
+        conn.close()
+        self.assertNotIn("source_metadata_json", cols_before)
+
+        # Start app -- migration guard should add the column
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.db_path}"
+        from src.app import create_app
+        app = create_app()
+        app.config["SECRET_KEY"] = "test-secret"
+        app.config["TESTING"] = True
+        self.addCleanup(release_app_db_handles, app, drop_all=False)
+        self.addCleanup(self._restore_uri)
+
+        conn = sqlite3.connect(self.db_path)
+        cols_after = {r[1] for r in conn.execute("PRAGMA table_info(imported_conversation)")}
+        conn.close()
+        self.assertIn("source_metadata_json", cols_after)
+
+        # POST an import and verify it succeeds
+        sid = "aaaaaaaa-0000-0000-0000-000000000001"
+        info = _build_fake_projects(self.tmpdir, {"C--proj-migrate": [sid]})
+        projects_dir = info["projects_dir"]
+        client = app.test_client()
+        with patch(
+            "src.importers.claude_code_discovery.default_claude_projects_dir",
+            return_value=projects_dir,
+        ):
+            resp = client.post(
+                "/imported/scan-claude-code",
+                data={"session_ids": [sid]},
+                follow_redirects=True,
+            )
+        self.assertEqual(resp.status_code, 200)
+        with app.app_context():
+            row = ImportedConversation.query.filter_by(source="claude_code").first()
+            self.assertIsNotNone(row)
+            self.assertIsNotNone(row.source_metadata_json)
+
 
 class ScanClaudeCodeResultsGetTest(unittest.TestCase):
     def setUp(self):

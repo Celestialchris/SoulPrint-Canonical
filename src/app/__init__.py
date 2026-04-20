@@ -281,6 +281,11 @@ def create_app():
                 "ALTER TABLE imported_conversation ADD COLUMN is_archived BOOLEAN NOT NULL DEFAULT 0"
             )
             _gc.commit()
+        if "source_metadata_json" not in _cols:
+            _gc.execute(
+                "ALTER TABLE imported_conversation ADD COLUMN source_metadata_json TEXT"
+            )
+            _gc.commit()
         _gc.close()
     except Exception:
         pass
@@ -1768,7 +1773,19 @@ def create_app():
 
         sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
         db_path = _sqlite_path_from_uri(sqlite_uri)
-        projects_dir = default_claude_projects_dir()
+        raw_projects_dir = request.form.get("projects_dir", "").strip()
+        if raw_projects_dir:
+            home = Path.home()
+            try:
+                from ..importers.claude_code_discovery import normalize_projects_path
+                candidate = normalize_projects_path(raw_projects_dir)
+                candidate.relative_to(home.resolve())
+                projects_dir = candidate
+            except (ValueError, OSError):
+                session["scan_error"] = "Projects path must be under your home directory."
+                return redirect(url_for("scan_claude_code"))
+        else:
+            projects_dir = default_claude_projects_dir()
         discovered = discover_sessions(projects_dir)
         to_import = [s for s in discovered if s.session_id in selected_ids]
 
