@@ -33,7 +33,11 @@ def default_claude_projects_dir() -> Path:
 
 
 def normalize_projects_path(raw: str) -> Path:
-    return Path(raw).expanduser().resolve()
+    """Resolve a user-supplied path, constrained to under Path.home()."""
+    home = Path.home().resolve()
+    candidate = Path(raw).expanduser().resolve()
+    candidate.relative_to(home)  # raises ValueError if not under home
+    return candidate
 
 
 def discover_sessions(projects_dir: Path) -> list[DiscoveredSession]:

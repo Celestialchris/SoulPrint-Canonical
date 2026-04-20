@@ -1728,14 +1728,11 @@ def create_app():
         error_message = session.pop("scan_error", None)
         raw_path = request.args.get("path", "").strip()
         if raw_path:
-            home = Path.home()
             try:
-                candidate = normalize_projects_path(raw_path)
-                candidate.relative_to(home.resolve())
+                projects_dir = normalize_projects_path(raw_path)
             except (ValueError, OSError):
                 session["scan_error"] = "Projects path must be under your home directory."
                 return redirect(url_for("scan_claude_code"))
-            projects_dir = candidate
         else:
             projects_dir = default_claude_projects_dir()
 
