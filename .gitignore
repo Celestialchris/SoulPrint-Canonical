@@ -44,7 +44,6 @@ PRIORITIES.md
 # Dev tooling (not part of product)
 .agents/
 .codex/
-ops/
 openspec/
 
 # Dev debris (screenshot captures, scratch files, MCP caches)
