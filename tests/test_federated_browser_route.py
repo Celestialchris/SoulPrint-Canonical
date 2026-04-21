@@ -109,6 +109,38 @@ class FederatedBrowserSortTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn("Most relevant", html)
 
+    def test_sort_toggle_hrefs_url_encode_special_characters_in_keyword(self):
+        # Seed a message with literal "&" so searching "foo&bar" returns results
+        # and the sort toggle is rendered with the URL-encoded keyword.
+        with self.app.app_context():
+            conv = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="conv-ampersand",
+                title="Ampersand test",
+                created_at_unix=1700000000.0,
+                updated_at_unix=1700000000.0,
+            )
+            db.session.add(conv)
+            db.session.flush()
+            db.session.add(ImportedMessage(
+                conversation_id=conv.id,
+                source_message_id="msg-ampersand",
+                role="user",
+                content="Discussion about foo&bar compatibility.",
+                sequence_index=0,
+                created_at_unix=1700000000.0,
+            ))
+            db.session.commit()
+        rebuild_fts(self.db_path)
+
+        # Flask decodes %26 → &; keyword becomes "foo&bar".
+        # With |urlencode, sort-toggle hrefs must carry q=foo%26bar (not q=foo&amp;bar).
+        response = self.client.get("/federated?q=foo%26bar")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertEqual(html.count("q=foo%26bar"), 3)
+        self.assertNotIn("q=foo&amp;bar", html)
+
 
 class FederatedBrowserArchaeologyTest(unittest.TestCase):
     """Tests for ?mode=archaeology on /federated."""
@@ -162,3 +194,14 @@ class FederatedBrowserArchaeologyTest(unittest.TestCase):
         response = self.client.get("/federated?q=archaeology&mode=archaeology")
         html = response.get_data(as_text=True)
         self.assertNotIn("provenance-callout", html)
+
+    def test_archaeology_mode_overrides_user_sort_newest(self):
+        # sort=newest in the URL must be ignored — archaeology always forces oldest+limit=1.
+        response = self.client.get("/federated?q=archaeology&sort=newest&mode=archaeology")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        # Exactly one result card
+        self.assertEqual(html.count("archaeology-card__title"), 1)
+        # The single result is the chronologically earliest (March), not December
+        self.assertIn("March", html)
+        self.assertNotIn("December", html)
