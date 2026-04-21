@@ -210,6 +210,24 @@ class TestSearch:
         result = json.loads(soulprint_search(query="the", limit=1))
         assert len(result["results"]) <= 1
 
+    def test_sort_oldest_returns_earliest_first(self, sample_db):
+        result = json.loads(soulprint_search(query="how", sort="oldest"))
+        assert result["sort"] == "oldest"
+        results = result["results"]
+        assert len(results) >= 2
+        assert results[0]["timestamp"] < results[-1]["timestamp"]
+
+    def test_sort_newest_returns_most_recent_first(self, sample_db):
+        result = json.loads(soulprint_search(query="how", sort="newest"))
+        assert result["sort"] == "newest"
+        results = result["results"]
+        assert len(results) >= 2
+        assert results[0]["timestamp"] > results[-1]["timestamp"]
+
+    def test_invalid_sort_falls_back_to_relevance(self, sample_db):
+        result = json.loads(soulprint_search(query="SQLite", sort="banana"))
+        assert result["sort"] == "relevance"
+
 
 # ---------------------------------------------------------------------------
 # Tests: soulprint_rebuild_index
