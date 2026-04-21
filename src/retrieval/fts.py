@@ -388,64 +388,67 @@ def search_fts(
             LIMIT ?
         """
 
-    # Search imported messages
     try:
-        msg_rows = conn.execute(msg_sql, (query, limit)).fetchall()
+        # Search imported messages
+        try:
+            msg_rows = conn.execute(msg_sql, (query, limit)).fetchall()
 
-        for row in msg_rows:
-            results.append(
-                {
-                    "snippet": row["snippet"],
-                    "source_type": "imported_message",
-                    "conversation_id": row["conversation_id"],
-                    "conversation_title": row["conversation_title"],
-                    "provider": row["provider"],
-                    "message_index": int(row["message_index"])
-                    if row["message_index"]
-                    else None,
-                    "message_role": row["message_role"],
-                    "message_id": row["message_id"],
-                    "note_id": None,
-                    "timestamp": row["timestamp"],
-                    "rank": None if sort == "oldest" else row["rank"],
-                }
-            )
-    except sqlite3.OperationalError:
-        pass  # FTS table doesn't exist yet
+            for row in msg_rows:
+                results.append(
+                    {
+                        "snippet": row["snippet"],
+                        "source_type": "imported_message",
+                        "conversation_id": row["conversation_id"],
+                        "conversation_title": row["conversation_title"],
+                        "provider": row["provider"],
+                        "message_index": int(row["message_index"])
+                        if row["message_index"]
+                        else None,
+                        "message_role": row["message_role"],
+                        "message_id": row["message_id"],
+                        "note_id": None,
+                        "timestamp": row["timestamp"],
+                        "rank": None if sort == "oldest" else row["rank"],
+                    }
+                )
+        except sqlite3.OperationalError:
+            pass  # FTS table doesn't exist yet
 
-    # Search native notes
-    try:
-        note_rows = conn.execute(note_sql, (query, limit)).fetchall()
+        # Search native notes
+        try:
+            note_rows = conn.execute(note_sql, (query, limit)).fetchall()
 
-        for row in note_rows:
-            results.append(
-                {
-                    "snippet": row["snippet"],
-                    "source_type": "native_note",
-                    "conversation_id": None,
-                    "conversation_title": None,
-                    "provider": "soulprint",
-                    "message_index": None,
-                    "message_role": None,
-                    "message_id": None,
-                    "note_id": row["note_id"],
-                    "timestamp": row["timestamp"],
-                    "rank": None if sort == "oldest" else row["rank"],
-                }
-            )
-    except sqlite3.OperationalError:
-        pass
-
-    conn.close()
+            for row in note_rows:
+                results.append(
+                    {
+                        "snippet": row["snippet"],
+                        "source_type": "native_note",
+                        "conversation_id": None,
+                        "conversation_title": None,
+                        "provider": "soulprint",
+                        "message_index": None,
+                        "message_role": None,
+                        "message_id": None,
+                        "note_id": row["note_id"],
+                        "timestamp": row["timestamp"],
+                        "rank": None if sort == "oldest" else row["rank"],
+                    }
+                )
+        except sqlite3.OperationalError:
+            pass
+    finally:
+        conn.close()
 
     if sort == "newest":
         results.sort(key=lambda r: r.get("timestamp") or "", reverse=True)
     elif sort == "oldest":
-        results.sort(key=lambda r: r.get("timestamp") or "")
+        results.sort(key=lambda r: r.get("timestamp") or "9999-12-31T23:59:59Z")
     else:
         # BM25 in FTS5 returns negative scores — more negative = more relevant.
         results.sort(key=lambda r: r["rank"])
     return results[:limit]
+
+
 def _format_unix_ts(unix_ts: float | None) -> str:
     """Format a unix timestamp as ISO string, or empty string if None."""
 

@@ -333,6 +333,109 @@ class FTSSortTest(unittest.TestCase):
         for r in results:
             self.assertIsNotNone(r["rank"])
 
+    def _insert_fts_message_with_empty_timestamp(self, keyword: str) -> None:
+        """Insert directly into fts_messages with timestamp="" — simulates
+        _format_unix_ts(None) for an imported message missing created_at_unix."""
+        conn = sqlite3.connect(self.db_path)
+        try:
+            conn.execute(
+                "INSERT INTO fts_messages"
+                "(content, conversation_id, conversation_title, provider,"
+                " message_index, message_role, message_id, timestamp)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (f"{keyword} from an undated message", "conv-undated",
+                 "Undated conv", "chatgpt", "0", "user", "msg-undated", ""),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def test_oldest_sort_demotes_empty_timestamp(self):
+        # Empty-timestamp rows must sort LAST in oldest (ASC) mode.
+        # Without the sentinel fix, "" < "2024-..." causes the undated row
+        # to surface as results[0] — corrupting archaeology mode.
+        self._insert_fts_message_with_empty_timestamp("chronosort")
+        results = search_fts(self.db_path, '"chronosort"', sort="oldest")
+        self.assertGreater(len(results), 1)
+        self.assertEqual(results[-1].get("timestamp"), "")
+
+    def test_newest_sort_demotes_empty_timestamp_regression_guard(self):
+        # DESC lexicographic ordering already demotes "" last — no sentinel needed.
+        # This test MUST pass without any code change. If it fails, the DESC
+        # assumption is wrong and the sentinel fix must apply to both branches.
+        self._insert_fts_message_with_empty_timestamp("chronosort")
+        results = search_fts(self.db_path, '"chronosort"', sort="newest")
+        self.assertGreater(len(results), 1)
+        self.assertEqual(results[-1].get("timestamp"), "")
+
+    def _seed_mixed_sort_data(self):
+        """Seed March+December messages and June note with keyword 'mixedsort'."""
+        with self.app.app_context():
+            mar_conv = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="conv-mix-mar",
+                title="March mixedsort",
+                created_at_unix=1709251200.0,
+                updated_at_unix=1709251200.0,
+            )
+            db.session.add(mar_conv)
+            db.session.flush()
+            db.session.add(ImportedMessage(
+                conversation_id=mar_conv.id,
+                source_message_id="msg-mix-mar",
+                role="user",
+                content="mixedsort in March from a message.",
+                sequence_index=0,
+                created_at_unix=1709251200.0,
+            ))
+            dec_conv = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="conv-mix-dec",
+                title="December mixedsort",
+                created_at_unix=1733011200.0,
+                updated_at_unix=1733011200.0,
+            )
+            db.session.add(dec_conv)
+            db.session.flush()
+            db.session.add(ImportedMessage(
+                conversation_id=dec_conv.id,
+                source_message_id="msg-mix-dec",
+                role="user",
+                content="mixedsort in December from a message.",
+                sequence_index=0,
+                created_at_unix=1733011200.0,
+            ))
+            june_note = MemoryEntry(
+                timestamp=datetime(2024, 6, 1, tzinfo=timezone.utc),
+                role="user",
+                content="mixedsort in June from a note.",
+                tags="test",
+            )
+            db.session.add(june_note)
+            db.session.commit()
+        rebuild_fts(self.db_path)
+
+    def test_oldest_sort_interleaves_messages_and_notes(self):
+        self._seed_mixed_sort_data()
+        results = search_fts(self.db_path, '"mixedsort"', sort="oldest")
+        self.assertEqual(len(results), 3)
+        source_types = {r["source_type"] for r in results}
+        self.assertIn("imported_message", source_types)
+        self.assertIn("native_note", source_types)
+        # Chronological ASC: March (msg) → June (note) → December (msg)
+        self.assertIn("March", results[0].get("conversation_title") or "")
+        self.assertEqual(results[1]["source_type"], "native_note")
+        self.assertIn("December", results[2].get("conversation_title") or "")
+
+    def test_newest_sort_interleaves_messages_and_notes(self):
+        self._seed_mixed_sort_data()
+        results = search_fts(self.db_path, '"mixedsort"', sort="newest")
+        self.assertEqual(len(results), 3)
+        # Chronological DESC: December (msg) → June (note) → March (msg)
+        self.assertIn("December", results[0].get("conversation_title") or "")
+        self.assertEqual(results[1]["source_type"], "native_note")
+        self.assertIn("March", results[2].get("conversation_title") or "")
+
 
 class FTSQuerySanitizationTest(unittest.TestCase):
     def test_wraps_terms_in_quotes(self):

@@ -36,9 +36,9 @@
     </form>
     {% if not archaeology_mode %}
     <div class="sort-toggle" role="group" aria-label="Sort order">
-      <a href="?q={{ keyword }}&sort=relevance" {% if sort == "relevance" %}aria-current="true"{% endif %}>Most relevant</a>
-      <a href="?q={{ keyword }}&sort=newest" {% if sort == "newest" %}aria-current="true"{% endif %}>Newest first</a>
-      <a href="?q={{ keyword }}&sort=oldest" {% if sort == "oldest" %}aria-current="true"{% endif %}>Oldest first</a>
+      <a href="?q={{ keyword | urlencode }}&sort=relevance" {% if sort == "relevance" %}aria-current="true"{% endif %}>Most relevant</a>
+      <a href="?q={{ keyword | urlencode }}&sort=newest" {% if sort == "newest" %}aria-current="true"{% endif %}>Newest first</a>
+      <a href="?q={{ keyword | urlencode }}&sort=oldest" {% if sort == "oldest" %}aria-current="true"{% endif %}>Oldest first</a>
     </div>
     {% endif %}
   </section>
