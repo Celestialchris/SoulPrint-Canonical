@@ -286,6 +286,17 @@ def create_app():
                 "ALTER TABLE imported_conversation ADD COLUMN source_metadata_json TEXT"
             )
             _gc.commit()
+        if "is_starred" not in _cols:
+            _gc.execute(
+                "ALTER TABLE imported_conversation ADD COLUMN is_starred BOOLEAN NOT NULL DEFAULT 0"
+            )
+            _gc.commit()
+        _mcols = {r[1] for r in _gc.execute("PRAGMA table_info(memory_entry)")}
+        if "is_starred" not in _mcols:
+            _gc.execute(
+                "ALTER TABLE memory_entry ADD COLUMN is_starred BOOLEAN NOT NULL DEFAULT 0"
+            )
+            _gc.commit()
         _gc.close()
     except Exception:
         pass
@@ -1013,6 +1024,48 @@ def create_app():
             db.session.commit()
         session["export_notice"] = f"Restored '{conv.title or '(untitled)'}'."
         return redirect(url_for("imported_archived_conversations"))
+
+    def _safe_next(fallback_endpoint: str) -> str:
+        nxt = request.form.get("next", "")
+        if nxt.startswith("/") and not nxt.startswith("//"):
+            return nxt
+        return url_for(fallback_endpoint)
+
+    @app.post("/imported/<int:conv_id>/star")
+    def star_imported_conversation(conv_id: int):
+        conv = ImportedConversation.query.get_or_404(conv_id)
+        if not conv.is_starred:
+            conv.is_starred = True
+            db.session.commit()
+        session["export_notice"] = f"Starred '{conv.title or '(untitled)'}'."
+        return redirect(_safe_next("federated_browser"))
+
+    @app.post("/imported/<int:conv_id>/unstar")
+    def unstar_imported_conversation(conv_id: int):
+        conv = ImportedConversation.query.get_or_404(conv_id)
+        if conv.is_starred:
+            conv.is_starred = False
+            db.session.commit()
+        session["export_notice"] = f"Unstarred '{conv.title or '(untitled)'}'."
+        return redirect(_safe_next("federated_browser"))
+
+    @app.post("/memory/<int:memory_id>/star")
+    def star_memory(memory_id: int):
+        entry = MemoryEntry.query.get_or_404(memory_id)
+        if not entry.is_starred:
+            entry.is_starred = True
+            db.session.commit()
+        session["export_notice"] = "Starred note."
+        return redirect(_safe_next("chats"))
+
+    @app.post("/memory/<int:memory_id>/unstar")
+    def unstar_memory(memory_id: int):
+        entry = MemoryEntry.query.get_or_404(memory_id)
+        if entry.is_starred:
+            entry.is_starred = False
+            db.session.commit()
+        session["export_notice"] = "Unstarred note."
+        return redirect(_safe_next("chats"))
 
     @app.get("/imported/archived")
     def imported_archived_conversations():
