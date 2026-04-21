@@ -76,7 +76,7 @@ mcp = FastMCP(
         "openWorldHint": False,
     },
 )
-def soulprint_search(query: str, limit: int = 20) -> str:
+def soulprint_search(query: str, limit: int = 20, sort: str = "relevance") -> str:
     """Search across all imported conversations and native notes.
 
     Uses FTS5 full-text search with BM25 ranking. Returns snippets with
@@ -85,12 +85,19 @@ def soulprint_search(query: str, limit: int = 20) -> str:
     Args:
         query: Search keywords (e.g. "SQLite schema", "trading strategy").
         limit: Max results to return (default 20, max 100).
+        sort: Result ordering. "relevance" (default) uses BM25 ranking.
+            "newest" returns most recent messages first. "oldest" returns
+            earliest first, useful for finding the first mention of a topic
+            (archaeology idiom): pair with limit=1 to get just the earliest hit.
+            Any unrecognized value falls back to "relevance".
 
     Returns:
         JSON array of search results with snippets, provider, conversation
         title, and relevance ranking.
     """
     limit = min(max(1, limit), 100)
+    if sort not in {"relevance", "newest", "oldest"}:
+        sort = "relevance"
     db = _db_path()
 
     ensure_fts_tables(db)
@@ -98,14 +105,14 @@ def soulprint_search(query: str, limit: int = 20) -> str:
     if not safe_query:
         return json.dumps({"results": [], "message": "Empty query"})
 
-    results = search_fts(db, safe_query, limit=limit)
+    results = search_fts(db, safe_query, limit=limit, sort=sort)
 
     # Strip HTML <mark> tags for clean agent consumption
     for r in results:
         if r.get("snippet"):
             r["snippet"] = r["snippet"].replace("<mark>", "").replace("</mark>", "")
 
-    return json.dumps({"query": query, "result_count": len(results), "results": results})
+    return json.dumps({"query": query, "sort": sort, "result_count": len(results), "results": results})
 
 
 # ---------------------------------------------------------------------------
