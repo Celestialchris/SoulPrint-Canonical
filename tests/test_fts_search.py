@@ -333,6 +333,41 @@ class FTSSortTest(unittest.TestCase):
         for r in results:
             self.assertIsNotNone(r["rank"])
 
+    def _insert_fts_message_with_empty_timestamp(self, keyword: str) -> None:
+        """Insert directly into fts_messages with timestamp="" — simulates
+        _format_unix_ts(None) for an imported message missing created_at_unix."""
+        conn = sqlite3.connect(self.db_path)
+        try:
+            conn.execute(
+                "INSERT INTO fts_messages"
+                "(content, conversation_id, conversation_title, provider,"
+                " message_index, message_role, message_id, timestamp)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (f"{keyword} from an undated message", "conv-undated",
+                 "Undated conv", "chatgpt", "0", "user", "msg-undated", ""),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def test_oldest_sort_demotes_empty_timestamp(self):
+        # Empty-timestamp rows must sort LAST in oldest (ASC) mode.
+        # Without the sentinel fix, "" < "2024-..." causes the undated row
+        # to surface as results[0] — corrupting archaeology mode.
+        self._insert_fts_message_with_empty_timestamp("chronosort")
+        results = search_fts(self.db_path, '"chronosort"', sort="oldest")
+        self.assertGreater(len(results), 1)
+        self.assertEqual(results[-1].get("timestamp"), "")
+
+    def test_newest_sort_demotes_empty_timestamp_regression_guard(self):
+        # DESC lexicographic ordering already demotes "" last — no sentinel needed.
+        # This test MUST pass without any code change. If it fails, the DESC
+        # assumption is wrong and the sentinel fix must apply to both branches.
+        self._insert_fts_message_with_empty_timestamp("chronosort")
+        results = search_fts(self.db_path, '"chronosort"', sort="newest")
+        self.assertGreater(len(results), 1)
+        self.assertEqual(results[-1].get("timestamp"), "")
+
 
 class FTSQuerySanitizationTest(unittest.TestCase):
     def test_wraps_terms_in_quotes(self):
