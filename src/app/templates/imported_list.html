@@ -96,6 +96,16 @@
               Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
             </p>
             <p class="metadata-line">
+              <form method="post"
+                    action="/imported/{{ conversation.id }}/{{ 'unstar' if conversation.is_starred else 'star' }}"
+                    style="display:inline;">
+                <input type="hidden" name="next" value="/imported{% if provider %}?provider={{ provider }}{% endif %}{% if keyword %}{% if provider %}&{% else %}?{% endif %}q={{ keyword|urlencode }}{% endif %}">
+                <button type="submit"
+                        style="background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);font-size:inherit;color:{{ 'var(--accent)' if conversation.is_starred else 'var(--t3)' }};">
+                  {{ "★ Unstar" if conversation.is_starred else "☆ Star" }}
+                </button>
+              </form>
+              <span style="color: var(--t3);"> · </span>
               <button type="submit"
                       formaction="/imported/{{ conversation.id }}/archive"
                       formmethod="post"

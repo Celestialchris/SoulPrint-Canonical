@@ -7,6 +7,18 @@
 {% block page_title %}{{ display_title }}{% endblock %}
 {% block page_class %}page--explorer{% endblock %}
 
+{% block page_actions %}
+  <form method="post"
+        action="/imported/{{ conversation.id }}/{{ 'unstar' if conversation.is_starred else 'star' }}"
+        style="display:inline;">
+    <input type="hidden" name="next" value="/imported/{{ conversation.id }}/explorer">
+    <button type="submit"
+            style="background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);font-size:inherit;color:{{ 'var(--accent)' if conversation.is_starred else 'var(--t3)' }};">
+      {{ "★ Unstar" if conversation.is_starred else "☆ Star" }}
+    </button>
+  </form>
+{% endblock %}
+
 {% block content %}
   <section class="page-header">
     <div class="back-links" aria-label="Back navigation">
