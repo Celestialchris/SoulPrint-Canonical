@@ -394,6 +394,50 @@
     .empty-cta:hover {
       background: var(--accent-dim);
     }
+
+    .wrapped-origin {
+      margin: 2.5rem 0 0;
+      padding: 1.5rem 1.75rem;
+      background: var(--accent-soft, rgba(162,91,71,0.08));
+      border: 1px solid var(--accent-dim, #8E5748);
+      border-radius: 6px;
+    }
+
+    .wrapped-origin__label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent, #A25B47);
+      margin-bottom: 10px;
+    }
+
+    .wrapped-origin__date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--t3, rgba(244,238,229,0.34));
+      margin-bottom: 6px;
+    }
+
+    .wrapped-origin__title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--t1, rgba(244,238,229,0.92));
+      margin-bottom: 12px;
+    }
+
+    .wrapped-origin__link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-dim, #8E5748);
+      text-decoration: none;
+    }
+
+    .wrapped-origin__link:hover {
+      color: var(--accent, #A25B47);
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -504,6 +548,19 @@
       <p class="unfinished-clear">All caught up.</p>
       {% endif %}
     </div>
+
+    {# ---- Where it all started ---- #}
+    {% if wrapped.earliest_conversation %}
+    <div class="wrapped-origin">
+      <div class="wrapped-origin__label">Your first conversation</div>
+      <div class="wrapped-origin__date">{{ earliest_date }}</div>
+      <div class="wrapped-origin__title">{{ wrapped.earliest_conversation.title }}</div>
+      <a class="wrapped-origin__link"
+         href="/imported/{{ wrapped.earliest_conversation.id }}/explorer">
+        Open in explorer &rarr;
+      </a>
+    </div>
+    {% endif %}
 
     {# ---- Watermark ---- #}
     <div class="watermark">

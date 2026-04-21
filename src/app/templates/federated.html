@@ -42,6 +42,22 @@
       <div class="fts-stats">
         {{ fts_results|length }} result{{ 's' if fts_results|length != 1 }} for "{{ keyword }}"
       </div>
+
+      {% if callout %}
+        <div class="provenance-callout">
+          <div class="provenance-callout__header">Earliest mention in these results</div>
+          <div class="provenance-callout__meta">
+            <span class="fts-provider fts-provider--{{ callout.provider }}">{{ callout.provider }}</span>
+            <span class="provenance-callout__dates">{{ callout.absolute_date }} &middot; {{ callout.relative_date }}</span>
+          </div>
+          <div class="provenance-callout__title">{{ callout.title }}</div>
+          <div class="provenance-callout__excerpt">{{ callout.excerpt | safe }}</div>
+          {% if callout.conversation_id %}
+            <a class="fts-source-link" href="/imported/{{ callout.conversation_id }}/explorer">Open conversation &rarr;</a>
+          {% endif %}
+        </div>
+      {% endif %}
+
       <div class="container-card">
         {% for result in fts_results %}
           <article class="fts-result">

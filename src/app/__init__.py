@@ -1251,6 +1251,31 @@ def create_app():
                 logger.warning("FTS indexing failed", exc_info=True)
                 fts_results = []
 
+        archaeology_mode = request.args.get("mode") == "archaeology"
+
+        callout = None
+        if len(fts_results) > 1 and not archaeology_mode:
+            oldest = min(fts_results, key=lambda r: r.get("timestamp") or "9999-12-31T23:59:59Z")
+            ts_str = oldest.get("timestamp") or ""
+            try:
+                dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                ts_unix = dt.timestamp()
+                relative = _relative_time_from_unix(ts_unix)
+                absolute = dt.strftime("%B %d, %Y").replace(" 0", " ")
+            except (ValueError, AttributeError):
+                relative = ""
+                absolute = ts_str
+            callout = {
+                "relative_date": relative,
+                "absolute_date": absolute,
+                "provider": oldest.get("provider", ""),
+                "conversation_id": oldest.get("conversation_id", ""),
+                "title": oldest.get("conversation_title", ""),
+                "excerpt": oldest.get("snippet", ""),
+            }
+
         if fts_results:
             return render_template(
                 "federated.html",
@@ -1259,6 +1284,7 @@ def create_app():
                 fts_active=True,
                 rows=[],
                 format_timestamp=format_timestamp,
+                callout=callout,
             )
 
         # No FTS results (or no keyword) — existing browse/search behavior
@@ -1542,11 +1568,18 @@ def create_app():
         date_range_start = _format_unix_date(wrapped.date_range.get("earliest"))
         date_range_end = _format_unix_date(wrapped.date_range.get("latest"))
 
+        earliest_date = None
+        if wrapped.earliest_conversation:
+            earliest_date = _format_unix_date(
+                wrapped.earliest_conversation.get("created_at_unix")
+            )
+
         return render_template(
             "wrapped.html",
             wrapped=wrapped,
             date_range_start=date_range_start,
             date_range_end=date_range_end,
+            earliest_date=earliest_date,
         )
 
     # ------------------------------------------------------------------

@@ -27,6 +27,7 @@ class WrappedSummary:
     average_messages_per_conversation: float
     unfinished_threads: dict
     has_data: bool
+    earliest_conversation: dict | None
 
 
 def _month_key(unix_ts: float | None) -> str | None:
@@ -255,6 +256,29 @@ def build_wrapped_summary(*, sqlite_path: str) -> WrappedSummary:
     )
 
     # ------------------------------------------------------------------
+    # Earliest conversation ("Where it all started")
+    # Omitted if fewer than 2 imported conversations exist (R8).
+    # ------------------------------------------------------------------
+    earliest_conversation: dict | None = None
+    if imported_conversation_count >= 2:
+        earliest_ts = db.session.query(
+            func.min(ImportedConversation.created_at_unix)
+        ).scalar()
+        if earliest_ts is not None:
+            conv = (
+                ImportedConversation.query
+                .filter_by(created_at_unix=earliest_ts)
+                .first()
+            )
+            if conv is not None:
+                earliest_conversation = {
+                    "id": conv.id,
+                    "title": conv.title or "Untitled conversation",
+                    "created_at_unix": earliest_ts,
+                    "provider": conv.source,
+                }
+
+    # ------------------------------------------------------------------
     # Build
     # ------------------------------------------------------------------
     return WrappedSummary(
@@ -269,4 +293,5 @@ def build_wrapped_summary(*, sqlite_path: str) -> WrappedSummary:
         average_messages_per_conversation=average_messages_per_conversation,
         unfinished_threads=unfinished_threads,
         has_data=total_conversations > 0,
+        earliest_conversation=earliest_conversation,
     )
