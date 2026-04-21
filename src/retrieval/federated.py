@@ -30,6 +30,7 @@ class FederatedReadResult:
     source_metadata: dict[str, str]
     evidence_text: str | None = None
     evidence_stable_ids: list[str] | None = None
+    starred: bool = False
 
 
 def _sqlite_app(sqlite_path: str | Path) -> Flask:
@@ -143,6 +144,7 @@ def federated_search(
                         "role": row.role,
                         "tags": row.tags or "",
                     },
+                    starred=bool(row.is_starred),
                 )
                 for row in memory_rows
             ]
@@ -163,6 +165,7 @@ def federated_search(
                     evidence_stable_ids=[f"imported_conversation:{row.id}"]
                     if row.id in matched_messages_by_conversation_id
                     else None,
+                    starred=bool(row.is_starred),
                 )
                 for row in imported_rows
             )
