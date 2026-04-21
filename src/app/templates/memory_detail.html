@@ -5,6 +5,18 @@
 {% block page_title %}{{ stable_id }}{% endblock %}
 {% block page_desc %}your own note{% endblock %}
 
+{% block page_actions %}
+  <form method="post"
+        action="/memory/{{ entry.id }}/{{ 'unstar' if entry.is_starred else 'star' }}"
+        style="display:inline;">
+    <input type="hidden" name="next" value="/memory/{{ entry.id }}">
+    <button type="submit"
+            style="background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);font-size:inherit;color:{{ 'var(--accent)' if entry.is_starred else 'var(--t3)' }};">
+      {{ "★ Unstar" if entry.is_starred else "☆ Star" }}
+    </button>
+  </form>
+{% endblock %}
+
 {% block content %}
   <section class="page-header">
     <div class="back-links" aria-label="Back navigation">

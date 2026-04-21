@@ -37,6 +37,12 @@
     </form>
   </section>
 
+  {# ── Star/unstar notice ── #}
+  {% set _mem_notice = session.pop("export_notice", none) %}
+  {% if _mem_notice %}
+    <p class="metadata-line" role="status" style="margin-bottom:0.75rem;">{{ _mem_notice }}</p>
+  {% endif %}
+
   {# ── Notes list ── #}
   {% if entries %}
     <div class="notes-list">
@@ -68,6 +74,16 @@
               </span>
             {% endif %}
             <span class="note-item__time">{{ e.timestamp.strftime('%Y-%m-%d %H:%M') if e.timestamp else '—' }}</span>
+            <form method="post"
+                  action="/memory/{{ e.id }}/{{ 'unstar' if e.is_starred else 'star' }}"
+                  style="display:inline;">
+              <input type="hidden" name="next" value="/chats{% if request.args.get('tag') %}?tag={{ request.args.get('tag')|urlencode }}{% endif %}">
+              <button type="submit"
+                      style="background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);font-size:inherit;color:{{ 'var(--accent)' if e.is_starred else 'var(--t3)' }};">
+                {{ "★ Unstar" if e.is_starred else "☆ Star" }}
+              </button>
+            </form>
+            <span style="color:var(--t3);"> · </span>
             <form method="POST" action="{{ url_for('delete_memory', memory_id=e.id) }}"
                   style="display:inline" onsubmit="return confirm('Delete this note?')">
               <button type="submit" class="note-delete-btn">Delete</button>

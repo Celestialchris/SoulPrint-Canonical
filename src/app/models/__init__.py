@@ -7,6 +7,13 @@ class MemoryEntry(db.Model):
     role = db.Column(db.String(32), nullable=False)  # user / assistant / system
     content = db.Column(db.Text, nullable=False)
     tags = db.Column(db.Text, nullable=True)
+    is_starred = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default="0",
+        index=True,
+    )
 
     def __repr__(self):
         return f"<MemoryEntry {self.id} {self.timestamp} {self.role}>"
@@ -22,6 +29,13 @@ class ImportedConversation(db.Model):
     created_at_unix = db.Column(db.Float, nullable=True)
     updated_at_unix = db.Column(db.Float, nullable=True)
     is_archived = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default="0",
+        index=True,
+    )
+    is_starred = db.Column(
         db.Boolean,
         nullable=False,
         default=False,

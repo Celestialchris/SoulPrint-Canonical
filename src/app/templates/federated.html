@@ -164,6 +164,20 @@
                 {% endfor %}
               </p>
             {% endif %}
+            {% if result.source_lane == "native_memory" %}
+              {% set _star_id = result.stable_id.split(':', 1)[1] %}
+              {% set _star_url = "/memory/" ~ _star_id ~ ("/unstar" if result.starred else "/star") %}
+            {% else %}
+              {% set _star_id = result.stable_id.split(':', 1)[1] %}
+              {% set _star_url = "/imported/" ~ _star_id ~ ("/unstar" if result.starred else "/star") %}
+            {% endif %}
+            <form method="post" action="{{ _star_url }}" style="display:inline;">
+              <input type="hidden" name="next" value="/federated?q={{ keyword|urlencode }}">
+              <button type="submit"
+                      style="background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);font-size:inherit;color:{{ 'var(--accent)' if result.starred else 'var(--t3)' }};">
+                {{ "★ Unstar" if result.starred else "☆ Star" }}
+              </button>
+            </form>
             {% if row.handoff_href %}
               <a class="record-card__link" href="{{ row.handoff_href }}">Open full view</a>
             {% endif %}
