@@ -43,3 +43,7 @@ When the user corrects an approach and the correction generalizes beyond the spe
 **From:** April 20, 2026 evening (P7 Phase 1 accidental main commit, `ops/sessions/april-20-2026-4.md`)
 **Pattern:** After `git checkout -b <new-branch>`, and again immediately before any `git add`/`git commit`, run `git branch --show-current` and visually confirm the output matches the intended feature branch.
 **Why:** Claude Code ran `git checkout -b feat/p7-phase1-cli-dispatch` at session start. The commit still landed on `main`. Root cause not traced (possibly intermediate checkout dropping context, possibly rtk wrapper interaction). Adding one verification line before commit catches this class of error before the wrong-branch commit exists. Cheap check, high value.
+
+## Standalone file index
+
+- [FTS timestamp sort stability](./fts-timestamp-sort-stability.md) — empty-string timestamps need sentinel `"9999-12-31T23:59:59Z"` in ASC sort; DESC is safe without it.
