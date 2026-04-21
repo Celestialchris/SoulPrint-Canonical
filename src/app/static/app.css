@@ -1351,3 +1351,44 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 @media (max-width: 639px) {
   .workspace-actions__grid { grid-template-columns: 1fr; }
 }
+
+/* ── Archaeology card (CP5) ── */
+.archaeology-card {
+  background: var(--bg-dark);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+}
+.archaeology-card__label {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--t2);
+  margin: 0 0 10px;
+}
+.archaeology-card__title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+.archaeology-card__title a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.archaeology-card__title a:hover {
+  color: var(--accent-dim);
+}
+.archaeology-card__date {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--t3);
+  font-variant-numeric: tabular-nums;
+  margin: 0 0 14px;
+}
+.archaeology-card__excerpt {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--t1);
+  line-height: 1.55;
+}

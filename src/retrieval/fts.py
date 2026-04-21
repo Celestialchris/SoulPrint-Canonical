@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import datetime, timezone
+from typing import Literal
 
 
 def sanitize_fts_query(raw_query: str) -> str:
@@ -271,10 +272,17 @@ def remove_note_from_fts(db_path: str, note_id: int | str) -> int:
         conn.close()
 
 
-def search_fts(db_path: str, query: str, limit: int = 50) -> list[dict]:
+def search_fts(
+    db_path: str,
+    query: str,
+    limit: int = 50,
+    sort: Literal["relevance", "newest", "oldest"] = "relevance",
+) -> list[dict]:
     """Full-text search across messages and notes.
 
-    Uses BM25 ranking.  Returns results with snippets.
+    sort="relevance" uses BM25 ranking (default, back-compat).
+    sort="newest" orders by timestamp descending.
+    sort="oldest" orders by timestamp ascending; rank is None in result dicts.
 
     Each result dict contains:
     - snippet: str — highlighted excerpt with <mark> tags around matches
@@ -287,19 +295,73 @@ def search_fts(db_path: str, query: str, limit: int = 50) -> list[dict]:
     - message_id: str | None — DB primary key for deep-linking
     - note_id: str | None — for native notes
     - timestamp: str — ISO timestamp
-    - rank: float — BM25 relevance score
+    - rank: float | None — BM25 score (None when sort="oldest")
     """
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     results: list[dict] = []
 
-    # Search imported messages
-    try:
-        msg_rows = conn.execute(
-            """
+    if sort == "oldest":
+        msg_sql = """
             SELECT
-                snippet(fts_messages, 0, '<mark>', '</mark>', '\u2026', 40) as snippet,
+                snippet(fts_messages, 0, '<mark>', '</mark>', '…', 40) as snippet,
+                conversation_id,
+                conversation_title,
+                provider,
+                message_index,
+                message_role,
+                message_id,
+                timestamp
+            FROM fts_messages
+            WHERE fts_messages MATCH ?
+            ORDER BY timestamp ASC
+            LIMIT ?
+        """
+        note_sql = """
+            SELECT
+                snippet(fts_notes, 0, '<mark>', '</mark>', '…', 40) as snippet,
+                note_id,
+                tags,
+                timestamp
+            FROM fts_notes
+            WHERE fts_notes MATCH ?
+            ORDER BY timestamp ASC
+            LIMIT ?
+        """
+    elif sort == "newest":
+        msg_sql = """
+            SELECT
+                snippet(fts_messages, 0, '<mark>', '</mark>', '…', 40) as snippet,
+                conversation_id,
+                conversation_title,
+                provider,
+                message_index,
+                message_role,
+                message_id,
+                timestamp,
+                bm25(fts_messages) as rank
+            FROM fts_messages
+            WHERE fts_messages MATCH ?
+            ORDER BY timestamp DESC
+            LIMIT ?
+        """
+        note_sql = """
+            SELECT
+                snippet(fts_notes, 0, '<mark>', '</mark>', '…', 40) as snippet,
+                note_id,
+                tags,
+                timestamp,
+                bm25(fts_notes) as rank
+            FROM fts_notes
+            WHERE fts_notes MATCH ?
+            ORDER BY timestamp DESC
+            LIMIT ?
+        """
+    else:  # "relevance"
+        msg_sql = """
+            SELECT
+                snippet(fts_messages, 0, '<mark>', '</mark>', '…', 40) as snippet,
                 conversation_id,
                 conversation_title,
                 provider,
@@ -312,9 +374,23 @@ def search_fts(db_path: str, query: str, limit: int = 50) -> list[dict]:
             WHERE fts_messages MATCH ?
             ORDER BY rank
             LIMIT ?
-            """,
-            (query, limit),
-        ).fetchall()
+        """
+        note_sql = """
+            SELECT
+                snippet(fts_notes, 0, '<mark>', '</mark>', '…', 40) as snippet,
+                note_id,
+                tags,
+                timestamp,
+                bm25(fts_notes) as rank
+            FROM fts_notes
+            WHERE fts_notes MATCH ?
+            ORDER BY rank
+            LIMIT ?
+        """
+
+    # Search imported messages
+    try:
+        msg_rows = conn.execute(msg_sql, (query, limit)).fetchall()
 
         for row in msg_rows:
             results.append(
@@ -331,7 +407,7 @@ def search_fts(db_path: str, query: str, limit: int = 50) -> list[dict]:
                     "message_id": row["message_id"],
                     "note_id": None,
                     "timestamp": row["timestamp"],
-                    "rank": row["rank"],
+                    "rank": None if sort == "oldest" else row["rank"],
                 }
             )
     except sqlite3.OperationalError:
@@ -339,21 +415,7 @@ def search_fts(db_path: str, query: str, limit: int = 50) -> list[dict]:
 
     # Search native notes
     try:
-        note_rows = conn.execute(
-            """
-            SELECT
-                snippet(fts_notes, 0, '<mark>', '</mark>', '\u2026', 40) as snippet,
-                note_id,
-                tags,
-                timestamp,
-                bm25(fts_notes) as rank
-            FROM fts_notes
-            WHERE fts_notes MATCH ?
-            ORDER BY rank
-            LIMIT ?
-            """,
-            (query, limit),
-        ).fetchall()
+        note_rows = conn.execute(note_sql, (query, limit)).fetchall()
 
         for row in note_rows:
             results.append(
@@ -368,7 +430,7 @@ def search_fts(db_path: str, query: str, limit: int = 50) -> list[dict]:
                     "message_id": None,
                     "note_id": row["note_id"],
                     "timestamp": row["timestamp"],
-                    "rank": row["rank"],
+                    "rank": None if sort == "oldest" else row["rank"],
                 }
             )
     except sqlite3.OperationalError:
@@ -376,11 +438,14 @@ def search_fts(db_path: str, query: str, limit: int = 50) -> list[dict]:
 
     conn.close()
 
-    # BM25 in FTS5 returns negative scores — more negative = more relevant.
-    results.sort(key=lambda r: r["rank"])
+    if sort == "newest":
+        results.sort(key=lambda r: r.get("timestamp") or "", reverse=True)
+    elif sort == "oldest":
+        results.sort(key=lambda r: r.get("timestamp") or "")
+    else:
+        # BM25 in FTS5 returns negative scores — more negative = more relevant.
+        results.sort(key=lambda r: r["rank"])
     return results[:limit]
-
-
 def _format_unix_ts(unix_ts: float | None) -> str:
     """Format a unix timestamp as ISO string, or empty string if None."""
 
