@@ -1238,6 +1238,16 @@ def create_app():
         sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
         sqlite_path = _sqlite_path_from_uri(sqlite_uri)
 
+        archaeology_mode = request.args.get("mode") == "archaeology"
+        sort_param = request.args.get("sort", "relevance")
+        if sort_param not in ("relevance", "newest", "oldest"):
+            sort_param = "relevance"
+        if archaeology_mode:
+            sort_param = "oldest"
+            fts_limit = 1
+        else:
+            fts_limit = 50
+
         # Try FTS5 message-level search when a keyword is present
         fts_results: list[dict] = []
         if keyword:
@@ -1246,12 +1256,10 @@ def create_app():
 
                 fts_query = sanitize_fts_query(keyword)
                 if fts_query:
-                    fts_results = search_fts(sqlite_path, fts_query, limit=50)
+                    fts_results = search_fts(sqlite_path, fts_query, sort=sort_param, limit=fts_limit)
             except Exception:
                 logger.warning("FTS indexing failed", exc_info=True)
                 fts_results = []
-
-        archaeology_mode = request.args.get("mode") == "archaeology"
 
         callout = None
         if len(fts_results) > 1 and not archaeology_mode:
@@ -1276,6 +1284,19 @@ def create_app():
                 "excerpt": oldest.get("snippet", ""),
             }
 
+        if archaeology_mode and keyword and not fts_results:
+            return render_template(
+                "federated.html",
+                keyword=keyword,
+                fts_results=[],
+                fts_active=True,
+                rows=[],
+                format_timestamp=format_timestamp,
+                callout=None,
+                sort=sort_param,
+                archaeology_mode=True,
+            )
+
         if fts_results:
             return render_template(
                 "federated.html",
@@ -1285,6 +1306,8 @@ def create_app():
                 rows=[],
                 format_timestamp=format_timestamp,
                 callout=callout,
+                sort=sort_param,
+                archaeology_mode=archaeology_mode,
             )
 
         # No FTS results (or no keyword) — existing browse/search behavior
@@ -1318,6 +1341,8 @@ def create_app():
             fts_active=False,
             fts_results=[],
             format_timestamp=format_timestamp,
+            sort=sort_param,
+            archaeology_mode=archaeology_mode,
         )
 
     @app.get("/answer-traces")

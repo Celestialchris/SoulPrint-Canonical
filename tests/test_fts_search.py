@@ -249,6 +249,91 @@ class FTSSearchTest(unittest.TestCase):
         self.assertTrue(len(results) > 0)
 
 
+class FTSSortTest(unittest.TestCase):
+    """Tests for search_fts() sort parameter (CP5)."""
+
+    def setUp(self):
+        self.tmpdir = make_test_temp_dir(self, "fts-sort")
+        self.db_path = str(self.tmpdir / "fts_sort_test.db")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.db_path}"
+        self.app = create_app()
+        self._seed_sort_data()
+        rebuild_fts(self.db_path)
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+        self.addCleanup(self._restore_uri)
+
+    def _restore_uri(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+
+    def _seed_sort_data(self):
+        with self.app.app_context():
+            for title, src_id, ts in [
+                ("March chronosort", "conv-mar", 1709251200.0),   # 2024-03-01
+                ("June chronosort", "conv-jun", 1717200000.0),    # 2024-06-01
+                ("December chronosort", "conv-dec", 1733011200.0),  # 2024-12-01
+            ]:
+                conv = ImportedConversation(
+                    source="chatgpt",
+                    source_conversation_id=src_id,
+                    title=title,
+                    created_at_unix=ts,
+                    updated_at_unix=ts,
+                )
+                db.session.add(conv)
+                db.session.flush()
+                db.session.add(ImportedMessage(
+                    conversation_id=conv.id,
+                    source_message_id=f"msg-{src_id}",
+                    role="user",
+                    content=f"Discussion about chronosort in {title}.",
+                    sequence_index=0,
+                    created_at_unix=ts,
+                ))
+            db.session.commit()
+
+    def test_sort_oldest_returns_march_first(self):
+        results = search_fts(self.db_path, '"chronosort"', sort="oldest")
+        self.assertGreaterEqual(len(results), 2)
+        self.assertIn("March", results[0]["conversation_title"])
+
+    def test_sort_oldest_returns_in_ascending_order(self):
+        results = search_fts(self.db_path, '"chronosort"', sort="oldest")
+        timestamps = [r["timestamp"] for r in results]
+        self.assertEqual(timestamps, sorted(timestamps))
+
+    def test_sort_newest_returns_december_first(self):
+        results = search_fts(self.db_path, '"chronosort"', sort="newest")
+        self.assertGreaterEqual(len(results), 2)
+        self.assertIn("December", results[0]["conversation_title"])
+
+    def test_sort_newest_returns_in_descending_order(self):
+        results = search_fts(self.db_path, '"chronosort"', sort="newest")
+        timestamps = [r["timestamp"] for r in results]
+        self.assertEqual(timestamps, sorted(timestamps, reverse=True))
+
+    def test_sort_relevance_results_are_nonempty(self):
+        results = search_fts(self.db_path, '"chronosort"', sort="relevance")
+        self.assertGreater(len(results), 0)
+
+    def test_sort_relevance_result_dicts_have_valid_rank(self):
+        results = search_fts(self.db_path, '"chronosort"', sort="relevance")
+        for r in results:
+            self.assertIsNotNone(r["rank"])
+            self.assertIsInstance(r["rank"], float)
+
+    def test_sort_oldest_result_dicts_have_rank_none(self):
+        results = search_fts(self.db_path, '"chronosort"', sort="oldest")
+        self.assertGreater(len(results), 0)
+        for r in results:
+            self.assertIsNone(r["rank"], f"Expected rank=None for oldest sort, got {r['rank']!r}")
+
+    def test_sort_newest_result_dicts_have_valid_rank(self):
+        results = search_fts(self.db_path, '"chronosort"', sort="newest")
+        for r in results:
+            self.assertIsNotNone(r["rank"])
+
+
 class FTSQuerySanitizationTest(unittest.TestCase):
     def test_wraps_terms_in_quotes(self):
         result = sanitize_fts_query("hello world")

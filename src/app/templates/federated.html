@@ -34,75 +34,107 @@
         </div>
       </div>
     </form>
+    {% if not archaeology_mode %}
+    <div class="sort-toggle" role="group" aria-label="Sort order">
+      <a href="?q={{ keyword }}&sort=relevance" {% if sort == "relevance" %}aria-current="true"{% endif %}>Most relevant</a>
+      <a href="?q={{ keyword }}&sort=newest" {% if sort == "newest" %}aria-current="true"{% endif %}>Newest first</a>
+      <a href="?q={{ keyword }}&sort=oldest" {% if sort == "oldest" %}aria-current="true"{% endif %}>Oldest first</a>
+    </div>
+    {% endif %}
   </section>
 
   {% if fts_active %}
-    {# ── FTS message-level search results ── #}
-    {% if fts_results %}
-      <div class="fts-stats">
-        {{ fts_results|length }} result{{ 's' if fts_results|length != 1 }} for "{{ keyword }}"
-      </div>
-
-      {% if callout %}
-        <div class="provenance-callout">
-          <div class="provenance-callout__header">Earliest mention in these results</div>
-          <div class="provenance-callout__meta">
-            <span class="fts-provider fts-provider--{{ callout.provider }}">{{ callout.provider }}</span>
-            <span class="provenance-callout__dates">{{ callout.absolute_date }} &middot; {{ callout.relative_date }}</span>
-          </div>
-          <div class="provenance-callout__title">{{ callout.title }}</div>
-          <div class="provenance-callout__excerpt">{{ callout.excerpt | safe }}</div>
-          {% if callout.conversation_id %}
-            <a class="fts-source-link" href="/imported/{{ callout.conversation_id }}/explorer">Open conversation &rarr;</a>
-          {% endif %}
+    {% if archaeology_mode %}
+      {# ── Archaeology mode: single oldest-match card ── #}
+      {% if fts_results %}
+        <div class="archaeology-card">
+          <p class="archaeology-card__label">Your first conversation about this was&hellip;</p>
+          <h2 class="archaeology-card__title">
+            {% if fts_results[0].conversation_id %}
+              <a href="/imported/{{ fts_results[0].conversation_id }}/explorer">{{ fts_results[0].conversation_title }}</a>
+            {% else %}
+              {{ fts_results[0].conversation_title or "Note" }}
+            {% endif %}
+          </h2>
+          <p class="archaeology-card__date">{{ fts_results[0].timestamp }}</p>
+          <div class="archaeology-card__excerpt">{{ fts_results[0].snippet | safe }}</div>
+        </div>
+      {% else %}
+        <div class="fts-empty">
+          <p>No earliest mention found for "{{ keyword }}"</p>
+          <p style="font-size: 13px; margin-top: 8px;">
+            Try different terms or check your imports.
+          </p>
         </div>
       {% endif %}
-
-      <div class="container-card">
-        {% for result in fts_results %}
-          <article class="fts-result">
-            <div class="fts-result-meta">
-              <span class="fts-provider fts-provider--{{ result.provider }}">
-                {{ result.provider }}
-              </span>
-              {% if result.source_type == 'imported_message' %}
-                <span class="fts-conversation-title">
-                  {{ result.conversation_title }}
-                </span>
-                <span class="fts-role">{{ result.message_role }}</span>
-              {% else %}
-                <span class="fts-conversation-title">Note</span>
-              {% endif %}
-              <span class="fts-timestamp">{{ result.timestamp }}</span>
-            </div>
-
-            <div class="fts-snippet">
-              {{ result.snippet | safe }}
-            </div>
-
-            <div class="fts-actions">
-              {% if result.source_type == 'imported_message' %}
-                <a href="/imported/{{ result.conversation_id }}/explorer#message-{{ result.message_id }}"
-                   class="fts-source-link">
-                  Open at this message &rarr;
-                </a>
-              {% else %}
-                <a href="/memory/{{ result.note_id }}"
-                   class="fts-source-link">
-                  Open note &rarr;
-                </a>
-              {% endif %}
-            </div>
-          </article>
-        {% endfor %}
-      </div>
     {% else %}
-      <div class="fts-empty">
-        <p>No messages found for "{{ keyword }}"</p>
-        <p style="font-size: 13px; margin-top: 8px;">
-          Try different terms or check your imports.
-        </p>
-      </div>
+      {# ── FTS message-level search results ── #}
+      {% if fts_results %}
+        <div class="fts-stats">
+          {{ fts_results|length }} result{{ 's' if fts_results|length != 1 }} for "{{ keyword }}"
+        </div>
+
+        {% if callout %}
+          <div class="provenance-callout">
+            <div class="provenance-callout__header">Earliest mention in these results</div>
+            <div class="provenance-callout__meta">
+              <span class="fts-provider fts-provider--{{ callout.provider }}">{{ callout.provider }}</span>
+              <span class="provenance-callout__dates">{{ callout.absolute_date }} &middot; {{ callout.relative_date }}</span>
+            </div>
+            <div class="provenance-callout__title">{{ callout.title }}</div>
+            <div class="provenance-callout__excerpt">{{ callout.excerpt | safe }}</div>
+            {% if callout.conversation_id %}
+              <a class="fts-source-link" href="/imported/{{ callout.conversation_id }}/explorer">Open conversation &rarr;</a>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <div class="container-card">
+          {% for result in fts_results %}
+            <article class="fts-result">
+              <div class="fts-result-meta">
+                <span class="fts-provider fts-provider--{{ result.provider }}">
+                  {{ result.provider }}
+                </span>
+                {% if result.source_type == 'imported_message' %}
+                  <span class="fts-conversation-title">
+                    {{ result.conversation_title }}
+                  </span>
+                  <span class="fts-role">{{ result.message_role }}</span>
+                {% else %}
+                  <span class="fts-conversation-title">Note</span>
+                {% endif %}
+                <span class="fts-timestamp">{{ result.timestamp }}</span>
+              </div>
+
+              <div class="fts-snippet">
+                {{ result.snippet | safe }}
+              </div>
+
+              <div class="fts-actions">
+                {% if result.source_type == 'imported_message' %}
+                  <a href="/imported/{{ result.conversation_id }}/explorer#message-{{ result.message_id }}"
+                     class="fts-source-link">
+                    Open at this message &rarr;
+                  </a>
+                {% else %}
+                  <a href="/memory/{{ result.note_id }}"
+                     class="fts-source-link">
+                    Open note &rarr;
+                  </a>
+                {% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="fts-empty">
+          <p>No messages found for "{{ keyword }}"</p>
+          <p style="font-size: 13px; margin-top: 8px;">
+            Try different terms or check your imports.
+          </p>
+        </div>
+      {% endif %}
     {% endif %}
 
   {% else %}
