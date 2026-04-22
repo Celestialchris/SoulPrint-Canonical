@@ -2,6 +2,22 @@
 
 All notable changes to SoulPrint are documented here, backfilled from git history.
 
+## [Unreleased]
+
+### Added
+- **Starring (CP1).** `is_starred` Boolean column on `ImportedConversation` and `MemoryEntry` (nullable=False, default=False, server_default="0", indexed). Four POST routes: `/imported/<id>/star`, `/imported/<id>/unstar`, `/memory/<id>/star`, `/memory/<id>/unstar`. Each sets `session["export_notice"]` and honors a `next` form field, falling back to `federated_browser` or `chats`. Star toggle UI on five surfaces: federated browse rows, imported list row actions, chats notes list, imported_explorer header, memory_detail header. `FederatedReadResult` dataclass gained `starred: bool = False`; both lanes populate it from `row.is_starred`. New test file `tests/test_starring.py` with 13 tests across five classes. (PR #139)
+
+### Security
+- **CodeQL py/url-redirection alerts #12-19 closed.** Two-pass hardening of the `next` redirect parameter on star/unstar routes. Pass 1 (#12-15): added `urlparse`-based validation with backslash rejection and expanded `test_star_rejects_bad_next` coverage from 3 cases to 7 (adding `https://evil.com/path`, `\\evil.com`, `/\evil.com`, `javascript:alert(1)`). Pass 2 (#16-19): inlined CodeQL's canonical sanitizer shape at each redirect sink (`replace("\\", "")` then inline double `urlparse(nxt).netloc` / `urlparse(nxt).scheme` guard with early return). Factoring through a helper broke taint-tracker recognition even with identical logic; the idiom must be visible at the sink. Test assertions updated from literal-string containment (`assertNotIn("evil.com", location)`) to browser-level safety (`assertFalse(location.startswith("http:"))` and equivalents) since the canonical shape strips backslashes rather than rejecting on their presence.
+- **Dependabot lxml alert dismissed** as `not_used`. `requirements.txt` removed at commit 042bc36; `pyproject.toml` pins `lxml>=6.1.0` as the single source of truth.
+
+### Removed
+- **`_safe_next` helper** from `src/app/__init__.py`. Retained across the two CodeQL passes as a revert-safety fallback; now that the inline canonical pattern has stabilized at all four redirect sinks and CodeQL is green, the dead code is deleted.
+- **`requirements.txt`** at repo root (superseded by `pyproject.toml`).
+
+### Tests
+- Suite at 930 passing.
+
 ## v0.7.0-alpha.2 — Cascade delete for imported conversations (2026-04-19)
 
 ### Added
