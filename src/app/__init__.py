@@ -1042,7 +1042,10 @@ def create_app():
             conv.is_starred = True
             db.session.commit()
         session["export_notice"] = f"Starred '{conv.title or '(untitled)'}'."
-        return redirect(_safe_next("federated_browser"))
+        nxt = request.form.get("next", "")
+        parsed = urlparse(nxt)
+        is_safe = bool(nxt) and "\\" not in nxt and not parsed.netloc and not parsed.scheme
+        return redirect(nxt if is_safe else url_for("federated_browser"))
 
     @app.post("/imported/<int:conv_id>/unstar")
     def unstar_imported_conversation(conv_id: int):
@@ -1051,7 +1054,10 @@ def create_app():
             conv.is_starred = False
             db.session.commit()
         session["export_notice"] = f"Unstarred '{conv.title or '(untitled)'}'."
-        return redirect(_safe_next("federated_browser"))
+        nxt = request.form.get("next", "")
+        parsed = urlparse(nxt)
+        is_safe = bool(nxt) and "\\" not in nxt and not parsed.netloc and not parsed.scheme
+        return redirect(nxt if is_safe else url_for("federated_browser"))
 
     @app.post("/memory/<int:memory_id>/star")
     def star_memory(memory_id: int):
@@ -1060,7 +1066,10 @@ def create_app():
             entry.is_starred = True
             db.session.commit()
         session["export_notice"] = "Starred note."
-        return redirect(_safe_next("chats"))
+        nxt = request.form.get("next", "")
+        parsed = urlparse(nxt)
+        is_safe = bool(nxt) and "\\" not in nxt and not parsed.netloc and not parsed.scheme
+        return redirect(nxt if is_safe else url_for("chats"))
 
     @app.post("/memory/<int:memory_id>/unstar")
     def unstar_memory(memory_id: int):
@@ -1069,7 +1078,10 @@ def create_app():
             entry.is_starred = False
             db.session.commit()
         session["export_notice"] = "Unstarred note."
-        return redirect(_safe_next("chats"))
+        nxt = request.form.get("next", "")
+        parsed = urlparse(nxt)
+        is_safe = bool(nxt) and "\\" not in nxt and not parsed.netloc and not parsed.scheme
+        return redirect(nxt if is_safe else url_for("chats"))
 
     @app.get("/imported/archived")
     def imported_archived_conversations():
