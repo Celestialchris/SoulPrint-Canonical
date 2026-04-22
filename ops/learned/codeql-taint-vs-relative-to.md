@@ -9,3 +9,27 @@ Validated via candidate.relative_to(home) which raises ValueError on paths resol
 CodeQL's taint model does not recognize relative_to() as a sanitizer. The repeated autofix suggestions either (a) break legitimate in-home absolute paths, or (b) fail to constrain absolute paths at the filesystem level due to how Path composition handles absolute components. The current implementation is the correct resolution.
 
 Local-first application; the ?path= parameter is a usability feature for users whose Claude Code projects live outside ~/.claude/projects/. Threat model assumes user owns their filesystem.
+
+---
+
+## Open-redirect sanitizer: urlparse + backslash reject (CodeQL py/url-redirection)
+
+**Recognized idiom:**
+```python
+from urllib.parse import urlparse
+
+def _safe_next(fallback_endpoint: str) -> str:
+    nxt = request.form.get("next", "")
+    if "\\" in nxt:
+        return url_for(fallback_endpoint)
+    parsed = urlparse(nxt)
+    if nxt and not parsed.netloc and not parsed.scheme:
+        return nxt
+    return url_for(fallback_endpoint)
+```
+
+`urlparse(nxt).netloc` and `urlparse(nxt).scheme` are the CodeQL-recognized taint sanitizers for py/url-redirection. The backslash pre-reject is a pre-filter, not a replacement.
+
+**Why reject-on-backslash, not strip-then-validate:** Stripping `\` from `/\evil.com` gives `/evil.com` (same-origin path, passes `urlparse`). Stripping from `\\evil.com` gives `evil.com` (no netloc or scheme, passes `urlparse`). Both are wrong acceptances. No legitimate internal redirect URL contains a backslash, so rejecting is safe with zero false-positive cost.
+
+**The real `/\evil.com` bypass:** Browsers normalize `\` to `/` in Location headers. A `startswith("/") and not startswith("//")` guard passes `/\evil.com`; the browser treats it as `//evil.com`, a protocol-relative external URL.
