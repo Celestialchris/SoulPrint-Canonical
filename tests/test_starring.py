@@ -266,7 +266,15 @@ class StarRenderingTest(unittest.TestCase):
         resp = self.client.get("/federated")
         self.assertEqual(resp.status_code, 200)
         html = resp.get_data(as_text=True)
-        self.assertIn("☆ Star", html)
+        self.assertIn("★ Star", html)
+
+    def test_star_glyph_appears_on_federated_browse_starred(self):
+        """Starred rows should render '★ Unstar' with the filled glyph."""
+        _seed_conversation(self.app, title="Starred Conv", starred=True, source_id="src-render-starred")
+        resp = self.client.get("/federated")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("★ Unstar", html)
 
 
 if __name__ == "__main__":

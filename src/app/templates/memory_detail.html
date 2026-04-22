@@ -12,7 +12,7 @@
     <input type="hidden" name="next" value="/memory/{{ entry.id }}">
     <button type="submit"
             style="background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);font-size:inherit;color:{{ 'var(--accent)' if entry.is_starred else 'var(--t3)' }};">
-      {{ "★ Unstar" if entry.is_starred else "☆ Star" }}
+      ★ {{ "Unstar" if entry.is_starred else "Star" }}
     </button>
   </form>
 {% endblock %}

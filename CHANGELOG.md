@@ -9,6 +9,8 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - **Provider display names centralized.** `PROVIDER_DISPLAY_NAMES` relocated from `src/obsidian/renderer.py` to `src/importers/contracts.py` (next to `SUPPORTED_IMPORT_PROVIDERS`). Extended to all five providers with brand-case values (ChatGPT, Claude, Claude Code, Gemini, Grok). Exposed to templates via a new `provider_display_name` Jinja filter; Workspace right panel and recent list render through it.
 - **`/imported` tab coverage.** Claude Code and Grok added to the provider tabs row. Backend already supported filtering; only the template was missing.
 - **Right-panel provider dots.** Increased from 8×8px to 10×10px for visual weight.
+- **Star glyph unified.** All star-rendering surfaces now use `★` regardless of starred state; color carries the state (accent when starred, muted when not). Eliminates the visual size drift between `★` and `☆` glyphs in sans-serif fonts. Affects `/federated`, `/imported`, `/chats`, `/imported/<id>/explorer`, and `/memory/<id>`.
+- **Archive Status provider rows are links.** On Workspace, each provider row in the right panel now navigates to `/imported?provider=<slug>` with a hover treatment matching the existing context-panel interactive patterns.
 
 ### Added
 - **Starring (CP1).** `is_starred` Boolean column on `ImportedConversation` and `MemoryEntry` (nullable=False, default=False, server_default="0", indexed). Four POST routes: `/imported/<id>/star`, `/imported/<id>/unstar`, `/memory/<id>/star`, `/memory/<id>/unstar`. Each sets `session["export_notice"]` and honors a `next` form field, falling back to `federated_browser` or `chats`. Star toggle UI on five surfaces: federated browse rows, imported list row actions, chats notes list, imported_explorer header, memory_detail header. `FederatedReadResult` dataclass gained `starred: bool = False`; both lanes populate it from `row.is_starred`. New test file `tests/test_starring.py` with 13 tests across five classes. (PR #139)
@@ -18,11 +20,12 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - **Dependabot lxml alert dismissed** as `not_used`. `requirements.txt` removed at commit 042bc36; `pyproject.toml` pins `lxml>=6.1.0` as the single source of truth.
 
 ### Removed
+- **Left rail (Column A).** The 64px workspace rail at the far left is removed. It contained an SP logo duplicating the sidebar wordmark, three placeholder provider icons (outdated since PR #145 extended provider coverage to five), an Import shortcut duplicating the sidebar Continuity nav item, and a non-functional settings placeholder. All functions remain accessible via the sidebar and page-header actions.
 - **`_safe_next` helper** from `src/app/__init__.py`. Retained across the two CodeQL passes as a revert-safety fallback; now that the inline canonical pattern has stabilized at all four redirect sinks and CodeQL is green, the dead code is deleted.
 - **`requirements.txt`** at repo root (superseded by `pyproject.toml`).
 
 ### Tests
-- Suite at 930 passing.
+- Suite at 931 passing.
 
 ## v0.7.0-alpha.2 — Cascade delete for imported conversations (2026-04-19)
 
