@@ -9,6 +9,8 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
+from ..importers.contracts import PROVIDER_DISPLAY_NAMES
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -17,12 +19,6 @@ RENDER_VERSION: int = 1
 
 AUTO_BEGIN = "<!-- SOULPRINT:BEGIN AUTO -->"
 AUTO_END = "<!-- SOULPRINT:END AUTO -->"
-
-PROVIDER_DISPLAY_NAMES: dict[str, str] = {
-    "chatgpt": "ChatGPT",
-    "claude": "Claude",
-    "gemini": "Gemini",
-}
 
 PROVIDER_DESCRIPTIONS: dict[str, str] = {
     "chatgpt": "OpenAI's ChatGPT export",

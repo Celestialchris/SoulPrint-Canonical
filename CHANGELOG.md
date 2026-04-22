@@ -4,6 +4,12 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 
 ## [Unreleased]
 
+### Changed
+- **Provider palette revised.** Claude now renders in Anthropic-aligned warm orange (`#D97757`), Claude Code splits off into a saturated yellow (`#F5C518`, new `--lane-claude-code` token), Grok shifts from purple to burgundy (`#8B3A3A`). Light-theme variants updated in the same pass. `.format-chip--claude-code` rewired from `var(--lane-claude)` to the new token.
+- **Provider display names centralized.** `PROVIDER_DISPLAY_NAMES` relocated from `src/obsidian/renderer.py` to `src/importers/contracts.py` (next to `SUPPORTED_IMPORT_PROVIDERS`). Extended to all five providers with brand-case values (ChatGPT, Claude, Claude Code, Gemini, Grok). Exposed to templates via a new `provider_display_name` Jinja filter; Workspace right panel and recent list render through it.
+- **`/imported` tab coverage.** Claude Code and Grok added to the provider tabs row. Backend already supported filtering; only the template was missing.
+- **Right-panel provider dots.** Increased from 8×8px to 10×10px for visual weight.
+
 ### Added
 - **Starring (CP1).** `is_starred` Boolean column on `ImportedConversation` and `MemoryEntry` (nullable=False, default=False, server_default="0", indexed). Four POST routes: `/imported/<id>/star`, `/imported/<id>/unstar`, `/memory/<id>/star`, `/memory/<id>/unstar`. Each sets `session["export_notice"]` and honors a `next` form field, falling back to `federated_browser` or `chats`. Star toggle UI on five surfaces: federated browse rows, imported list row actions, chats notes list, imported_explorer header, memory_detail header. `FederatedReadResult` dataclass gained `starred: bool = False`; both lanes populate it from `row.is_starred`. New test file `tests/test_starring.py` with 13 tests across five classes. (PR #139)
 
