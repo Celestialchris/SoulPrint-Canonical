@@ -13,25 +13,6 @@
 <body class="{% block body_class %}{% endblock %}">
   <div class="shell">
 
-    {# Column A: Workspace rail (64px) — brand + provider shortcuts + utilities #}
-    <aside class="rail" aria-label="Workspaces">
-      <a class="rail-icon rail-icon--active" href="{{ url_for('home') }}" title="SoulPrint">
-        <span class="rail-icon__label">SP</span>
-      </a>
-      <div class="rail-sep" aria-hidden="true"></div>
-      {# Provider shortcuts — visual placeholders for v1, wire in later phase #}
-      <span class="rail-icon rail-icon--placeholder" title="Claude exports" aria-disabled="true">C</span>
-      <span class="rail-icon rail-icon--placeholder" title="ChatGPT exports" aria-disabled="true">G</span>
-      <span class="rail-icon rail-icon--placeholder" title="Gemini exports" aria-disabled="true">Ge</span>
-      <div class="rail-bottom">
-        <div class="rail-sep" aria-hidden="true"></div>
-        <a class="rail-icon" href="{{ url_for('import_conversations') }}" title="Import new">
-          <span class="rail-icon__label">+</span>
-        </a>
-        <span class="rail-icon rail-icon--placeholder" title="Settings (coming soon)" aria-disabled="true">⚙</span>
-      </div>
-    </aside>
-
     {# Column B: Sidebar (240px) #}
     <aside class="sidebar" id="sidebar" aria-label="Primary">
       <div class="sidebar-header">

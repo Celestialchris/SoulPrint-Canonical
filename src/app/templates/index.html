@@ -103,10 +103,12 @@
   <h4 class="context-block__label">PROVIDERS</h4>
   <ul class="provider-list">
     {% for entry in workspace.provider_recent %}
-    <li class="provider-list__row">
-      <span class="provider-list__dot" style="background-color: var(--lane-{{ entry.provider }})"></span>
-      <span class="provider-list__name">{{ entry.provider|provider_display_name }}</span>
-      <span class="provider-list__count">{{ entry.count }}</span>
+    <li>
+      <a class="provider-list__row" href="{{ url_for('imported_conversations', provider=entry.provider) }}">
+        <span class="provider-list__dot" style="background-color: var(--lane-{{ entry.provider }})"></span>
+        <span class="provider-list__name">{{ entry.provider|provider_display_name }}</span>
+        <span class="provider-list__count">{{ entry.count }}</span>
+      </a>
     </li>
     {% endfor %}
   </ul>

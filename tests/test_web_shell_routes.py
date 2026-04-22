@@ -36,7 +36,7 @@ class WebShellRouteTest(unittest.TestCase):
         self.assertIn("Workspace", html)
         self.assertIn('href="/chats"', html)
         self.assertIn('href="/imported"', html)
-        # Import flow lives as a rail link to /import
+        # Import flow lives in the Continuity sidebar group, linking to /import
         self.assertIn('href="/import"', html)
         self.assertIn('href="/federated"', html)
         self.assertIn('href="/passport"', html)
