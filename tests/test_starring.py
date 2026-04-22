@@ -101,7 +101,16 @@ class StarImportedRouteTest(unittest.TestCase):
         self.assertIn("/federated", location)
 
     def test_star_rejects_bad_next(self):
-        for bad in ("//evil.com", "http://evil.com", ""):
+        bad_inputs = (
+            "//evil.com",
+            "http://evil.com",
+            "https://evil.com/path",
+            "\\\\evil.com",
+            "/\\evil.com",
+            "javascript:alert(1)",
+            "",
+        )
+        for bad in bad_inputs:
             with self.subTest(next=bad):
                 resp = self.client.post(
                     f"/imported/{self.conv_id}/star",
@@ -110,6 +119,7 @@ class StarImportedRouteTest(unittest.TestCase):
                 self.assertEqual(resp.status_code, 302)
                 location = resp.headers.get("Location", "")
                 self.assertNotIn("evil.com", location)
+                self.assertNotIn("javascript", location)
                 self.assertIn("/federated", location)
 
 
@@ -182,7 +192,16 @@ class StarMemoryRouteTest(unittest.TestCase):
         self.assertIn("/chats", location)
 
     def test_star_rejects_bad_next(self):
-        for bad in ("//evil.com", "http://evil.com", ""):
+        bad_inputs = (
+            "//evil.com",
+            "http://evil.com",
+            "https://evil.com/path",
+            "\\\\evil.com",
+            "/\\evil.com",
+            "javascript:alert(1)",
+            "",
+        )
+        for bad in bad_inputs:
             with self.subTest(next=bad):
                 resp = self.client.post(
                     f"/memory/{self.memory_id}/star",
@@ -191,6 +210,7 @@ class StarMemoryRouteTest(unittest.TestCase):
                 self.assertEqual(resp.status_code, 302)
                 location = resp.headers.get("Location", "")
                 self.assertNotIn("evil.com", location)
+                self.assertNotIn("javascript", location)
                 self.assertIn("/chats", location)
 
 

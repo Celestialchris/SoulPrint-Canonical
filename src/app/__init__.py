@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from urllib.parse import urlparse
 from flask import Flask, abort, redirect, render_template, request, jsonify, session, url_for
 from datetime import datetime, timezone
 import logging
@@ -1027,7 +1028,10 @@ def create_app():
 
     def _safe_next(fallback_endpoint: str) -> str:
         nxt = request.form.get("next", "")
-        if nxt.startswith("/") and not nxt.startswith("//"):
+        if "\\" in nxt:
+            return url_for(fallback_endpoint)
+        parsed = urlparse(nxt)
+        if nxt and not parsed.netloc and not parsed.scheme:
             return nxt
         return url_for(fallback_endpoint)
 
