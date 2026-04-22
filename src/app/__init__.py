@@ -1026,15 +1026,6 @@ def create_app():
         session["export_notice"] = f"Restored '{conv.title or '(untitled)'}'."
         return redirect(url_for("imported_archived_conversations"))
 
-    def _safe_next(fallback_endpoint: str) -> str:
-        nxt = request.form.get("next", "")
-        if "\\" in nxt:
-            return url_for(fallback_endpoint)
-        parsed = urlparse(nxt)
-        if nxt and not parsed.netloc and not parsed.scheme:
-            return nxt
-        return url_for(fallback_endpoint)
-
     @app.post("/imported/<int:conv_id>/star")
     def star_imported_conversation(conv_id: int):
         conv = ImportedConversation.query.get_or_404(conv_id)

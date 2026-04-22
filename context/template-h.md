@@ -72,7 +72,6 @@ Explicit list. Files that are in scope for reading but not for editing get liste
 Always include in DO NOT EDIT unless the task requires them:
 - `pyproject.toml`
 - `src/app/static/app.css`
-- `CHANGELOG.md`
 - Any file in `context/`, `ops/`, `.claude/rules/`
 - Files explicitly owned by other in-flight prompts
 
