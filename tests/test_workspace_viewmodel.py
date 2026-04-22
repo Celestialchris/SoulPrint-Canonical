@@ -117,7 +117,8 @@ class WorkspaceViewmodelTest(unittest.TestCase):
 
             summary = build_workspace_summary(trace_store_path=self._trace_path())
 
-            self.assertEqual(len(summary.provider_recent), 2)
+            # Active providers at the head, zero-count providers appended at the tail.
+            self.assertEqual(len(summary.provider_recent), 5)
             # Ordered by count desc
             chatgpt_entry = summary.provider_recent[0]
             self.assertEqual(chatgpt_entry["provider"], "chatgpt")
@@ -130,10 +131,18 @@ class WorkspaceViewmodelTest(unittest.TestCase):
             self.assertEqual(claude_entry["count"], 1)
             self.assertEqual(claude_entry["recent_title"], "Claude conv 0")
 
-    def test_provider_recent_empty_when_no_imports(self):
+            # Tail entries are zero-count providers.
+            for tail_entry in summary.provider_recent[2:]:
+                self.assertEqual(tail_entry["count"], 0)
+
+    def test_provider_recent_all_zero_count_when_no_imports(self):
+        """With no imports all five providers appear with count 0; connected count is 0."""
         with self.app.app_context():
             summary = build_workspace_summary(trace_store_path=self._trace_path())
-            self.assertEqual(summary.provider_recent, [])
+            self.assertEqual(len(summary.provider_recent), 5)
+            for entry in summary.provider_recent:
+                self.assertEqual(entry["count"], 0)
+            self.assertEqual(summary.providers_connected_count, 0)
 
 
 if __name__ == "__main__":
