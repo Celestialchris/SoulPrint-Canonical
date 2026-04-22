@@ -292,6 +292,11 @@ def create_app():
                 "ALTER TABLE imported_conversation ADD COLUMN is_starred BOOLEAN NOT NULL DEFAULT 0"
             )
             _gc.commit()
+        if "tags" not in _cols:
+            _gc.execute(
+                "ALTER TABLE imported_conversation ADD COLUMN tags VARCHAR NOT NULL DEFAULT ''"
+            )
+            _gc.commit()
         _mcols = {r[1] for r in _gc.execute("PRAGMA table_info(memory_entry)")}
         if "is_starred" not in _mcols:
             _gc.execute(
@@ -1082,6 +1087,38 @@ def create_app():
         if nxt and not urlparse(nxt).netloc and not urlparse(nxt).scheme:
             return redirect(nxt)
         return redirect(url_for("chats"))
+
+    @app.post("/imported/<int:conv_id>/tags/add")
+    def add_imported_conversation_tag(conv_id: int):
+        from .tags import normalize_tag_string
+        conv = ImportedConversation.query.get_or_404(conv_id)
+        raw_new = request.form.get("tag", "")
+        normalized_new = normalize_tag_string(raw_new)
+        if normalized_new:
+            combined = f"{conv.tags}, {normalized_new}" if conv.tags else normalized_new
+            conv.tags = normalize_tag_string(combined)
+            db.session.commit()
+        nxt = request.form.get("next", "")
+        nxt = nxt.replace("\\", "")
+        if nxt and not urlparse(nxt).netloc and not urlparse(nxt).scheme:
+            return redirect(nxt)
+        return redirect(url_for("imported_conversations"))
+
+    @app.post("/imported/<int:conv_id>/tags/remove/<path:tag>")
+    def remove_imported_conversation_tag(conv_id: int, tag: str):
+        from .tags import normalize_tag_string
+        conv = ImportedConversation.query.get_or_404(conv_id)
+        target = normalize_tag_string(tag)
+        if conv.tags and target:
+            current = [t.strip() for t in conv.tags.split(",") if t.strip()]
+            new_tags = [t for t in current if t != target]
+            conv.tags = normalize_tag_string(", ".join(new_tags))
+            db.session.commit()
+        nxt = request.form.get("next", "")
+        nxt = nxt.replace("\\", "")
+        if nxt and not urlparse(nxt).netloc and not urlparse(nxt).scheme:
+            return redirect(nxt)
+        return redirect(url_for("imported_conversations"))
 
     @app.get("/imported/archived")
     def imported_archived_conversations():
