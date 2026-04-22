@@ -16,6 +16,34 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from .contracts import NormalizedConversation, validate_provider_id
+from src.app.tags import auto_tag_from_title
+
+
+def _ensure_tags_column_exists() -> None:
+    """Add tags column to imported_conversation if absent (idempotent).
+
+    Runs before the first ORM query in persist_normalized_conversations so that
+    CLI and discovery flows that bypass create_app() still get the guard.
+    """
+    import sqlite3 as _sqlite3
+    from src.app.models.db import db as _db
+
+    db_path = _db.engine.url.database
+    if not db_path or db_path == ":memory:":
+        return
+    try:
+        conn = _sqlite3.connect(db_path)
+        try:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(imported_conversation)")}
+            if "tags" not in cols:
+                conn.execute(
+                    "ALTER TABLE imported_conversation ADD COLUMN tags VARCHAR NOT NULL DEFAULT ''"
+                )
+                conn.commit()
+        finally:
+            conn.close()
+    except Exception:
+        pass
 
 
 @dataclass(frozen=True)
@@ -42,6 +70,8 @@ def persist_normalized_conversations(
         if len(provider_ids) != 1:
             raise ValueError("persist_normalized_conversations expects a single provider per batch")
         provider_id = next(iter(provider_ids))
+
+    _ensure_tags_column_exists()
 
     incoming_ids = {conversation.source_conversation_id for conversation in conversations_list}
     existing_ids = {
@@ -71,6 +101,7 @@ def persist_normalized_conversations(
             created_at_unix=conversation.created_at,
             updated_at_unix=conversation.updated_at,
             source_metadata_json=json.dumps(conversation.source_metadata) if conversation.source_metadata else None,
+            tags=auto_tag_from_title(conversation.title),
         )
         db.session.add(db_conversation)
         db.session.flush()
