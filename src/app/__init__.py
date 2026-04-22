@@ -1104,7 +1104,7 @@ def create_app():
             return redirect(nxt)
         return redirect(url_for("imported_conversations"))
 
-    @app.post("/imported/<int:conv_id>/tags/remove/<string:tag>")
+    @app.post("/imported/<int:conv_id>/tags/remove/<path:tag>")
     def remove_imported_conversation_tag(conv_id: int, tag: str):
         from .tags import normalize_tag_string
         conv = ImportedConversation.query.get_or_404(conv_id)
