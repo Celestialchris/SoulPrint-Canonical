@@ -33,3 +33,11 @@ def _safe_next(fallback_endpoint: str) -> str:
 **Why reject-on-backslash, not strip-then-validate:** Stripping `\` from `/\evil.com` gives `/evil.com` (same-origin path, passes `urlparse`). Stripping from `\\evil.com` gives `evil.com` (no netloc or scheme, passes `urlparse`). Both are wrong acceptances. No legitimate internal redirect URL contains a backslash, so rejecting is safe with zero false-positive cost.
 
 **The real `/\evil.com` bypass:** Browsers normalize `\` to `/` in Location headers. A `startswith("/") and not startswith("//")` guard passes `/\evil.com`; the browser treats it as `//evil.com`, a protocol-relative external URL.
+
+**Interprocedural blindspot**
+
+`urlparse(x).netloc` and `urlparse(x).scheme` are recognized as taint sanitizers only when
+co-located with the `redirect()` sink in the same function body. Factoring them into a helper
+breaks recognition even when the logic is identical. Fix: inline the 4-line check at each call
+site. Same lesson as the `relative_to(home)` case above — CodeQL requires the idiom to be
+visible at the sink, not behind an abstraction.
