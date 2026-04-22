@@ -28,10 +28,10 @@ from src.intelligence.store import (
     list_topic_scans,
 )
 from src.obsidian.config import generate_config, generate_templates
+from src.importers.contracts import PROVIDER_DISPLAY_NAMES
 from src.obsidian.renderer import (
     AUTO_BEGIN,
     AUTO_END,
-    PROVIDER_DISPLAY_NAMES,
     chat_note_filename,
     daily_note_filename,
     render_category_note,

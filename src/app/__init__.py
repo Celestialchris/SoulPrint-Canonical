@@ -326,6 +326,11 @@ def create_app():
         """Render a unix timestamp as a short relative string ('2h ago', '3d ago')."""
         return _relative_time_from_unix(unix_ts)
 
+    @app.template_filter("provider_display_name")
+    def _provider_display_name(slug: str) -> str:
+        from ..importers.contracts import PROVIDER_DISPLAY_NAMES
+        return PROVIDER_DISPLAY_NAMES.get(slug, (slug or "").capitalize())
+
     @app.get("/")
     def home():
         from ..answering.trace import default_trace_store_path

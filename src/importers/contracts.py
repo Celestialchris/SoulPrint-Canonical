@@ -26,6 +26,14 @@ SUPPORTED_IMPORT_PROVIDERS = frozenset(
     }
 )
 
+PROVIDER_DISPLAY_NAMES: dict[str, str] = {
+    PROVIDER_CHATGPT: "ChatGPT",
+    PROVIDER_CLAUDE: "Claude",
+    PROVIDER_CLAUDE_CODE: "Claude Code",
+    PROVIDER_GEMINI: "Gemini",
+    PROVIDER_GROK: "Grok",
+}
+
 
 @dataclass(slots=True, frozen=True)
 class NormalizedMessage:
