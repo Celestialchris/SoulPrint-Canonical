@@ -48,3 +48,5 @@ When the user corrects an approach and the correction generalizes beyond the spe
 
 - [FTS timestamp sort stability](./fts-timestamp-sort-stability.md) — empty-string timestamps need sentinel `"9999-12-31T23:59:59Z"` in ASC sort; DESC is safe without it.
 - [Redirect-after-action safety](./redirect-after-action-safety.md) — `_safe_next()` pattern for validating a user-supplied `next` redirect param; template `session.pop()` for scope-locked routes.
+- [Static analyzers match shapes, not logic](./static-analyzer-shape-matching.md) — CodeQL and similar tools pattern-match canonical idioms; correct-but-unrecognized logic costs PRs. Rule: copy the canonical verbatim, rename variables only.
+- [CodeQL and Dependabot debugging commands](./codeql-debugging-commands.md) — paste-ready `gh api` invocations for listing, detailing, and dismissing alerts. Notes the different dismiss-reason enums between CodeQL and Dependabot.
