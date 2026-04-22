@@ -44,7 +44,7 @@
 
 {% if workspace.has_any_data %}
 <p class="metadata-line" style="margin-bottom: 1.5rem;">
-  {{ workspace.provider_recent|length }} provider{{ 's' if workspace.provider_recent|length != 1 }} connected ·
+  {{ workspace.providers_connected_count }} provider{{ 's' if workspace.providers_connected_count != 1 }} connected ·
   {{ workspace.imported_conversation_count }} conversations imported ·
   {{ workspace.imported_message_count }} messages indexed
 </p>
@@ -81,7 +81,7 @@
   <ul class="recent-list">
     {% for conv in recent_conversations %}
     <li class="recent-list__row">
-      <span class="recent-list__dot" style="background-color: var(--lane-{{ conv.provider }})"></span>
+      <span class="recent-list__dot" style="background-color: var(--lane-{{ conv.provider|replace('_', '-') }})"></span>
       <a class="recent-list__title" href="{{ url_for('imported_explorer', conversation_id=conv.id) }}">{{ conv.title or 'Untitled' }}</a>
       <span class="recent-list__provider">{{ conv.provider|provider_display_name }}</span>
       <span class="recent-list__time">{{ conv.relative_time }}</span>
@@ -105,7 +105,7 @@
     {% for entry in workspace.provider_recent %}
     <li>
       <a class="provider-list__row" href="{{ url_for('imported_conversations', provider=entry.provider) }}">
-        <span class="provider-list__dot" style="background-color: var(--lane-{{ entry.provider }})"></span>
+        <span class="provider-list__dot" style="background-color: var(--lane-{{ entry.provider|replace('_', '-') }})"></span>
         <span class="provider-list__name">{{ entry.provider|provider_display_name }}</span>
         <span class="provider-list__count">{{ entry.count }}</span>
       </a>

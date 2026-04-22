@@ -182,6 +182,38 @@ class WorkspaceHomeTest(unittest.TestCase):
         self.assertIn("Import conversations", html)
         self.assertIn("Memory Passport", html)
 
+    # ── Zero-count provider + connected-count field ──
+
+    def test_zero_import_provider_appears_in_right_panel(self):
+        """Providers with no imports still render in the Archive Status panel with count 0."""
+        with self.app.app_context():
+            self._seed_conv("chatgpt", "GPT conv")
+            db.session.commit()
+        html = self._get_workspace_html()
+        # Grok has zero imports but must appear in the providers block.
+        self.assertIn("grok", html.lower())
+        # The providers block itself must be present.
+        self.assertIn("PROVIDERS", html)
+
+    def test_providers_connected_count_reflects_active_providers_only(self):
+        """'N providers connected' counts only providers with imports, not zero-count entries."""
+        with self.app.app_context():
+            self._seed_conv("chatgpt", "GPT conv")
+            self._seed_conv("claude", "Claude conv")
+            db.session.commit()
+        html = self._get_workspace_html()
+        self.assertIn("2 providers connected", html)
+        self.assertNotIn("5 providers connected", html)
+
+    def test_providers_connected_count_all_five(self):
+        """When all five providers have imports, the count reads '5 providers connected'."""
+        with self.app.app_context():
+            for provider in ("chatgpt", "claude", "claude_code", "gemini", "grok"):
+                self._seed_conv(provider, f"{provider} conv")
+            db.session.commit()
+        html = self._get_workspace_html()
+        self.assertIn("5 providers connected", html)
+
 
 if __name__ == "__main__":
     unittest.main()

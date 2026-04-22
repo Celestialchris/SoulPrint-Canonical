@@ -9,6 +9,7 @@ from sqlalchemy import func
 
 from ..models import ImportedConversation, ImportedMessage, MemoryEntry
 from ..models.db import db
+from ...importers.contracts import PROVIDER_DISPLAY_NAMES
 
 
 @dataclass(frozen=True)
@@ -26,6 +27,7 @@ class WorkspaceSummary:
     has_any_data: bool
     continuity_sentence: str
     provider_recent: list[dict[str, object]]
+    providers_connected_count: int
 
 
 def _trim_text(value: str, limit: int = 120) -> str:
@@ -53,6 +55,7 @@ def build_workspace_summary(*, trace_store_path: str | Path) -> WorkspaceSummary
         .order_by(func.count(ImportedConversation.id).desc(), ImportedConversation.source.asc())
         .all()
     )
+    providers_connected_count = len(provider_rows)
     providers = [
         {"name": source, "conversation_count": conversation_count}
         for source, conversation_count in provider_rows
@@ -73,6 +76,16 @@ def build_workspace_summary(*, trace_store_path: str | Path) -> WorkspaceSummary
             "recent_title": most_recent.title if most_recent else "",
             "recent_id": most_recent.id if most_recent else None,
         })
+
+    existing_providers = {entry["provider"] for entry in provider_recent}
+    for provider_slug in PROVIDER_DISPLAY_NAMES:
+        if provider_slug not in existing_providers:
+            provider_recent.append({
+                "provider": provider_slug,
+                "count": 0,
+                "recent_title": "",
+                "recent_id": None,
+            })
 
     recent_imported_rows = (
         ImportedConversation.query.order_by(ImportedConversation.id.desc()).limit(6).all()
@@ -140,4 +153,5 @@ def build_workspace_summary(*, trace_store_path: str | Path) -> WorkspaceSummary
         has_any_data=has_any_data,
         continuity_sentence=continuity_sentence,
         provider_recent=provider_recent,
+        providers_connected_count=providers_connected_count,
     )
