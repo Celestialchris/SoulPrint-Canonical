@@ -41,3 +41,12 @@ co-located with the `redirect()` sink in the same function body. Factoring them 
 breaks recognition even when the logic is identical. Fix: inline the 4-line check at each call
 site. Same lesson as the `relative_to(home)` case above — CodeQL requires the idiom to be
 visible at the sink, not behind an abstraction.
+
+**Inline-but-factored is also insufficient**
+
+Inlining the check at the sink is necessary but not sufficient. CodeQL requires the exact
+canonical shape from its own docs: `nxt.replace("\\", "")` mutation first, then
+`not urlparse(nxt).netloc and not urlparse(nxt).scheme` called twice inline in the guard,
+with an early-return pattern (not a ternary at the sink). Factoring through a `parsed =
+urlparse(nxt)` intermediate variable, an `is_safe` boolean, or `redirect(nxt if is_safe else ...)`
+all break recognition. Source of truth: CodeQL py/url-redirection canonical example.
