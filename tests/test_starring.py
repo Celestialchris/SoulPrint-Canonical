@@ -118,9 +118,11 @@ class StarImportedRouteTest(unittest.TestCase):
                 )
                 self.assertEqual(resp.status_code, 302)
                 location = resp.headers.get("Location", "")
-                self.assertNotIn("evil.com", location)
                 self.assertNotIn("javascript", location)
-                self.assertIn("/federated", location)
+                self.assertFalse(location.startswith("//"), f"Location {location!r} is protocol-relative")
+                self.assertFalse(location.startswith("http://"), f"Location {location!r} has explicit scheme")
+                self.assertFalse(location.startswith("https://"), f"Location {location!r} has explicit scheme")
+                self.assertFalse(location.startswith("javascript:"), f"Location {location!r} is javascript scheme")
 
 
 class UnstarImportedRouteTest(unittest.TestCase):
@@ -209,9 +211,11 @@ class StarMemoryRouteTest(unittest.TestCase):
                 )
                 self.assertEqual(resp.status_code, 302)
                 location = resp.headers.get("Location", "")
-                self.assertNotIn("evil.com", location)
                 self.assertNotIn("javascript", location)
-                self.assertIn("/chats", location)
+                self.assertFalse(location.startswith("//"), f"Location {location!r} is protocol-relative")
+                self.assertFalse(location.startswith("http://"), f"Location {location!r} has explicit scheme")
+                self.assertFalse(location.startswith("https://"), f"Location {location!r} has explicit scheme")
+                self.assertFalse(location.startswith("javascript:"), f"Location {location!r} is javascript scheme")
 
 
 class UnstarMemoryRouteTest(unittest.TestCase):

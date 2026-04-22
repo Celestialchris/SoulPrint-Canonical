@@ -1043,9 +1043,10 @@ def create_app():
             db.session.commit()
         session["export_notice"] = f"Starred '{conv.title or '(untitled)'}'."
         nxt = request.form.get("next", "")
-        parsed = urlparse(nxt)
-        is_safe = bool(nxt) and "\\" not in nxt and not parsed.netloc and not parsed.scheme
-        return redirect(nxt if is_safe else url_for("federated_browser"))
+        nxt = nxt.replace("\\", "")
+        if nxt and not urlparse(nxt).netloc and not urlparse(nxt).scheme:
+            return redirect(nxt)
+        return redirect(url_for("federated_browser"))
 
     @app.post("/imported/<int:conv_id>/unstar")
     def unstar_imported_conversation(conv_id: int):
@@ -1055,9 +1056,10 @@ def create_app():
             db.session.commit()
         session["export_notice"] = f"Unstarred '{conv.title or '(untitled)'}'."
         nxt = request.form.get("next", "")
-        parsed = urlparse(nxt)
-        is_safe = bool(nxt) and "\\" not in nxt and not parsed.netloc and not parsed.scheme
-        return redirect(nxt if is_safe else url_for("federated_browser"))
+        nxt = nxt.replace("\\", "")
+        if nxt and not urlparse(nxt).netloc and not urlparse(nxt).scheme:
+            return redirect(nxt)
+        return redirect(url_for("federated_browser"))
 
     @app.post("/memory/<int:memory_id>/star")
     def star_memory(memory_id: int):
@@ -1067,9 +1069,10 @@ def create_app():
             db.session.commit()
         session["export_notice"] = "Starred note."
         nxt = request.form.get("next", "")
-        parsed = urlparse(nxt)
-        is_safe = bool(nxt) and "\\" not in nxt and not parsed.netloc and not parsed.scheme
-        return redirect(nxt if is_safe else url_for("chats"))
+        nxt = nxt.replace("\\", "")
+        if nxt and not urlparse(nxt).netloc and not urlparse(nxt).scheme:
+            return redirect(nxt)
+        return redirect(url_for("chats"))
 
     @app.post("/memory/<int:memory_id>/unstar")
     def unstar_memory(memory_id: int):
@@ -1079,9 +1082,10 @@ def create_app():
             db.session.commit()
         session["export_notice"] = "Unstarred note."
         nxt = request.form.get("next", "")
-        parsed = urlparse(nxt)
-        is_safe = bool(nxt) and "\\" not in nxt and not parsed.netloc and not parsed.scheme
-        return redirect(nxt if is_safe else url_for("chats"))
+        nxt = nxt.replace("\\", "")
+        if nxt and not urlparse(nxt).netloc and not urlparse(nxt).scheme:
+            return redirect(nxt)
+        return redirect(url_for("chats"))
 
     @app.get("/imported/archived")
     def imported_archived_conversations():
