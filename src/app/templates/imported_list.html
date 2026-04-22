@@ -97,6 +97,23 @@
             <p class="metadata-line">
               Created: {{ format_timestamp(conversation.created_at_unix) }} · Updated: {{ format_timestamp(conversation.updated_at_unix) }} · Messages: {{ message_count }}
             </p>
+            <div class="tag-chip-row">
+              {% for tag in (conversation.tags or '').split(',') if tag.strip() %}
+                <form method="post"
+                      action="/imported/{{ conversation.id }}/tags/remove/{{ tag.strip() | urlencode }}"
+                      class="tag-chip">
+                  <input type="hidden" name="next" value="/imported{% if provider %}?provider={{ provider }}{% endif %}{% if keyword %}{% if provider %}&{% else %}?{% endif %}q={{ keyword|urlencode }}{% endif %}">
+                  <span class="tag-chip__label">{{ tag.strip() }}</span>
+                  <button type="submit" class="tag-chip__remove" aria-label="Remove tag {{ tag.strip() }}">×</button>
+                </form>
+              {% endfor %}
+              <form method="post"
+                    action="/imported/{{ conversation.id }}/tags/add"
+                    class="tag-chip-add">
+                <input type="hidden" name="next" value="/imported{% if provider %}?provider={{ provider }}{% endif %}{% if keyword %}{% if provider %}&{% else %}?{% endif %}q={{ keyword|urlencode }}{% endif %}">
+                <input type="text" name="tag" class="tag-chip-add__input" placeholder="+ tag" maxlength="64">
+              </form>
+            </div>
             <p class="metadata-line">
               <form method="post"
                     action="/imported/{{ conversation.id }}/{{ 'unstar' if conversation.is_starred else 'star' }}"

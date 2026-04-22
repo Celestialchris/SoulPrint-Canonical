@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from .contracts import NormalizedConversation, validate_provider_id
+from src.app.tags import auto_tag_from_title
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,7 @@ def persist_normalized_conversations(
             created_at_unix=conversation.created_at,
             updated_at_unix=conversation.updated_at,
             source_metadata_json=json.dumps(conversation.source_metadata) if conversation.source_metadata else None,
+            tags=auto_tag_from_title(conversation.title),
         )
         db.session.add(db_conversation)
         db.session.flush()
