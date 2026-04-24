@@ -35,29 +35,29 @@
         <nav class="sidebar-group" aria-label="Sanctum">
           <span class="sidebar-group__label">Sanctum</span>
           {{ sidebar_item(url_for('home'), 'Workspace', request.path == url_for('home')) }}
-          {{ sidebar_item(url_for('ask'), 'Ask your memory', request.path.startswith('/ask')) }}
+          {{ sidebar_item(url_for('ask'), 'Ask', request.path.startswith('/ask')) }}
         </nav>
 
         <nav class="sidebar-group" aria-label="Memory">
           <span class="sidebar-group__label">Memory</span>
-          {{ sidebar_item(url_for('imported_conversations'), "What you've discussed", request.path.startswith('/imported') and not request.path.startswith('/imported/archived') and not request.path.startswith('/imported/scan-claude-code')) }}
+          {{ sidebar_item(url_for('imported_conversations'), "Imported", request.path.startswith('/imported') and not request.path.startswith('/imported/archived') and not request.path.startswith('/imported/scan-claude-code')) }}
           {{ sidebar_item(url_for('imported_archived_conversations'), "Archived", request.path.startswith('/imported/archived')) }}
           {{ sidebar_item(url_for('scan_claude_code'), 'Scan Claude Code', request.path.startswith('/imported/scan-claude-code'), lane='claude') }}
           {{ sidebar_item(url_for('chats'), 'Your own notes', request.path.startswith(url_for('chats')) or request.path.startswith('/memory/')) }}
-          {{ sidebar_item(url_for('federated_browser'), 'Everything, together', request.path.startswith('/federated')) }}
+          {{ sidebar_item(url_for('federated_browser'), 'Federated', request.path.startswith('/federated')) }}
         </nav>
 
         <nav class="sidebar-group" aria-label="Interpretation">
           <span class="sidebar-group__label">Interpretation</span>
           {{ sidebar_item(url_for('intelligence'), 'Recurring themes', request.path.startswith('/intelligence')) }}
           {{ sidebar_item(url_for('distill'), 'Create a digest', request.path.startswith('/distill')) }}
-          {{ sidebar_item(url_for('answer_trace_list'), 'How answers were found', request.path.startswith('/answer-traces')) }}
+          {{ sidebar_item(url_for('answer_trace_list'), 'Answer audit', request.path.startswith('/answer-traces')) }}
         </nav>
 
         <nav class="sidebar-group" aria-label="Continuity">
           <span class="sidebar-group__label">Continuity</span>
           {{ sidebar_item(url_for('import_conversations'), 'Import', request.path.startswith('/import')) }}
-          {{ sidebar_item(url_for('passport_surface'), 'Take it with you', request.path.startswith('/passport')) }}
+          {{ sidebar_item(url_for('passport_surface'), 'Memory Passport', request.path.startswith('/passport')) }}
         </nav>
       </div>
 
