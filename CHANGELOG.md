@@ -33,6 +33,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - **`requirements.txt`** at repo root (superseded by `pyproject.toml`).
 
 ### Fixed
+- **`/archive/health` distinguishes pre-instrumentation state from never-imported.** Providers with conversations in the archive but no `ImportRun` row (i.e. imported before PR #154 began tracking) now render "Not tracked" with the archive count, instead of the misleading "Never imported". Footnote below the table clarifies that import history began April 24, 2026.
 - **Workspace Archive Status panel now shows all five providers.** Previously providers with zero imports were silently absent from the right panel because the SQL GROUP BY that built `provider_recent` only yielded provider rows with at least one import. Zero-count providers now render at the tail of the list with `count=0`, ordered by `PROVIDER_DISPLAY_NAMES` insertion order. The "N providers connected" summary uses a new `providers_connected_count` field so it continues to reflect only active providers.
 - **Claude Code lane dot now renders in its assigned color.** The template was constructing `var(--lane-{slug})` by interpolating the provider slug directly; Claude Code's slug is `claude_code` but the CSS variable is `--lane-claude-code`, so the dot had no background color and rendered invisibly against the warm-black panel. Fixed by routing the slug through `|replace('_', '-')` at both interpolation sites (recent conversations list and Archive Status panel).
 

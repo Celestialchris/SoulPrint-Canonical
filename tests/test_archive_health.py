@@ -95,6 +95,61 @@ class ArchiveHealthRouteTest(unittest.TestCase):
         db_path_normalized = self.db_path.replace("\\", "/")
         self.assertIn(db_path_normalized, html)
 
+    def test_archive_health_shows_not_tracked_for_pre_instrumentation_provider(self):
+        conn = sqlite3.connect(self.db_path)
+        try:
+            conn.execute(
+                "INSERT INTO imported_conversation "
+                "(source, source_conversation_id, title, created_at_unix, updated_at_unix, is_archived, is_starred, tags) "
+                "VALUES (?, ?, ?, ?, ?, 0, 0, '')",
+                ("chatgpt", "test-conv-001", "Test convo", 1700000000.0, 1700000000.0),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        response = self.client.get("/archive/health")
+        html = response.get_data(as_text=True)
+        self.assertIn("Not tracked", html)
+        self.assertIn("1 conversations", html)
+
+    def test_archive_health_shows_never_imported_for_zero_conversation_provider(self):
+        response = self.client.get("/archive/health")
+        html = response.get_data(as_text=True)
+        self.assertIn("Never imported", html)
+        # "Archive has N conversations" only appears in the pre-instrumentation branch
+        self.assertNotIn("Archive has", html)
+
+    def test_archive_health_mixed_state_renders_all_three_branches(self):
+        conn = sqlite3.connect(self.db_path)
+        try:
+            conn.execute(
+                "INSERT INTO imported_conversation "
+                "(source, source_conversation_id, title, created_at_unix, updated_at_unix, is_archived, is_starred, tags) "
+                "VALUES (?, ?, ?, ?, ?, 0, 0, '')",
+                ("chatgpt", "pre-track-001", "Old chat", 1700000000.0, 1700000000.0),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        with self.app.app_context():
+            db.session.add(ImportRun(
+                provider="gemini",
+                filename="gemini.json",
+                imported_at=time.time(),
+                status="success",
+                conversations_imported=3,
+                messages_imported=12,
+                conversations_skipped=0,
+                conversations_failed=0,
+                error_message=None,
+            ))
+            db.session.commit()
+        response = self.client.get("/archive/health")
+        html = response.get_data(as_text=True)
+        self.assertIn("Not tracked", html)
+        self.assertIn("success", html)
+        self.assertIn("Never imported", html)
+
 
 if __name__ == "__main__":
     unittest.main()
