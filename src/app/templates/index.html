@@ -96,6 +96,12 @@
 {% endblock %}
 
 {% block right_panel %}
+<a href="{{ url_for('archive_health') }}"
+   class="workspace-health-badge workspace-health-badge--{{ health_summary.state | replace('_', '-') }}"
+   title="{{ health_summary.detail or '' }}">
+  <span class="workspace-health-badge__dot" aria-hidden="true"></span>
+  <span class="workspace-health-badge__label">{{ badge_label }}</span>
+</a>
 <div class="context-panel__header">Archive status</div>
 
 {% if workspace.provider_recent %}

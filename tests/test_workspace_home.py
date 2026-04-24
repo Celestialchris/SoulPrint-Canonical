@@ -215,5 +215,51 @@ class WorkspaceHomeTest(unittest.TestCase):
         self.assertIn("5 providers connected", html)
 
 
+    # ── Health badge ──
+
+    def test_workspace_renders_health_badge_when_healthy(self):
+        """Healthy archive (all tables present) renders the green-dot badge."""
+        html = self._get_workspace_html()
+        self.assertIn("workspace-health-badge--healthy", html)
+        self.assertIn("Archive available", html)
+
+    def test_workspace_renders_needs_attention_badge_when_fts_missing(self):
+        """Dropping FTS tables flips the badge to needs-attention."""
+        import sqlite3 as _sqlite3
+
+        db_uri = self.app.config["SQLALCHEMY_DATABASE_URI"]
+        db_path = db_uri.removeprefix("sqlite:///")
+        conn = _sqlite3.connect(db_path)
+        try:
+            conn.execute("DROP TABLE IF EXISTS fts_messages")
+            conn.execute("DROP TABLE IF EXISTS fts_notes")
+            conn.commit()
+        finally:
+            conn.close()
+
+        html = self._get_workspace_html()
+        self.assertIn("workspace-health-badge--needs-attention", html)
+        self.assertIn("Needs attention", html)
+
+    def test_workspace_renders_unknown_badge_when_db_missing(self):
+        """Pointing the app at a nonexistent DB path renders the unknown-state badge."""
+        original_uri = self.app.config["SQLALCHEMY_DATABASE_URI"]
+        self.app.config["SQLALCHEMY_DATABASE_URI"] = (
+            f"sqlite:///{self.workdir}/does-not-exist.db"
+        )
+        try:
+            html = self._get_workspace_html()
+        finally:
+            self.app.config["SQLALCHEMY_DATABASE_URI"] = original_uri
+
+        self.assertIn("workspace-health-badge--unknown", html)
+        self.assertIn("No archive yet", html)
+
+    def test_workspace_badge_links_to_archive_health(self):
+        """The badge anchor always points to /archive/health."""
+        html = self._get_workspace_html()
+        self.assertIn("/archive/health", html)
+
+
 if __name__ == "__main__":
     unittest.main()

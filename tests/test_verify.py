@@ -206,3 +206,88 @@ class VerifyArchiveTest(unittest.TestCase):
         self.assertTrue(result["checks"]["orphans"]["ok"])
         self.assertFalse(result["checks"]["core_tables"]["ok"])
         self.assertIn("imported_conversation", result["checks"]["core_tables"]["missing"])
+
+    # ------------------------------------------------------------------
+    # quick_health_summary tests
+    # ------------------------------------------------------------------
+
+    def test_quick_health_summary_missing_db_returns_unknown(self) -> None:
+        from src.verify import quick_health_summary
+
+        path = self._db("qs_nonexistent.db")
+        result = quick_health_summary(path)
+
+        self.assertEqual(result["state"], "unknown")
+        self.assertIsInstance(result["db_path"], str)
+
+    def test_quick_health_summary_healthy_archive_returns_healthy(self) -> None:
+        from src.verify import quick_health_summary
+
+        path = self._db("qs_healthy.db")
+        _make_db(path, _FULL_DDL)
+        result = quick_health_summary(path)
+
+        self.assertEqual(result["state"], "healthy")
+        self.assertIsNone(result["detail"])
+
+    def test_quick_health_summary_missing_core_table_returns_needs_attention(self) -> None:
+        from src.verify import quick_health_summary
+
+        path = self._db("qs_missing_core.db")
+        # Build DB with all tables except memory_entry
+        conn = sqlite3.connect(str(path))
+        try:
+            conn.executescript("""
+                CREATE TABLE imported_conversation (
+                    id INTEGER PRIMARY KEY, source TEXT, created_at_unix REAL
+                );
+                CREATE TABLE imported_message (
+                    id INTEGER PRIMARY KEY, conversation_id INTEGER
+                );
+                CREATE VIRTUAL TABLE fts_messages USING fts5(content);
+                CREATE VIRTUAL TABLE fts_notes USING fts5(content);
+            """)
+            conn.commit()
+        finally:
+            conn.close()
+
+        result = quick_health_summary(path)
+
+        self.assertEqual(result["state"], "needs_attention")
+        self.assertIn("memory_entry", result["detail"])
+
+    def test_quick_health_summary_corrupt_db_returns_needs_attention(self) -> None:
+        from src.verify import quick_health_summary
+
+        path = self._db("qs_corrupt.db")
+        path.write_text("this is not a sqlite database\n")
+        result = quick_health_summary(path)
+
+        self.assertEqual(result["state"], "needs_attention")
+        self.assertIsInstance(result["detail"], str)
+        self.assertTrue(len(result["detail"]) > 0)
+
+    def test_quick_health_summary_skips_full_verify_checks(self) -> None:
+        """Orphan row does not flip state to needs_attention.
+
+        Proves quick_health_summary skips the orphan detection that
+        verify_archive runs. All tables present + an orphan row =
+        state "healthy" from the quick function.
+        """
+        from src.verify import quick_health_summary
+
+        path = self._db("qs_orphan.db")
+        _make_db(path, _FULL_DDL)
+        # Insert an orphaned message (conversation_id 999 has no parent row)
+        conn = sqlite3.connect(str(path))
+        try:
+            conn.execute(
+                "INSERT INTO imported_message (conversation_id) VALUES (?)", (999,)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        result = quick_health_summary(path)
+
+        self.assertEqual(result["state"], "healthy")

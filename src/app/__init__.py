@@ -27,6 +27,7 @@ from ..importers.errors import (
     UnsupportedImportFormatError,
 )
 from ..passport import export_memory_passport, validate_memory_passport
+from ..verify import quick_health_summary
 
 
 def federated_search(*args, **kwargs):
@@ -382,6 +383,13 @@ def create_app():
         ]
 
         license_status = get_license_status(instance_dir=app.instance_path)
+        health_summary = quick_health_summary(Path(db_path))
+        _badge_labels = {
+            "healthy": "Archive available",
+            "needs_attention": "Needs attention",
+            "unknown": "No archive yet",
+        }
+        badge_label = _badge_labels.get(health_summary["state"], "Unknown")
         return render_template(
             "index.html",
             workspace=workspace,
@@ -390,6 +398,8 @@ def create_app():
             last_passport_date=last_passport_date,
             time_of_day=time_of_day,
             recent_conversations=recent_conversations,
+            health_summary=health_summary,
+            badge_label=badge_label,
         )
 
     @app.get("/archive/health")
