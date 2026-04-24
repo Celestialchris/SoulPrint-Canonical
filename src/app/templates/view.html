@@ -92,16 +92,66 @@
         </article>
       {% endfor %}
     </div>
-  {% elif not request.args.get('tag') %}
+  {% elif not starred_imports and not request.args.get('tag') %}
     <section class="empty-state">
       <h2 class="empty-state__title">No notes yet.</h2>
       <p class="empty-state__text">Write your first thought above, or browse a conversation and select text to clip moments with source links attached.</p>
     </section>
-  {% else %}
+  {% elif not starred_imports %}
     {{ empty_state(
       "No notes found.",
       "Try a different tag, or write a new note above."
     ) }}
+  {% endif %}
+
+  {# ── Starred conversations ── #}
+  {% if starred_imports %}
+    <p class="page-eyebrow" style="margin-top:2rem;">Starred conversations</p>
+    <div class="notes-list">
+      {% for conv in starred_imports %}
+        <article class="note-item">
+          <a class="note-item__link" href="/imported/{{ conv.id }}/explorer">
+            <p class="note-item__content">{{ conv.title }}</p>
+          </a>
+          <div class="note-item__meta">
+            {% if conv.tags and conv.tags.strip() %}
+              <span class="note-item__tags">
+                <span class="tag-pill">{{ conv.source | provider_display_name }}</span>
+                {% for t in conv.tags.split(',') %}
+                  {% if t.strip() %}
+                    <span class="tag-pill">{{ t.strip() }}</span>
+                  {% endif %}
+                {% endfor %}
+              </span>
+            {% else %}
+              <span class="note-item__tags">
+                <span class="tag-pill">{{ conv.source | provider_display_name }}</span>
+              </span>
+            {% endif %}
+            <span class="note-item__time">
+              {% if conv.updated_at_unix %}{{ format_timestamp(conv.updated_at_unix) }}
+              {% elif conv.created_at_unix %}{{ format_timestamp(conv.created_at_unix) }}
+              {% else %}—{% endif %}
+              · {{ conv.messages | length }} messages
+            </span>
+            <form method="post" action="/imported/{{ conv.id }}/unstar" style="display:inline;">
+              <input type="hidden" name="next"
+                     value="/chats{% if request.args.get('tag') %}?tag={{ request.args.get('tag')|urlencode }}{% endif %}">
+              <button type="submit"
+                      style="background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);font-size:inherit;color:var(--accent);">
+                ★ Unstar
+              </button>
+            </form>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% elif entries and not request.args.get('tag') %}
+    <p class="page-eyebrow" style="margin-top:2rem;">Starred conversations</p>
+    <p class="metadata-line">No starred conversations yet. Star an imported conversation to adopt it here.</p>
+  {% elif entries %}
+    <p class="page-eyebrow" style="margin-top:2rem;">Starred conversations</p>
+    <p class="metadata-line">No starred conversations match this tag.</p>
   {% endif %}
 {% endblock %}
 

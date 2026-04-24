@@ -907,7 +907,18 @@ def create_app():
         if tag:
             q = q.filter(MemoryEntry.tags.contains(tag))
         entries = q.limit(100).all()
-        return render_template("view.html", entries=entries)
+        sq = ImportedConversation.query.filter(
+            ImportedConversation.is_starred == True  # noqa: E712
+        ).order_by(ImportedConversation.updated_at_unix.desc())
+        if tag:
+            sq = sq.filter(ImportedConversation.tags.contains(tag))
+        starred_imports = sq.limit(100).all()
+        return render_template(
+            "view.html",
+            entries=entries,
+            starred_imports=starred_imports,
+            format_timestamp=format_timestamp,
+        )
 
     @app.get("/imported/<int:conv_id>/delete")
     def delete_imported_confirm(conv_id: int):
