@@ -170,6 +170,17 @@ class ImportedExplorerRouteTest(unittest.TestCase):
             f"export link must not have `download` attribute: {match.group(0)!r}",
         )
 
+    def test_copy_transcript_button_and_confirm_span_present(self):
+        conversation_id = self._create_conversation_with_messages()
+
+        response = self.client.get(f"/imported/{conversation_id}/explorer")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('id="explorer-copy-btn"', html)
+        self.assertIn('id="explorer-copy-confirm"', html)
+        self.assertIn('class="copy-confirm"', html)
+
     def test_imported_explorer_shows_provider_identity_for_non_chatgpt_source(self):
         with self.app.app_context():
             conversation = ImportedConversation(

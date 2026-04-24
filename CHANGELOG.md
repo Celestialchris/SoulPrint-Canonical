@@ -5,6 +5,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 ## [Unreleased]
 
 ### Changed
+- **Copy UX normalized across handoff surfaces.** `/continuity/<id>` gains a "Copied ✓" confirm state to match `/digest/result`. `/imported/<id>/explorer` gains a "Copy transcript" button for the first time, reading `#transcriptPane` directly. One new shared `.copy-confirm` CSS class promoted. Digest untouched.
 - **ROADMAP retires "Phase 11: Soft launch" framing.** Launch pressure removed per end-of-session context 2026-04-23. Phase 11 items (multi-select export, landing refresh, Reddit posts, fresh screenshots, loopback restriction) moved to a Parked section. Observable Archive v0 added to Completed.
 - **Tightened sidebar-test anchors to page-unique content.** Three assertions that passed via sidebar substring matches replaced with page-unique anchors: `"Ask"` → full action-card `<h4>` element on START HERE tests; `"Federated"` → `"Across all sources"` page_title block on `/federated` tests. Per Codex review on #149.
 - **Sidebar language aligned with page headers.** Five sidebar labels changed to match the functional language used on their target pages: "Ask your memory" → "Ask", "What you've discussed" → "Imported", "Everything, together" → "Federated", "How answers were found" → "Answer audit", "Take it with you" → "Memory Passport". Import subtitle now lists all five providers including Grok.
