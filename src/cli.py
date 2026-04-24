@@ -129,19 +129,13 @@ def _cmd_verify(args: argparse.Namespace) -> None:
         for key, (ok_label, fail_label) in _CHECK_LABELS.items():
             check = result["checks"][key]
             detail = check.get("detail")
-            if detail and detail.startswith("skipped"):
-                status = "--  "
-                label = ok_label
-                suffix = f" ({detail})"
-            elif check["ok"]:
-                status = "ok  "
-                label = ok_label
-                suffix = ""
+            if check["ok"]:
+                print(f"  ok  {ok_label}")
+            elif detail and detail.startswith("skipped"):
+                print(f"  --    {ok_label} ({detail})")
             else:
-                status = "FAIL"
-                label = fail_label
                 suffix = f" ({detail})" if detail else ""
-            print(f"  {status}  {label}{suffix}")
+                print(f"  FAIL  {fail_label}{suffix}")
 
         counts = result["counts"]
         print(f"\nCounts:")
