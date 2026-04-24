@@ -2029,6 +2029,13 @@ def create_app():
                 run_error_message = "Selected sessions no longer exist on disk."
                 return redirect(url_for("scan_claude_code"))
 
+            import sqlite3 as _sqlite3
+            _c = _sqlite3.connect(str(db_path))
+            try:
+                msg_before = _c.execute("SELECT COUNT(*) FROM imported_message").fetchone()[0]
+            finally:
+                _c.close()
+
             result = import_selected_sessions(to_import, db_path)
             run_reached_importer = True
             run_imported = len(result.imported)
@@ -2036,6 +2043,13 @@ def create_app():
             run_failed = len(result.failed)
             if result.failed:
                 run_error_message = "; ".join(f"{sid}: {msg}" for sid, msg in result.failed)
+
+            _c = _sqlite3.connect(str(db_path))
+            try:
+                msg_after = _c.execute("SELECT COUNT(*) FROM imported_message").fetchone()[0]
+            finally:
+                _c.close()
+            run_messages_imported = max(0, msg_after - msg_before)
 
             session["scan_result"] = {
                 "imported": result.imported,

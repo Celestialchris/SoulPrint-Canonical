@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.config import Config
-from src.importers.claude_code_discovery import ImportScanResult
 from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
 
 
@@ -226,6 +225,7 @@ class ScanClaudeCodePostTest(unittest.TestCase):
 
     def test_mixed_failure_creates_partial_run(self):
         from src.app.models import ImportRun
+        from src.importers.claude_code_discovery import ImportScanResult
         sid_a = "aaaaaaaa-aaaa-0000-0000-000000000001"
         sid_b = "bbbbbbbb-bbbb-0000-0000-000000000002"
         info = _build_fake_projects(self.tmpdir, {"C--proj-partial": [sid_a, sid_b]})
@@ -256,6 +256,7 @@ class ScanClaudeCodePostTest(unittest.TestCase):
 
     def test_all_failed_scan_creates_failed_run(self):
         from src.app.models import ImportRun
+        from src.importers.claude_code_discovery import ImportScanResult
         sid_a = "cccccccc-cccc-0000-0000-000000000001"
         info = _build_fake_projects(self.tmpdir, {"C--proj-allfail": [sid_a]})
         projects_dir = info["projects_dir"]
