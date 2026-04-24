@@ -392,6 +392,27 @@ def create_app():
             recent_conversations=recent_conversations,
         )
 
+    @app.get("/archive/health")
+    def archive_health():
+        from ..verify import verify_archive
+        from .import_runs import last_import_run_per_provider
+        from ..importers.contracts import PROVIDER_DISPLAY_NAMES
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        db_path = _sqlite_path_from_uri(sqlite_uri)
+
+        verify_result = verify_archive(Path(db_path))
+        provider_runs = last_import_run_per_provider()
+
+        return render_template(
+            "archive_health.html",
+            verify=verify_result,
+            provider_runs=provider_runs,
+            provider_ids=list(PROVIDER_DISPLAY_NAMES.keys()),
+            format_timestamp=format_timestamp,
+            db_path=db_path,
+        )
+
     @app.get("/passport")
     def passport_surface():
         capability = {

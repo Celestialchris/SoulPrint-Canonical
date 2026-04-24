@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Archive health · SoulPrint{% endblock %}
+{% block page_title %}Archive health{% endblock %}
+{% block page_desc %}canonical archive status and last-import activity{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Sanctum / Archive health</p>
+    <p class="page-summary">
+      Full health check of your canonical archive, plus last-import activity per provider.
+    </p>
+  </section>
+
+  <section class="surface-card" aria-label="Verify checks">
+    <h2>Checks</h2>
+    {% set check_labels = [
+        ('db_exists',   'Database file exists'),
+        ('integrity',   'SQLite integrity check'),
+        ('core_tables', 'Core tables present'),
+        ('fts_tables',  'FTS tables present'),
+        ('orphans',     'No orphan messages'),
+    ] %}
+    <ul class="content-list">
+      {% for key, label in check_labels %}
+        {% set entry = verify.checks[key] %}
+        <li>
+          <strong>{{ 'ok' if entry.ok else 'FAIL' }}</strong>
+          · {{ label }}{% if entry.detail %} — {{ entry.detail }}{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    <p>Status: {{ 'healthy' if verify.ok else 'issues detected' }}.</p>
+  </section>
+
+  <section class="surface-card" aria-label="Last import per provider">
+    <h2>Last import per provider</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Provider</th>
+          <th>Last run</th>
+          <th>Status</th>
+          <th>Counts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pid in provider_ids %}
+          {% set run = provider_runs[pid] %}
+          <tr>
+            <td>{{ pid | provider_display_name }}</td>
+            {% if run %}
+              <td>{{ format_timestamp(run.imported_at) }}</td>
+              <td>{{ run.status }}</td>
+              <td>{{ run.conversations_imported }} imported, {{ run.conversations_skipped }} skipped, {{ run.conversations_failed }} failed</td>
+            {% else %}
+              <td>Never imported</td>
+              <td>—</td>
+              <td>—</td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="file-proof" aria-label="Your Archive">
+    <div class="file-proof-label">YOUR ARCHIVE</div>
+    <code class="file-proof-path">{{ db_path }}</code>
+  </section>
+{% endblock %}

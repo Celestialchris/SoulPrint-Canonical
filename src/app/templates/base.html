@@ -36,6 +36,7 @@
           <span class="sidebar-group__label">Sanctum</span>
           {{ sidebar_item(url_for('home'), 'Workspace', request.path == url_for('home')) }}
           {{ sidebar_item(url_for('ask'), 'Ask', request.path.startswith('/ask')) }}
+          {{ sidebar_item(url_for('archive_health'), 'Archive health', request.path.startswith('/archive/health')) }}
         </nav>
 
         <nav class="sidebar-group" aria-label="Memory">
