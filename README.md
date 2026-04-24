@@ -10,7 +10,7 @@
 
 **Your AI conversations, home.**
 
-SoulPrint imports your ChatGPT, Claude, and Gemini history into a single searchable archive on your machine. No cloud. No accounts. No telemetry. The archive is a file you own, one SQLite database you can open in any tool and verify yourself.
+SoulPrint imports your ChatGPT, Claude, Claude Code, Gemini, and Grok history into a single searchable archive on your machine. No cloud. No accounts. No telemetry. The archive is a file you own, one SQLite database you can open in any tool and verify yourself.
 
 ![Workspace](docs/screenshots/workspace.png)
 
@@ -76,7 +76,7 @@ soulprint
 
 ## What it does
 
-**Import.** Drop a ChatGPT `.zip`, Claude `.json`, or Gemini Takeout. Provider auto-detected. Deduplicated. Normalized into one SQLite file on your machine.
+**Import.** Drop a ChatGPT `.zip`, Claude `.json`, Claude Code `.jsonl`, Gemini Takeout, or Grok `.json`. Provider auto-detected. Deduplicated. Normalized into one SQLite file on your machine.
 
 **Browse and search.** Workspace dashboard, conversation list by provider, transcript explorer with prompt-level TOC and minimap, full-text search across all providers with highlighted snippets. Clip moments from any conversation into personal notes with full source provenance.
 
@@ -90,7 +90,7 @@ soulprint
 
 ## Why this exists
 
-I use ChatGPT, Claude, and Gemini every day. My conversation history, research, decisions, and creative work is scattered across three platforms that don't talk to each other. Their exports sit dead on disk as unusable zip files.
+I use ChatGPT, Claude, Claude Code, Gemini, and Grok every day. My conversation history, research, decisions, and creative work is scattered across five platforms that don't talk to each other. Their exports sit dead on disk as unusable zip files.
 
 In March 2026, Google and Anthropic both launched features to import your AI conversations into *their* silos. SoulPrint does the opposite: it gives you a local file you own, with provenance you can verify, and intelligence you can export.
 
@@ -104,6 +104,7 @@ Read the full [manifesto](docs/manifesto.md).
 |----------|--------|--------|
 | ChatGPT | `.zip` from OpenAI | Supported |
 | Claude | `.json` from Anthropic | Supported |
+| Claude Code | `.jsonl` from Claude Code session files | Supported |
 | Gemini | Google Takeout `MyActivity.json` or Chrome extension JSON | Supported |
 | Grok | `.json` from xAI export | Supported |
 
