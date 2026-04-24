@@ -53,6 +53,13 @@
               <td>{{ format_timestamp(run.imported_at) }}</td>
               <td>{{ run.status }}</td>
               <td>{{ run.conversations_imported }} imported, {{ run.conversations_skipped }} skipped, {{ run.conversations_failed }} failed</td>
+            {% elif provider_counts.get(pid, 0) > 0 %}
+              <td>
+                Not tracked
+                <div class="metadata-line">Archive has {{ provider_counts[pid] }} conversations, imported before tracking began.</div>
+              </td>
+              <td>—</td>
+              <td>—</td>
             {% else %}
               <td>Never imported</td>
               <td>—</td>
@@ -62,6 +69,7 @@
         {% endfor %}
       </tbody>
     </table>
+    <p class="metadata-line">Import history tracks runs from April 24, 2026 onward. Conversations imported before that appear as &#8220;Not tracked&#8221;.</p>
   </section>
 
   <section class="file-proof" aria-label="Your Archive">

@@ -421,6 +421,7 @@ def create_app():
             provider_ids=list(PROVIDER_DISPLAY_NAMES.keys()),
             format_timestamp=format_timestamp,
             db_path=db_path,
+            provider_counts=verify_result["counts"].get("providers", {}),
         )
 
     @app.get("/passport")
