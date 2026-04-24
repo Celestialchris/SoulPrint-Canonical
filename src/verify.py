@@ -171,3 +171,60 @@ def verify_archive(db_path: Path) -> dict:
 
     result["ok"] = all(c["ok"] for c in result["checks"].values())
     return result
+
+
+def quick_health_summary(db_path: Path) -> dict:
+    """Return a minimal three-state health signal for the Workspace badge.
+
+    Does NOT run PRAGMA integrity_check. Does NOT run the orphan check.
+    Skipping these keeps the badge cost to a sqlite_master lookup — safe
+    to call on every Workspace GET.
+
+    Returns:
+        {
+            "state": "healthy" | "needs_attention" | "unknown",
+            "db_path": str,
+            "detail": str | None,
+        }
+
+    State mapping:
+      db_exists False                       → "unknown"
+      db_exists True, all tables present    → "healthy"
+      db_exists True, any table missing     → "needs_attention"
+
+    Acknowledged gap: verify_archive can return ok=False for integrity
+    or orphan failures that this function does not detect. The badge may
+    read "healthy" while /archive/health reports issues. This is intentional.
+    """
+    db_path = Path(db_path)
+
+    if not db_path.is_file():
+        return {
+            "state": "unknown",
+            "db_path": str(db_path.resolve()),
+            "detail": "No archive found at this path.",
+        }
+
+    all_expected = CORE_TABLES + FTS_TABLES
+    placeholders = ", ".join("?" * len(all_expected))
+    conn = sqlite3.connect(str(db_path))
+    try:
+        rows = conn.execute(
+            f"SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ({placeholders})",
+            tuple(all_expected),
+        ).fetchall()
+        found = {r[0] for r in rows}
+        missing = [t for t in all_expected if t not in found]
+        if missing:
+            return {
+                "state": "needs_attention",
+                "db_path": str(db_path.resolve()),
+                "detail": f"Missing tables: {', '.join(missing)}",
+            }
+        return {
+            "state": "healthy",
+            "db_path": str(db_path.resolve()),
+            "detail": None,
+        }
+    finally:
+        conn.close()
