@@ -209,10 +209,17 @@ def quick_health_summary(db_path: Path) -> dict:
     placeholders = ", ".join("?" * len(all_expected))
     conn = sqlite3.connect(str(db_path))
     try:
-        rows = conn.execute(
-            f"SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ({placeholders})",
-            tuple(all_expected),
-        ).fetchall()
+        try:
+            rows = conn.execute(
+                f"SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ({placeholders})",
+                tuple(all_expected),
+            ).fetchall()
+        except sqlite3.DatabaseError as exc:
+            return {
+                "state": "needs_attention",
+                "db_path": str(db_path.resolve()),
+                "detail": str(exc),
+            }
         found = {r[0] for r in rows}
         missing = [t for t in all_expected if t not in found]
         if missing:

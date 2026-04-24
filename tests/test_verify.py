@@ -256,6 +256,17 @@ class VerifyArchiveTest(unittest.TestCase):
         self.assertEqual(result["state"], "needs_attention")
         self.assertIn("memory_entry", result["detail"])
 
+    def test_quick_health_summary_corrupt_db_returns_needs_attention(self) -> None:
+        from src.verify import quick_health_summary
+
+        path = self._db("qs_corrupt.db")
+        path.write_text("this is not a sqlite database\n")
+        result = quick_health_summary(path)
+
+        self.assertEqual(result["state"], "needs_attention")
+        self.assertIsInstance(result["detail"], str)
+        self.assertTrue(len(result["detail"]) > 0)
+
     def test_quick_health_summary_skips_full_verify_checks(self) -> None:
         """Orphan row does not flip state to needs_attention.
 
