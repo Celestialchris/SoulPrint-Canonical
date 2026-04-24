@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 import unittest
 
-from src.app.import_runs import classify_import_outcome, latest_import_runs, record_import_run
+from src.app.import_runs import classify_import_outcome, last_import_run_per_provider, latest_import_runs, record_import_run
 from src.app.models import ImportRun
 from src.config import Config
 from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
@@ -188,6 +188,66 @@ class ImportRunWriterTest(unittest.TestCase):
     def test_latest_import_runs_empty_db_returns_empty_list(self):
         with self.app.app_context():
             self.assertEqual(latest_import_runs(), [])
+
+
+class LastImportRunPerProviderTest(unittest.TestCase):
+    def setUp(self):
+        self.workdir = make_test_temp_dir(self, "last-run-per-provider")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        self.addCleanup(self._restore_uri)
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.workdir / 'test.db'}"
+        from src.app import create_app
+        self.app = create_app()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+
+    def _restore_uri(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+
+    def test_last_import_run_per_provider_returns_all_five_keys(self):
+        from src.importers.contracts import PROVIDER_DISPLAY_NAMES
+        with self.app.app_context():
+            result = last_import_run_per_provider()
+        self.assertEqual(set(result.keys()), set(PROVIDER_DISPLAY_NAMES.keys()))
+        for v in result.values():
+            self.assertIsNone(v)
+
+    def test_last_import_run_per_provider_returns_most_recent_for_each(self):
+        from src.app.models.db import db
+        with self.app.app_context():
+            db.session.add(ImportRun(
+                provider="chatgpt", filename=None,
+                imported_at=1000.0, status="duplicate_only",
+                conversations_imported=0, messages_imported=0,
+                conversations_skipped=3, conversations_failed=0,
+                error_message=None,
+            ))
+            db.session.add(ImportRun(
+                provider="chatgpt", filename=None,
+                imported_at=2000.0, status="success",
+                conversations_imported=5, messages_imported=20,
+                conversations_skipped=0, conversations_failed=0,
+                error_message=None,
+            ))
+            db.session.commit()
+            result = last_import_run_per_provider()
+        self.assertIsNotNone(result["chatgpt"])
+        self.assertAlmostEqual(result["chatgpt"].imported_at, 2000.0, places=1)
+        self.assertEqual(result["chatgpt"].status, "success")
+
+    def test_last_import_run_per_provider_excludes_null_provider_rows(self):
+        from src.app.models.db import db
+        with self.app.app_context():
+            db.session.add(ImportRun(
+                provider=None, filename="unknown.json",
+                imported_at=9999.0, status="failed",
+                conversations_imported=0, messages_imported=0,
+                conversations_skipped=0, conversations_failed=1,
+                error_message="unrecognized format",
+            ))
+            db.session.commit()
+            result = last_import_run_per_provider()
+        for v in result.values():
+            self.assertIsNone(v)
 
 
 if __name__ == "__main__":

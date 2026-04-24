@@ -10,6 +10,7 @@ import time
 
 from src.app.models import ImportRun
 from src.app.models.db import db
+from src.importers.contracts import PROVIDER_DISPLAY_NAMES
 
 
 VALID_STATUSES: frozenset[str] = frozenset({
@@ -83,3 +84,23 @@ def record_import_run(
 def latest_import_runs(limit: int = 10) -> list[ImportRun]:
     """Return the most recent ImportRun rows, newest first. Flask context required."""
     return ImportRun.query.order_by(ImportRun.imported_at.desc()).limit(limit).all()
+
+
+def last_import_run_per_provider() -> dict[str, "ImportRun | None"]:
+    """Return the most-recent ImportRun row per provider, keyed by provider ID.
+
+    All five provider keys from PROVIDER_DISPLAY_NAMES are always present.
+    Providers with no import history have value None.
+    Rows with provider=None are excluded.
+    """
+    result: dict[str, ImportRun | None] = {pid: None for pid in PROVIDER_DISPLAY_NAMES}
+    rows = (
+        ImportRun.query
+        .filter(ImportRun.provider.isnot(None))
+        .order_by(ImportRun.imported_at.desc())
+        .all()
+    )
+    for row in rows:
+        if row.provider in result and result[row.provider] is None:
+            result[row.provider] = row
+    return result
