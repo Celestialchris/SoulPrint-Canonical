@@ -24,7 +24,7 @@ A local-first memory continuity system for AI users. Import AI conversation hist
 - Each provider needs: adapter, detector, fixture, registry entry, tests
 - Tests use `make_test_temp_dir()` and `release_app_db_handles()`
 - Provider IDs: lowercase strings in `SUPPORTED_IMPORT_PROVIDERS`
-- Current providers: `chatgpt`, `claude`, `gemini`, `grok`
+- Current providers: `chatgpt`, `claude`, `claude_code`, `gemini`, `grok`
 - Answer traces: JSONL append-only, non-canonical, always labeled "Derived"
 - Citation handoff: `memory:<id>` → `/memory/<id>`, `imported_conversation:<id>` → `/imported/<id>/explorer`
 - Continuity packets: typed artifacts (summary, decisions, open loops, entity map, bridge packet) stored with provenance
