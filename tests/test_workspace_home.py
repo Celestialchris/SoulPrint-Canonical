@@ -135,7 +135,7 @@ class WorkspaceHomeTest(unittest.TestCase):
         """Action tiles orient a fresh user on first run."""
         html = self._get_workspace_html()
         self.assertIn("START HERE", html)
-        self.assertIn("Ask", html)
+        self.assertIn('<h4 class="action-card__title">Ask your memory</h4>', html)
         self.assertIn("Import conversations", html)
         self.assertIn("Memory Passport", html)
 
@@ -178,7 +178,7 @@ class WorkspaceHomeTest(unittest.TestCase):
         )
         html = self._get_workspace_html()
         self.assertIn("START HERE", html)
-        self.assertIn("Ask", html)
+        self.assertIn('<h4 class="action-card__title">Ask your memory</h4>', html)
         self.assertIn("Import conversations", html)
         self.assertIn("Memory Passport", html)
 

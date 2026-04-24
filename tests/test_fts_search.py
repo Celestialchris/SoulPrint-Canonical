@@ -482,7 +482,7 @@ class FTSFederatedRouteIntegrationTest(unittest.TestCase):
         response = self.client.get("/federated")
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
-        self.assertIn("Federated", html)
+        self.assertIn("Across all sources", html)
 
     def test_fts_results_include_deep_links(self):
         response = self.client.get("/federated?q=DCA")
