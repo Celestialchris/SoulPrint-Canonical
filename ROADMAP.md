@@ -15,10 +15,13 @@
 - Phase 10 — Distribution (brand, landing, desktop, freemium, wrapped)
 - Phase 10.5 — Packaging Infrastructure (PyInstaller, pyproject.toml)
 - Phase 12 — Obsidian Bridge — one-way export to Obsidian vault with structured notes, themes, and daily anchors
+- Observable Archive v0: /archive/health, ImportRun history, soulprint verify CLI, Workspace health badge
 
-## Current Milestone
+## Parked
 
-### Phase 11 — Soft launch
+Launch pressure removed as of 2026-04-23. These items unpark when a launch window is scheduled.
+
+### Phase 11: Soft launch
 - Multi-select export (checkboxes on /imported, bulk markdown download — many files)
 - Fresh screenshots for docs + README with real imported data (Quiet Archive v3)
 - Landing page refresh (soulprint.dev)
