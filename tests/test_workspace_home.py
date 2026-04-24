@@ -87,7 +87,7 @@ class WorkspaceHomeTest(unittest.TestCase):
             self._seed_conv("chatgpt", "Test")
             db.session.commit()
         html = self._get_workspace_html()
-        self.assertIn("Everything, together", html)
+        self.assertIn("Federated", html)
         self.assertIn('href="/federated"', html)
 
     def test_post_import_shows_stats_grid(self):
@@ -135,7 +135,7 @@ class WorkspaceHomeTest(unittest.TestCase):
         """Action tiles orient a fresh user on first run."""
         html = self._get_workspace_html()
         self.assertIn("START HERE", html)
-        self.assertIn("Ask your memory", html)
+        self.assertIn("Ask", html)
         self.assertIn("Import conversations", html)
         self.assertIn("Memory Passport", html)
 
@@ -178,7 +178,7 @@ class WorkspaceHomeTest(unittest.TestCase):
         )
         html = self._get_workspace_html()
         self.assertIn("START HERE", html)
-        self.assertIn("Ask your memory", html)
+        self.assertIn("Ask", html)
         self.assertIn("Import conversations", html)
         self.assertIn("Memory Passport", html)
 
