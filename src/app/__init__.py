@@ -907,9 +907,16 @@ def create_app():
         if tag:
             q = q.filter(MemoryEntry.tags.contains(tag))
         entries = q.limit(100).all()
-        sq = ImportedConversation.query.filter(
-            ImportedConversation.is_starred == True  # noqa: E712
-        ).order_by(ImportedConversation.updated_at_unix.desc())
+        sq = (
+            db.session.query(
+                ImportedConversation,
+                func.count(ImportedMessage.id).label("message_count"),
+            )
+            .outerjoin(ImportedConversation.messages)
+            .filter(ImportedConversation.is_starred == True)  # noqa: E712
+            .group_by(ImportedConversation.id)
+            .order_by(ImportedConversation.updated_at_unix.desc())
+        )
         if tag:
             sq = sq.filter(ImportedConversation.tags.contains(tag))
         starred_imports = sq.limit(100).all()

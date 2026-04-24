@@ -108,7 +108,7 @@
   {% if starred_imports %}
     <p class="page-eyebrow" style="margin-top:2rem;">Starred conversations</p>
     <div class="notes-list">
-      {% for conv in starred_imports %}
+      {% for conv, msg_count in starred_imports %}
         <article class="note-item">
           <a class="note-item__link" href="/imported/{{ conv.id }}/explorer">
             <p class="note-item__content">{{ conv.title }}</p>
@@ -132,7 +132,7 @@
               {% if conv.updated_at_unix %}{{ format_timestamp(conv.updated_at_unix) }}
               {% elif conv.created_at_unix %}{{ format_timestamp(conv.created_at_unix) }}
               {% else %}—{% endif %}
-              · {{ conv.messages | length }} messages
+              · {{ msg_count }} messages
             </span>
             <form method="post" action="/imported/{{ conv.id }}/unstar" style="display:inline;">
               <input type="hidden" name="next"
