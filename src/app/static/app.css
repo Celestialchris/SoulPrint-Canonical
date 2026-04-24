@@ -1426,4 +1426,19 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .workspace-health-badge--unknown .workspace-health-badge__dot {
   background: var(--t3);
 }
-.copy-confirm{color:var(--accent);font-family:var(--font-mono);font-size:12px}
+.copy-confirm {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.page-action-copy {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: inherit;
+  color: var(--t2);
+  margin-left: 1rem;
+}

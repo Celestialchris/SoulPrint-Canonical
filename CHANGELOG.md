@@ -5,6 +5,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 ## [Unreleased]
 
 ### Changed
+- **Explorer Copy transcript button promoted from inline styles to `.page-action-copy` class.** Followup to PR #160. No behavior or visual change. `.copy-confirm` reformatted from single-line to multi-line block matching stylesheet house style.
 - **Copy UX normalized across handoff surfaces.** `/continuity/<id>` gains a "Copied ✓" confirm state to match `/digest/result`. `/imported/<id>/explorer` gains a "Copy transcript" button for the first time, reading `#transcriptPane` directly. One new shared `.copy-confirm` CSS class promoted. Digest untouched.
 - **ROADMAP retires "Phase 11: Soft launch" framing.** Launch pressure removed per end-of-session context 2026-04-23. Phase 11 items (multi-select export, landing refresh, Reddit posts, fresh screenshots, loopback restriction) moved to a Parked section. Observable Archive v0 added to Completed.
 - **Tightened sidebar-test anchors to page-unique content.** Three assertions that passed via sidebar substring matches replaced with page-unique anchors: `"Ask"` → full action-card `<h4>` element on START HERE tests; `"Federated"` → `"Across all sources"` page_title block on `/federated` tests. Per Codex review on #149.
