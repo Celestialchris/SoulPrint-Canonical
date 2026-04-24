@@ -160,6 +160,17 @@ class ContinuityRouteTest(unittest.TestCase):
         self.assertIn("Copy for New Chat", html)
         self.assertIn("copy-payload", html)
 
+    def test_copy_button_and_confirm_span_present(self):
+        conv_id = self._create_conversation()
+        self._post_generate(conv_id)
+        with patch.dict(os.environ, {"SOULPRINT_LLM_PROVIDER": "stub"}, clear=False):
+            response = self.client.get(f"/intelligence/continuity/{conv_id}")
+
+        html = response.get_data(as_text=True)
+        self.assertIn('id="continuity-copy-btn"', html)
+        self.assertIn('id="continuity-copy-confirm"', html)
+        self.assertIn('class="copy-confirm"', html)
+
     def test_source_conversation_link(self):
         conv_id = self._create_conversation()
         with patch.dict(os.environ, {"SOULPRINT_LLM_PROVIDER": "stub"}, clear=False):

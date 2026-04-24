@@ -17,6 +17,11 @@
       ★ {{ "Unstar" if conversation.is_starred else "Star" }}
     </button>
   </form>
+  <button type="button" id="explorer-copy-btn"
+          style="background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-body);font-size:inherit;color:var(--t2);margin-left:1rem;">
+    Copy transcript
+  </button>
+  <span id="explorer-copy-confirm" class="copy-confirm" hidden>Copied ✓</span>
 {% endblock %}
 
 {% block content %}
@@ -287,6 +292,38 @@
         target.style.backgroundColor = "rgba(74, 222, 128, 0.1)";
         setTimeout(function () { target.style.backgroundColor = ""; }, 2000);
       }, 100);
+    })();
+
+    /* ── Copy transcript ── */
+    (function () {
+      var copyBtn = document.getElementById('explorer-copy-btn');
+      var copyConfirm = document.getElementById('explorer-copy-confirm');
+      var pane = document.getElementById('transcriptPane');
+      if (!copyBtn || !pane) return;
+
+      var title = {{ display_title | tojson }};
+
+      function showCopied() {
+        copyConfirm.hidden = false;
+        setTimeout(function () { copyConfirm.hidden = true; }, 2000);
+      }
+
+      copyBtn.addEventListener('click', function () {
+        var text = title + '\n\n' + (pane.innerText || pane.textContent);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(showCopied);
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showCopied();
+        }
+      });
     })();
   </script>
 {% endblock %}

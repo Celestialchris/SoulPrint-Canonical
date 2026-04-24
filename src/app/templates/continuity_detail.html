@@ -45,9 +45,10 @@
       <h2>Copy for New Chat</h2>
       <p class="handoff-hint">Paste this into a fresh AI chat to pick up where you left off.</p>
       <textarea id="copy-payload" class="copy-payload" readonly rows="12">{{ copy_payload }}</textarea>
-      <button type="button" class="handoff-cta" onclick="navigator.clipboard.writeText(document.getElementById('copy-payload').value)">
+      <button type="button" class="handoff-cta" id="continuity-copy-btn">
         Copy handoff to clipboard
       </button>
+      <span id="continuity-copy-confirm" class="copy-confirm" hidden>Copied ✓</span>
     </section>
 
     {# ── Artifacts — supporting detail below the handoff ── #}
@@ -103,4 +104,37 @@
       </section>
     {% endif %}
   {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var btn = document.getElementById('continuity-copy-btn');
+  var confirm = document.getElementById('continuity-copy-confirm');
+  var payload = document.getElementById('copy-payload');
+  if (!btn || !payload) return;
+
+  function showCopied() {
+    confirm.hidden = false;
+    setTimeout(function() { confirm.hidden = true; }, 2000);
+  }
+
+  btn.addEventListener('click', function() {
+    var text = payload.value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(showCopied);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showCopied();
+    }
+  });
+})();
+</script>
 {% endblock %}
