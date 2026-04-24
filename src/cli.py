@@ -107,6 +107,68 @@ def _cmd_info(args: argparse.Namespace) -> None:
         print("  Intelligence: not configured")
 
 
+def _cmd_verify(args: argparse.Namespace) -> None:
+    from src.verify import verify_archive
+
+    db_path = Path(args.db) if args.db else _default_db()
+    result = verify_archive(db_path)
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        print(f"\nSoulPrint verify — {db_path.resolve()}\n")
+
+        _CHECK_LABELS = {
+            "db_exists":   ("Database file exists",   "Database file exists"),
+            "integrity":   ("SQLite integrity check", "SQLite integrity check"),
+            "core_tables": ("Core tables present",    "Core tables present"),
+            "fts_tables":  ("FTS tables present",     "FTS tables present"),
+            "orphans":     ("No orphan messages",     "Orphan messages"),
+        }
+
+        for key, (ok_label, fail_label) in _CHECK_LABELS.items():
+            check = result["checks"][key]
+            detail = check.get("detail")
+            if detail and detail.startswith("skipped"):
+                status = "--  "
+                label = ok_label
+                suffix = f" ({detail})"
+            elif check["ok"]:
+                status = "ok  "
+                label = ok_label
+                suffix = ""
+            else:
+                status = "FAIL"
+                label = fail_label
+                suffix = f" ({detail})" if detail else ""
+            print(f"  {status}  {label}{suffix}")
+
+        counts = result["counts"]
+        print(f"\nCounts:")
+        print(f"  Conversations: {counts['conversations']:>10,}")
+        print(f"  Messages:      {counts['messages']:>10,}")
+        print(f"  Notes:         {counts['notes']:>10,}")
+        if counts["providers"]:
+            print("  Providers:")
+            for p in PROVIDERS:
+                if p in counts["providers"]:
+                    print(f"    {p}: {counts['providers'][p]:>8,}")
+
+        db_exists_ok = result["checks"]["db_exists"]["ok"]
+        if not db_exists_ok:
+            print("\nStatus: archive missing")
+        elif result["ok"]:
+            print("\nStatus: healthy")
+        else:
+            failed = sum(1 for c in result["checks"].values() if not c["ok"])
+            print(f"\nStatus: unhealthy ({failed} check(s) failed)")
+
+    if not result["checks"]["db_exists"]["ok"]:
+        sys.exit(2)
+    if not result["ok"]:
+        sys.exit(1)
+
+
 def _cmd_mcp_config(_args: argparse.Namespace) -> None:
     import shutil
 
@@ -155,6 +217,10 @@ def main(argv: list[str] | None = None) -> None:
     info_p.add_argument("--json", action="store_true")
     info_p.add_argument("--db", default=None, metavar="PATH")
 
+    verify_p = sub.add_parser("verify", help="Run health checks on the archive")
+    verify_p.add_argument("--json", action="store_true")
+    verify_p.add_argument("--db", default=None, metavar="PATH")
+
     sub.add_parser("mcp-config", help="Print a ready-to-paste .mcp.json block")
 
     args = parser.parse_args(argv)
@@ -166,5 +232,7 @@ def main(argv: list[str] | None = None) -> None:
         _cmd_serve(args)
     elif args.command == "info":
         _cmd_info(args)
+    elif args.command == "verify":
+        _cmd_verify(args)
     elif args.command == "mcp-config":
         _cmd_mcp_config(args)

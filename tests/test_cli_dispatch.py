@@ -27,6 +27,11 @@ CREATE TABLE memory_entry (
 );
 """
 
+_CREATE_TABLES_WITH_FTS = _CREATE_TABLES + """
+CREATE VIRTUAL TABLE fts_messages USING fts5(content);
+CREATE VIRTUAL TABLE fts_notes USING fts5(content);
+"""
+
 
 def _make_db(path: Path) -> None:
     conn = sqlite3.connect(str(path))
@@ -163,6 +168,74 @@ class CLIMcpConfigTest(unittest.TestCase):
         self.assertEqual(db_val, expected)
 
 
+def _make_db_with_fts(path: Path) -> None:
+    conn = sqlite3.connect(str(path))
+    try:
+        conn.executescript(_CREATE_TABLES_WITH_FTS)
+        conn.commit()
+    finally:
+        conn.close()
+
+
+class CLIVerifyTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmpdir = make_test_temp_dir(self, "cli-verify")
+        self.db_path = str(self.tmpdir / "test.db")
+
+    def _run_verify(self, extra_args: list[str] | None = None) -> tuple[str, int | None]:
+        from src.cli import main
+        args = ["verify", "--db", self.db_path] + (extra_args or [])
+        buf = io.StringIO()
+        exit_code = None
+        try:
+            with patch("sys.stdout", buf):
+                main(args)
+        except SystemExit as exc:
+            exit_code = exc.code
+        return buf.getvalue(), exit_code
+
+    def test_verify_happy_path_exit_zero(self) -> None:
+        _make_db_with_fts(Path(self.db_path))
+        conn = sqlite3.connect(self.db_path)
+        try:
+            conn.execute(
+                "INSERT INTO imported_conversation (source, created_at_unix) VALUES (?, ?)",
+                ("chatgpt", 1_700_000_000.0),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        out, exit_code = self._run_verify()
+
+        self.assertIn("Status: healthy", out)
+        self.assertIsNone(exit_code)
+
+    def test_verify_missing_db_exits_two(self) -> None:
+        from src.cli import main
+        missing = str(self.tmpdir / "nonexistent.db")
+        buf = io.StringIO()
+        with patch("sys.stdout", buf):
+            with self.assertRaises(SystemExit) as cm:
+                main(["verify", "--db", missing])
+        self.assertEqual(cm.exception.code, 2)
+
+    def test_verify_unhealthy_archive_exits_one(self) -> None:
+        # core tables only — FTS tables missing → unhealthy
+        _make_db(Path(self.db_path))
+
+        _out, exit_code = self._run_verify()
+
+        self.assertEqual(exit_code, 1)
+
+    def test_verify_json_flag_outputs_parseable_json(self) -> None:
+        _make_db_with_fts(Path(self.db_path))
+        out, _exit_code = self._run_verify(["--json"])
+        obj = json.loads(out)
+        for key in ("ok", "db_path", "checks", "counts"):
+            self.assertIn(key, obj)
+
+
 class CLIServeDispatchTest(unittest.TestCase):
     def test_bare_soulprint_invokes_serve_handler(self) -> None:
         from src.cli import main
@@ -200,5 +273,6 @@ class CLIServeDispatchTest(unittest.TestCase):
         self.assertIn("serve", out)
         self.assertIn("info", out)
         self.assertIn("mcp-config", out)
+        self.assertIn("verify", out)
 
 
