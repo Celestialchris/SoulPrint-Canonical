@@ -74,3 +74,18 @@ class ImportedMessage(db.Model):
     content = db.Column(db.Text, nullable=False)
     sequence_index = db.Column(db.Integer, nullable=False)
     created_at_unix = db.Column(db.Float, nullable=True)
+
+
+class ImportRun(db.Model):
+    """Durable history row for one import attempt at an import route handler."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    provider = db.Column(db.String(32), nullable=True)
+    filename = db.Column(db.String(512), nullable=True)
+    imported_at = db.Column(db.Float, nullable=False, index=True)
+    status = db.Column(db.String(32), nullable=False, index=True)
+    conversations_imported = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    messages_imported = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    conversations_skipped = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    conversations_failed = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    error_message = db.Column(db.String(500), nullable=True)

@@ -13,7 +13,8 @@ from .imported_explorer import anchor_for_message, build_prompt_toc, format_time
 from .models.db import db
 from ..config import Config, normalize_sqlite_uri
 from ..runtime import default_instance_dir, static_dir, templates_dir
-from .models import ImportedConversation, ImportedMessage, MemoryEntry
+from .models import ImportedConversation, ImportedMessage, ImportRun, MemoryEntry
+from .import_runs import classify_import_outcome, latest_import_runs, record_import_run
 from .citation_handoff import build_answer_trace_citation_view
 from .decorators import require_license
 from .licensing import get_license_status, is_licensed
@@ -825,72 +826,112 @@ def create_app():
         result = None
 
         if request.method == "POST":
-            # Capture count before import for first-import redirect
-            count_before = ImportedConversation.query.count()
+            run_provider: str | None = None
+            run_filename: str | None = None
+            run_imported = 0
+            run_messages_imported = 0
+            run_skipped = 0
+            run_failed = 0
+            run_error_message: str | None = None
+            run_reached_importer = False
 
-            upload = request.files.get("export_file")
-            if upload is None or upload.filename == "":
-                error_message = "Choose an export file before importing."
-            else:
-                temp_path: Path | None = None
-                try:
-                    filename_lower = (upload.filename or "").lower()
-                    if filename_lower.endswith(".zip"):
-                        suffix = ".zip"
-                    elif filename_lower.endswith(".jsonl"):
-                        suffix = ".jsonl"
-                    else:
-                        suffix = ".json"
-                    with tempfile.NamedTemporaryFile(
-                        mode="wb",
-                        suffix=suffix,
-                        delete=False,
-                    ) as handle:
-                        upload.save(handle)
-                        temp_path = Path(handle.name)
+            try:
+                # Capture count before import for first-import redirect
+                count_before = ImportedConversation.query.count()
 
-                    sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
-                    sqlite_path = _sqlite_path_from_uri(sqlite_uri)
-                    import_result = import_conversation_export_to_sqlite(temp_path, sqlite_path)
+                upload = request.files.get("export_file")
+                if upload is None or upload.filename == "":
+                    error_message = "Choose an export file before importing."
+                    run_error_message = "No file submitted."
+                else:
+                    run_filename = upload.filename
+                    temp_path: Path | None = None
+                    try:
+                        filename_lower = (upload.filename or "").lower()
+                        if filename_lower.endswith(".zip"):
+                            suffix = ".zip"
+                        elif filename_lower.endswith(".jsonl"):
+                            suffix = ".jsonl"
+                        else:
+                            suffix = ".json"
+                        with tempfile.NamedTemporaryFile(
+                            mode="wb",
+                            suffix=suffix,
+                            delete=False,
+                        ) as handle:
+                            upload.save(handle)
+                            temp_path = Path(handle.name)
 
-                    # First import: redirect to summary page
-                    if count_before == 0 and import_result.imported_conversations > 0:
-                        return redirect(url_for("summary"))
+                        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+                        sqlite_path = _sqlite_path_from_uri(sqlite_uri)
+                        import_result = import_conversation_export_to_sqlite(temp_path, sqlite_path)
+                        run_reached_importer = True
+                        run_provider = import_result.provider_id
+                        run_imported = import_result.imported_conversations
+                        run_messages_imported = import_result.imported_messages
+                        run_skipped = import_result.skipped_conversations
 
-                    # New conversations arrived → flash page
-                    if import_result.imported_conversations > 0:
-                        session["import_stats"] = {
-                            "messages_imported": import_result.imported_messages,
-                            "conversations_imported": import_result.imported_conversations,
-                            "provider_name": import_result.provider_id,
+                        # First import: redirect to summary page
+                        if count_before == 0 and import_result.imported_conversations > 0:
+                            return redirect(url_for("summary"))
+
+                        # New conversations arrived → flash page
+                        if import_result.imported_conversations > 0:
+                            session["import_stats"] = {
+                                "messages_imported": import_result.imported_messages,
+                                "conversations_imported": import_result.imported_conversations,
+                                "provider_name": import_result.provider_id,
+                            }
+                            return redirect(url_for("import_complete"))
+
+                        # All duplicates — show inline feedback on import page
+                        result = {
+                            "provider_id": import_result.provider_id,
+                            "imported_conversations": import_result.imported_conversations,
+                            "skipped_conversations": import_result.skipped_conversations,
+                            "imported_messages": import_result.imported_messages,
+                            "warnings": import_result.warnings,
+                            "show_summary_link": False,
                         }
-                        return redirect(url_for("import_complete"))
-
-                    # All duplicates — show inline feedback on import page
-                    result = {
-                        "provider_id": import_result.provider_id,
-                        "imported_conversations": import_result.imported_conversations,
-                        "skipped_conversations": import_result.skipped_conversations,
-                        "imported_messages": import_result.imported_messages,
-                        "warnings": import_result.warnings,
-                        "show_summary_link": False,
-                    }
-                except ImportProviderDetectionError:
-                    error_message = (
-                        "We could not recognize this export format. Supported imports are ChatGPT, Claude, Claude Code, Gemini, and Grok conversation exports."
-                    )
-                except UnsupportedImportFormatError as exc:
-                    error_message = f"This export format is not supported yet: {exc}"
-                except MalformedImportFileError as exc:
-                    error_message = str(exc)
-                finally:
-                    if temp_path is not None and temp_path.exists():
-                        temp_path.unlink()
+                    except ImportProviderDetectionError:
+                        error_message = (
+                            "We could not recognize this export format. Supported imports are ChatGPT, Claude, Claude Code, Gemini, and Grok conversation exports."
+                        )
+                        run_error_message = "Unrecognized export format."
+                    except UnsupportedImportFormatError as exc:
+                        error_message = f"This export format is not supported yet: {exc}"
+                        run_error_message = str(exc)
+                    except MalformedImportFileError as exc:
+                        error_message = str(exc)
+                        run_error_message = str(exc)
+                    except Exception as exc:
+                        run_error_message = f"unexpected: {exc}"
+                        raise
+                    finally:
+                        if temp_path is not None and temp_path.exists():
+                            temp_path.unlink()
+            finally:
+                status = classify_import_outcome(
+                    run_imported, run_skipped, run_failed,
+                    reached_importer=run_reached_importer,
+                )
+                record_import_run(
+                    provider=run_provider,
+                    filename=run_filename,
+                    status=status,
+                    conversations_imported=run_imported,
+                    messages_imported=run_messages_imported,
+                    conversations_skipped=run_skipped,
+                    conversations_failed=run_failed,
+                    error_message=run_error_message,
+                )
 
         return render_template(
             "import.html",
             error_message=error_message,
             result=result,
+            recent_runs=latest_import_runs(limit=10),
+            format_timestamp=format_timestamp,
         )
 
     @app.get("/import/complete")
@@ -1945,43 +1986,81 @@ def create_app():
             discover_sessions,
             import_selected_sessions,
         )
-        selected_ids = set(request.form.getlist("session_ids"))
-        if not selected_ids:
-            session["scan_error"] = "No sessions selected."
-            return redirect(url_for("scan_claude_code"))
 
-        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
-        db_path = _sqlite_path_from_uri(sqlite_uri)
-        raw_projects_dir = request.form.get("projects_dir", "").strip()
-        if raw_projects_dir:
-            home = Path.home()
-            try:
-                from ..importers.claude_code_discovery import normalize_projects_path
-                candidate = normalize_projects_path(raw_projects_dir)
-                candidate.relative_to(home.resolve())
-                projects_dir = candidate
-            except (ValueError, OSError):
-                session["scan_error"] = "Projects path must be under your home directory."
+        run_provider: str | None = "claude_code"
+        run_filename: str | None = "scan-claude-code"
+        run_imported = 0
+        run_messages_imported = 0
+        run_skipped = 0
+        run_failed = 0
+        run_error_message: str | None = None
+        run_reached_importer = False
+
+        try:
+            selected_ids = set(request.form.getlist("session_ids"))
+            if not selected_ids:
+                session["scan_error"] = "No sessions selected."
+                run_error_message = "No sessions selected."
                 return redirect(url_for("scan_claude_code"))
-        else:
-            projects_dir = default_claude_projects_dir()
-        discovered = discover_sessions(projects_dir)
-        to_import = [s for s in discovered if s.session_id in selected_ids]
 
-        if not to_import:
-            session["scan_error"] = "Selected sessions no longer exist on disk."
-            return redirect(url_for("scan_claude_code"))
+            sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+            db_path = _sqlite_path_from_uri(sqlite_uri)
+            raw_projects_dir = request.form.get("projects_dir", "").strip()
+            if raw_projects_dir:
+                home = Path.home()
+                try:
+                    from ..importers.claude_code_discovery import normalize_projects_path
+                    candidate = normalize_projects_path(raw_projects_dir)
+                    candidate.relative_to(home.resolve())
+                    projects_dir = candidate
+                except (ValueError, OSError):
+                    session["scan_error"] = "Projects path must be under your home directory."
+                    run_error_message = "Projects path must be under your home directory."
+                    return redirect(url_for("scan_claude_code"))
+            else:
+                projects_dir = default_claude_projects_dir()
 
-        result = import_selected_sessions(to_import, db_path)
-        session["scan_result"] = {
-            "imported": result.imported,
-            "skipped_duplicate": result.skipped_duplicate,
-            "failed": [
-                {"session_id": sid, "error": msg}
-                for sid, msg in result.failed
-            ],
-        }
-        return redirect(url_for("scan_claude_code_results"))
+            discovered = discover_sessions(projects_dir)
+            to_import = [s for s in discovered if s.session_id in selected_ids]
+            run_filename = f"scan-claude-code:{len(to_import)}-sessions"
+
+            if not to_import:
+                session["scan_error"] = "Selected sessions no longer exist on disk."
+                run_error_message = "Selected sessions no longer exist on disk."
+                return redirect(url_for("scan_claude_code"))
+
+            result = import_selected_sessions(to_import, db_path)
+            run_reached_importer = True
+            run_imported = len(result.imported)
+            run_skipped = len(result.skipped_duplicate)
+            run_failed = len(result.failed)
+            if result.failed:
+                run_error_message = "; ".join(f"{sid}: {msg}" for sid, msg in result.failed)
+
+            session["scan_result"] = {
+                "imported": result.imported,
+                "skipped_duplicate": result.skipped_duplicate,
+                "failed": [
+                    {"session_id": sid, "error": msg}
+                    for sid, msg in result.failed
+                ],
+            }
+            return redirect(url_for("scan_claude_code_results"))
+        finally:
+            status = classify_import_outcome(
+                run_imported, run_skipped, run_failed,
+                reached_importer=run_reached_importer,
+            )
+            record_import_run(
+                provider=run_provider,
+                filename=run_filename,
+                status=status,
+                conversations_imported=run_imported,
+                messages_imported=run_messages_imported,
+                conversations_skipped=run_skipped,
+                conversations_failed=run_failed,
+                error_message=run_error_message,
+            )
 
     @app.get("/imported/scan-claude-code/results")
     def scan_claude_code_results():

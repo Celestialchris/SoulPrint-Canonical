@@ -67,4 +67,34 @@
       <button type="submit" class="cta-primary">Import selected file</button>
     </form>
   {% endif %}
+
+  <section>
+    <h2>Recent imports</h2>
+    {% if recent_runs %}
+      <table>
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Provider</th>
+            <th>File</th>
+            <th>Status</th>
+            <th>Counts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for run in recent_runs %}
+            <tr>
+              <td>{{ format_timestamp(run.imported_at) }}</td>
+              <td>{{ (run.provider or 'unknown') | provider_display_name }}</td>
+              <td>{{ run.filename or '(no file)' }}</td>
+              <td>{{ run.status }}</td>
+              <td>{{ run.conversations_imported }} imported, {{ run.conversations_skipped }} skipped, {{ run.conversations_failed }} failed</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="metadata-note">No imports yet.</p>
+    {% endif %}
+  </section>
 {% endblock %}
