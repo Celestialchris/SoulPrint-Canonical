@@ -6,8 +6,11 @@ import io
 import unittest
 from pathlib import Path
 
+import time
+
 from src.app import create_app
-from src.app.models import ImportedConversation
+from src.app.models import ImportedConversation, ImportRun
+from src.app.models.db import db
 from src.config import Config
 from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
 
@@ -101,6 +104,99 @@ class ImportRouteTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn("Import could not be completed", html)
         self.assertIn("could not recognize this export format", html.lower())
+
+
+    # --- ImportRun instrumentation tests ---
+
+    def test_successful_import_creates_success_run(self):
+        fixture_bytes = Path("sample_data/chatgpt.json").read_bytes()
+        self.client.post(
+            "/import",
+            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt.json")},
+            content_type="multipart/form-data",
+        )
+        with self.app.app_context():
+            self.assertEqual(ImportRun.query.count(), 1)
+            run = ImportRun.query.first()
+            self.assertEqual(run.status, "success")
+            self.assertEqual(run.provider, "chatgpt")
+            self.assertEqual(run.filename, "chatgpt.json")
+            self.assertGreater(run.conversations_imported, 0)
+
+    def test_duplicate_import_creates_duplicate_only_run(self):
+        fixture_bytes = Path("sample_data/chatgpt.json").read_bytes()
+        self.client.post(
+            "/import",
+            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt.json")},
+            content_type="multipart/form-data",
+        )
+        self.client.post(
+            "/import",
+            data={"export_file": (io.BytesIO(fixture_bytes), "chatgpt.json")},
+            content_type="multipart/form-data",
+        )
+        with self.app.app_context():
+            self.assertEqual(ImportRun.query.count(), 2)
+            latest = ImportRun.query.order_by(ImportRun.imported_at.desc()).first()
+            self.assertEqual(latest.status, "duplicate_only")
+            self.assertEqual(latest.conversations_imported, 0)
+
+    def test_no_file_creates_failed_run(self):
+        self.client.post("/import", data={}, content_type="multipart/form-data")
+        with self.app.app_context():
+            self.assertEqual(ImportRun.query.count(), 1)
+            run = ImportRun.query.first()
+            self.assertEqual(run.status, "failed")
+            self.assertIsNone(run.provider)
+            self.assertIsNone(run.filename)
+
+    def test_malformed_file_creates_failed_run(self):
+        self.client.post(
+            "/import",
+            data={"export_file": (io.BytesIO(b"{not json"), "invalid.json")},
+            content_type="multipart/form-data",
+        )
+        with self.app.app_context():
+            self.assertEqual(ImportRun.query.count(), 1)
+            self.assertEqual(ImportRun.query.first().status, "failed")
+
+    def test_unrecognized_format_creates_failed_run(self):
+        self.client.post(
+            "/import",
+            data={"export_file": (io.BytesIO(b'{"hello": "world"}'), "unknown.json")},
+            content_type="multipart/form-data",
+        )
+        with self.app.app_context():
+            self.assertEqual(ImportRun.query.count(), 1)
+            self.assertEqual(ImportRun.query.first().status, "failed")
+
+    def test_get_shows_no_imports_yet_when_empty(self):
+        response = self.client.get("/import")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("No imports yet.", html)
+
+    def test_get_shows_recent_runs_table_after_import(self):
+        with self.app.app_context():
+            db.session.add(ImportRun(
+                provider="chatgpt",
+                filename="export.json",
+                imported_at=time.time(),
+                status="success",
+                conversations_imported=3,
+                messages_imported=12,
+                conversations_skipped=0,
+                conversations_failed=0,
+                error_message=None,
+            ))
+            db.session.commit()
+
+        response = self.client.get("/import")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("Recent imports", html)
+        self.assertIn("chatgpt", html)
+        self.assertIn("success", html)
 
 
 if __name__ == "__main__":

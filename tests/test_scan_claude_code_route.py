@@ -186,6 +186,103 @@ class ScanClaudeCodePostTest(unittest.TestCase):
             row = ImportedConversation.query.filter_by(source="claude_code").first()
             self.assertIsNotNone(row)
 
+    # --- ImportRun instrumentation tests ---
+
+    def test_successful_scan_creates_success_run(self):
+        from src.app.models import ImportRun
+        sid1 = "aaaaaaaa-1111-0000-0000-000000000001"
+        sid2 = "bbbbbbbb-2222-0000-0000-000000000002"
+        info = _build_fake_projects(self.tmpdir, {"C--proj-scan-ok": [sid1, sid2]})
+        projects_dir = info["projects_dir"]
+        with patch(
+            "src.importers.claude_code_discovery.default_claude_projects_dir",
+            return_value=projects_dir,
+        ):
+            self.client.post(
+                "/imported/scan-claude-code",
+                data={"session_ids": [sid1, sid2]},
+                follow_redirects=True,
+            )
+        with self.app.app_context():
+            self.assertEqual(ImportRun.query.count(), 1)
+            run = ImportRun.query.first()
+            self.assertEqual(run.status, "success")
+            self.assertEqual(run.provider, "claude_code")
+            self.assertGreater(run.conversations_imported, 0)
+
+    def test_empty_selection_creates_failed_run(self):
+        from src.app.models import ImportRun
+        self.client.post(
+            "/imported/scan-claude-code",
+            data={},
+            follow_redirects=True,
+        )
+        with self.app.app_context():
+            self.assertEqual(ImportRun.query.count(), 1)
+            run = ImportRun.query.first()
+            self.assertEqual(run.status, "failed")
+            self.assertEqual(run.provider, "claude_code")
+
+    def test_mixed_failure_creates_partial_run(self):
+        from src.app.models import ImportRun
+        from src.importers.claude_code_discovery import ImportScanResult
+        sid_a = "aaaaaaaa-aaaa-0000-0000-000000000001"
+        sid_b = "bbbbbbbb-bbbb-0000-0000-000000000002"
+        info = _build_fake_projects(self.tmpdir, {"C--proj-partial": [sid_a, sid_b]})
+        projects_dir = info["projects_dir"]
+        mixed_result = ImportScanResult(
+            imported=[sid_a],
+            skipped_duplicate=[],
+            failed=[(sid_b, "simulated failure")],
+        )
+        with patch(
+            "src.importers.claude_code_discovery.default_claude_projects_dir",
+            return_value=projects_dir,
+        ), patch(
+            "src.importers.claude_code_discovery.import_selected_sessions",
+            return_value=mixed_result,
+        ):
+            self.client.post(
+                "/imported/scan-claude-code",
+                data={"session_ids": [sid_a, sid_b]},
+                follow_redirects=True,
+            )
+        with self.app.app_context():
+            self.assertEqual(ImportRun.query.count(), 1)
+            run = ImportRun.query.first()
+            self.assertEqual(run.status, "partial")
+            self.assertEqual(run.conversations_imported, 1)
+            self.assertEqual(run.conversations_failed, 1)
+
+    def test_all_failed_scan_creates_failed_run(self):
+        from src.app.models import ImportRun
+        from src.importers.claude_code_discovery import ImportScanResult
+        sid_a = "cccccccc-cccc-0000-0000-000000000001"
+        info = _build_fake_projects(self.tmpdir, {"C--proj-allfail": [sid_a]})
+        projects_dir = info["projects_dir"]
+        all_failed_result = ImportScanResult(
+            imported=[],
+            skipped_duplicate=[],
+            failed=[(sid_a, "simulated error")],
+        )
+        with patch(
+            "src.importers.claude_code_discovery.default_claude_projects_dir",
+            return_value=projects_dir,
+        ), patch(
+            "src.importers.claude_code_discovery.import_selected_sessions",
+            return_value=all_failed_result,
+        ):
+            self.client.post(
+                "/imported/scan-claude-code",
+                data={"session_ids": [sid_a]},
+                follow_redirects=True,
+            )
+        with self.app.app_context():
+            self.assertEqual(ImportRun.query.count(), 1)
+            run = ImportRun.query.first()
+            self.assertEqual(run.status, "failed")
+            self.assertEqual(run.conversations_failed, 1)
+
 
 class ScanClaudeCodeMigrationTest(unittest.TestCase):
     def setUp(self):
