@@ -173,3 +173,36 @@ class VerifyArchiveTest(unittest.TestCase):
 
         self.assertTrue(result["checks"]["integrity"]["ok"])
         self.assertIsNone(result["checks"]["integrity"]["detail"])
+
+    def test_verify_non_sqlite_file_does_not_crash(self) -> None:
+        from src.verify import verify_archive
+
+        path = self._db("not_sqlite.db")
+        path.write_text("this is not a sqlite database\n")
+
+        result = verify_archive(path)
+
+        self.assertTrue(result["checks"]["db_exists"]["ok"])
+        self.assertFalse(result["checks"]["integrity"]["ok"])
+        self.assertFalse(result["ok"])
+
+    def test_verify_orphan_skips_when_conversation_table_missing(self) -> None:
+        from src.verify import verify_archive
+
+        path = self._db()
+        conn = sqlite3.connect(str(path))
+        try:
+            conn.execute(
+                "CREATE TABLE imported_message (id INTEGER PRIMARY KEY, conversation_id INTEGER)"
+            )
+            conn.execute("CREATE TABLE memory_entry (id INTEGER PRIMARY KEY)")
+            conn.execute("INSERT INTO imported_message (conversation_id) VALUES (?)", (999,))
+            conn.commit()
+        finally:
+            conn.close()
+
+        result = verify_archive(path)
+
+        self.assertTrue(result["checks"]["orphans"]["ok"])
+        self.assertFalse(result["checks"]["core_tables"]["ok"])
+        self.assertIn("imported_conversation", result["checks"]["core_tables"]["missing"])
