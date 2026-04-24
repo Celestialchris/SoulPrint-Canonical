@@ -22,7 +22,9 @@
     <a class="provider-tab{% if not provider %} provider-tab--active{% endif %}" href="/imported/archived{% if keyword %}?q={{ keyword|urlencode }}{% endif %}">All</a>
     <a class="provider-tab provider-tab--chatgpt{% if provider == 'chatgpt' %} provider-tab--active{% endif %}" href="/imported/archived?provider=chatgpt{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">ChatGPT</a>
     <a class="provider-tab provider-tab--claude{% if provider == 'claude' %} provider-tab--active{% endif %}" href="/imported/archived?provider=claude{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Claude</a>
+    <a class="provider-tab provider-tab--claude-code{% if provider == 'claude_code' %} provider-tab--active{% endif %}" href="/imported/archived?provider=claude_code{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">{{ 'claude_code' | provider_display_name }}</a>
     <a class="provider-tab provider-tab--gemini{% if provider == 'gemini' %} provider-tab--active{% endif %}" href="/imported/archived?provider=gemini{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">Gemini</a>
+    <a class="provider-tab provider-tab--grok{% if provider == 'grok' %} provider-tab--active{% endif %}" href="/imported/archived?provider=grok{% if keyword %}&q={{ keyword|urlencode }}{% endif %}">{{ 'grok' | provider_display_name }}</a>
   </nav>
 
   <section class="surface-card filter-panel">

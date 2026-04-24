@@ -226,5 +226,52 @@ class ArchiveFtsInvariantTest(unittest.TestCase):
         self.assertIn("FTS Searchable Conv", html)
 
 
+class ArchivedProviderTabsTest(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = make_test_temp_dir(self, "archived-tabs")
+        self.db_path = str(self.tmpdir / "test.db")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.db_path}"
+        self.app = create_app()
+        self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+        self.addCleanup(self._restore_uri)
+
+    def _restore_uri(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+
+    def test_all_five_provider_tabs_rendered(self):
+        resp = self.client.get("/imported/archived")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("Claude Code", html)
+        self.assertIn("Grok", html)
+        self.assertIn("provider-tab--claude-code", html)
+        self.assertIn("provider-tab--grok", html)
+        self.assertIn("provider-tab--chatgpt", html)
+        self.assertIn("provider-tab--claude", html)
+        self.assertIn("provider-tab--gemini", html)
+
+    def test_all_tab_active_when_no_provider(self):
+        resp = self.client.get("/imported/archived")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("provider-tab provider-tab--active", html)
+
+    def test_claude_code_tab_active_when_provider_filter_set(self):
+        resp = self.client.get("/imported/archived?provider=claude_code")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("provider-tab--active", html)
+        self.assertIn("provider-tab--claude-code", html)
+
+    def test_grok_tab_active_when_provider_filter_set(self):
+        resp = self.client.get("/imported/archived?provider=grok")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("provider-tab--active", html)
+        self.assertIn("provider-tab--grok", html)
+
+
 if __name__ == "__main__":
     unittest.main()
