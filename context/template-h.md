@@ -6,6 +6,14 @@ Template H is the operating contract for implementation prompts sent to Claude C
 
 This edition assumes SoulPrint now has a context layer. The context layer carries persistent project doctrine, agent behavior, user preferences, and session continuity. Template H should not repeat that material inside every task prompt. It should point the agent at the correct context boundary, then spend the rest of the prompt on the task-specific facts that decide the diff.
 
+## MODE
+
+Execution mode. This prompt is already the implementation plan.
+
+Do not invoke writing-plans, advisor, subagent-driven-development, or any planning skill.
+Do not create a separate plan.
+After mandatory reads, begin editing allowed files unless a stop condition is hit.
+
 ## Authority rule
 
 Use this order of authority when drafting, reviewing, or executing a Template H prompt:

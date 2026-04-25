@@ -2,6 +2,14 @@
 
 Reusable patterns extracted from corrections and successful approaches during development sessions. These complement `.claude/rules/` (which stores hard constraints) with softer guidance that improves output quality over time.
 
+## Execution mode for implementation prompts
+
+**From:** PR #169, `feat/conversation-attachment-ui`
+
+**Pattern:** For Template-H implementation prompts, include an explicit MODE block: "Execution mode. This prompt is already the implementation plan. Do not invoke planning/advisor skills. Do not create a separate plan."
+
+**Why:** Claude Code entered plan-mode ceremony despite receiving a complete implementation prompt, likely because plan mode plus `superpowers:writing-plans` was active. The explicit MODE block prevents implementation prompts from being converted into meta-planning sessions.
+
 ## When to Add
 
 When the user corrects an approach and the correction generalizes beyond the specific task. The soul.md feedback loop (step 2) proposes additions here or to `.claude/rules/` depending on whether the pattern is a hard constraint or a soft preference.
