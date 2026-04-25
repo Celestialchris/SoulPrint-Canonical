@@ -285,5 +285,49 @@ class MessageAssetRouteTest(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
 
+    def test_db_constraint_prevents_duplicate_message_asset_rows(self):
+        """DB-level uniqueness: direct double-insert raises IntegrityError, leaving one row."""
+        from sqlalchemy.exc import IntegrityError as _IntegrityError
+
+        conv_id, msg_ids = self._create_conversation_with_messages("conv-constraint-001")
+        msg_id = msg_ids[0]
+        data = b"constraint test content" * 6
+
+        with self.app.app_context():
+            asset = store_asset(
+                io.BytesIO(data),
+                "constraint_test.txt",
+                "text/plain",
+                instance_root=Path(self.app.instance_path),
+            )
+            attach_asset_to_message(msg_id, asset.id)
+            with self.assertRaises(_IntegrityError):
+                attach_asset_to_message(msg_id, asset.id)
+
+        with self.app.app_context():
+            self.assertEqual(
+                MessageAsset.query.filter_by(message_id=msg_id).count(), 1
+            )
+
+    def test_same_asset_different_messages_not_constrained(self):
+        """Constraint is per (message_id, asset_id) — different messages are allowed."""
+        conv_id, msg_ids = self._create_conversation_with_messages("conv-multi-msg-001", n_messages=2)
+        msg_id_0 = msg_ids[0]
+        msg_id_1 = msg_ids[1]
+        data = b"shared asset different messages" * 6
+
+        with self.app.app_context():
+            asset = store_asset(
+                io.BytesIO(data),
+                "shared_asset.txt",
+                "text/plain",
+                instance_root=Path(self.app.instance_path),
+            )
+            attach_asset_to_message(msg_id_0, asset.id)
+            attach_asset_to_message(msg_id_1, asset.id)
+            self.assertEqual(Asset.query.count(), 1)
+            self.assertEqual(MessageAsset.query.count(), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

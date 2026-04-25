@@ -401,6 +401,18 @@ def create_app():
                 " ON conversation_asset(conversation_id, asset_id)"
             )
             _gc.commit()
+        _ma_indexes = {
+            r[0]
+            for r in _gc.execute(
+                "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='message_asset'"
+            )
+        }
+        if "uq_message_asset" not in _ma_indexes:
+            _gc.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uq_message_asset"
+                " ON message_asset(message_id, asset_id)"
+            )
+            _gc.commit()
         _gc.close()
     except Exception:
         pass
