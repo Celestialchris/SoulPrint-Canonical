@@ -57,6 +57,12 @@ class ImportedConversation(db.Model):
         order_by="ImportedMessage.sequence_index",
         lazy=True,
     )
+    conversation_assets = db.relationship(
+        "ConversationAsset",
+        backref="conversation",
+        cascade="all, delete-orphan",
+        lazy=True,
+    )
 
 
 class ImportedMessage(db.Model):
@@ -74,6 +80,58 @@ class ImportedMessage(db.Model):
     content = db.Column(db.Text, nullable=False)
     sequence_index = db.Column(db.Integer, nullable=False)
     created_at_unix = db.Column(db.Float, nullable=True)
+
+    message_assets = db.relationship(
+        "MessageAsset",
+        backref="message",
+        cascade="all, delete-orphan",
+        lazy=True,
+    )
+
+
+class Asset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    stable_id = db.Column(db.String(128), nullable=False, unique=True, index=True)
+    sha256 = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    original_filename = db.Column(db.Text, nullable=False)
+    stored_filename = db.Column(db.Text, nullable=False)
+    mime_type = db.Column(db.String(255), nullable=True)
+    extension = db.Column(db.String(32), nullable=True)
+    size_bytes = db.Column(db.Integer, nullable=False)
+    storage_path = db.Column(db.Text, nullable=False)
+    uploaded_at_unix = db.Column(db.Float, nullable=False, index=True)
+    source = db.Column(db.String(64), nullable=False, default="manual")
+    parse_status = db.Column(db.String(32), nullable=False, default="unparsed")
+    parse_error = db.Column(db.Text, nullable=True)
+
+    conversation_assets = db.relationship("ConversationAsset", back_populates="asset", lazy=True)
+    message_assets = db.relationship("MessageAsset", back_populates="asset", lazy=True)
+
+
+class ConversationAsset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(
+        db.Integer, db.ForeignKey("imported_conversation.id"), nullable=False, index=True
+    )
+    asset_id = db.Column(db.Integer, db.ForeignKey("asset.id"), nullable=False, index=True)
+    role = db.Column(db.String(64), nullable=False, default="context")
+    note = db.Column(db.Text, nullable=False, default="")
+    attached_at_unix = db.Column(db.Float, nullable=False, index=True)
+
+    asset = db.relationship("Asset", back_populates="conversation_assets")
+
+
+class MessageAsset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(
+        db.Integer, db.ForeignKey("imported_message.id"), nullable=False, index=True
+    )
+    asset_id = db.Column(db.Integer, db.ForeignKey("asset.id"), nullable=False, index=True)
+    placement = db.Column(db.String(64), nullable=False, default="after_message_content")
+    caption = db.Column(db.Text, nullable=False, default="")
+    attached_at_unix = db.Column(db.Float, nullable=False, index=True)
+
+    asset = db.relationship("Asset", back_populates="message_assets")
 
 
 class ImportRun(db.Model):
