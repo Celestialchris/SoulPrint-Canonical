@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -10,6 +11,15 @@ from ..provider import LLMProvider
 from .models import ContinuityArtifact, make_artifact_id, make_timestamp
 from .store import append_artifact
 
+
+logger = logging.getLogger(__name__)
+
+# Transcript budget: cap the rendered transcript so the system prompt,
+# transcript, and response budget fit inside provider context windows.
+# Approx 4 chars/token in English -> 150K chars ~= 37K tokens, leaving
+# safer headroom in a 64K-context provider. If targeting a smaller context
+# model, lower this constant.
+MAX_TRANSCRIPT_CHARS = 150_000
 
 PROMPT_TEMPLATE_VERSION = "v1"
 
@@ -47,14 +57,77 @@ _SYSTEM_PROMPT = (
 )
 
 
+def _render_message_for_transcript(message) -> str:
+    return f"[{message.role}]: {message.content}"
+
+
+def _truncate_messages_to_budget(messages: list, max_chars: int) -> tuple[list, int]:
+    """Drop oldest messages until rendered total fits within max_chars.
+
+    Returns (kept_messages, dropped_count). Always preserves at least the
+    most-recent message. If that message alone exceeds max_chars, replaces it
+    with a lightweight stand-in whose content keeps the tail of the original
+    and prepends a truncation marker.
+    """
+    def rendered_size(msgs):
+        return len("\n".join(_render_message_for_transcript(m) for m in msgs))
+
+    kept = list(messages)
+    dropped = 0
+
+    # Preserve at least the most-recent message so the giant-message
+    # truncation path below can run.
+    while len(kept) > 1 and rendered_size(kept) > max_chars:
+        kept.pop(0)
+        dropped += 1
+
+    if kept and rendered_size(kept) > max_chars:
+        tail = kept[-1]
+        prefix = "[message truncated] "
+        line_overhead = len(f"[{tail.role}]: {prefix}")
+        keep_chars = max(max_chars - line_overhead, 0)
+        truncated_content = prefix + tail.content[-keep_chars:]
+
+        class _TruncatedMsg:
+            __slots__ = ("role", "content", "sequence_index")
+
+            def __init__(self, role, content, sequence_index):
+                self.role = role
+                self.content = content
+                self.sequence_index = sequence_index
+
+        kept[-1] = _TruncatedMsg(tail.role, truncated_content, tail.sequence_index)
+        logger.warning(
+            "continuity transcript: most-recent message exceeded budget, "
+            "truncated content to last %d chars",
+            keep_chars,
+        )
+
+    if dropped > 0:
+        logger.warning(
+            "continuity transcript: dropped %d oldest messages to fit budget (%d chars)",
+            dropped,
+            max_chars,
+        )
+
+    return kept, dropped
+
+
 def _build_transcript(conversation) -> str:
     """Format conversation messages into a compact transcript string.
+
+    Caps total rendered size at MAX_TRANSCRIPT_CHARS by dropping oldest
+    messages and prepending a truncation marker. See _truncate_messages_to_budget.
 
     ``conversation`` must expose ``.messages`` (each with ``.role``,
     ``.content``, ``.sequence_index``).
     """
     sorted_messages = sorted(conversation.messages, key=lambda m: m.sequence_index)
-    lines = [f"[{m.role}]: {m.content}" for m in sorted_messages]
+    kept, dropped = _truncate_messages_to_budget(sorted_messages, MAX_TRANSCRIPT_CHARS)
+    lines = [_render_message_for_transcript(m) for m in kept]
+    if dropped > 0:
+        marker = f"[{dropped} earlier messages truncated to fit context]"
+        return marker + "\n" + "\n".join(lines)
     return "\n".join(lines)
 
 
