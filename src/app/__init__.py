@@ -280,19 +280,23 @@ def render_conversation_markdown(
     *,
     conversation_assets=None,
     message_assets=None,
+    assets_stem_override=None,
 ) -> tuple[str, str]:
     """Return (markdown_content, safe_filename) for a conversation + messages.
 
     conversation_assets: list[ConversationAsset] or None
     message_assets: dict[int, list[MessageAsset]] keyed by message_id, or None
+    assets_stem_override: when set, use this as the stem for .assets/ links
+        instead of the title-derived default. Pass the final chosen export
+        filename stem so embedded links match the actual sibling folder.
     """
 
     title = conversation.title or "Untitled conversation"
     safe_title = "".join(
         c if c.isascii() and (c.isalnum() or c in " -_.") else "" for c in title
     )[:60].strip()
-    assets_stem = safe_title or "conversation"
-    filename = f"{assets_stem}.md"
+    assets_stem = assets_stem_override if assets_stem_override is not None else (safe_title or "conversation")
+    filename = f"{safe_title or 'conversation'}.md"
 
     lines = []
     lines.append(f"# {title}")
@@ -1086,7 +1090,14 @@ def create_app():
                     conversation.id,
                     lambda n: (dest / n).exists(),
                 )
-                _atomic_write_text(dest / name, content)
+                stem = name[:-3] if name.endswith(".md") else name
+                dir_content, _ = render_conversation_markdown(
+                    conversation, messages,
+                    conversation_assets=conv_assets,
+                    message_assets=msg_assets,
+                    assets_stem_override=stem,
+                )
+                _atomic_write_text(dest / name, dir_content)
             except OSError as exc:
                 app.logger.warning(
                     "Single-conv export to %s failed: %s. Falling back to download.",
@@ -1095,7 +1106,6 @@ def create_app():
             else:
                 has_assets = bool(conv_assets) or any(msg_assets.values())
                 if has_assets:
-                    stem = name[:-3] if name.endswith(".md") else name
                     try:
                         _write_asset_bundle(
                             dest / f"{stem}.assets",
@@ -1179,18 +1189,24 @@ def create_app():
             used: set[str] = set()
             written = 0
             try:
-                for conv_id, content, base_filename in rendered:
+                for conv_id, _, base_filename in rendered:
                     name = _pick_unique_filename(
                         base_filename,
                         conv_id,
                         lambda n: n in used or (dest / n).exists(),
                     )
-                    _atomic_write_text(dest / name, content)
+                    stem = name[:-3] if name.endswith(".md") else name
+                    conv_obj, ca, msgs, ma = assets_by_conv[conv_id]
+                    dir_content, _ = render_conversation_markdown(
+                        conv_obj, msgs,
+                        conversation_assets=ca,
+                        message_assets=ma,
+                        assets_stem_override=stem,
+                    )
+                    _atomic_write_text(dest / name, dir_content)
                     used.add(name)
                     written += 1
-                    conv_obj, ca, msgs, ma = assets_by_conv[conv_id]
                     if ca or any(ma.values()):
-                        stem = name[:-3] if name.endswith(".md") else name
                         _write_asset_bundle(
                             dest / f"{stem}.assets",
                             conv_obj, ca, msgs, ma,

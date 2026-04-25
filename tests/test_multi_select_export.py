@@ -655,6 +655,203 @@ class MultiSelectExportDirectoryBundleTest(unittest.TestCase):
         self.assertNotEqual(alpha_manifest["conversation_id"], beta_manifest["conversation_id"])
 
 
+class MultiSelectExportDirectoryBundleCollisionTest(unittest.TestCase):
+    """Regression: colliding export filenames must each link to their own .assets/ folder.
+
+    Two conversations share the same title so _pick_unique_filename disambiguates
+    the second one.  After export:
+    - each .md must embed links referencing its own sibling .assets/ folder name;
+    - each referenced .assets/ folder must exist on disk;
+    - asset files must be present in the correct folder.
+    """
+
+    def setUp(self):
+        self.workdir = make_test_temp_dir(self, "multi-dir-coll")
+        self.export_dir = self.workdir / "vault"
+        self.export_dir.mkdir()
+
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        self._old_dir = Config.SOULPRINT_EXPORT_DIR
+        self.addCleanup(self._restore_config)
+
+        Config.SQLALCHEMY_DATABASE_URI = (
+            f"sqlite:///{(self.workdir / 'coll_bundle.db').as_posix()}"
+        )
+        Config.SOULPRINT_EXPORT_DIR = str(self.export_dir)
+
+        self.app = create_app()
+        self.instance_root = Path(self.app.instance_path)
+        self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+
+        self._physical_files: list[Path] = []
+        self.addCleanup(self._remove_physical_files)
+
+        self._sha_a = ("aa" + "cc" * 31)[:64]
+        self._sha_b = ("bb" + "dd" * 31)[:64]
+        storage_a = f"assets/sha256/aa/{self._sha_a}-file_a.pdf"
+        storage_b = f"assets/sha256/bb/{self._sha_b}-file_b.pdf"
+
+        with self.app.app_context():
+            db.create_all()
+            conv_a = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="coll-a",
+                title="Shared",
+                created_at_unix=1710000000.0,
+                updated_at_unix=1710000500.0,
+            )
+            conv_b = ImportedConversation(
+                source="claude",
+                source_conversation_id="coll-b",
+                title="Shared",
+                created_at_unix=1710001000.0,
+                updated_at_unix=1710001500.0,
+            )
+            db.session.add_all([conv_a, conv_b])
+            db.session.flush()
+
+            msg_a = ImportedMessage(
+                conversation_id=conv_a.id,
+                source_message_id="a-0",
+                role="user",
+                content="Content A.",
+                sequence_index=0,
+                created_at_unix=1710000001.0,
+            )
+            msg_b = ImportedMessage(
+                conversation_id=conv_b.id,
+                source_message_id="b-0",
+                role="user",
+                content="Content B.",
+                sequence_index=0,
+                created_at_unix=1710001001.0,
+            )
+            db.session.add_all([msg_a, msg_b])
+            db.session.flush()
+
+            asset_a = Asset(
+                stable_id=f"asset:sha256:{self._sha_a}",
+                sha256=self._sha_a,
+                original_filename="file_a.pdf",
+                stored_filename=f"{self._sha_a}-file_a.pdf",
+                mime_type="application/pdf",
+                extension="pdf",
+                size_bytes=8,
+                storage_path=storage_a,
+                uploaded_at_unix=1710000010.0,
+                source="manual",
+                parse_status="unparsed",
+                parse_error=None,
+            )
+            asset_b = Asset(
+                stable_id=f"asset:sha256:{self._sha_b}",
+                sha256=self._sha_b,
+                original_filename="file_b.pdf",
+                stored_filename=f"{self._sha_b}-file_b.pdf",
+                mime_type="application/pdf",
+                extension="pdf",
+                size_bytes=8,
+                storage_path=storage_b,
+                uploaded_at_unix=1710001010.0,
+                source="manual",
+                parse_status="unparsed",
+                parse_error=None,
+            )
+            db.session.add_all([asset_a, asset_b])
+            db.session.flush()
+
+            db.session.add(ConversationAsset(
+                conversation_id=conv_a.id,
+                asset_id=asset_a.id,
+                role="context",
+                note="",
+                attached_at_unix=1710000020.0,
+            ))
+            db.session.add(ConversationAsset(
+                conversation_id=conv_b.id,
+                asset_id=asset_b.id,
+                role="context",
+                note="",
+                attached_at_unix=1710001020.0,
+            ))
+            db.session.commit()
+            self.conv_a_id = conv_a.id
+            self.conv_b_id = conv_b.id
+
+        for storage in (storage_a, storage_b):
+            physical = self.instance_root / storage
+            physical.parent.mkdir(parents=True, exist_ok=True)
+            physical.write_bytes(b"bytes")
+            self._physical_files.append(physical)
+
+    def _restore_config(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+        Config.SOULPRINT_EXPORT_DIR = self._old_dir
+
+    def _remove_physical_files(self):
+        for p in self._physical_files:
+            try:
+                p.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+    def test_each_md_links_to_its_own_assets_folder(self):
+        """Each .md's embedded links must reference its own sibling .assets/ folder."""
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.conv_a_id), str(self.conv_b_id)]},
+            follow_redirects=False,
+        )
+        self.assertEqual(response.status_code, 302)
+
+        md_files = sorted(self.export_dir.glob("*.md"))
+        self.assertEqual(len(md_files), 2)
+
+        for md_file in md_files:
+            stem = md_file.stem  # e.g. "Shared" or "Shared-2"
+            assets_dir = self.export_dir / f"{stem}.assets"
+
+            # The referenced .assets/ folder must exist
+            self.assertTrue(
+                assets_dir.is_dir(),
+                f"{md_file.name} references '{stem}.assets/' but that folder does not exist",
+            )
+
+            # The markdown must link into the correct stem
+            content = md_file.read_text(encoding="utf-8")
+            self.assertIn(
+                f"[[{stem}.assets/",
+                content,
+                f"{md_file.name} does not contain links to '{stem}.assets/'",
+            )
+
+            # Copied asset files must be present in that folder
+            asset_files = [p for p in assets_dir.iterdir() if p.name != "manifest.json"]
+            self.assertTrue(
+                len(asset_files) > 0,
+                f"No asset files found in {assets_dir.name}",
+            )
+
+    def test_no_md_points_to_nonexistent_assets_folder(self):
+        """Neither .md file may embed a link whose .assets/ folder does not exist."""
+        self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.conv_a_id), str(self.conv_b_id)]},
+        )
+
+        import re
+        for md_file in self.export_dir.glob("*.md"):
+            content = md_file.read_text(encoding="utf-8")
+            for match in re.finditer(r"\[\[([^\]]+)\.assets/", content):
+                referenced_stem = match.group(1)
+                referenced_dir = self.export_dir / f"{referenced_stem}.assets"
+                self.assertTrue(
+                    referenced_dir.is_dir(),
+                    f"{md_file.name} links to '{referenced_stem}.assets/' which does not exist",
+                )
+
+
 def _seed_dir_bundle_conversations(app, sha_a, sha_b, storage_a, storage_b) -> dict[str, int]:
     """Seed two conversations: Alpha (conv-level asset), Beta (message-level asset)."""
     with app.app_context():
