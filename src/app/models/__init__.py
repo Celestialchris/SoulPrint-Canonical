@@ -137,6 +137,10 @@ class MessageAsset(db.Model):
 
     asset = db.relationship("Asset", back_populates="message_assets")
 
+    __table_args__ = (
+        db.UniqueConstraint("message_id", "asset_id", name="uq_message_asset"),
+    )
+
 
 class ImportRun(db.Model):
     """Durable history row for one import attempt at an import route handler."""
