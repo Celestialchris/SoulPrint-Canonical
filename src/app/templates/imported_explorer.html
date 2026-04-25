@@ -54,6 +54,37 @@
     {% endif %}
   </section>
 
+  <section class="surface-card content-block" aria-label="Conversation attachments">
+    <h2>Attachments</h2>
+    <p class="metadata-line">Files attached to this whole conversation. Message-level placement comes later.</p>
+
+    {% if attachment_notice %}
+      <p class="metadata-line" role="status">{{ attachment_notice }}</p>
+    {% endif %}
+    {% if attachment_error %}
+      <p class="metadata-line" role="alert">{{ attachment_error }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('upload_conversation_attachment', conversation_id=conversation.id) }}" enctype="multipart/form-data" class="inline-action">
+      <label class="field-label" for="conversation-attachment-file">Attach file to conversation</label>
+      <input id="conversation-attachment-file" type="file" name="attachment_file">
+      <button type="submit" class="ghost-link">Attach file</button>
+    </form>
+
+    {% if conversation_assets %}
+      <ul class="toc-list">
+        {% for row in conversation_assets %}
+          <li>
+            <a href="{{ url_for('download_conversation_attachment', conversation_id=conversation.id, conversation_asset_id=row.id) }}">{{ row.asset.original_filename }}</a>
+            <span class="metadata-line"> · {{ row.asset.mime_type or 'unknown type' }} · {{ format_file_size(row.asset.size_bytes) }} · {{ row.asset.sha256[:12] }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty-note">No files attached to this conversation yet.</p>
+    {% endif %}
+  </section>
+
   {% if llm_configured|default(false) and licensed|default(false) %}
     <section class="explorer-continue">
       <form method="post" action="/intelligence/continuity/{{ conversation.id }}">

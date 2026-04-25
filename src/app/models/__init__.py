@@ -120,6 +120,10 @@ class ConversationAsset(db.Model):
 
     asset = db.relationship("Asset", back_populates="conversation_assets")
 
+    __table_args__ = (
+        db.UniqueConstraint("conversation_id", "asset_id", name="uq_conversation_asset"),
+    )
+
 
 class MessageAsset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
