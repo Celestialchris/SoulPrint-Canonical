@@ -485,7 +485,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
 
         response = self.client.get(f"/imported/{self.conv_id}/export")
         text = response.data.decode("utf-8")
-        self.assertIn("[[Test Attach Conversation.assets/source.pdf]]", text)
+        # sha_prefix "abcdef5678" → sha[:12] = "abcdef567800"
+        self.assertIn("[[Test Attach Conversation.assets/abcdef567800-source.pdf]]", text)
 
     def test_message_level_attachment_appears_under_correct_message(self):
         with self.app.app_context():
@@ -502,7 +503,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
         response = self.client.get(f"/imported/{self.conv_id}/export")
         text = response.data.decode("utf-8")
         self.assertIn("#### Attachments", text)
-        self.assertIn("msg-000-screenshot.png", text)
+        # sha_prefix "deadbeef12" → sha[:12] = "deadbeef1200"
+        self.assertIn("msg-000-deadbeef1200-screenshot.png", text)
 
     def test_message_level_attachment_not_under_neighboring_message(self):
         with self.app.app_context():
@@ -520,7 +522,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
         text = response.data.decode("utf-8")
         # "#### Attachments" block appears exactly once — under msg1 only
         self.assertEqual(text.count("#### Attachments"), 1)
-        attach_pos = text.index("msg-000-screenshot.png")
+        # sha_prefix "cafebabe12" → sha[:12] = "cafebabe1200"
+        attach_pos = text.index("msg-000-cafebabe1200-screenshot.png")
         msg2_pos = text.index("Response without attachment")
         self.assertLess(attach_pos, msg2_pos)
 
@@ -539,3 +542,90 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
         response = self.client.get(f"/imported/{self.conv_id}/export")
         text = response.data.decode("utf-8")
         self.assertNotIn(str(self.workdir), text)
+
+    def test_two_conversation_assets_same_filename_produce_distinct_links(self):
+        with self.app.app_context():
+            asset_id_1 = self._make_asset("aaaa111111", "report.pdf", "application/pdf")
+            asset_id_2 = self._make_asset("bbbb222222", "report.pdf", "application/pdf")
+            db.session.add(ConversationAsset(
+                conversation_id=self.conv_id,
+                asset_id=asset_id_1,
+                role="context",
+                note="",
+                attached_at_unix=1700000010.0,
+            ))
+            db.session.add(ConversationAsset(
+                conversation_id=self.conv_id,
+                asset_id=asset_id_2,
+                role="context",
+                note="",
+                attached_at_unix=1700000020.0,
+            ))
+            db.session.commit()
+
+        response = self.client.get(f"/imported/{self.conv_id}/export")
+        text = response.data.decode("utf-8")
+        # sha_prefix "aaaa111111" → sha[:12] = "aaaa11111100"
+        # sha_prefix "bbbb222222" → sha[:12] = "bbbb22222200"
+        link_1 = "[[Test Attach Conversation.assets/aaaa11111100-report.pdf]]"
+        link_2 = "[[Test Attach Conversation.assets/bbbb22222200-report.pdf]]"
+        self.assertIn(link_1, text)
+        self.assertIn(link_2, text)
+
+    def test_two_message_assets_same_filename_produce_distinct_links(self):
+        with self.app.app_context():
+            asset_id_1 = self._make_asset("cccc333333", "notes.txt", "text/plain")
+            asset_id_2 = self._make_asset("dddd444444", "notes.txt", "text/plain")
+            db.session.add(MessageAsset(
+                message_id=self.msg1_id,
+                asset_id=asset_id_1,
+                placement="after_message_content",
+                caption="",
+                attached_at_unix=1700000010.0,
+            ))
+            db.session.add(MessageAsset(
+                message_id=self.msg1_id,
+                asset_id=asset_id_2,
+                placement="after_message_content",
+                caption="",
+                attached_at_unix=1700000020.0,
+            ))
+            db.session.commit()
+
+        response = self.client.get(f"/imported/{self.conv_id}/export")
+        text = response.data.decode("utf-8")
+        # sha_prefix "cccc333333" → sha[:12] = "cccc33333300"
+        # sha_prefix "dddd444444" → sha[:12] = "dddd44444400"
+        link_1 = "[[Test Attach Conversation.assets/msg-000-cccc33333300-notes.txt]]"
+        link_2 = "[[Test Attach Conversation.assets/msg-000-dddd44444400-notes.txt]]"
+        self.assertIn(link_1, text)
+        self.assertIn(link_2, text)
+
+    def test_attachment_marker_ordering_is_deterministic(self):
+        with self.app.app_context():
+            # Insert the late attachment first to confirm sort ignores insertion order
+            asset_id_late = self._make_asset("ffff666666", "late.pdf", "application/pdf")
+            asset_id_early = self._make_asset("eeee555555", "early.pdf", "application/pdf")
+            db.session.add(ConversationAsset(
+                conversation_id=self.conv_id,
+                asset_id=asset_id_late,
+                role="context",
+                note="",
+                attached_at_unix=1700000020.0,
+            ))
+            db.session.add(ConversationAsset(
+                conversation_id=self.conv_id,
+                asset_id=asset_id_early,
+                role="context",
+                note="",
+                attached_at_unix=1700000010.0,
+            ))
+            db.session.commit()
+
+        response = self.client.get(f"/imported/{self.conv_id}/export")
+        text = response.data.decode("utf-8")
+        # sha_prefix "eeee555555" → sha[:12] = "eeee55555500"
+        # sha_prefix "ffff666666" → sha[:12] = "ffff66666600"
+        early_pos = text.index("eeee55555500-early.pdf")
+        late_pos = text.index("ffff66666600-late.pdf")
+        self.assertLess(early_pos, late_pos)

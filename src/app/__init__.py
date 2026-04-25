@@ -307,9 +307,13 @@ def render_conversation_markdown(
         lines.append("")
         lines.append("| File | Type | SHA256 | Placement |")
         lines.append("|---|---|---|---|")
-        for ca in conversation_assets:
+        sorted_conv_assets = sorted(
+            conversation_assets,
+            key=lambda ca: (ca.attached_at_unix or 0, ca.id or 0, ca.asset_id or 0),
+        )
+        for ca in sorted_conv_assets:
             asset = ca.asset
-            safe_name = _safe_marker_name(asset.original_filename)
+            safe_name = f"{asset.sha256[:12]}-{_safe_marker_name(asset.original_filename)}"
             link = f"[[{assets_stem}.assets/{safe_name}]]"
             mime = asset.mime_type or "application/octet-stream"
             lines.append(f"| {link} | {mime} | {asset.sha256} | conversation |")
@@ -332,9 +336,14 @@ def render_conversation_markdown(
         if msg_attachment_list:
             lines.append("#### Attachments")
             lines.append("")
-            for ma in msg_attachment_list:
+            sorted_msg_assets = sorted(
+                msg_attachment_list,
+                key=lambda ma: (ma.attached_at_unix or 0, ma.id or 0, ma.asset_id or 0),
+            )
+            for ma in sorted_msg_assets:
                 asset = ma.asset
-                safe_name = f"msg-{msg.sequence_index:03d}-{_safe_marker_name(asset.original_filename)}"
+                sha_prefix = asset.sha256[:12]
+                safe_name = f"msg-{msg.sequence_index:03d}-{sha_prefix}-{_safe_marker_name(asset.original_filename)}"
                 link = f"[[{assets_stem}.assets/{safe_name}]]"
                 mime = asset.mime_type or "application/octet-stream"
                 lines.append(f"- {link} · {mime} · {asset.sha256}")
