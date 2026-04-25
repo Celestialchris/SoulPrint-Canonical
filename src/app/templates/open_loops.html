@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_ui.html" import badge, empty_state %}
+
+{% block title %}Open loops{% endblock %}
+{% block page_title %}Open loops{% endblock %}
+{% block page_desc %}unresolved threads across continuity packets{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <p class="page-eyebrow">Continuity</p>
+    <div class="page-header__row">
+      <div class="page-badges">
+        {{ badge("Generated", "derived") }}
+      </div>
+    </div>
+    <h2>Unresolved threads</h2>
+    <p class="page-summary">Extracted from continuity packets generated for individual conversations. These are things you said you'd follow up on.</p>
+  </section>
+
+  {% if not rows %}
+    {{ empty_state(
+      "No open loops yet",
+      "Generate a Continuity Packet for a conversation to start tracking unresolved threads."
+    ) }}
+  {% else %}
+    {% for row in rows %}
+      <section class="surface-card content-block">
+        <p>{{ row.loop_text }}</p>
+        <div class="back-links">
+          {% if row.explorer_url %}
+            <a class="back-link" href="{{ row.explorer_url }}">{{ row.conversation_title }}</a>
+          {% else %}
+            <span class="back-link">{{ row.conversation_title }}</span>
+          {% endif %}
+          {% if row.continuity_url %}
+            <a class="back-link" href="{{ row.continuity_url }}">Open continuity page</a>
+          {% endif %}
+        </div>
+        <p class="metadata-line">
+          {% if row.conversation_source %}{{ row.conversation_source | provider_display_name }} · {% endif %}{{ row.generation_timestamp }}
+        </p>
+      </section>
+    {% endfor %}
+  {% endif %}
+{% endblock %}

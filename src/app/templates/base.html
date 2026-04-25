@@ -57,6 +57,7 @@
 
         <nav class="sidebar-group" aria-label="Continuity">
           <span class="sidebar-group__label">Continuity</span>
+          {{ sidebar_item(url_for('continuity_open_loops'), 'Open loops', request.path.startswith('/continuity/open-loops')) }}
           {{ sidebar_item(url_for('import_conversations'), 'Import', request.path.startswith('/import')) }}
           {{ sidebar_item(url_for('passport_surface'), 'Memory Passport', request.path.startswith('/passport')) }}
         </nav>
