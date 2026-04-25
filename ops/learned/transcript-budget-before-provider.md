@@ -44,3 +44,7 @@ Three tests in `TranscriptBuildingTest` in `tests/test_continuity_service.py`:
 ### The broader rule
 
 Before calling a finite-context provider, measure the assembled prompt. If it can exceed the context window for realistic inputs, add a pre-call budget cap with explicit truncation markers. Silent provider-side truncation is invisible to callers and produces unpredictable failures.
+
+### Calibration note (April 25, 2026)
+
+The original 4 chars/token English-prose estimate was off by 2x for production conversation content. A real continuity run against conversation 85 showed 150,000 chars rendering to a 75,363-token Ollama prompt, well above the 65,536-token context limit (`truncating input prompt limit=65536 prompt=75363`). Observed Gemma/Ollama tokenizer density for this content is ~2 chars/token. The budget was subsequently lowered to 80,000 chars (~40K input tokens), which leaves ~9K tokens of headroom with the 16K response reservation and ~500 tokens of overhead. Future budget tuning should be empirical: measure the token count from Ollama's log (`level=WARN source=runner.go msg="truncating input prompt"`) rather than estimating from character counts alone.
