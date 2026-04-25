@@ -1825,6 +1825,11 @@ def create_app():
 
         result = generate_continuity_packet(conversation, provider, store_path)
         if result.error:
+            logger.error(
+                "continuity_generate failed for conversation_id=%s: %s",
+                conversation_id,
+                result.error,
+            )
             abort(500)
 
         return redirect(url_for("intelligence_continuity_view", conversation_id=conversation_id))

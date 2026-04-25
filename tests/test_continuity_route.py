@@ -126,6 +126,18 @@ class ContinuityRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_post_generate_logs_error_when_provider_returns_invalid_json(self):
+        conv_id = self._create_conversation()
+        with patch.dict(os.environ, {"SOULPRINT_LLM_PROVIDER": "stub"}, clear=False):
+            with patch.object(StubProvider, "complete", return_value="not valid json"):
+                with self.assertLogs("src.app", level="ERROR") as cm:
+                    response = self.client.post(f"/intelligence/continuity/{conv_id}")
+
+        self.assertEqual(response.status_code, 500)
+        joined = "\n".join(cm.output)
+        self.assertIn(f"conversation_id={conv_id}", joined)
+        self.assertIn("Failed to parse provider response as JSON", joined)
+
     # -- viewing artifacts --
 
     def test_get_continuity_shows_artifacts_after_generation(self):
