@@ -1,6 +1,6 @@
 from dataclasses import asdict
 from urllib.parse import urlparse
-from flask import Flask, abort, redirect, render_template, request, jsonify, session, url_for
+from flask import Flask, abort, redirect, render_template, request, jsonify, send_file, session, url_for
 from datetime import datetime, timezone
 import logging
 import os
@@ -13,7 +13,7 @@ from .imported_explorer import anchor_for_message, build_prompt_toc, format_time
 from .models.db import db
 from ..config import Config, normalize_sqlite_uri
 from ..runtime import default_instance_dir, static_dir, templates_dir
-from .models import ImportedConversation, ImportedMessage, ImportRun, MemoryEntry
+from .models import ConversationAsset, ImportedConversation, ImportedMessage, ImportRun, MemoryEntry
 from .import_runs import classify_import_outcome, latest_import_runs, record_import_run
 from .citation_handoff import build_answer_trace_citation_view
 from .decorators import require_license
@@ -172,6 +172,25 @@ def _sqlite_path_from_uri(sqlite_uri: str) -> str:
     """Resolve an absolute SQLite file path from app config URI."""
 
     return sqlite_uri.removeprefix("sqlite:///")
+
+
+def _format_file_size(size_bytes: int | None) -> str:
+    if size_bytes is None:
+        return "0 B"
+    size = float(size_bytes)
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024 or unit == "GB":
+            if unit == "B":
+                return f"{int(size)} B"
+            return f"{size:.1f} {unit}".replace(".0 ", " ")
+        size /= 1024
+
+
+def _find_conversation_asset(conversation_id: int, asset_id: int):
+    return ConversationAsset.query.filter_by(
+        conversation_id=conversation_id,
+        asset_id=asset_id,
+    ).first()
 
 
 def _extract_loop_texts(artifact: dict) -> list[str]:
@@ -692,6 +711,17 @@ def create_app():
         ]
         lineage_suggestions = suggest_lineage(source_summary, candidate_summaries, limit=3)
 
+        from .assets import list_conversation_assets
+
+        conversation_assets = sorted(
+            list_conversation_assets(conversation_id),
+            key=lambda row: row.attached_at_unix or 0,
+            reverse=True,
+        )
+
+        attachment_notice = session.pop("attachment_notice", None)
+        attachment_error = session.pop("attachment_error", None)
+
         return render_template(
             "imported_explorer.html",
             conversation=conversation,
@@ -702,6 +732,56 @@ def create_app():
             llm_configured=is_llm_configured(),
             licensed=is_licensed(instance_dir=app.instance_path),
             lineage_suggestions=lineage_suggestions,
+            conversation_assets=conversation_assets,
+            attachment_notice=attachment_notice,
+            attachment_error=attachment_error,
+            format_file_size=_format_file_size,
+        )
+
+    @app.post("/imported/<int:conversation_id>/attachments")
+    def upload_conversation_attachment(conversation_id: int):
+        from .assets import attach_asset_to_conversation, store_asset
+
+        conversation = ImportedConversation.query.filter_by(id=conversation_id).first_or_404()
+        upload = request.files.get("attachment_file")
+        if upload is None or upload.filename == "":
+            session["attachment_error"] = "Choose a file before attaching."
+            return redirect(url_for("imported_explorer", conversation_id=conversation.id))
+
+        asset = store_asset(
+            upload.stream,
+            upload.filename or "unnamed_file",
+            upload.mimetype,
+            source="manual",
+            instance_root=app.instance_path,
+        )
+
+        existing = _find_conversation_asset(conversation.id, asset.id)
+        if existing is not None:
+            session["attachment_notice"] = f"Attachment already exists: {asset.original_filename}."
+            return redirect(url_for("imported_explorer", conversation_id=conversation.id))
+
+        attach_asset_to_conversation(conversation.id, asset.id)
+        session["attachment_notice"] = f"Attached {asset.original_filename}."
+        return redirect(url_for("imported_explorer", conversation_id=conversation.id))
+
+    @app.get("/imported/<int:conversation_id>/attachments/<int:conversation_asset_id>/download")
+    def download_conversation_attachment(conversation_id: int, conversation_asset_id: int):
+        from .assets import asset_absolute_path
+
+        conversation_asset = ConversationAsset.query.filter_by(
+            id=conversation_asset_id,
+            conversation_id=conversation_id,
+        ).first_or_404()
+        asset = conversation_asset.asset
+        abs_path = asset_absolute_path(asset, instance_root=app.instance_path)
+        if not abs_path.exists():
+            abort(404)
+        return send_file(
+            abs_path,
+            as_attachment=True,
+            download_name=asset.original_filename,
+            mimetype=asset.mime_type or "application/octet-stream",
         )
 
     @app.get("/imported/<int:conversation_id>/export")
