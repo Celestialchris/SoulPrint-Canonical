@@ -15,11 +15,17 @@ from .store import append_artifact
 logger = logging.getLogger(__name__)
 
 # Transcript budget: cap the rendered transcript so the system prompt,
-# transcript, and response budget fit inside provider context windows.
-# Approx 4 chars/token in English -> 150K chars ~= 37K tokens, leaving
-# safer headroom in a 64K-context provider. If targeting a smaller context
-# model, lower this constant.
-MAX_TRANSCRIPT_CHARS = 150_000
+# transcript, and response budget fit inside the provider's context window.
+#
+# Observed Gemma/Ollama tokenizer density on real conversation content is
+# roughly 2 chars/token, denser than the 4 chars/token English-prose
+# estimate the original budget assumed. At 2 chars/token, 80,000 chars
+# renders to ~40K input tokens. With max_tokens=16384 reserved for the
+# response and ~500 tokens of system + wrapper + chat-template overhead,
+# total prompt usage is ~56.5K tokens, leaving ~9K tokens of headroom in
+# Ollama's 65,536-token context. If you target a smaller-context model,
+# lower this constant further.
+MAX_TRANSCRIPT_CHARS = 80_000
 
 PROMPT_TEMPLATE_VERSION = "v1"
 
