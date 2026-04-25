@@ -15,7 +15,13 @@ import zipfile
 from unittest.mock import patch
 
 from src.app import create_app
-from src.app.models import ImportedConversation, ImportedMessage
+from src.app.models import (
+    Asset,
+    ConversationAsset,
+    ImportedConversation,
+    ImportedMessage,
+    MessageAsset,
+)
 from src.app.models.db import db
 from src.config import Config
 from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
@@ -350,6 +356,179 @@ class MultiSelectExportCollisionTest(unittest.TestCase):
         md_files = sorted(export_dir.glob("*.md"))
         self.assertEqual(len(md_files), 3)
         self.assertEqual(len({f.name for f in md_files}), 3)
+
+
+def _seed_conversations_with_assets(app) -> dict[str, int]:
+    """Seed two conversations each with a distinct attachment.
+
+    Conv A: conversation-level attachment alpha_report.pdf
+    Conv B: message-level attachment beta_screenshot.png on its first message
+    """
+    with app.app_context():
+        a = ImportedConversation(
+            source="chatgpt",
+            source_conversation_id="attach-alpha",
+            title="Conversation Alpha",
+            created_at_unix=1710000000.0,
+            updated_at_unix=1710000500.0,
+        )
+        b = ImportedConversation(
+            source="claude",
+            source_conversation_id="attach-beta",
+            title="Conversation Beta",
+            created_at_unix=1710001000.0,
+            updated_at_unix=1710001500.0,
+        )
+        db.session.add_all([a, b])
+        db.session.flush()
+
+        msg_a = ImportedMessage(
+            conversation_id=a.id,
+            source_message_id="a-0",
+            role="user",
+            content="Alpha message content.",
+            sequence_index=0,
+            created_at_unix=1710000001.0,
+        )
+        msg_b = ImportedMessage(
+            conversation_id=b.id,
+            source_message_id="b-0",
+            role="user",
+            content="Beta message content.",
+            sequence_index=0,
+            created_at_unix=1710001001.0,
+        )
+        db.session.add_all([msg_a, msg_b])
+        db.session.flush()
+
+        sha_a = ("aaa111" + "0" * 64)[:64]
+        asset_a = Asset(
+            stable_id=f"asset:sha256:{sha_a}",
+            sha256=sha_a,
+            original_filename="alpha_report.pdf",
+            stored_filename=f"{sha_a}-alpha_report.pdf",
+            mime_type="application/pdf",
+            extension="pdf",
+            size_bytes=1024,
+            storage_path=f"assets/sha256/aa/{sha_a}-alpha_report.pdf",
+            uploaded_at_unix=1710000010.0,
+            source="manual",
+            parse_status="unparsed",
+            parse_error=None,
+        )
+        sha_b = ("bbb222" + "0" * 64)[:64]
+        asset_b = Asset(
+            stable_id=f"asset:sha256:{sha_b}",
+            sha256=sha_b,
+            original_filename="beta_screenshot.png",
+            stored_filename=f"{sha_b}-beta_screenshot.png",
+            mime_type="image/png",
+            extension="png",
+            size_bytes=512,
+            storage_path=f"assets/sha256/bb/{sha_b}-beta_screenshot.png",
+            uploaded_at_unix=1710001010.0,
+            source="manual",
+            parse_status="unparsed",
+            parse_error=None,
+        )
+        db.session.add_all([asset_a, asset_b])
+        db.session.flush()
+
+        db.session.add(ConversationAsset(
+            conversation_id=a.id,
+            asset_id=asset_a.id,
+            role="context",
+            note="",
+            attached_at_unix=1710000020.0,
+        ))
+        db.session.add(MessageAsset(
+            message_id=msg_b.id,
+            asset_id=asset_b.id,
+            placement="after_message_content",
+            caption="",
+            attached_at_unix=1710001020.0,
+        ))
+        db.session.commit()
+        return {"a": a.id, "b": b.id}
+
+
+class MultiSelectExportAttachmentsTest(unittest.TestCase):
+    """Attachment markers in multi-select export stay scoped to each conversation."""
+
+    def setUp(self):
+        self.workdir = make_test_temp_dir(self, "multi-export-attach")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        self._old_dir = Config.SOULPRINT_EXPORT_DIR
+        self.addCleanup(self._restore_config)
+
+        Config.SQLALCHEMY_DATABASE_URI = (
+            f"sqlite:///{(self.workdir / 'attach_export.db').as_posix()}"
+        )
+        Config.SOULPRINT_EXPORT_DIR = ""
+
+        self.app = create_app()
+        self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+
+        self.ids = _seed_conversations_with_assets(self.app)
+
+    def _restore_config(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+        Config.SOULPRINT_EXPORT_DIR = self._old_dir
+
+    def test_each_conversation_includes_only_its_own_attachments(self):
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
+        )
+        self.assertEqual(response.status_code, 200)
+
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            bodies = {name: zf.read(name).decode("utf-8") for name in zf.namelist()}
+
+        alpha_body = next(v for k, v in bodies.items() if "Alpha" in k)
+        beta_body = next(v for k, v in bodies.items() if "Beta" in k)
+
+        self.assertIn("alpha_report.pdf", alpha_body)
+        self.assertNotIn("beta_screenshot.png", alpha_body)
+
+        self.assertIn("beta_screenshot.png", beta_body)
+        self.assertNotIn("alpha_report.pdf", beta_body)
+
+    def test_zip_contains_only_markdown_files_when_attachments_exist(self):
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/zip")
+
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            names = zf.namelist()
+            self.assertEqual(len(names), 2)
+            for name in names:
+                self.assertTrue(
+                    name.endswith(".md"),
+                    f"Expected only .md entries in zip, found: {name!r}",
+                )
+
+    def test_no_shared_global_assets_folder_in_zip(self):
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
+        )
+        self.assertEqual(response.status_code, 200)
+
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            for name in zf.namelist():
+                self.assertFalse(
+                    name.startswith("assets/"),
+                    f"Unexpected shared assets folder in zip: {name!r}",
+                )
+                self.assertFalse(
+                    name.endswith("/"),
+                    f"Unexpected directory entry in zip: {name!r}",
+                )
 
 
 if __name__ == "__main__":
