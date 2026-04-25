@@ -174,6 +174,64 @@ def _sqlite_path_from_uri(sqlite_uri: str) -> str:
     return sqlite_uri.removeprefix("sqlite:///")
 
 
+def _extract_loop_texts(artifact: dict) -> list[str]:
+    """Extract individual loop text strings from a continuity open_loops artifact.
+
+    Prefers content_json['open_loops'] list; falls back to parsing content_text lines.
+    """
+    content_json = artifact.get("content_json")
+    if content_json and isinstance(content_json, dict):
+        loops = content_json.get("open_loops", [])
+        if loops:
+            return [str(t).strip() for t in loops if str(t).strip()]
+    text = artifact.get("content_text", "")
+    lines = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        for prefix in ("- ", "* ", "• ", "– "):
+            if line.startswith(prefix):
+                line = line[len(prefix):]
+                break
+        if line:
+            lines.append(line)
+    return lines
+
+
+def _resolve_open_loop_conversation(source_ids: list[str]) -> dict:
+    """Resolve the first valid imported_conversation stable ID to display info.
+
+    Returns a dict with id, title, source, explorer_url, continuity_url.
+    Falls back gracefully when no stable ID resolves to a live conversation.
+    """
+    prefix = "imported_conversation:"
+    for sid in source_ids:
+        if not sid.startswith(prefix):
+            continue
+        raw_id = sid.removeprefix(prefix)
+        if not raw_id.isdigit():
+            continue
+        conv = ImportedConversation.query.get(int(raw_id))
+        if conv is None:
+            continue
+        return {
+            "id": conv.id,
+            "title": conv.title or "Untitled conversation",
+            "source": conv.source,
+            "explorer_url": f"/imported/{conv.id}/explorer",
+            "continuity_url": f"/intelligence/continuity/{conv.id}",
+        }
+    stable_text = source_ids[0] if source_ids else ""
+    return {
+        "id": None,
+        "title": stable_text or "Unknown conversation",
+        "source": "",
+        "explorer_url": None,
+        "continuity_url": None,
+    }
+
+
 def render_conversation_markdown(conversation, messages) -> tuple[str, str]:
     """Return (markdown_content, safe_filename) for a conversation + messages."""
 
@@ -1877,6 +1935,37 @@ def create_app():
             copy_payload=copy_payload,
             llm_configured=configured,
         )
+
+    @app.get("/continuity/open-loops")
+    def continuity_open_loops():
+        from ..intelligence.continuity.store import (
+            default_continuity_store_path,
+            list_artifacts_by_type,
+        )
+
+        db_path = _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"])
+        store_path = default_continuity_store_path(db_path)
+        artifacts = list_artifacts_by_type(store_path, "open_loops", limit=9999)
+
+        rows = []
+        for artifact in artifacts:
+            loop_texts = _extract_loop_texts(artifact)
+            source_ids = artifact.get("source_conversation_ids", [])
+            conv_info = _resolve_open_loop_conversation(source_ids)
+            for loop_text in loop_texts:
+                rows.append({
+                    "artifact_id": artifact.get("artifact_id", ""),
+                    "loop_text": loop_text,
+                    "generation_timestamp": artifact.get("generation_timestamp", ""),
+                    "llm_provider_used": artifact.get("llm_provider_used", ""),
+                    "conversation_id": conv_info["id"],
+                    "conversation_title": conv_info["title"],
+                    "conversation_source": conv_info["source"],
+                    "explorer_url": conv_info["explorer_url"],
+                    "continuity_url": conv_info["continuity_url"],
+                })
+
+        return render_template("open_loops.html", rows=rows)
 
     # ------------------------------------------------------------------
     # Multi-conversation distillation routes
