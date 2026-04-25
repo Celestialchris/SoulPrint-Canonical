@@ -2,8 +2,10 @@ from dataclasses import asdict
 from urllib.parse import urlparse
 from flask import Flask, abort, redirect, render_template, request, jsonify, send_file, session, url_for
 from datetime import datetime, timezone
+import json
 import logging
 import os
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -399,6 +401,99 @@ def _atomic_write_text(target: Path, content: str) -> None:
             except OSError:
                 pass  # best-effort cleanup; don't mask the original error
         raise
+
+
+def _write_asset_bundle(
+    assets_dir: Path,
+    conversation,
+    conv_assets: list,
+    messages: list,
+    msg_assets: dict,
+    instance_root,
+) -> None:
+    """Copy asset files into assets_dir and write manifest.json.
+
+    Raises FileNotFoundError (subclass of OSError) if any physical file is missing.
+    """
+    from .assets import asset_absolute_path
+
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    manifest_items: list[dict] = []
+
+    sorted_conv_assets = sorted(
+        conv_assets,
+        key=lambda ca: (ca.attached_at_unix or 0, ca.id or 0, ca.asset_id or 0),
+    )
+    for ca in sorted_conv_assets:
+        asset = ca.asset
+        copied_name = f"{asset.sha256[:12]}-{_safe_marker_name(asset.original_filename)}"
+        src = asset_absolute_path(asset, instance_root=instance_root)
+        if not src.exists():
+            raise FileNotFoundError(
+                f"Asset file missing for '{asset.original_filename}' (sha256: {asset.sha256})"
+            )
+        shutil.copy2(src, assets_dir / copied_name)
+        manifest_items.append({
+            "asset_id": asset.id,
+            "stable_id": asset.stable_id,
+            "sha256": asset.sha256,
+            "original_filename": asset.original_filename,
+            "stored_filename": asset.stored_filename,
+            "mime_type": asset.mime_type,
+            "size_bytes": asset.size_bytes,
+            "relationship": "conversation",
+            "conversation_asset_id": ca.id,
+            "role": ca.role,
+            "note": ca.note,
+        })
+
+    for msg in messages:
+        sorted_msg_assets = sorted(
+            msg_assets.get(msg.id, []),
+            key=lambda ma: (ma.attached_at_unix or 0, ma.id or 0, ma.asset_id or 0),
+        )
+        for ma in sorted_msg_assets:
+            asset = ma.asset
+            copied_name = (
+                f"msg-{msg.sequence_index:03d}-{asset.sha256[:12]}"
+                f"-{_safe_marker_name(asset.original_filename)}"
+            )
+            src = asset_absolute_path(asset, instance_root=instance_root)
+            if not src.exists():
+                raise FileNotFoundError(
+                    f"Asset file missing for '{asset.original_filename}' (sha256: {asset.sha256})"
+                )
+            shutil.copy2(src, assets_dir / copied_name)
+            manifest_items.append({
+                "asset_id": asset.id,
+                "stable_id": asset.stable_id,
+                "sha256": asset.sha256,
+                "original_filename": asset.original_filename,
+                "stored_filename": asset.stored_filename,
+                "mime_type": asset.mime_type,
+                "size_bytes": asset.size_bytes,
+                "relationship": "message",
+                "message_asset_id": ma.id,
+                "message_id": msg.id,
+                "message_sequence_index": msg.sequence_index,
+                "role": msg.role,
+                "placement": ma.placement,
+                "caption": ma.caption,
+            })
+
+    manifest = {
+        "schema": "soulprint.attachments.v1",
+        "conversation_id": conversation.id,
+        "source": conversation.source,
+        "source_conversation_id": conversation.source_conversation_id,
+        "title": conversation.title or "Untitled conversation",
+        "exported_from": "SoulPrint",
+        "assets": manifest_items,
+    }
+    (assets_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
 
 
 def create_app():
@@ -998,6 +1093,23 @@ def create_app():
                     dest, exc,
                 )
             else:
+                has_assets = bool(conv_assets) or any(msg_assets.values())
+                if has_assets:
+                    stem = name[:-3] if name.endswith(".md") else name
+                    try:
+                        _write_asset_bundle(
+                            dest / f"{stem}.assets",
+                            conversation,
+                            conv_assets,
+                            messages,
+                            msg_assets,
+                            instance_root=app.instance_path,
+                        )
+                    except OSError as exc:
+                        session["export_error"] = (
+                            f"Markdown exported but assets could not be copied: {exc}"
+                        )
+                        return redirect(url_for("imported_conversations"))
                 session["export_notice"] = (
                     f"Exported '{conversation.title or 'Untitled conversation'}' "
                     f"to {dest / name}"
@@ -1042,6 +1154,7 @@ def create_app():
             return redirect(url_for("imported_conversations"))
 
         rendered: list[tuple[int, str, str]] = []
+        assets_by_conv: dict[int, tuple] = {}
         for conversation in conversations:
             messages = (
                 ImportedMessage.query
@@ -1057,6 +1170,7 @@ def create_app():
                 message_assets=msg_assets,
             )
             rendered.append((conversation.id, content, base_filename))
+            assets_by_conv[conversation.id] = (conversation, conv_assets, messages, msg_assets)
 
         export_dir = app.config.get("SOULPRINT_EXPORT_DIR", "") or ""
         dest = Path(export_dir).resolve() if export_dir else None
@@ -1074,6 +1188,14 @@ def create_app():
                     _atomic_write_text(dest / name, content)
                     used.add(name)
                     written += 1
+                    conv_obj, ca, msgs, ma = assets_by_conv[conv_id]
+                    if ca or any(ma.values()):
+                        stem = name[:-3] if name.endswith(".md") else name
+                        _write_asset_bundle(
+                            dest / f"{stem}.assets",
+                            conv_obj, ca, msgs, ma,
+                            instance_root=app.instance_path,
+                        )
             except OSError as exc:
                 detail = (
                     f" {written} of {len(rendered)} conversations were written before the failure."

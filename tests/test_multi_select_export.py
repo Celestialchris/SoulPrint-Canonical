@@ -12,6 +12,7 @@ from __future__ import annotations
 import io
 import unittest
 import zipfile
+from pathlib import Path
 from unittest.mock import patch
 
 from src.app import create_app
@@ -529,6 +530,217 @@ class MultiSelectExportAttachmentsTest(unittest.TestCase):
                     name.endswith("/"),
                     f"Unexpected directory entry in zip: {name!r}",
                 )
+
+
+class MultiSelectExportDirectoryBundleTest(unittest.TestCase):
+    """Multi-select directory export creates per-conversation .assets/ folders."""
+
+    def setUp(self):
+        self.workdir = make_test_temp_dir(self, "multi-dir-bundle")
+        self.export_dir = self.workdir / "vault"
+        self.export_dir.mkdir()
+
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        self._old_dir = Config.SOULPRINT_EXPORT_DIR
+        self.addCleanup(self._restore_config)
+
+        Config.SQLALCHEMY_DATABASE_URI = (
+            f"sqlite:///{(self.workdir / 'multi_bundle.db').as_posix()}"
+        )
+        Config.SOULPRINT_EXPORT_DIR = str(self.export_dir)
+
+        self.app = create_app()
+        self.instance_root = Path(self.app.instance_path)
+        self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+
+        self._physical_files: list[Path] = []
+        self.addCleanup(self._remove_physical_files)
+
+        # sha_a: sha[:2] == "aa"
+        self._sha_a = ("aa" + "11" * 31)[:64]
+        self._sha_b = ("bb" + "22" * 31)[:64]
+        self._storage_a = f"assets/sha256/aa/{self._sha_a}-alpha_report.pdf"
+        self._storage_b = f"assets/sha256/bb/{self._sha_b}-beta_screenshot.png"
+
+        self.ids = _seed_dir_bundle_conversations(self.app, self._sha_a, self._sha_b,
+                                                  self._storage_a, self._storage_b)
+
+        for storage in (self._storage_a, self._storage_b):
+            physical = self.instance_root / storage
+            physical.parent.mkdir(parents=True, exist_ok=True)
+            physical.write_bytes(b"bytes")
+            self._physical_files.append(physical)
+
+    def _restore_config(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+        Config.SOULPRINT_EXPORT_DIR = self._old_dir
+
+    def _remove_physical_files(self):
+        for p in self._physical_files:
+            try:
+                p.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+    def test_each_conversation_gets_its_own_assets_folder(self):
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
+            follow_redirects=False,
+        )
+        self.assertEqual(response.status_code, 302)
+
+        self.assertTrue((self.export_dir / "Conversation Alpha.assets").is_dir())
+        self.assertTrue((self.export_dir / "Conversation Beta.assets").is_dir())
+
+    def test_assets_not_leaked_across_conversations(self):
+        self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
+        )
+        alpha_files = {p.name for p in (self.export_dir / "Conversation Alpha.assets").iterdir()}
+        beta_files = {p.name for p in (self.export_dir / "Conversation Beta.assets").iterdir()}
+
+        self.assertTrue(any("alpha_report.pdf" in n for n in alpha_files))
+        self.assertFalse(any("beta_screenshot.png" in n for n in alpha_files))
+
+        self.assertTrue(any("beta_screenshot.png" in n for n in beta_files))
+        self.assertFalse(any("alpha_report.pdf" in n for n in beta_files))
+
+    def test_no_assets_folder_for_conversation_without_attachments(self):
+        with self.app.app_context():
+            conv_clean = ImportedConversation(
+                source="gemini",
+                source_conversation_id="clean-conv",
+                title="Clean Conversation",
+                created_at_unix=1710002000.0,
+                updated_at_unix=1710002500.0,
+            )
+            db.session.add(conv_clean)
+            db.session.flush()
+            db.session.add(ImportedMessage(
+                conversation_id=conv_clean.id,
+                source_message_id="c-0",
+                role="user",
+                content="no attachments here",
+                sequence_index=0,
+                created_at_unix=1710002001.0,
+            ))
+            db.session.commit()
+            clean_id = conv_clean.id
+
+        self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(clean_id)]},
+        )
+        self.assertFalse((self.export_dir / "Clean Conversation.assets").exists())
+
+    def test_each_manifest_scoped_to_its_own_conversation(self):
+        import json as _json
+        self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
+        )
+        alpha_manifest = _json.loads(
+            (self.export_dir / "Conversation Alpha.assets" / "manifest.json").read_text()
+        )
+        beta_manifest = _json.loads(
+            (self.export_dir / "Conversation Beta.assets" / "manifest.json").read_text()
+        )
+        self.assertEqual(alpha_manifest["title"], "Conversation Alpha")
+        self.assertEqual(beta_manifest["title"], "Conversation Beta")
+        self.assertEqual(len(alpha_manifest["assets"]), 1)
+        self.assertEqual(len(beta_manifest["assets"]), 1)
+        self.assertNotEqual(alpha_manifest["conversation_id"], beta_manifest["conversation_id"])
+
+
+def _seed_dir_bundle_conversations(app, sha_a, sha_b, storage_a, storage_b) -> dict[str, int]:
+    """Seed two conversations: Alpha (conv-level asset), Beta (message-level asset)."""
+    with app.app_context():
+        a = ImportedConversation(
+            source="chatgpt",
+            source_conversation_id="dir-alpha",
+            title="Conversation Alpha",
+            created_at_unix=1710000000.0,
+            updated_at_unix=1710000500.0,
+        )
+        b = ImportedConversation(
+            source="claude",
+            source_conversation_id="dir-beta",
+            title="Conversation Beta",
+            created_at_unix=1710001000.0,
+            updated_at_unix=1710001500.0,
+        )
+        db.session.add_all([a, b])
+        db.session.flush()
+
+        msg_a = ImportedMessage(
+            conversation_id=a.id,
+            source_message_id="a-0",
+            role="user",
+            content="Alpha message.",
+            sequence_index=0,
+            created_at_unix=1710000001.0,
+        )
+        msg_b = ImportedMessage(
+            conversation_id=b.id,
+            source_message_id="b-0",
+            role="user",
+            content="Beta message.",
+            sequence_index=0,
+            created_at_unix=1710001001.0,
+        )
+        db.session.add_all([msg_a, msg_b])
+        db.session.flush()
+
+        asset_a = Asset(
+            stable_id=f"asset:sha256:{sha_a}",
+            sha256=sha_a,
+            original_filename="alpha_report.pdf",
+            stored_filename=f"{sha_a}-alpha_report.pdf",
+            mime_type="application/pdf",
+            extension="pdf",
+            size_bytes=8,
+            storage_path=storage_a,
+            uploaded_at_unix=1710000010.0,
+            source="manual",
+            parse_status="unparsed",
+            parse_error=None,
+        )
+        asset_b = Asset(
+            stable_id=f"asset:sha256:{sha_b}",
+            sha256=sha_b,
+            original_filename="beta_screenshot.png",
+            stored_filename=f"{sha_b}-beta_screenshot.png",
+            mime_type="image/png",
+            extension="png",
+            size_bytes=5,
+            storage_path=storage_b,
+            uploaded_at_unix=1710001010.0,
+            source="manual",
+            parse_status="unparsed",
+            parse_error=None,
+        )
+        db.session.add_all([asset_a, asset_b])
+        db.session.flush()
+
+        db.session.add(ConversationAsset(
+            conversation_id=a.id,
+            asset_id=asset_a.id,
+            role="context",
+            note="",
+            attached_at_unix=1710000020.0,
+        ))
+        db.session.add(MessageAsset(
+            message_id=msg_b.id,
+            asset_id=asset_b.id,
+            placement="after_message_content",
+            caption="",
+            attached_at_unix=1710001020.0,
+        ))
+        db.session.commit()
+        return {"a": a.id, "b": b.id}
 
 
 if __name__ == "__main__":
