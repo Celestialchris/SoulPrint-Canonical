@@ -6,6 +6,7 @@ import hashlib
 import io
 import sqlite3
 import unittest
+from sqlalchemy.exc import IntegrityError as SAIntegrityError
 
 from src.app import create_app
 from src.app.assets import (
@@ -263,13 +264,153 @@ class AssetsSanitizationTest(unittest.TestCase):
 
         root = self.tmpdir.resolve()
         self.assertTrue(
-            str(abs_path).startswith(str(root)),
+            abs_path.is_relative_to(root),
             f"Path escaped root: {abs_path}",
         )
         self.assertNotIn("/", stored_filename)
         self.assertNotIn("\\", stored_filename)
         self.assertNotIn("..", stored_filename)
         self.assertTrue(storage_path.startswith("assets/sha256/"))
+
+
+class AssetsPathContainmentRegressionTest(unittest.TestCase):
+    """Regression: sibling-prefix path must not bypass the containment check.
+
+    /tmp/instance_evil/file shares the string prefix /tmp/instance, so the old
+    str.startswith check would pass it. is_relative_to() correctly rejects it.
+    """
+
+    def setUp(self):
+        self.app, self.tmpdir, self.db_path = _make_app(self, "path-contain")
+
+    def tearDown(self):
+        sibling = self.tmpdir.parent / (self.tmpdir.name + "_evil")
+        if sibling.exists():
+            import shutil
+            shutil.rmtree(sibling, ignore_errors=True)
+
+    def test_sibling_prefix_path_is_rejected(self):
+        root = self.tmpdir.resolve()
+        sibling_name = root.name + "_evil"
+        sibling = root.parent / sibling_name
+        sibling.mkdir(exist_ok=True)
+
+        # storage_path crafted to resolve into the sibling directory:
+        # joining root / "../<root_name>_evil/evil_file.txt" resolves to sibling/evil_file.txt
+        evil_storage_path = f"../{sibling_name}/evil_file.txt"
+
+        with self.app.app_context():
+            asset = Asset(
+                stable_id="asset:sha256:" + "a" * 64,
+                sha256="a" * 64,
+                original_filename="evil.txt",
+                stored_filename="evil.txt",
+                size_bytes=0,
+                storage_path=evil_storage_path,
+                uploaded_at_unix=0.0,
+                source="test",
+                parse_status="unparsed",
+                parse_error=None,
+            )
+            with self.assertRaises(ValueError, msg="Sibling-prefix path should be rejected"):
+                asset_absolute_path(asset, instance_root=root)
+
+    def test_legitimate_path_is_accepted(self):
+        with self.app.app_context():
+            sha256 = "b" * 64
+            asset = Asset(
+                stable_id=f"asset:sha256:{sha256}",
+                sha256=sha256,
+                original_filename="doc.pdf",
+                stored_filename=f"{sha256}-doc.pdf",
+                size_bytes=0,
+                storage_path=f"assets/sha256/{sha256[:2]}/{sha256}-doc.pdf",
+                uploaded_at_unix=0.0,
+                source="test",
+                parse_status="unparsed",
+                parse_error=None,
+            )
+            path = asset_absolute_path(asset, instance_root=self.tmpdir)
+        self.assertTrue(path.is_relative_to(self.tmpdir.resolve()))
+
+
+class AssetsIntegrityErrorRecoveryTest(unittest.TestCase):
+    """Regression: concurrent uploads of identical bytes must not leave orphan files
+    or raise unhandled IntegrityError.
+
+    Simulates the race by directly triggering a duplicate sha256 IntegrityError
+    (the same operation store_asset performs after a missed pre-check) and verifying
+    the session recovers cleanly.
+    """
+
+    def setUp(self):
+        self.app, self.tmpdir, self.db_path = _make_app(self, "ie-recovery")
+
+    def test_integrity_error_rollback_and_recovery_returns_winner_row(self):
+        data = b"race condition bytes" * 8
+        sha256_val = hashlib.sha256(data).hexdigest()
+
+        with self.app.app_context():
+            # Simulate the "winner" insert that committed first
+            stored_path = f"assets/sha256/{sha256_val[:2]}/{sha256_val}-winner.bin"
+            abs_winner = self.tmpdir / stored_path
+            abs_winner.parent.mkdir(parents=True, exist_ok=True)
+            abs_winner.write_bytes(data)
+            winner = Asset(
+                stable_id=f"asset:sha256:{sha256_val}",
+                sha256=sha256_val,
+                original_filename="winner.bin",
+                stored_filename=f"{sha256_val}-winner.bin",
+                size_bytes=len(data),
+                storage_path=stored_path,
+                uploaded_at_unix=1710000000.0,
+                source="manual",
+                parse_status="unparsed",
+                parse_error=None,
+            )
+            db.session.add(winner)
+            db.session.commit()
+            winner_id = winner.id
+
+        with self.app.app_context():
+            # Simulate the "loser" thread that missed the pre-check and now tries
+            # to flush a duplicate sha256 row
+            loser_stored_path = f"assets/sha256/{sha256_val[:2]}/{sha256_val}-loser.bin"
+            loser = Asset(
+                stable_id=f"asset:sha256:{sha256_val}",
+                sha256=sha256_val,
+                original_filename="loser.bin",
+                stored_filename=f"{sha256_val}-loser.bin",
+                size_bytes=len(data),
+                storage_path=loser_stored_path,
+                uploaded_at_unix=1710000001.0,
+                source="manual",
+                parse_status="unparsed",
+                parse_error=None,
+            )
+            db.session.add(loser)
+
+            # flush must raise IntegrityError due to duplicate sha256
+            with self.assertRaises(SAIntegrityError):
+                db.session.flush()
+
+            # Recovery: rollback and fetch winner
+            db.session.rollback()
+            recovered = Asset.query.filter_by(sha256=sha256_val).first()
+
+            self.assertIsNotNone(recovered)
+            self.assertEqual(recovered.id, winner_id)
+            self.assertEqual(Asset.query.count(), 1)
+
+    def test_store_asset_returns_same_id_on_second_call(self):
+        """store_asset happy-path dedup still works after the IntegrityError fix."""
+        data = b"dedup after fix" * 12
+
+        with self.app.app_context():
+            a1 = store_asset(io.BytesIO(data), "a.txt", instance_root=self.tmpdir)
+            a2 = store_asset(io.BytesIO(data), "b.txt", instance_root=self.tmpdir)
+            self.assertEqual(a1.id, a2.id)
+            self.assertEqual(Asset.query.count(), 1)
 
 
 if __name__ == "__main__":

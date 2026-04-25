@@ -5,6 +5,8 @@ import re
 import time
 from pathlib import Path
 
+from sqlalchemy.exc import IntegrityError
+
 from .models import Asset, ConversationAsset, MessageAsset
 from .models.db import db
 
@@ -39,10 +41,7 @@ def store_asset(
     extension: str | None = suffix.lstrip(".")[:32] or None
     stored_filename = f"{sha256}-{safe_name}"[:255]
     storage_path = f"assets/sha256/{sha256[:2]}/{stored_filename}"
-
     abs_path = _resolve_instance_root(instance_root) / storage_path
-    abs_path.parent.mkdir(parents=True, exist_ok=True)
-    abs_path.write_bytes(data)
 
     asset = Asset(
         stable_id=f"asset:sha256:{sha256}",
@@ -59,6 +58,24 @@ def store_asset(
         parse_error=None,
     )
     db.session.add(asset)
+
+    try:
+        # Flush first so IntegrityError is detected before we write to disk.
+        # This prevents orphaned files when two uploads race on the same bytes.
+        db.session.flush()
+    except IntegrityError:
+        db.session.rollback()
+        recovered = Asset.query.filter_by(sha256=sha256).first()
+        if recovered is None:
+            raise
+        recovered_path = asset_absolute_path(recovered, instance_root=instance_root)
+        if not recovered_path.exists():
+            recovered_path.parent.mkdir(parents=True, exist_ok=True)
+            recovered_path.write_bytes(data)
+        return recovered
+
+    abs_path.parent.mkdir(parents=True, exist_ok=True)
+    abs_path.write_bytes(data)
     db.session.commit()
     return asset
 
@@ -126,7 +143,7 @@ def asset_absolute_path(asset: Asset, *, instance_root=None) -> Path:
     """
     root = _resolve_instance_root(instance_root).resolve()
     resolved = (root / Path(asset.storage_path)).resolve()
-    if not str(resolved).startswith(str(root)):
+    if not resolved.is_relative_to(root):
         raise ValueError(f"storage_path escapes instance root: {asset.storage_path!r}")
     return resolved
 
