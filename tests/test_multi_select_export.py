@@ -468,14 +468,36 @@ class MultiSelectExportAttachmentsTest(unittest.TestCase):
         Config.SOULPRINT_EXPORT_DIR = ""
 
         self.app = create_app()
+        self.instance_root = Path(self.app.instance_path)
         self.client = self.app.test_client()
         self.addCleanup(release_app_db_handles, self.app, drop_all=True)
 
         self.ids = _seed_conversations_with_assets(self.app)
 
+        # Create physical asset files so bundle export succeeds
+        self._sha_a = ("aaa111" + "0" * 64)[:64]
+        self._sha_b = ("bbb222" + "0" * 64)[:64]
+        self._physical_files: list[Path] = []
+        self.addCleanup(self._remove_physical_files)
+        for storage, data in [
+            (f"assets/sha256/aa/{self._sha_a}-alpha_report.pdf", b"pdf-content"),
+            (f"assets/sha256/bb/{self._sha_b}-beta_screenshot.png", b"png-content"),
+        ]:
+            physical = self.instance_root / storage
+            physical.parent.mkdir(parents=True, exist_ok=True)
+            physical.write_bytes(data)
+            self._physical_files.append(physical)
+
     def _restore_config(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
         Config.SOULPRINT_EXPORT_DIR = self._old_dir
+
+    def _remove_physical_files(self):
+        for p in self._physical_files:
+            try:
+                p.unlink(missing_ok=True)
+            except OSError:
+                pass
 
     def test_each_conversation_includes_only_its_own_attachments(self):
         response = self.client.post(
@@ -485,10 +507,15 @@ class MultiSelectExportAttachmentsTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
-            bodies = {name: zf.read(name).decode("utf-8") for name in zf.namelist()}
+            # Read only markdown entries for content checks
+            md_bodies = {
+                name: zf.read(name).decode("utf-8")
+                for name in zf.namelist()
+                if name.endswith(".md")
+            }
 
-        alpha_body = next(v for k, v in bodies.items() if "Alpha" in k)
-        beta_body = next(v for k, v in bodies.items() if "Beta" in k)
+        alpha_body = next(v for k, v in md_bodies.items() if "Alpha" in k)
+        beta_body = next(v for k, v in md_bodies.items() if "Beta" in k)
 
         self.assertIn("alpha_report.pdf", alpha_body)
         self.assertNotIn("beta_screenshot.png", alpha_body)
@@ -496,7 +523,8 @@ class MultiSelectExportAttachmentsTest(unittest.TestCase):
         self.assertIn("beta_screenshot.png", beta_body)
         self.assertNotIn("alpha_report.pdf", beta_body)
 
-    def test_zip_contains_only_markdown_files_when_attachments_exist(self):
+    def test_zip_contains_md_and_asset_files_when_attachments_exist(self):
+        """Browser zip includes per-conversation markdown plus asset bundles."""
         response = self.client.post(
             "/imported/export-selected",
             data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
@@ -506,12 +534,10 @@ class MultiSelectExportAttachmentsTest(unittest.TestCase):
 
         with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
             names = zf.namelist()
-            self.assertEqual(len(names), 2)
-            for name in names:
-                self.assertTrue(
-                    name.endswith(".md"),
-                    f"Expected only .md entries in zip, found: {name!r}",
-                )
+        md_entries = [n for n in names if n.endswith(".md")]
+        asset_entries = [n for n in names if not n.endswith(".md")]
+        self.assertEqual(len(md_entries), 2)
+        self.assertTrue(len(asset_entries) > 0, f"Expected asset entries in zip, got only: {names}")
 
     def test_no_shared_global_assets_folder_in_zip(self):
         response = self.client.post(
@@ -938,6 +964,133 @@ def _seed_dir_bundle_conversations(app, sha_a, sha_b, storage_a, storage_b) -> d
         ))
         db.session.commit()
         return {"a": a.id, "b": b.id}
+
+
+class MultiSelectExportBrowserBundleTest(unittest.TestCase):
+    """Browser zip includes per-conversation asset bundles with no cross-contamination."""
+
+    def setUp(self):
+        self.workdir = make_test_temp_dir(self, "multi-browser-bundle")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        self._old_dir = Config.SOULPRINT_EXPORT_DIR
+        self.addCleanup(self._restore_config)
+
+        Config.SQLALCHEMY_DATABASE_URI = (
+            f"sqlite:///{(self.workdir / 'browser_bundle.db').as_posix()}"
+        )
+        Config.SOULPRINT_EXPORT_DIR = ""
+
+        self.app = create_app()
+        self.instance_root = Path(self.app.instance_path)
+        self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+
+        self.ids = _seed_conversations_with_assets(self.app)
+
+        self._sha_a = ("aaa111" + "0" * 64)[:64]
+        self._sha_b = ("bbb222" + "0" * 64)[:64]
+        self._physical_files: list[Path] = []
+        self.addCleanup(self._remove_physical_files)
+        for storage, data in [
+            (f"assets/sha256/aa/{self._sha_a}-alpha_report.pdf", b"pdf-content"),
+            (f"assets/sha256/bb/{self._sha_b}-beta_screenshot.png", b"png-content"),
+        ]:
+            physical = self.instance_root / storage
+            physical.parent.mkdir(parents=True, exist_ok=True)
+            physical.write_bytes(data)
+            self._physical_files.append(physical)
+
+    def _restore_config(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+        Config.SOULPRINT_EXPORT_DIR = self._old_dir
+
+    def _remove_physical_files(self):
+        for p in self._physical_files:
+            try:
+                p.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+    def test_zip_includes_per_conversation_assets_folders(self):
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
+        )
+        self.assertEqual(response.status_code, 200)
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            names = zf.namelist()
+        alpha_assets = [n for n in names if "Conversation Alpha.assets" in n]
+        beta_assets = [n for n in names if "Conversation Beta.assets" in n]
+        self.assertTrue(len(alpha_assets) > 0, f"Expected Alpha.assets entries, got: {names}")
+        self.assertTrue(len(beta_assets) > 0, f"Expected Beta.assets entries, got: {names}")
+
+    def test_no_shared_global_assets_folder_in_zip(self):
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
+        )
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            for name in zf.namelist():
+                self.assertFalse(
+                    name.startswith("assets/"),
+                    f"Unexpected shared assets/ entry in zip: {name!r}",
+                )
+
+    def test_no_file_leakage_between_conversations(self):
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"]), str(self.ids["b"])]},
+        )
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            names = zf.namelist()
+        alpha_entries = [n for n in names if n.startswith("Conversation Alpha")]
+        beta_entries = [n for n in names if n.startswith("Conversation Beta")]
+        for n in alpha_entries:
+            self.assertNotIn("beta_screenshot", n, f"Beta file leaked into Alpha: {n!r}")
+        for n in beta_entries:
+            self.assertNotIn("alpha_report", n, f"Alpha file leaked into Beta: {n!r}")
+
+    def test_manifest_in_zip_contains_no_absolute_paths(self):
+        import json as _json
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"])]},
+        )
+        self.assertEqual(response.status_code, 200)
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            manifest_entry = next(n for n in zf.namelist() if n.endswith("manifest.json"))
+            manifest_text = zf.read(manifest_entry).decode("utf-8")
+        self.assertNotIn(str(self.instance_root), manifest_text)
+        self.assertNotIn(str(self.workdir), manifest_text)
+        manifest = _json.loads(manifest_text)
+        self.assertEqual(manifest["schema"], "soulprint.attachments.v1")
+        self.assertEqual(manifest["title"], "Conversation Alpha")
+
+    def test_missing_physical_file_redirects_with_error(self):
+        for p in self._physical_files:
+            p.unlink(missing_ok=True)
+        response = self.client.post(
+            "/imported/export-selected",
+            data={"conversation_ids": [str(self.ids["a"])]},
+            follow_redirects=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        followed = self.client.get("/imported")
+        self.assertIn("Export failed", followed.get_data(as_text=True))
+
+    def test_invalid_asset_path_redirects_with_error_not_500(self):
+        """ValueError from asset_absolute_path (path traversal guard) must redirect, not 500."""
+        from src.app import assets as _assets
+
+        with patch.object(_assets, "asset_absolute_path", side_effect=ValueError("path escapes root")):
+            response = self.client.post(
+                "/imported/export-selected",
+                data={"conversation_ids": [str(self.ids["a"])]},
+                follow_redirects=False,
+            )
+        self.assertEqual(response.status_code, 302)
+        followed = self.client.get("/imported")
+        self.assertIn("Export failed", followed.get_data(as_text=True))
 
 
 if __name__ == "__main__":

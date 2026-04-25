@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import io
 import unittest
+import zipfile
 from pathlib import Path
 
 from src.app import create_app
@@ -378,8 +380,12 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
         self.addCleanup(self._restore_config)
 
         self.app = create_app()
+        self.instance_root = Path(self.app.instance_path)
         self.client = self.app.test_client()
         self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+
+        self._physical_files: list[Path] = []
+        self.addCleanup(self._remove_physical_files)
 
         with self.app.app_context():
             db.create_all()
@@ -419,9 +425,17 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
         Config.SOULPRINT_EXPORT_DIR = self._old_export_dir
 
+    def _remove_physical_files(self):
+        for p in self._physical_files:
+            try:
+                p.unlink(missing_ok=True)
+            except OSError:
+                pass
+
     def _make_asset(self, sha_prefix: str, original_filename: str, mime_type: str) -> int:
-        """Insert an Asset row with no physical file (metadata only)."""
+        """Insert an Asset row and create the physical file on disk."""
         sha = (sha_prefix + "0" * 64)[:64]
+        storage_path = f"assets/sha256/{sha[:2]}/{sha}-{original_filename}"
         asset = Asset(
             stable_id=f"asset:sha256:{sha}",
             sha256=sha,
@@ -430,7 +444,7 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
             mime_type=mime_type,
             extension=Path(original_filename).suffix.lstrip(".") or None,
             size_bytes=1024,
-            storage_path=f"assets/sha256/{sha[:2]}/{sha}-{original_filename}",
+            storage_path=storage_path,
             uploaded_at_unix=1700000001.0,
             source="manual",
             parse_status="unparsed",
@@ -438,7 +452,19 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
         )
         db.session.add(asset)
         db.session.flush()
+        physical = self.instance_root / storage_path
+        physical.parent.mkdir(parents=True, exist_ok=True)
+        physical.write_bytes(b"dummy")
+        self._physical_files.append(physical)
         return asset.id
+
+    def _get_markdown(self, response) -> str:
+        """Return the markdown text from a text/markdown or zip response."""
+        if "application/zip" in response.content_type:
+            with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+                md_name = next(n for n in zf.namelist() if n.endswith(".md"))
+                return zf.read(md_name).decode("utf-8")
+        return response.data.decode("utf-8")
 
     def test_no_attachments_preserves_previous_behavior(self):
         response = self.client.get(f"/imported/{self.conv_id}/export")
@@ -462,7 +488,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
             db.session.commit()
 
         response = self.client.get(f"/imported/{self.conv_id}/export")
-        text = response.data.decode("utf-8")
+        self.assertEqual(response.status_code, 200)
+        text = self._get_markdown(response)
         self.assertIn("## Attachments", text)
         attach_idx = text.index("## Attachments")
         first_msg_idx = text.index("### User")
@@ -484,7 +511,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
             db.session.commit()
 
         response = self.client.get(f"/imported/{self.conv_id}/export")
-        text = response.data.decode("utf-8")
+        self.assertEqual(response.status_code, 200)
+        text = self._get_markdown(response)
         # sha_prefix "abcdef5678" → sha[:12] = "abcdef567800"
         self.assertIn("[[Test Attach Conversation.assets/abcdef567800-source.pdf]]", text)
 
@@ -501,7 +529,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
             db.session.commit()
 
         response = self.client.get(f"/imported/{self.conv_id}/export")
-        text = response.data.decode("utf-8")
+        self.assertEqual(response.status_code, 200)
+        text = self._get_markdown(response)
         self.assertIn("#### Attachments", text)
         # sha_prefix "deadbeef12" → sha[:12] = "deadbeef1200"
         self.assertIn("msg-000-deadbeef1200-screenshot.png", text)
@@ -519,7 +548,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
             db.session.commit()
 
         response = self.client.get(f"/imported/{self.conv_id}/export")
-        text = response.data.decode("utf-8")
+        self.assertEqual(response.status_code, 200)
+        text = self._get_markdown(response)
         # "#### Attachments" block appears exactly once — under msg1 only
         self.assertEqual(text.count("#### Attachments"), 1)
         # sha_prefix "cafebabe12" → sha[:12] = "cafebabe1200"
@@ -540,7 +570,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
             db.session.commit()
 
         response = self.client.get(f"/imported/{self.conv_id}/export")
-        text = response.data.decode("utf-8")
+        self.assertEqual(response.status_code, 200)
+        text = self._get_markdown(response)
         self.assertNotIn(str(self.workdir), text)
 
     def test_two_conversation_assets_same_filename_produce_distinct_links(self):
@@ -564,7 +595,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
             db.session.commit()
 
         response = self.client.get(f"/imported/{self.conv_id}/export")
-        text = response.data.decode("utf-8")
+        self.assertEqual(response.status_code, 200)
+        text = self._get_markdown(response)
         # sha_prefix "aaaa111111" → sha[:12] = "aaaa11111100"
         # sha_prefix "bbbb222222" → sha[:12] = "bbbb22222200"
         link_1 = "[[Test Attach Conversation.assets/aaaa11111100-report.pdf]]"
@@ -593,7 +625,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
             db.session.commit()
 
         response = self.client.get(f"/imported/{self.conv_id}/export")
-        text = response.data.decode("utf-8")
+        self.assertEqual(response.status_code, 200)
+        text = self._get_markdown(response)
         # sha_prefix "cccc333333" → sha[:12] = "cccc33333300"
         # sha_prefix "dddd444444" → sha[:12] = "dddd44444400"
         link_1 = "[[Test Attach Conversation.assets/msg-000-cccc33333300-notes.txt]]"
@@ -623,7 +656,8 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
             db.session.commit()
 
         response = self.client.get(f"/imported/{self.conv_id}/export")
-        text = response.data.decode("utf-8")
+        self.assertEqual(response.status_code, 200)
+        text = self._get_markdown(response)
         # sha_prefix "eeee555555" → sha[:12] = "eeee55555500"
         # sha_prefix "ffff666666" → sha[:12] = "ffff66666600"
         early_pos = text.index("eeee55555500-early.pdf")
@@ -863,3 +897,181 @@ class ConversationExportDirectoryBundleTest(unittest.TestCase):
         self.assertEqual(row["relationship"], "message")
         self.assertIn("message_sequence_index", row)
         self.assertEqual(row["message_sequence_index"], 0)
+
+
+class ConversationExportBrowserBundleTest(unittest.TestCase):
+    """Browser download returns .zip bundle when conversation has attachments."""
+
+    def setUp(self):
+        self.workdir = make_test_temp_dir(self, "conv-browser-bundle")
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        self._old_export_dir = Config.SOULPRINT_EXPORT_DIR
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.workdir}/browser_bundle.db"
+        Config.SOULPRINT_EXPORT_DIR = ""
+        self.addCleanup(self._restore_config)
+
+        self.app = create_app()
+        self.instance_root = Path(self.app.instance_path)
+        self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+
+        self._physical_files: list[Path] = []
+        self.addCleanup(self._remove_physical_files)
+
+        self._sha = ("aa" + "bb" * 31)[:64]
+        self._storage_path = f"assets/sha256/aa/{self._sha}-report.pdf"
+
+        with self.app.app_context():
+            db.create_all()
+
+            # Conversation with a conv-level asset
+            conv = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="browser-bundle-1",
+                title="Bundle Download Test",
+                created_at_unix=1700000000,
+                updated_at_unix=1700001000,
+            )
+            db.session.add(conv)
+            db.session.flush()
+            db.session.add(ImportedMessage(
+                conversation_id=conv.id,
+                source_message_id="m1",
+                role="user",
+                content="message content",
+                sequence_index=0,
+                created_at_unix=1700000000,
+            ))
+            db.session.flush()
+            asset = Asset(
+                stable_id=f"asset:sha256:{self._sha}",
+                sha256=self._sha,
+                original_filename="report.pdf",
+                stored_filename=f"{self._sha}-report.pdf",
+                mime_type="application/pdf",
+                extension="pdf",
+                size_bytes=9,
+                storage_path=self._storage_path,
+                uploaded_at_unix=1700000001.0,
+                source="manual",
+                parse_status="unparsed",
+                parse_error=None,
+            )
+            db.session.add(asset)
+            db.session.flush()
+            db.session.add(ConversationAsset(
+                conversation_id=conv.id,
+                asset_id=asset.id,
+                role="context",
+                note="",
+                attached_at_unix=1700000002.0,
+            ))
+            db.session.commit()
+            self.conv_with_asset_id = conv.id
+
+            # Conversation without attachments
+            conv2 = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="browser-bundle-2",
+                title="No Attachment Download",
+                created_at_unix=1700000000,
+                updated_at_unix=1700001000,
+            )
+            db.session.add(conv2)
+            db.session.flush()
+            db.session.add(ImportedMessage(
+                conversation_id=conv2.id,
+                source_message_id="m2",
+                role="user",
+                content="no files",
+                sequence_index=0,
+                created_at_unix=1700000000,
+            ))
+            db.session.commit()
+            self.conv_no_asset_id = conv2.id
+
+        physical = self.instance_root / self._storage_path
+        physical.parent.mkdir(parents=True, exist_ok=True)
+        physical.write_bytes(b"pdf bytes")
+        self._physical_files.append(physical)
+
+    def _restore_config(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+        Config.SOULPRINT_EXPORT_DIR = self._old_export_dir
+
+    def _remove_physical_files(self):
+        for p in self._physical_files:
+            try:
+                p.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+    def test_no_attachment_returns_plain_markdown(self):
+        response = self.client.get(f"/imported/{self.conv_no_asset_id}/export")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/markdown", response.content_type)
+        self.assertIn(".md", response.headers.get("Content-Disposition", ""))
+
+    def test_with_attachment_returns_zip(self):
+        response = self.client.get(f"/imported/{self.conv_with_asset_id}/export")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/zip")
+        self.assertIn(".zip", response.headers.get("Content-Disposition", ""))
+
+    def test_zip_contains_markdown_assets_and_manifest(self):
+        response = self.client.get(f"/imported/{self.conv_with_asset_id}/export")
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            names = zf.namelist()
+        self.assertTrue(any(n.endswith(".md") for n in names), f"No .md in zip: {names}")
+        self.assertTrue(any("manifest.json" in n for n in names), f"No manifest in zip: {names}")
+        self.assertTrue(any("report.pdf" in n for n in names), f"No report.pdf in zip: {names}")
+
+    def test_zip_copied_filename_matches_markdown_marker(self):
+        response = self.client.get(f"/imported/{self.conv_with_asset_id}/export")
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            names = zf.namelist()
+            md_name = next(n for n in names if n.endswith(".md"))
+            md_content = zf.read(md_name).decode("utf-8")
+        expected_filename = f"{self._sha[:12]}-report.pdf"
+        self.assertIn(expected_filename, md_content)
+        self.assertTrue(
+            any(expected_filename in n for n in names),
+            f"Expected zip entry containing {expected_filename!r}, got: {names}",
+        )
+
+    def test_zip_manifest_contains_no_absolute_paths(self):
+        import json as _json
+        response = self.client.get(f"/imported/{self.conv_with_asset_id}/export")
+        with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+            manifest_entry = next(n for n in zf.namelist() if n.endswith("manifest.json"))
+            manifest_text = zf.read(manifest_entry).decode("utf-8")
+        self.assertNotIn(str(self.instance_root), manifest_text)
+        self.assertNotIn(str(self.workdir), manifest_text)
+        manifest = _json.loads(manifest_text)
+        self.assertEqual(manifest["schema"], "soulprint.attachments.v1")
+        self.assertEqual(len(manifest["assets"]), 1)
+
+    def test_missing_physical_file_returns_error_redirect(self):
+        for p in self._physical_files:
+            p.unlink(missing_ok=True)
+        response = self.client.get(
+            f"/imported/{self.conv_with_asset_id}/export",
+            follow_redirects=False,
+        )
+        self.assertEqual(response.status_code, 302)
+        followed = self.client.get("/imported")
+        self.assertIn("report.pdf", followed.get_data(as_text=True))
+
+    def test_invalid_asset_path_returns_error_redirect_not_500(self):
+        """ValueError from asset_absolute_path (path traversal guard) must redirect, not 500."""
+        from unittest.mock import patch
+        from src.app import assets as _assets
+
+        with patch.object(_assets, "asset_absolute_path", side_effect=ValueError("path escapes root")):
+            response = self.client.get(
+                f"/imported/{self.conv_with_asset_id}/export",
+                follow_redirects=False,
+            )
+        self.assertEqual(response.status_code, 302)
+        followed = self.client.get("/imported")
+        self.assertIn("Export failed", followed.get_data(as_text=True))

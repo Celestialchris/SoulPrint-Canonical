@@ -500,6 +500,100 @@ def _write_asset_bundle(
     )
 
 
+def _write_asset_bundle_to_zip(
+    zf,
+    assets_prefix: str,
+    conversation,
+    conv_assets: list,
+    messages: list,
+    msg_assets: dict,
+    instance_root,
+) -> None:
+    """Write asset bundle entries into an open ZipFile.
+
+    assets_prefix: the folder name inside the zip, e.g. "Bundle Test.assets".
+    Raises FileNotFoundError (subclass of OSError) if any physical file is missing.
+    """
+    from .assets import asset_absolute_path
+
+    manifest_items: list[dict] = []
+
+    sorted_conv_assets = sorted(
+        conv_assets,
+        key=lambda ca: (ca.attached_at_unix or 0, ca.id or 0, ca.asset_id or 0),
+    )
+    for ca in sorted_conv_assets:
+        asset = ca.asset
+        copied_name = f"{asset.sha256[:12]}-{_safe_marker_name(asset.original_filename)}"
+        src = asset_absolute_path(asset, instance_root=instance_root)
+        if not src.exists():
+            raise FileNotFoundError(
+                f"Asset file missing for '{asset.original_filename}' (sha256: {asset.sha256})"
+            )
+        zf.write(src, arcname=f"{assets_prefix}/{copied_name}")
+        manifest_items.append({
+            "asset_id": asset.id,
+            "stable_id": asset.stable_id,
+            "sha256": asset.sha256,
+            "original_filename": asset.original_filename,
+            "stored_filename": asset.stored_filename,
+            "mime_type": asset.mime_type,
+            "size_bytes": asset.size_bytes,
+            "relationship": "conversation",
+            "conversation_asset_id": ca.id,
+            "role": ca.role,
+            "note": ca.note,
+        })
+
+    for msg in messages:
+        sorted_msg_assets = sorted(
+            msg_assets.get(msg.id, []),
+            key=lambda ma: (ma.attached_at_unix or 0, ma.id or 0, ma.asset_id or 0),
+        )
+        for ma in sorted_msg_assets:
+            asset = ma.asset
+            copied_name = (
+                f"msg-{msg.sequence_index:03d}-{asset.sha256[:12]}"
+                f"-{_safe_marker_name(asset.original_filename)}"
+            )
+            src = asset_absolute_path(asset, instance_root=instance_root)
+            if not src.exists():
+                raise FileNotFoundError(
+                    f"Asset file missing for '{asset.original_filename}' (sha256: {asset.sha256})"
+                )
+            zf.write(src, arcname=f"{assets_prefix}/{copied_name}")
+            manifest_items.append({
+                "asset_id": asset.id,
+                "stable_id": asset.stable_id,
+                "sha256": asset.sha256,
+                "original_filename": asset.original_filename,
+                "stored_filename": asset.stored_filename,
+                "mime_type": asset.mime_type,
+                "size_bytes": asset.size_bytes,
+                "relationship": "message",
+                "message_asset_id": ma.id,
+                "message_id": msg.id,
+                "message_sequence_index": msg.sequence_index,
+                "role": msg.role,
+                "placement": ma.placement,
+                "caption": ma.caption,
+            })
+
+    manifest = {
+        "schema": "soulprint.attachments.v1",
+        "conversation_id": conversation.id,
+        "source": conversation.source,
+        "source_conversation_id": conversation.source_conversation_id,
+        "title": conversation.title or "Untitled conversation",
+        "exported_from": "SoulPrint",
+        "assets": manifest_items,
+    }
+    zf.writestr(
+        f"{assets_prefix}/manifest.json",
+        json.dumps(manifest, indent=2, ensure_ascii=False),
+    )
+
+
 def create_app():
     instance_dir = default_instance_dir()
     app = Flask(
@@ -1126,10 +1220,40 @@ def create_app():
                 )
                 return redirect(url_for("imported_conversations"))
 
+        has_assets = bool(conv_assets) or any(msg_assets.values())
+        if not has_assets:
+            return Response(
+                content,
+                mimetype="text/markdown",
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+            )
+
+        import io as _io
+        import zipfile as _zipfile
+        stem = filename[:-3] if filename.endswith(".md") else filename
+        assets_prefix = f"{stem}.assets"
+        bundle_content, _ = render_conversation_markdown(
+            conversation, messages,
+            conversation_assets=conv_assets,
+            message_assets=msg_assets,
+            assets_stem_override=stem,
+        )
+        buf = _io.BytesIO()
+        try:
+            with _zipfile.ZipFile(buf, "w", _zipfile.ZIP_DEFLATED) as zf:
+                zf.writestr(filename, bundle_content)
+                _write_asset_bundle_to_zip(
+                    zf, assets_prefix, conversation, conv_assets, messages, msg_assets,
+                    instance_root=app.instance_path,
+                )
+        except (OSError, ValueError) as exc:
+            session["export_error"] = f"Export failed: {exc}"
+            return redirect(url_for("imported_conversations"))
+        zip_filename = f"{stem}.zip"
         return Response(
-            content,
-            mimetype="text/markdown",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+            buf.getvalue(),
+            mimetype="application/zip",
+            headers={"Content-Disposition": f'attachment; filename="{zip_filename}"'},
         )
 
     @app.post("/imported/export-selected")
@@ -1230,13 +1354,33 @@ def create_app():
 
         zip_used: set[str] = set()
         buf = io.BytesIO()
-        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-            for conv_id, content, base_filename in rendered:
-                name = _pick_unique_filename(
-                    base_filename, conv_id, zip_used.__contains__
-                )
-                zf.writestr(name, content)
-                zip_used.add(name)
+        try:
+            with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                for conv_id, content, base_filename in rendered:
+                    name = _pick_unique_filename(
+                        base_filename, conv_id, zip_used.__contains__
+                    )
+                    stem = name[:-3] if name.endswith(".md") else name
+                    conv_obj, ca, msgs, ma = assets_by_conv[conv_id]
+                    has_assets = bool(ca) or any(ma.values())
+                    if has_assets:
+                        bundle_content, _ = render_conversation_markdown(
+                            conv_obj, msgs,
+                            conversation_assets=ca,
+                            message_assets=ma,
+                            assets_stem_override=stem,
+                        )
+                        zf.writestr(name, bundle_content)
+                        _write_asset_bundle_to_zip(
+                            zf, f"{stem}.assets", conv_obj, ca, msgs, ma,
+                            instance_root=app.instance_path,
+                        )
+                    else:
+                        zf.writestr(name, content)
+                    zip_used.add(name)
+        except (OSError, ValueError) as exc:
+            session["export_error"] = f"Export failed: could not package assets: {exc}"
+            return redirect(url_for("imported_conversations"))
         count = len(rendered)
         return Response(
             buf.getvalue(),
