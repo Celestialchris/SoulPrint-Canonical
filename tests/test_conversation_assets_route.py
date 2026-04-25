@@ -209,6 +209,29 @@ class ConversationAssetRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_db_constraint_prevents_duplicate_conversation_asset_rows(self):
+        """DB-level uniqueness: direct double-insert raises IntegrityError, leaving one row."""
+        from sqlalchemy.exc import IntegrityError as _IntegrityError
+
+        conv_id = self._create_conversation(source_id="conv-constraint-test")
+        data = b"constraint test bytes" * 6
+
+        with self.app.app_context():
+            asset = store_asset(
+                io.BytesIO(data),
+                "constraint_test.txt",
+                "text/plain",
+                instance_root=Path(self.app.instance_path),
+            )
+            attach_asset_to_conversation(conv_id, asset.id)
+            with self.assertRaises(_IntegrityError):
+                attach_asset_to_conversation(conv_id, asset.id)
+
+        with self.app.app_context():
+            self.assertEqual(
+                ConversationAsset.query.filter_by(conversation_id=conv_id).count(), 1
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

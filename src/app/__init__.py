@@ -382,6 +382,18 @@ def create_app():
                 "ALTER TABLE memory_entry ADD COLUMN is_starred BOOLEAN NOT NULL DEFAULT 0"
             )
             _gc.commit()
+        _ca_indexes = {
+            r[0]
+            for r in _gc.execute(
+                "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='conversation_asset'"
+            )
+        }
+        if "uq_conversation_asset" not in _ca_indexes:
+            _gc.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uq_conversation_asset"
+                " ON conversation_asset(conversation_id, asset_id)"
+            )
+            _gc.commit()
         _gc.close()
     except Exception:
         pass
@@ -741,6 +753,7 @@ def create_app():
     @app.post("/imported/<int:conversation_id>/attachments")
     def upload_conversation_attachment(conversation_id: int):
         from .assets import attach_asset_to_conversation, store_asset
+        from sqlalchemy.exc import IntegrityError
 
         conversation = ImportedConversation.query.filter_by(id=conversation_id).first_or_404()
         upload = request.files.get("attachment_file")
@@ -756,12 +769,20 @@ def create_app():
             instance_root=app.instance_path,
         )
 
+        # Fast path: avoid the exception for the common single-request duplicate.
+        # IntegrityError handling below covers the concurrent-upload race.
         existing = _find_conversation_asset(conversation.id, asset.id)
         if existing is not None:
             session["attachment_notice"] = f"Attachment already exists: {asset.original_filename}."
             return redirect(url_for("imported_explorer", conversation_id=conversation.id))
 
-        attach_asset_to_conversation(conversation.id, asset.id)
+        try:
+            attach_asset_to_conversation(conversation.id, asset.id)
+        except IntegrityError:
+            db.session.rollback()
+            session["attachment_notice"] = f"Attachment already exists: {asset.original_filename}."
+            return redirect(url_for("imported_explorer", conversation_id=conversation.id))
+
         session["attachment_notice"] = f"Attached {asset.original_filename}."
         return redirect(url_for("imported_explorer", conversation_id=conversation.id))
 
