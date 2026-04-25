@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from src.intelligence.continuity.models import ContinuityArtifact
 from src.intelligence.continuity.service import (
     ContinuityPacketResult,
+    MAX_TRANSCRIPT_CHARS,
     generate_continuity_packet,
     _build_transcript,
     _parse_provider_response,
@@ -159,6 +160,49 @@ class TranscriptBuildingTest(unittest.TestCase):
         transcript = _build_transcript(conv)
         self.assertIn("[user]: Should we use SQLite?", transcript)
         self.assertIn("[assistant]: Yes, for local-first.", transcript)
+
+    def test_transcript_under_budget_passes_through_unchanged(self):
+        conv = FakeConversation(
+            id=1,
+            title="Short",
+            messages=[
+                FakeMessage(role="user", content="hi", sequence_index=0),
+                FakeMessage(role="assistant", content="hello", sequence_index=1),
+            ],
+        )
+        transcript = _build_transcript(conv)
+        self.assertNotIn("earlier messages truncated", transcript)
+        self.assertNotIn("message truncated", transcript)
+        self.assertEqual(transcript, "[user]: hi\n[assistant]: hello")
+
+    def test_transcript_over_budget_drops_oldest_messages_with_marker(self):
+        big_content = "x" * 5_000
+        messages = [
+            FakeMessage(role="user", content=big_content, sequence_index=i)
+            for i in range(50)
+        ]
+        messages[-1] = FakeMessage(
+            role="user",
+            content="LAST_MESSAGE_MARKER",
+            sequence_index=49,
+        )
+        conv = FakeConversation(id=1, title="Long", messages=messages)
+        transcript = _build_transcript(conv)
+        self.assertRegex(transcript, r"^\[\d+ earlier messages truncated to fit context\]")
+        self.assertIn("LAST_MESSAGE_MARKER", transcript)
+        self.assertLessEqual(len(transcript), MAX_TRANSCRIPT_CHARS + 100)
+
+    def test_transcript_single_giant_message_truncated_with_marker(self):
+        giant = "y" * (MAX_TRANSCRIPT_CHARS + 50_000)
+        conv = FakeConversation(
+            id=1,
+            title="Giant",
+            messages=[FakeMessage(role="user", content=giant, sequence_index=0)],
+        )
+        transcript = _build_transcript(conv)
+        self.assertIn("[message truncated]", transcript)
+        self.assertIn("y" * 100, transcript)
+        self.assertLessEqual(len(transcript), MAX_TRANSCRIPT_CHARS + 100)
 
 
 # ---------------------------------------------------------------------------
