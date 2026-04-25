@@ -258,11 +258,41 @@ def _resolve_open_loop_conversation(source_ids: list[str]) -> dict:
     }
 
 
-def render_conversation_markdown(conversation, messages) -> tuple[str, str]:
-    """Return (markdown_content, safe_filename) for a conversation + messages."""
+def _safe_marker_name(original_filename: str) -> str:
+    """Return a filesystem-safe version of a filename for use in markdown link markers.
+
+    Replaces characters outside [A-Za-z0-9-_.] with underscores and collapses
+    repeated underscores. Does not touch the filesystem.
+    """
+    name = Path(original_filename).name
+    safe = "".join(c if (c.isalnum() or c in "-_.") else "_" for c in name)
+    while "__" in safe:
+        safe = safe.replace("__", "_")
+    safe = safe.lstrip("._")
+    return safe[:80] or "unnamed_file"
+
+
+def render_conversation_markdown(
+    conversation,
+    messages,
+    *,
+    conversation_assets=None,
+    message_assets=None,
+) -> tuple[str, str]:
+    """Return (markdown_content, safe_filename) for a conversation + messages.
+
+    conversation_assets: list[ConversationAsset] or None
+    message_assets: dict[int, list[MessageAsset]] keyed by message_id, or None
+    """
+
+    title = conversation.title or "Untitled conversation"
+    safe_title = "".join(
+        c if c.isascii() and (c.isalnum() or c in " -_.") else "" for c in title
+    )[:60].strip()
+    assets_stem = safe_title or "conversation"
+    filename = f"{assets_stem}.md"
 
     lines = []
-    title = conversation.title or "Untitled conversation"
     lines.append(f"# {title}")
     lines.append("")
     lines.append(f"**Provider:** {conversation.source}")
@@ -271,6 +301,24 @@ def render_conversation_markdown(conversation, messages) -> tuple[str, str]:
     lines.append(f"**Messages:** {len(messages)}")
     lines.append(f"**Exported from:** SoulPrint")
     lines.append("")
+
+    if conversation_assets:
+        lines.append("## Attachments")
+        lines.append("")
+        lines.append("| File | Type | SHA256 | Placement |")
+        lines.append("|---|---|---|---|")
+        sorted_conv_assets = sorted(
+            conversation_assets,
+            key=lambda ca: (ca.attached_at_unix or 0, ca.id or 0, ca.asset_id or 0),
+        )
+        for ca in sorted_conv_assets:
+            asset = ca.asset
+            safe_name = f"{asset.sha256[:12]}-{_safe_marker_name(asset.original_filename)}"
+            link = f"[[{assets_stem}.assets/{safe_name}]]"
+            mime = asset.mime_type or "application/octet-stream"
+            lines.append(f"| {link} | {mime} | {asset.sha256} | conversation |")
+        lines.append("")
+
     lines.append("---")
     lines.append("")
 
@@ -283,12 +331,28 @@ def render_conversation_markdown(conversation, messages) -> tuple[str, str]:
         lines.append("")
         lines.append(msg.content or "")
         lines.append("")
+
+        msg_attachment_list = (message_assets or {}).get(msg.id, [])
+        if msg_attachment_list:
+            lines.append("#### Attachments")
+            lines.append("")
+            sorted_msg_assets = sorted(
+                msg_attachment_list,
+                key=lambda ma: (ma.attached_at_unix or 0, ma.id or 0, ma.asset_id or 0),
+            )
+            for ma in sorted_msg_assets:
+                asset = ma.asset
+                sha_prefix = asset.sha256[:12]
+                safe_name = f"msg-{msg.sequence_index:03d}-{sha_prefix}-{_safe_marker_name(asset.original_filename)}"
+                link = f"[[{assets_stem}.assets/{safe_name}]]"
+                mime = asset.mime_type or "application/octet-stream"
+                lines.append(f"- {link} · {mime} · {asset.sha256}")
+            lines.append("")
+
         lines.append("---")
         lines.append("")
 
     content = "\n".join(lines)
-    safe_title = "".join(c if c.isascii() and (c.isalnum() or c in " -_.") else "" for c in title)[:60].strip()
-    filename = f"{safe_title or 'conversation'}.md"
     return content, filename
 
 
@@ -908,7 +972,14 @@ def create_app():
             .all()
         )
 
-        content, filename = render_conversation_markdown(conversation, messages)
+        from .assets import list_conversation_assets, list_message_assets
+        conv_assets = list_conversation_assets(conversation_id)
+        msg_assets = list_message_assets([m.id for m in messages])
+        content, filename = render_conversation_markdown(
+            conversation, messages,
+            conversation_assets=conv_assets,
+            message_assets=msg_assets,
+        )
 
         export_dir = app.config.get("SOULPRINT_EXPORT_DIR", "") or ""
         dest = Path(export_dir).resolve() if export_dir else None
@@ -946,6 +1017,7 @@ def create_app():
         import io
         import zipfile
         from flask import Response
+        from .assets import list_conversation_assets, list_message_assets
 
         raw_ids = request.form.getlist("conversation_ids")
         ids: list[int] = []
@@ -977,7 +1049,13 @@ def create_app():
                 .order_by(ImportedMessage.sequence_index)
                 .all()
             )
-            content, base_filename = render_conversation_markdown(conversation, messages)
+            conv_assets = list_conversation_assets(conversation.id)
+            msg_assets = list_message_assets([m.id for m in messages])
+            content, base_filename = render_conversation_markdown(
+                conversation, messages,
+                conversation_assets=conv_assets,
+                message_assets=msg_assets,
+            )
             rendered.append((conversation.id, content, base_filename))
 
         export_dir = app.config.get("SOULPRINT_EXPORT_DIR", "") or ""
