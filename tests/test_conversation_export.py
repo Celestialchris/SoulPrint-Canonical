@@ -629,3 +629,237 @@ class ConversationExportAttachmentsTest(unittest.TestCase):
         early_pos = text.index("eeee55555500-early.pdf")
         late_pos = text.index("ffff66666600-late.pdf")
         self.assertLess(early_pos, late_pos)
+
+
+class ConversationExportDirectoryBundleTest(unittest.TestCase):
+    """Directory export writes .assets/ folder with copied files and manifest.json."""
+
+    def setUp(self):
+        self.workdir = make_test_temp_dir(self, "conv-dir-bundle")
+        self.export_dir = self.workdir / "vault"
+        self.export_dir.mkdir()
+
+        self._old_uri = Config.SQLALCHEMY_DATABASE_URI
+        self._old_export_dir = Config.SOULPRINT_EXPORT_DIR
+        Config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{self.workdir}/bundle.db"
+        Config.SOULPRINT_EXPORT_DIR = str(self.export_dir)
+        self.addCleanup(self._restore_config)
+
+        self.app = create_app()
+        self.instance_root = Path(self.app.instance_path)
+        self.client = self.app.test_client()
+        self.addCleanup(release_app_db_handles, self.app, drop_all=True)
+
+        self._physical_files: list[Path] = []
+        self.addCleanup(self._remove_physical_files)
+
+        # sha designed so sha[:2] == "aa"
+        self._sha = ("aa" + "bb" * 31)[:64]
+        self._storage_path = f"assets/sha256/aa/{self._sha}-report.pdf"
+
+        with self.app.app_context():
+            db.create_all()
+            conv = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="bundle-conv-1",
+                title="Bundle Test",
+                created_at_unix=1700000000,
+                updated_at_unix=1700001000,
+            )
+            db.session.add(conv)
+            db.session.flush()
+            msg = ImportedMessage(
+                conversation_id=conv.id,
+                source_message_id="m1",
+                role="user",
+                content="Message content",
+                sequence_index=0,
+                created_at_unix=1700000000,
+            )
+            db.session.add(msg)
+            db.session.flush()
+            asset = Asset(
+                stable_id=f"asset:sha256:{self._sha}",
+                sha256=self._sha,
+                original_filename="report.pdf",
+                stored_filename=f"{self._sha}-report.pdf",
+                mime_type="application/pdf",
+                extension="pdf",
+                size_bytes=9,
+                storage_path=self._storage_path,
+                uploaded_at_unix=1700000001.0,
+                source="manual",
+                parse_status="unparsed",
+                parse_error=None,
+            )
+            db.session.add(asset)
+            db.session.flush()
+            db.session.add(ConversationAsset(
+                conversation_id=conv.id,
+                asset_id=asset.id,
+                role="context",
+                note="",
+                attached_at_unix=1700000002.0,
+            ))
+            db.session.commit()
+            self.conv_id = conv.id
+
+        # Create the physical asset file under app.instance_path
+        physical = self.instance_root / self._storage_path
+        physical.parent.mkdir(parents=True, exist_ok=True)
+        physical.write_bytes(b"pdf bytes")
+        self._physical_files.append(physical)
+
+    def _restore_config(self):
+        Config.SQLALCHEMY_DATABASE_URI = self._old_uri
+        Config.SOULPRINT_EXPORT_DIR = self._old_export_dir
+
+    def _remove_physical_files(self):
+        for p in self._physical_files:
+            try:
+                p.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+    def test_directory_export_creates_assets_folder(self):
+        response = self.client.get(f"/imported/{self.conv_id}/export")
+        self.assertEqual(response.status_code, 302)
+        assets_dir = self.export_dir / "Bundle Test.assets"
+        self.assertTrue(assets_dir.is_dir())
+
+    def test_copied_filename_matches_markdown_marker(self):
+        self.client.get(f"/imported/{self.conv_id}/export")
+        assets_dir = self.export_dir / "Bundle Test.assets"
+        expected_name = f"{self._sha[:12]}-report.pdf"
+        self.assertTrue((assets_dir / expected_name).exists())
+
+    def test_manifest_json_exists_with_expected_fields(self):
+        import json as _json
+        self.client.get(f"/imported/{self.conv_id}/export")
+        manifest_path = self.export_dir / "Bundle Test.assets" / "manifest.json"
+        self.assertTrue(manifest_path.exists())
+        manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["schema"], "soulprint.attachments.v1")
+        self.assertEqual(manifest["source"], "chatgpt")
+        self.assertEqual(manifest["title"], "Bundle Test")
+        self.assertEqual(manifest["exported_from"], "SoulPrint")
+        self.assertEqual(len(manifest["assets"]), 1)
+        row = manifest["assets"][0]
+        self.assertEqual(row["relationship"], "conversation")
+        self.assertEqual(row["original_filename"], "report.pdf")
+        self.assertIn("sha256", row)
+        self.assertIn("asset_id", row)
+
+    def test_manifest_contains_no_absolute_paths(self):
+        self.client.get(f"/imported/{self.conv_id}/export")
+        manifest_path = self.export_dir / "Bundle Test.assets" / "manifest.json"
+        text = manifest_path.read_text(encoding="utf-8")
+        self.assertNotIn(str(self.instance_root), text)
+        self.assertNotIn(str(self.export_dir), text)
+
+    def test_no_assets_folder_for_conversation_without_attachments(self):
+        with self.app.app_context():
+            conv2 = ImportedConversation(
+                source="chatgpt",
+                source_conversation_id="no-attach",
+                title="No Attachments",
+                created_at_unix=1700000000,
+                updated_at_unix=1700001000,
+            )
+            db.session.add(conv2)
+            db.session.flush()
+            db.session.add(ImportedMessage(
+                conversation_id=conv2.id,
+                source_message_id="m1",
+                role="user",
+                content="hi",
+                sequence_index=0,
+                created_at_unix=1700000000,
+            ))
+            db.session.commit()
+            conv2_id = conv2.id
+
+        self.client.get(f"/imported/{conv2_id}/export")
+        self.assertFalse((self.export_dir / "No Attachments.assets").exists())
+
+    def test_missing_physical_asset_reports_error_not_silent(self):
+        for p in self._physical_files:
+            p.unlink(missing_ok=True)
+
+        response = self.client.get(
+            f"/imported/{self.conv_id}/export",
+            follow_redirects=False,
+        )
+        # Must redirect with error, not 500
+        self.assertEqual(response.status_code, 302)
+        followed = self.client.get("/imported")
+        body = followed.get_data(as_text=True)
+        # The export_error flash message should describe the failure
+        self.assertIn("report.pdf", body)
+
+    def test_message_level_asset_bundle_uses_msg_prefix(self):
+        """Message-level attachment: copied name uses msg-NNN- prefix."""
+        import json as _json
+        sha2 = ("cc" + "dd" * 31)[:64]
+        storage2 = f"assets/sha256/cc/{sha2}-screenshot.png"
+        with self.app.app_context():
+            conv3 = ImportedConversation(
+                source="claude",
+                source_conversation_id="msg-bundle-conv",
+                title="Msg Bundle",
+                created_at_unix=1700000000,
+                updated_at_unix=1700001000,
+            )
+            db.session.add(conv3)
+            db.session.flush()
+            msg3 = ImportedMessage(
+                conversation_id=conv3.id,
+                source_message_id="m1",
+                role="user",
+                content="content",
+                sequence_index=0,
+                created_at_unix=1700000000,
+            )
+            db.session.add(msg3)
+            db.session.flush()
+            asset3 = Asset(
+                stable_id=f"asset:sha256:{sha2}",
+                sha256=sha2,
+                original_filename="screenshot.png",
+                stored_filename=f"{sha2}-screenshot.png",
+                mime_type="image/png",
+                extension="png",
+                size_bytes=5,
+                storage_path=storage2,
+                uploaded_at_unix=1700000010.0,
+                source="manual",
+                parse_status="unparsed",
+                parse_error=None,
+            )
+            db.session.add(asset3)
+            db.session.flush()
+            db.session.add(MessageAsset(
+                message_id=msg3.id,
+                asset_id=asset3.id,
+                placement="after_message_content",
+                caption="",
+                attached_at_unix=1700000011.0,
+            ))
+            db.session.commit()
+            conv3_id = conv3.id
+
+        physical3 = self.instance_root / storage2
+        physical3.parent.mkdir(parents=True, exist_ok=True)
+        physical3.write_bytes(b"png bytes")
+        self._physical_files.append(physical3)
+
+        self.client.get(f"/imported/{conv3_id}/export")
+        assets_dir = self.export_dir / "Msg Bundle.assets"
+        expected_name = f"msg-000-{sha2[:12]}-screenshot.png"
+        self.assertTrue((assets_dir / expected_name).exists())
+
+        manifest = _json.loads((assets_dir / "manifest.json").read_text())
+        row = manifest["assets"][0]
+        self.assertEqual(row["relationship"], "message")
+        self.assertIn("message_sequence_index", row)
+        self.assertEqual(row["message_sequence_index"], 0)
