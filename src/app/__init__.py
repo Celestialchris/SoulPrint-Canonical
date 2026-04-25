@@ -13,7 +13,7 @@ from .imported_explorer import anchor_for_message, build_prompt_toc, format_time
 from .models.db import db
 from ..config import Config, normalize_sqlite_uri
 from ..runtime import default_instance_dir, static_dir, templates_dir
-from .models import ConversationAsset, ImportedConversation, ImportedMessage, ImportRun, MemoryEntry
+from .models import ConversationAsset, ImportedConversation, ImportedMessage, ImportRun, MemoryEntry, MessageAsset
 from .import_runs import classify_import_outcome, latest_import_runs, record_import_run
 from .citation_handoff import build_answer_trace_citation_view
 from .decorators import require_license
@@ -189,6 +189,13 @@ def _format_file_size(size_bytes: int | None) -> str:
 def _find_conversation_asset(conversation_id: int, asset_id: int):
     return ConversationAsset.query.filter_by(
         conversation_id=conversation_id,
+        asset_id=asset_id,
+    ).first()
+
+
+def _find_message_asset(message_id: int, asset_id: int):
+    return MessageAsset.query.filter_by(
+        message_id=message_id,
         asset_id=asset_id,
     ).first()
 
@@ -723,13 +730,16 @@ def create_app():
         ]
         lineage_suggestions = suggest_lineage(source_summary, candidate_summaries, limit=3)
 
-        from .assets import list_conversation_assets
+        from .assets import list_conversation_assets, list_message_assets
 
         conversation_assets = sorted(
             list_conversation_assets(conversation_id),
             key=lambda row: row.attached_at_unix or 0,
             reverse=True,
         )
+
+        message_ids = [m.id for m in messages]
+        message_assets = list_message_assets(message_ids)
 
         attachment_notice = session.pop("attachment_notice", None)
         attachment_error = session.pop("attachment_error", None)
@@ -745,6 +755,7 @@ def create_app():
             licensed=is_licensed(instance_dir=app.instance_path),
             lineage_suggestions=lineage_suggestions,
             conversation_assets=conversation_assets,
+            message_assets=message_assets,
             attachment_notice=attachment_notice,
             attachment_error=attachment_error,
             format_file_size=_format_file_size,
@@ -795,6 +806,67 @@ def create_app():
             conversation_id=conversation_id,
         ).first_or_404()
         asset = conversation_asset.asset
+        abs_path = asset_absolute_path(asset, instance_root=app.instance_path)
+        if not abs_path.exists():
+            abort(404)
+        return send_file(
+            abs_path,
+            as_attachment=True,
+            download_name=asset.original_filename,
+            mimetype=asset.mime_type or "application/octet-stream",
+        )
+
+    @app.post("/imported/<int:conversation_id>/messages/<int:message_id>/attachments")
+    def upload_message_attachment(conversation_id: int, message_id: int):
+        from .assets import attach_asset_to_message, store_asset
+        from sqlalchemy.exc import IntegrityError
+
+        conversation = ImportedConversation.query.filter_by(id=conversation_id).first_or_404()
+        message = ImportedMessage.query.filter_by(
+            id=message_id, conversation_id=conversation_id
+        ).first_or_404()
+
+        upload = request.files.get("attachment_file")
+        if upload is None or upload.filename == "":
+            session["attachment_error"] = "Choose a file before attaching."
+            return redirect(url_for("imported_explorer", conversation_id=conversation.id))
+
+        asset = store_asset(
+            upload.stream,
+            upload.filename or "unnamed_file",
+            upload.mimetype,
+            source="manual",
+            instance_root=app.instance_path,
+        )
+
+        existing = _find_message_asset(message.id, asset.id)
+        if existing is not None:
+            session["attachment_notice"] = f"Attachment already exists: {asset.original_filename}."
+            return redirect(url_for("imported_explorer", conversation_id=conversation.id))
+
+        try:
+            attach_asset_to_message(message.id, asset.id)
+        except IntegrityError:
+            db.session.rollback()
+            session["attachment_notice"] = f"Attachment already exists: {asset.original_filename}."
+            return redirect(url_for("imported_explorer", conversation_id=conversation.id))
+
+        session["attachment_notice"] = f"Attached {asset.original_filename}."
+        return redirect(url_for("imported_explorer", conversation_id=conversation.id))
+
+    @app.get("/imported/<int:conversation_id>/messages/<int:message_id>/attachments/<int:message_asset_id>/download")
+    def download_message_attachment(conversation_id: int, message_id: int, message_asset_id: int):
+        from .assets import asset_absolute_path
+
+        message = ImportedMessage.query.filter_by(
+            id=message_id, conversation_id=conversation_id
+        ).first_or_404()
+        message_asset = MessageAsset.query.filter_by(
+            id=message_asset_id,
+            message_id=message_id,
+        ).first_or_404()
+
+        asset = message_asset.asset
         abs_path = asset_absolute_path(asset, instance_root=app.instance_path)
         if not abs_path.exists():
             abort(404)

@@ -133,6 +133,25 @@
             <span>{{ format_timestamp(message.created_at_unix) }}</span>
           </div>
           <pre>{{ message.content }}</pre>
+          {% set msg_assets = message_assets.get(message.id, []) if message_assets is defined else [] %}
+          <div class="inline-action" style="margin-top: 0.5rem;">
+            <form method="post"
+                  action="{{ url_for('upload_message_attachment', conversation_id=conversation.id, message_id=message.id) }}"
+                  enctype="multipart/form-data">
+              <input type="file" name="attachment_file">
+              <button type="submit" class="ghost-link">Attach file</button>
+            </form>
+            {% if msg_assets %}
+              <ul class="toc-list" style="margin-top: 0.25rem;">
+                {% for row in msg_assets %}
+                  <li>
+                    <a class="ghost-link" href="{{ url_for('download_message_attachment', conversation_id=conversation.id, message_id=message.id, message_asset_id=row.id) }}">{{ row.asset.original_filename }}</a>
+                    <span class="metadata-line"> · {{ row.asset.mime_type or 'unknown type' }} · {{ format_file_size(row.asset.size_bytes) }} · {{ row.asset.sha256[:12] }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </div>
         </article>
       {% else %}
         {{ empty_state(
