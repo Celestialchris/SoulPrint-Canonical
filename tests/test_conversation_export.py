@@ -1061,3 +1061,17 @@ class ConversationExportBrowserBundleTest(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         followed = self.client.get("/imported")
         self.assertIn("report.pdf", followed.get_data(as_text=True))
+
+    def test_invalid_asset_path_returns_error_redirect_not_500(self):
+        """ValueError from asset_absolute_path (path traversal guard) must redirect, not 500."""
+        from unittest.mock import patch
+        from src.app import assets as _assets
+
+        with patch.object(_assets, "asset_absolute_path", side_effect=ValueError("path escapes root")):
+            response = self.client.get(
+                f"/imported/{self.conv_with_asset_id}/export",
+                follow_redirects=False,
+            )
+        self.assertEqual(response.status_code, 302)
+        followed = self.client.get("/imported")
+        self.assertIn("Export failed", followed.get_data(as_text=True))

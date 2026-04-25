@@ -1246,7 +1246,7 @@ def create_app():
                     zf, assets_prefix, conversation, conv_assets, messages, msg_assets,
                     instance_root=app.instance_path,
                 )
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             session["export_error"] = f"Export failed: {exc}"
             return redirect(url_for("imported_conversations"))
         zip_filename = f"{stem}.zip"
@@ -1378,7 +1378,7 @@ def create_app():
                     else:
                         zf.writestr(name, content)
                     zip_used.add(name)
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             session["export_error"] = f"Export failed: could not package assets: {exc}"
             return redirect(url_for("imported_conversations"))
         count = len(rendered)

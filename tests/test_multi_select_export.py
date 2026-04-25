@@ -1078,6 +1078,20 @@ class MultiSelectExportBrowserBundleTest(unittest.TestCase):
         followed = self.client.get("/imported")
         self.assertIn("Export failed", followed.get_data(as_text=True))
 
+    def test_invalid_asset_path_redirects_with_error_not_500(self):
+        """ValueError from asset_absolute_path (path traversal guard) must redirect, not 500."""
+        from src.app import assets as _assets
+
+        with patch.object(_assets, "asset_absolute_path", side_effect=ValueError("path escapes root")):
+            response = self.client.post(
+                "/imported/export-selected",
+                data={"conversation_ids": [str(self.ids["a"])]},
+                follow_redirects=False,
+            )
+        self.assertEqual(response.status_code, 302)
+        followed = self.client.get("/imported")
+        self.assertIn("Export failed", followed.get_data(as_text=True))
+
 
 if __name__ == "__main__":
     unittest.main()
