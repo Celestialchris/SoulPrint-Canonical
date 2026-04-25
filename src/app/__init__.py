@@ -1940,12 +1940,14 @@ def create_app():
     def continuity_open_loops():
         from ..intelligence.continuity.store import (
             default_continuity_store_path,
-            list_artifacts_by_type,
+            list_artifacts,
         )
 
         db_path = _sqlite_path_from_uri(app.config["SQLALCHEMY_DATABASE_URI"])
         store_path = default_continuity_store_path(db_path)
-        artifacts = list_artifacts_by_type(store_path, "open_loops", limit=9999)
+        # Filter after reading to avoid list_artifacts_by_type's pre-filter cap.
+        all_artifacts = list_artifacts(store_path, limit=1_000_000)
+        artifacts = [a for a in all_artifacts if a.get("artifact_type") == "open_loops"]
 
         rows = []
         for artifact in artifacts:
