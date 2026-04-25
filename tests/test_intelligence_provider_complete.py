@@ -121,6 +121,32 @@ class OpenAIProviderCompleteTest(unittest.TestCase):
         kwargs = mock_client.chat.completions.create.call_args.kwargs
         self.assertEqual(kwargs["max_tokens"], 16384)
 
+    def test_response_format_omitted_by_default(self):
+        provider = self._make_provider()
+        mock_resp = self._make_mock_response()
+
+        with patch("openai.OpenAI") as mock_cls:
+            mock_client = mock_cls.return_value
+            mock_client.chat.completions.create.return_value = mock_resp
+            provider.complete(SYSTEM, USER)
+
+        kwargs = mock_client.chat.completions.create.call_args.kwargs
+        self.assertNotIn("response_format", kwargs)
+        self.assertNotIn("temperature", kwargs)
+
+    def test_response_format_forwarded_when_requested(self):
+        provider = self._make_provider()
+        mock_resp = self._make_mock_response()
+
+        with patch("openai.OpenAI") as mock_cls:
+            mock_client = mock_cls.return_value
+            mock_client.chat.completions.create.return_value = mock_resp
+            provider.complete(SYSTEM, USER, response_format={"type": "json_object"})
+
+        kwargs = mock_client.chat.completions.create.call_args.kwargs
+        self.assertEqual(kwargs["response_format"], {"type": "json_object"})
+        self.assertEqual(kwargs["temperature"], 0)
+
 
 class AnthropicProviderCompleteTest(unittest.TestCase):
     """Anthropic is a lazy import inside complete(); patch via sys.modules."""

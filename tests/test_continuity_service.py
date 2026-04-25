@@ -451,6 +451,41 @@ class MarkdownFenceTest(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
+# Tests — json mode forwarding
+# ---------------------------------------------------------------------------
+
+
+class JsonModeTest(unittest.TestCase):
+
+    def setUp(self):
+        self.workdir = make_test_temp_dir(self, "continuity-jsonmode")
+        self.store_path = self.workdir / "continuity_artifacts.jsonl"
+
+    def test_continuity_requests_json_mode(self):
+        captured = {}
+
+        class _RecordingProvider:
+            provider_name = "recording"
+
+            def complete(self, system_prompt, user_message, max_tokens=4096, *, response_format=None):
+                captured["max_tokens"] = max_tokens
+                captured["response_format"] = response_format
+                return json.dumps({
+                    "summary": "ok",
+                    "decisions": [],
+                    "open_loops": [],
+                    "entity_map": [],
+                })
+
+        conv = _make_conversation()
+        result = generate_continuity_packet(conv, _RecordingProvider(), self.store_path)
+
+        self.assertIsNone(result.error)
+        self.assertEqual(captured["response_format"], {"type": "json_object"})
+        self.assertEqual(captured["max_tokens"], 16384)
+
+
+# ---------------------------------------------------------------------------
 # Tests — no canonical mutation
 # ---------------------------------------------------------------------------
 

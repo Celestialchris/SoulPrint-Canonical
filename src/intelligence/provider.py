@@ -33,6 +33,8 @@ class LLMProvider(Protocol):
         system_prompt: str,
         user_message: str,
         max_tokens: int = DEFAULT_MAX_TOKENS,
+        *,
+        response_format: dict | None = None,
     ) -> str: ...
 
     @property
@@ -64,6 +66,8 @@ class StubProvider:
         system_prompt: str,
         user_message: str,
         max_tokens: int = DEFAULT_MAX_TOKENS,
+        *,
+        response_format: dict | None = None,
     ) -> str:
         return (
             "[Stub complete] Received system prompt and user message. "
@@ -127,6 +131,8 @@ class AnthropicProvider:
         system_prompt: str,
         user_message: str,
         max_tokens: int = DEFAULT_MAX_TOKENS,
+        *,
+        response_format: dict | None = None,
     ) -> str:
         import anthropic
 
@@ -216,6 +222,8 @@ class OpenAIProvider:
         system_prompt: str,
         user_message: str,
         max_tokens: int = DEFAULT_MAX_TOKENS,
+        *,
+        response_format: dict | None = None,
     ) -> str:
         import openai
 
@@ -223,14 +231,19 @@ class OpenAIProvider:
             api_key=self._api_key,
             base_url=self._base_url,
         )
-        response = client.chat.completions.create(
-            model=self._model,
-            max_tokens=max_tokens,
-            messages=[
+        kwargs = {
+            "model": self._model,
+            "max_tokens": max_tokens,
+            "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
             ],
-        )
+        }
+        if response_format is not None:
+            kwargs["response_format"] = response_format
+            kwargs["temperature"] = 0
+
+        response = client.chat.completions.create(**kwargs)
         return response.choices[0].message.content
 
 

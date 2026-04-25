@@ -192,7 +192,10 @@ def generate_continuity_packet(
         # long; override the 4096 default so the response isn't truncated
         # mid-object and fails JSON parsing.
         raw_response = provider.complete(
-            _SYSTEM_PROMPT, user_message, max_tokens=16384
+            _SYSTEM_PROMPT,
+            user_message,
+            max_tokens=16384,
+            response_format={"type": "json_object"},
         )
     except Exception as exc:
         return ContinuityPacketResult(

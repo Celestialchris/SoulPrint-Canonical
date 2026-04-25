@@ -48,3 +48,46 @@ Before calling a finite-context provider, measure the assembled prompt. If it ca
 ### Calibration note (April 25, 2026)
 
 The original 4 chars/token English-prose estimate was off by 2x for production conversation content. A real continuity run against conversation 85 showed 150,000 chars rendering to a 75,363-token Ollama prompt, well above the 65,536-token context limit (`truncating input prompt limit=65536 prompt=75363`). Observed Gemma/Ollama tokenizer density for this content is ~2 chars/token. The budget was subsequently lowered to 80,000 chars (~40K input tokens), which leaves ~9K tokens of headroom with the 16K response reservation and ~500 tokens of overhead. Future budget tuning should be empirical: measure the token count from Ollama's log (`level=WARN source=runner.go msg="truncating input prompt"`) rather than estimating from character counts alone.
+
+---
+
+## Grammar-constrained output for small models
+
+**From:** April 25, 2026 — fix/continuity-json-mode
+
+---
+
+### Pattern: use `response_format={"type": "json_object"}` for guaranteed JSON syntax
+
+After PR #165 lowered the transcript budget to 80,000 chars, Ollama no longer hit the context limit. But conversation 85 still failed: `Failed to parse provider response as JSON: Extra data: line 1 column 10 (char 9)`. This error is produced by `json.loads('"summary": "test"')` — the model emitted top-level key-value pairs without enclosing braces. Stronger prompt instruction does not fix this for Gemma3:4B-class models; the failure is at the sampling layer, not a prompt-comprehension gap.
+
+The structural fix is grammar-constrained sampling. Ollama's `/v1/chat/completions` endpoint accepts OpenAI's `response_format={"type": "json_object"}` parameter and enforces syntactically valid JSON output via constrained decoding. This is passed through `OpenAIProvider.complete` as a keyword-only argument and forwarded in the `kwargs` dict to `client.chat.completions.create`. Adding `temperature=0` alongside it increases determinism for structured extraction tasks.
+
+```python
+# In OpenAIProvider.complete:
+if response_format is not None:
+    kwargs["response_format"] = response_format
+    kwargs["temperature"] = 0
+```
+
+```python
+# At the continuity call site:
+raw_response = provider.complete(
+    _SYSTEM_PROMPT,
+    user_message,
+    max_tokens=16384,
+    response_format={"type": "json_object"},
+)
+```
+
+### What this does and does not fix
+
+Grammar-constrained sampling enforces **JSON syntax only**. It guarantees the output is parseable by `json.loads`. It does not guarantee semantic correctness: a model that does not understand the task can still produce `{"summary": "", "decisions": [], "open_loops": [], "entity_map": []}` — valid JSON, empty content. If JSON mode produces syntactically valid but semantically empty output, the problem is model capability, and the fix is a model upgrade, not further prompt engineering.
+
+### Where this applies
+
+Any call site that requires parseable structured output from an OpenAI-compatible endpoint (including Ollama). Anthropic's messages API has a separate JSON mode mechanism and is out of scope for this pattern.
+
+### Provider protocol design
+
+The `response_format` parameter is threaded through the `LLMProvider.complete` Protocol signature as `*, response_format: dict | None = None`. `StubProvider` and `AnthropicProvider` accept and ignore it. This keeps the call site uniform without forcing non-OpenAI providers to implement semantics they don't have.
