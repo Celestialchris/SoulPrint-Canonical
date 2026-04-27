@@ -57,8 +57,6 @@ Intelligence features require a configured provider. SoulPrint supports three:
 
 Cloud providers are bring-your-own-key. SoulPrint does not proxy keys, broker calls, or share keys between users.
 
-Known caveat: when `SOULPRINT_LLM_BASE_URL` is configured for a non-loopback endpoint, the keyless fallback may forward an empty `api_key` to that endpoint, and `provider_name` may default-label as `openai-compat/gpt-4o-mini` while the call hits whatever the endpoint's default model is. Until loopback restriction lands (tracked as a P1 followup), point `BASE_URL` at `http://localhost:...` only and set `SOULPRINT_LLM_MODEL` explicitly.
-
 ## Import parser attack surface
 
 Provider exports are untrusted input. SoulPrint parses files in five formats:
