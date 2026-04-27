@@ -18,6 +18,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - **Archive Status provider rows are links.** On Workspace, each provider row in the right panel now navigates to `/imported?provider=<slug>` with a hover treatment matching the existing context-panel interactive patterns.
 
 ### Added
+- **Attachment-aware exports (full arc).** Conversations and messages support file attachments stored in the canonical ledger. Markdown exports carry `<!-- attachment: ... -->` markers that link each attached file by its original filename. When a conversation has attachments, exporting creates an `.assets/<slug>/` directory bundle (directory export) or a `.zip` containing the markdown, all attached files, and a `manifest.json` (browser download). Multi-select export compiles per-conversation asset subfolders into one zip with no cross-contamination. Manifests record original filenames, MIME types, sizes, SHA-256 hashes, and the owning conversation/message relationship. Single-conversation browser export remains a plain `.md` when no attachments exist.
 - **Workspace archive health badge.** Always-visible three-state signal (healthy / needs attention / no archive yet) above Archive status panel in the Workspace right panel, linking to `/archive/health`. Backed by lightweight `quick_health_summary` in `src/verify.py` that skips integrity and orphan checks — badge pays glance-cost, `/archive/health` pays full-truth cost. (PR next-4, Observable Archive v0, 4/4)
 - **`/archive/health` read-only page.** Surfaces full `verify_archive()` output (five checks + overall healthy/issues status) and last-import activity per provider from `ImportRun` history. All five providers always render; zero-history providers show "Never imported". New `last_import_run_per_provider()` helper in `src/app/import_runs.py`. Sanctum sidebar gains a third entry. (PR next-3, Observable Archive v0, 3/4)
 - **ImportRun history table.** Every import attempt — via `/import` or `/imported/scan-claude-code` — now records a durable `ImportRun` row classified as `success`, `duplicate_only`, `partial`, or `failed`. Exactly one row per POST, including pre-importer validation failures and unexpected exceptions. The last 10 runs surface on `/import` below the upload form. New table created via `db.create_all()`; no migration needed. New `src/app/import_runs.py` service module with a pure `classify_import_outcome` classifier. (PR next-2, Observable Archive v0, 2/4)
@@ -43,7 +44,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - **Archived-view tab row covers all five providers.** `/imported/archived` now renders Claude Code and Grok tabs in addition to ChatGPT, Claude, and Gemini. Matches the centralization pattern from PR #145 on `/imported`. Template-only change; route already supports filtering by any provider ID.
 
 ### Tests
-- Suite at 934 passing.
+- Suite at 1126 passing.
 
 ## v0.7.0-alpha.2 — Cascade delete for imported conversations (2026-04-19)
 

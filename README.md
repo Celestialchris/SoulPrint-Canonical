@@ -82,7 +82,7 @@ soulprint
 
 **Distill.** Select any set of conversations and get a paste-ready handoff document, what was decided, what was built, what's open. Paste it into a new chat and pick up exactly where you left off. No more starting from zero after a model update.
 
-**Export.** Memory Passport with manifest, canonical JSONL, provenance index, and checksums. Validate any passport against the contract. The archive is a file you own.
+**Export.** Memory Passport with manifest, canonical JSONL, provenance index, and checksums. Validate any passport against the contract. Conversations with file attachments export as attachment-aware `.zip` downloads or `.assets/` directory bundles with provenance manifests. The archive is a file you own.
 
 **Obsidian** users: see [docs/obsidian-raw-inbox.md](docs/obsidian-raw-inbox.md) for the raw-inbox bridge.
 
