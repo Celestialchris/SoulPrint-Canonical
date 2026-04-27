@@ -118,8 +118,8 @@ src/
 └── passport/       Memory Passport export and validation
 
 scripts/            PyInstaller spec, Inno Setup installer, build script
-tests/              50+ test files, 600+ test methods
-sample_data/        Provider fixtures (ChatGPT, Claude, Gemini)
+tests/              Test suite, currently 1126 passing
+sample_data/        Provider fixtures (ChatGPT, Claude, Claude Code, Gemini, Grok)
 docs/               Architecture, specs, product docs
 landing/            Static landing page (soulprint.dev)
 ```
@@ -147,8 +147,7 @@ landing/            Static landing page (soulprint.dev)
 python -m pytest tests/ -v
 ```
 
-50+ test files (600+ methods) covering import, persistence, retrieval, search, intelligence,
-distillation, continuity, passport, freemium gate, CLI, and browser integration.
+Test suite currently records 1126 passing tests, covering import, persistence, retrieval, search, intelligence, distillation, continuity, passport, freemium gate, CLI, attachments, and browser integration.
 CI runs on every push.
 
 ### CLI Reference
