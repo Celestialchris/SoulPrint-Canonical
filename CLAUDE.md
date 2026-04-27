@@ -43,8 +43,8 @@ Every derived output traces back to canonical stable IDs.
 ```bash
 pip install -e .                    # core: import, browse, search, export
 pip install -e ".[intelligence]"    # + Ask, Distill, Themes (requires Ollama or API key)
-python -m src.main                  # run the app
-python -m pytest tests/ -v          # run tests (700+, all must pass before commit)
+soulprint                            # run the app
+python -m pytest tests/ -v          # run tests (1126 passing as of latest changelog entry)
 python -m src.importers.cli sample_data/chatgpt.json --db instance/soulprint.db
 python -m src.passport.cli exports/passports --db instance/soulprint.db
 python -m src.passport.cli validate exports/passports/memory-passport-v1
