@@ -22,23 +22,12 @@ Your AI conversations are scattered everywhere. SoulPrint brings them home.
 **SoulPrint** — one word, capital S, capital P.
 Never: Soul Print, soul print, SOULPRINT, SP.
 
-## Warm Nav Labels
+## Sidebar Labels
 
-Sidebar nav text and page heading text adopt warmer labels.
-Routes are unchanged — only the visible text changes.
-
-| Route             | Nav Label                   | Page Heading                  |
-|-------------------|-----------------------------|-------------------------------|
-| `/`               | Workspace                   | Search your archive           |
-| `/ask`            | Ask your memory             | Ask your memory               |
-| `/imported`       | What you've discussed       | What you've discussed         |
-| `/chats`          | Your own notes              | Your own notes                |
-| `/federated`      | Everything, together        | Everything, together          |
-| `/intelligence`   | Recurring themes            | Recurring themes              |
-| `/distill`        | Create a digest             | Create a digest               |
-| `/answer-traces`  | How answers were found      | How answers were found        |
-| `/import`         | Import                      | Bring conversations home      |
-| `/passport`       | Take it with you            | Memory Passport               |
+Sidebar labels are defined in `src/app/templates/base.html`. That file
+is authoritative; this brand guide does not duplicate it. If labels
+need to change, update the template and any public copy that references
+the old label.
 
 ## Design System: Quiet Archive v3
 
