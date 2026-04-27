@@ -18,7 +18,7 @@ SoulPrint is a local-first memory archive for AI conversations. It imports chats
 
 ## Install
 
-Packaged desktop builds are planned. For now, install from source:
+For the latest version, install from source:
 
 ```bash
 git clone https://github.com/Celestialchris/SoulPrint-Canonical.git
@@ -29,7 +29,7 @@ soulprint
 
 Open http://127.0.0.1:5678 and import an export file.
 
-Earlier packaged builds for Windows, macOS, and Linux (v0.6.0) are available on [GitHub Releases](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest). The current source tree (0.7.0a2) ships features those packages predate, including attachment-aware exports, archive health observability, ImportRun history, and the Quiet Archive v3 design system. Install from source for the latest behavior.
+Older packaged builds for Windows, macOS, and Linux are available on [GitHub Releases](https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest), but they currently trail the source version. Use the source install for the newest features and fixes.
 
 ---
 

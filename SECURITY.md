@@ -81,13 +81,13 @@ If you find a parser path that crashes the app, hangs, or escapes the intended s
 
 ## Attachments and file custody
 
-Attachments imported from a provider export are written to the filesystem under the instance directory. SoulPrint records SHA-256, original filename, MIME type, size, and the owning conversation/message in the ledger.
+Attachments explicitly added to a conversation or message in SoulPrint are written to the filesystem under the instance directory. SoulPrint records SHA-256, original filename, MIME type, size, and the owning conversation/message relationship in the ledger.
 
 Risks to be aware of:
 
 - An imported attachment is opaque content. Opening it is the user's responsibility; SoulPrint does not sandbox or scan attachment content.
 - Filename normalization rejects path traversal at write time; absolute paths and parent-relative segments are stripped before the filename hits disk.
-- Exports preserve attachments verbatim. An attachment-aware export bundle contains exactly the bytes that the import contained.
+- Exports preserve attachments verbatim. An attachment-aware export bundle contains exactly the bytes that were explicitly attached in SoulPrint.
 - Multi-select export keeps per-conversation `<stem>.assets/` subtrees isolated; there is no cross-contamination between conversations in a single zip.
 
 ## SQLite and archive protection
