@@ -18,23 +18,23 @@ If you believe an issue is being actively exploited, mark the advisory as such; 
 
 ## Security model
 
-SoulPrint is a single-user local application. It is not a multi-tenant service.
+SoulPrint is a single-user local application. It is not a hosted service and it does not manage accounts for multiple users.
 
-In scope:
+This security policy focuses on the risks SoulPrint can reasonably control:
 
-- Parser-level attacks via untrusted provider exports.
-- Redirect or response-splitting attacks via crafted form parameters.
-- Accidental network egress from the core archive.
+- Malicious or malformed provider exports.
+- Unsafe redirects or crafted form inputs.
+- Accidental network calls from the core archive.
 - Accidental exposure of local services to other machines on the network.
-- Path traversal in attachment names or export targets.
+- Unsafe attachment names or export paths trying to escape their intended folder.
 
-Out of scope:
+Some risks are outside what SoulPrint can protect against:
 
-- Compromise of the local user account. Local code execution as your user is outside the threat model; an attacker at that level has already won.
-- Multi-user authentication. SoulPrint does not have user accounts.
-- Provider-side compromise of a configured LLM endpoint.
+- If someone already controls your computer or your operating-system account, they can access anything your user account can access.
+- SoulPrint does not provide multi-user login, permissions, or team access controls.
+- SoulPrint cannot protect against a cloud LLM provider misusing data after you explicitly configure that provider and send data to it.
 
-The threat model assumes the machine running SoulPrint is owned and trusted by the user, and that the instance directory and database file are protected by ordinary operating-system file permissions.
+The security model assumes the machine running SoulPrint is owned and trusted by the user, and that the instance directory and database file are protected by normal operating-system file permissions.
 
 ## Network behavior
 
