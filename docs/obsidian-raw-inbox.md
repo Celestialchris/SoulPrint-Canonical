@@ -110,7 +110,8 @@ The metadata block is machine-readable (colon-delimited key-value pairs, first 6
 ### What's NOT in the export
 
 - No summaries, topics, or derived content. Those are SoulPrint's internal intelligence layer; the raw export is canonical-only.
-- No embeds, attachments, or images. SoulPrint's canonical ledger is text-first; if a conversation referenced an image URL, the URL appears in the message content verbatim but no image is downloaded or embedded.
+- No inline image embeds. If a conversation referenced an image URL in message content, the URL appears verbatim but no image is downloaded or embedded.
+- Attachments (files explicitly attached to a conversation or individual message in SoulPrint) export to a sibling folder named after the markdown file's stem with a `.assets` suffix — for a conversation written as `Bundle Test.md`, attachments land in `Bundle Test.assets/` alongside it, and the markdown links them as `[[Bundle Test.assets/<file>]]`. The folder also contains a `manifest.json` preserving provenance and relationship metadata. If the conversation has no attachments, no `.assets` folder is written.
 - No cross-references to other SoulPrint conversations. Your vault's librarian adds those based on its own rules.
 
 This is deliberate. The raw export is a faithful transcript. Interpretation happens vault-side.
