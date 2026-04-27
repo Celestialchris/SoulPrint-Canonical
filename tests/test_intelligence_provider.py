@@ -117,6 +117,76 @@ class OllamaFallbackTest(unittest.TestCase):
         self.assertIsNone(provider)
 
 
+class KeylessLoopbackGuardTest(unittest.TestCase):
+    """Keyless OpenAI-compatible fallback only activates for loopback base URLs.
+
+    A misconfigured non-loopback ``SOULPRINT_LLM_BASE_URL`` must not silently
+    forward prompts under the dummy ``"ollama"`` key. Explicit BYOK to any
+    base URL is unaffected.
+    """
+
+    def _provider_for(self, base_url: str, api_key: str | None = None):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_PROVIDER"] = "openai"
+        env["SOULPRINT_LLM_BASE_URL"] = base_url
+        if api_key is not None:
+            env["SOULPRINT_LLM_API_KEY"] = api_key
+        with patch.dict(os.environ, env, clear=True):
+            return provider_from_config()
+
+    def test_keyless_accepts_localhost(self):
+        provider = self._provider_for("http://localhost:11434/v1")
+        self.assertIsNotNone(provider)
+        self.assertEqual(provider._api_key, "ollama")
+
+    def test_keyless_accepts_127_0_0_1(self):
+        provider = self._provider_for("http://127.0.0.1:11434/v1")
+        self.assertIsNotNone(provider)
+        self.assertEqual(provider._api_key, "ollama")
+
+    def test_keyless_accepts_other_127_loopback(self):
+        provider = self._provider_for("http://127.0.0.5:11434/v1")
+        self.assertIsNotNone(provider)
+        self.assertEqual(provider._api_key, "ollama")
+
+    def test_keyless_accepts_ipv6_loopback(self):
+        provider = self._provider_for("http://[::1]:11434/v1")
+        self.assertIsNotNone(provider)
+        self.assertEqual(provider._api_key, "ollama")
+
+    def test_keyless_rejects_public_host(self):
+        provider = self._provider_for("https://api.example.com/v1")
+        self.assertIsNone(provider)
+
+    def test_keyless_rejects_lan_ip(self):
+        provider = self._provider_for("http://192.168.1.10:11434/v1")
+        self.assertIsNone(provider)
+
+    def test_keyless_rejects_non_loopback_ipv6(self):
+        provider = self._provider_for("http://[2001:db8::1]:11434/v1")
+        self.assertIsNone(provider)
+
+    def test_keyless_rejects_malformed_url(self):
+        provider = self._provider_for("not a url")
+        self.assertIsNone(provider)
+
+    def test_explicit_key_accepts_non_loopback(self):
+        provider = self._provider_for(
+            "https://api.example.com/v1",
+            api_key="sk-real-key",
+        )
+        self.assertIsNotNone(provider)
+        self.assertEqual(provider._api_key, "sk-real-key")
+
+    def test_explicit_key_accepts_lan_ip(self):
+        provider = self._provider_for(
+            "http://192.168.1.10:11434/v1",
+            api_key="sk-real-key",
+        )
+        self.assertIsNotNone(provider)
+        self.assertEqual(provider._api_key, "sk-real-key")
+
+
 class ModelMissingWarningTest(unittest.TestCase):
     """Warn when SOULPRINT_LLM_BASE_URL is set without SOULPRINT_LLM_MODEL."""
 
@@ -241,6 +311,20 @@ class IsLlmConfiguredTest(unittest.TestCase):
         env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
         with patch.dict(os.environ, env, clear=True):
             self.assertFalse(is_llm_configured())
+
+    def test_false_for_keyless_non_loopback_base_url(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_PROVIDER"] = "openai"
+        env["SOULPRINT_LLM_BASE_URL"] = "https://api.example.com/v1"
+        with patch.dict(os.environ, env, clear=True):
+            self.assertFalse(is_llm_configured())
+
+    def test_true_for_keyless_loopback_base_url(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SOULPRINT_LLM_")}
+        env["SOULPRINT_LLM_PROVIDER"] = "openai"
+        env["SOULPRINT_LLM_BASE_URL"] = "http://localhost:11434/v1"
+        with patch.dict(os.environ, env, clear=True):
+            self.assertTrue(is_llm_configured())
 
 
 if __name__ == "__main__":

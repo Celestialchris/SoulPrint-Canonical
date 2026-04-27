@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ipaddress
 import os
 from typing import Protocol, runtime_checkable
+from urllib.parse import urlparse
 
 
 DEFAULT_MAX_TOKENS = 4096
@@ -247,6 +249,34 @@ class OpenAIProvider:
         return response.choices[0].message.content
 
 
+def _is_loopback_base_url(url: str) -> bool:
+    """Return True only when ``url``'s host is loopback.
+
+    Loopback covers ``localhost``, any IPv4 address in 127.0.0.0/8, and IPv6
+    ``::1``. The check is purely textual on the URL host; no DNS lookup is
+    performed. Malformed URLs and unparseable hosts return False.
+
+    Used to guard the keyless OpenAI-compatible fallback so a misconfigured
+    non-loopback ``SOULPRINT_LLM_BASE_URL`` cannot silently forward prompts
+    under a dummy ``"ollama"`` key.
+    """
+    try:
+        host = urlparse(url).hostname
+    except (ValueError, TypeError):
+        return False
+
+    if not host:
+        return False
+
+    if host == "localhost":
+        return True
+
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
 def provider_from_config() -> LLMProvider | None:
     """Read SOULPRINT_LLM_PROVIDER and SOULPRINT_LLM_API_KEY env vars.
 
@@ -262,9 +292,15 @@ def provider_from_config() -> LLMProvider | None:
     api_key = os.environ.get("SOULPRINT_LLM_API_KEY", "").strip()
     base_url = os.environ.get("SOULPRINT_LLM_BASE_URL", "").strip()
     if not api_key:
-        # Ollama and some local servers don't need a real API key.
-        # If a base_url is set, use "ollama" as a dummy key.
-        if base_url and provider_name == "openai":
+        # Ollama and other local OpenAI-compatible servers don't need a real
+        # API key. Restrict the dummy-key fallback to loopback so a
+        # misconfigured non-loopback BASE_URL cannot silently exfiltrate
+        # prompts under a fake credential.
+        if (
+            base_url
+            and provider_name == "openai"
+            and _is_loopback_base_url(base_url)
+        ):
             api_key = "ollama"
         else:
             return None
