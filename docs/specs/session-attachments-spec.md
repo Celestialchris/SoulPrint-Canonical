@@ -1,6 +1,15 @@
 # Session Attachments Spec
 
-Status: draft 0
+> **Status (2026-04-27):** Phases 1 through 4 shipped. Asset ledger,
+> conversation-level attachments, message-level attachments, and
+> attachment-aware export bundles are in production. The "Current
+> state" section below documents the pre-implementation state and is
+> preserved as design history. Verify against `src/app/models/__init__.py`
+> and `src/app/__init__.py` for current shape. Session logs covering
+> implementation: `ops/sessions/april-25-2026-6.md` through
+> `ops/sessions/april-25-2026-11.md`, plus
+> `ops/sessions/april-27-2026-1.md`.
+
 Target path in repo: `docs/specs/session-attachments-spec.md`
 Scope: product and architecture spec only. No implementation in this branch.
 

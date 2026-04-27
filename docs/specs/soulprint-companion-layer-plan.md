@@ -1,8 +1,16 @@
 # SoulPrint Expansion Plan — Companion Layer
 
-**Status:** planning draft
+**Status (2026-04-27):** Partially shipped. The Phase 11 precondition is obsolete because soft launch was parked 2026-04-23. Shipped items so far:
+
+- **CP1** Favorites and starring (PR #139).
+- **CP2** Archive / hide conversations.
+- **CP3** Tags on conversations (MVP shipped 2026-04-22; see `tagging-spec.md`).
+- **CP6** "What's still open" view (read-only command center at `/continuity/open-loops`).
+- **CP11** Import history log (`ImportRun` table + `/archive/health` page; Observable Archive v0).
+
+Items CP4, CP5, CP7, CP8, CP9, CP10, and CP12 remain queued as design records unless current source proves otherwise.
+
 **Parent docs:** `ROADMAP.md` (Shape 5 — Companion Layer), `docs/specs/soulprint-expansion-plan.md` (Shape 4 — Ecosystem Reach)
-**Precondition:** Phase 11 soft launch must ship first. None of this work starts before the Reddit posts land.
 **Philosophy:** every item here solves a problem a companion user actually has. Not features that sound good for the audience — features that close a concrete gap between "I have my conversations on my machine" and "this archive is alive and useful." The canonical ledger is already the right shape. Nothing here reshapes it. Everything here adds surfaces above it.
 
 ---

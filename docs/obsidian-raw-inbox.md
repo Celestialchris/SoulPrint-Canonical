@@ -2,7 +2,7 @@
 
 **What this is.** A simple, one-way pipeline that drops your AI conversations as plain markdown files into an Obsidian vault's `raw/` inbox, where the vault's own librarian (an LLM agent guided by your vault's `CLAUDE.md` or `AGENTS.md`) decides how to file, tag, cross-link, and compile them into structured notes.
 
-**Who this is for.** You already run an Obsidian vault with a librarian workflow — probably a [Kepano-style](https://github.com/kepano/kepano-obsidian) setup where content lives in `References/` and categories are assigned via frontmatter. You want your ChatGPT, Claude, Gemini, and Grok conversations flowing into that system so your vault's compile pass picks them up alongside web clips, book notes, and meeting notes.
+**Who this is for.** You already run an Obsidian vault with a librarian workflow — probably a [Kepano-style](https://github.com/kepano/kepano-obsidian) setup where content lives in `References/` and categories are assigned via frontmatter. You want your ChatGPT, Claude, Claude Code, Gemini, and Grok conversations flowing into that system so your vault's compile pass picks them up alongside web clips, book notes, and meeting notes.
 
 **If you just want to look at your conversations inside SoulPrint, skip this doc.** This is only for people wiring SoulPrint into a larger knowledge-management stack.
 
@@ -125,7 +125,7 @@ This section describes what happens AFTER SoulPrint hands off. If your vault's `
 For a Kepano-style vault following conventions like those in [kepano-obsidian](https://github.com/kepano/kepano-obsidian), the expected compile flow is:
 
 1. **Librarian reads `raw/`.** Each SoulPrint-written `.md` file is one AI conversation.
-2. **Extract metadata.** Parse the provider/date/id block. Map provider to a wiki-link: `chatgpt → [[ChatGPT]]`, `claude → [[Claude]]`, `gemini → [[Gemini]]`, `grok → [[Grok]]`.
+2. **Extract metadata.** Parse the provider/date/id block. Map provider to a wiki-link: `chatgpt → [[ChatGPT]]`, `claude → [[Claude]]`, `claude_code → [[ClaudeCode]]`, `gemini → [[Gemini]]`, `grok → [[Grok]]`.
 3. **Identify topics.** Scan the transcript for technologies, projects, people, decisions. Each becomes a `[[wiki link]]` in frontmatter.
 4. **Write to `References/`.** Using the AI Conversation template, create a compiled note with: summary (from SoulPrint's summary if one is present, otherwise librarian-generated), key takeaways, notable exchanges (2-3 substantive turns, not the full transcript), and a pointer back to the raw file.
 5. **Cross-link.** Add `[[wiki links]]` to any existing notes that cover the same topics.

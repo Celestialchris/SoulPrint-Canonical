@@ -19,6 +19,10 @@ The broader two-tier vision (raw tags plus a curation layer via starring) isn't 
 
 ## 2. Current state audit (against main at PR #144)
 
+> **Note (2026-04-27):** This audit and the "Gap this spec fills" section
+> describe the pre-implementation state. The MVP shipped 2026-04-22 per
+> the file header. The section is preserved as design context.
+
 Existing tagging code, unchanged by this spec:
 
 - `MemoryEntry.tags` is a comma-string column. Used by `/chats?tag=X` substring filter.

@@ -1,1 +1,0 @@
-Companion layer: CP1 starring, CP4 Continue in X, CP7 Wrapped v2, CP8 Persona Extract.

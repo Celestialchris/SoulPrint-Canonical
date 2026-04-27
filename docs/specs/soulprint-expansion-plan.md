@@ -1,8 +1,13 @@
 # SoulPrint Expansion Plan — Ecosystem Reach & Hygiene
 
-**Status:** planning draft
+**Status (2026-04-27):** Partially shipped. The Phase 11 precondition is obsolete because soft launch was parked 2026-04-23. Shipped items so far:
+
+- **P1** Claude Code session auto-discovery (importer at `src/importers/claude_code.py`, discovery helper at `src/importers/claude_code_discovery.py`, `/imported/scan-claude-code` route in `src/app/__init__.py`). The `soulprint scan claude-code` CLI verb in P1's plan body is *not* shipped; scanning is web-UI only today.
+- **P7 Phase 1** CLI dispatch (`pyproject.toml` exposes `soulprint = "src.cli:main"`; `src/cli.py` registers `serve`, `info`, `verify`, and `mcp-config` subcommands). P7 Phases 2 through 4 (`search`, `import`, `scan`, `export` verbs) are not shipped.
+
+Items P3, P4, P5, and P6 are not verified from docs alone. Check the source before treating any P-section below as queued or shipped.
+
 **Parent docs:** `ROADMAP.md` (Shape 4 — Ecosystem Reach), `SECURITY.md` (extended per Bucket 3)
-**Precondition:** Phase 11 soft launch must ship first. None of this work starts before the Reddit posts land.
 **Philosophy:** every item here has either a shipped MCA equivalent or a concrete trust-signal purpose. We adapt shape, not code. Apache-2.0 stays intact. Clean-room implementations against normalized formats, not against MCA's source tree.
 
 ---
