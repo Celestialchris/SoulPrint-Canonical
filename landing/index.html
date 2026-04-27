@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SoulPrint — A virtual USB stick for your AI life</title>
-<meta name="description" content="Import your AI conversations from ChatGPT, Claude, and Gemini into one local archive. Search, browse, and own your history. Nothing leaves your machine.">
+<title>SoulPrint — Your AI conversations, home</title>
+<meta name="description" content="Import your AI conversations from ChatGPT, Claude, Claude Code, Gemini, and Grok into one local archive. Search across everything and continue old threads. Core archive features stay local on your machine.">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -150,7 +150,7 @@ footer a:hover{color:var(--accent)}
     <a href="#features">Features</a>
     <a href="#how">How it works</a>
     <a href="https://github.com/Celestialchris/SoulPrint-Canonical">GitHub</a>
-    <a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest/download/SoulPrint-Setup.exe" class="nav-cta">Download</a>
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical#install" class="nav-cta">Install</a>
   </div>
 </nav>
 
@@ -173,23 +173,24 @@ footer a:hover{color:var(--accent)}
     </div>
   </div>
 
-  <h1 class="reveal" style="--d:.15s">A <em>virtual USB stick</em><br>for your AI life</h1>
-  <p class="hero-sub reveal" style="--d:.25s">Import your conversations from ChatGPT, Claude, and Gemini into one local archive. Search across everything. Own your history.</p>
+  <h1 class="reveal" style="--d:.15s">Your AI conversations,<br><em>home.</em></h1>
+  <p class="hero-sub reveal" style="--d:.25s">Import conversations from ChatGPT, Claude, Claude Code, Gemini, and Grok into one local archive. Search across everything. Continue old threads. Keep the work on your machine.</p>
   <div class="hero-actions reveal" style="--d:.35s">
-    <a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest/download/SoulPrint-Setup.exe" class="btn-fill">Download free</a>
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical#install" class="btn-fill">Install from source</a>
     <a href="https://github.com/Celestialchris/SoulPrint-Canonical" class="btn-outline">View on GitHub</a>
   </div>
-  <p class="hero-trust reveal" style="--d:.45s">Everything stays on your machine. Nothing is sent anywhere.</p>
+  <p class="hero-trust reveal" style="--d:.45s">Core archive features stay local. Optional intelligence only contacts the LLM provider you configure and trigger.</p>
 </section>
 
 <!-- Providers -->
 <div class="providers reveal" style="--d:.5s">
   <p>Works with</p>
   <div class="provider-row">
-    <span class="provider-pill"><span class="provider-dot" style="background:#4ade80"></span> ChatGPT</span>
-    <span class="provider-pill"><span class="provider-dot" style="background:#a78bfa"></span> Claude</span>
-    <span class="provider-pill"><span class="provider-dot" style="background:#60a5fa"></span> Gemini</span>
-    <span class="provider-pill" style="color:var(--t3)">More coming</span>
+    <span class="provider-pill"><span class="provider-dot" style="background:#23955D"></span> ChatGPT</span>
+    <span class="provider-pill"><span class="provider-dot" style="background:#D97757"></span> Claude</span>
+    <span class="provider-pill"><span class="provider-dot" style="background:#F5C518"></span> Claude Code</span>
+    <span class="provider-pill"><span class="provider-dot" style="background:#2D6FE8"></span> Gemini</span>
+    <span class="provider-pill"><span class="provider-dot" style="background:#8B3A3A"></span> Grok</span>
   </div>
 </div>
 
@@ -201,12 +202,12 @@ footer a:hover{color:var(--accent)}
     <div class="feature-card">
       <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
       <h3>Import</h3>
-      <p>Drop your ChatGPT .zip, Claude .json, or Gemini Takeout. Provider auto-detected. Duplicates skipped.</p>
+      <p>Drop your ChatGPT .zip, Claude .json, Claude Code .jsonl, Gemini Takeout, or Grok .json. Provider auto-detected. Duplicates skipped.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
       <h3>Search everything</h3>
-      <p>Full-text search across all providers at once. Lane-aware retrieval keeps provenance explicit.</p>
+      <p>SQLite FTS5 across all providers at once. Snippet highlights and deep links back to the exact message in the transcript explorer.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
@@ -216,17 +217,17 @@ footer a:hover{color:var(--accent)}
     <div class="feature-card">
       <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></div>
       <h3>Ask your memory</h3>
-      <p>Grounded answers from your conversations, with citations. Returns "insufficient evidence" instead of guessing.</p>
+      <p>Optional grounded answering over your archive, with citations. Uses the LLM provider you configure; returns "insufficient evidence" instead of guessing.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-      <h3>Discover themes</h3>
-      <p>Cross-conversation topic detection, per-conversation summaries, and multi-conversation digests.</p>
+      <h3>Continue old threads</h3>
+      <p>Distill, Continuity Packets, and bridge handoffs turn a selection of conversations into paste-ready context for the next chat.</p>
     </div>
     <div class="feature-card">
       <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></div>
-      <h3>Export passport</h3>
-      <p>Memory Passport with manifest, JSONL lanes, provenance index, and checksums. Verifiable and portable.</p>
+      <h3>Export without lock-in</h3>
+      <p>Markdown, attachment-aware zip bundles, an Obsidian raw-inbox bridge, and a verifiable Memory Passport with manifest, JSONL lanes, and checksums.</p>
     </div>
   </div>
 </div>
@@ -242,15 +243,15 @@ footer a:hover{color:var(--accent)}
     </div>
     <div class="terminal-body">
       <span class="m">$</span> <span class="cmd">git clone https://github.com/Celestialchris/SoulPrint-Canonical.git</span><br>
-      <span class="m">$</span> <span class="cmd">cd SoulPrint-Canonical && pip install -r requirements.txt</span><br>
-      <span class="m">$</span> <span class="cmd">python -m src.main</span><br>
+      <span class="m">$</span> <span class="cmd">cd SoulPrint-Canonical && pip install -e .</span><br>
+      <span class="m">$</span> <span class="cmd">soulprint</span><br>
       <br>
       <span class="g">&#10003;</span> <span class="m">Server running at</span> <span class="g">http://127.0.0.1:5678</span><br>
       <br>
       <span class="m"># Drop your export file on the Import page</span><br>
       <span class="g">&#10003;</span> <span class="m">Detected provider:</span> <span class="g">chatgpt</span><br>
-      <span class="g">&#10003;</span> <span class="m">Imported</span> <span class="cmd">847 conversations</span> <span class="m">with</span> <span class="cmd">41,293 messages</span><br>
-      <span class="y">&#9679;</span> <span class="m">Duplicates skipped:</span> <span class="y">0</span><br>
+      <span class="g">&#10003;</span> <span class="m">Imported conversations and messages into the local ledger</span><br>
+      <span class="y">&#9679;</span> <span class="m">Duplicates skipped automatically</span><br>
       <br>
       <span class="m"># Search across everything</span><br>
       <span class="m">$</span> <span class="cmd">python -m src.retrieval.cli --db instance/soulprint.db "trip to Lisbon"</span><br>
@@ -268,7 +269,7 @@ footer a:hover{color:var(--accent)}
     <div class="step">
       <div class="step-num">01</div>
       <h3>Export your data</h3>
-      <p>Download your conversation history from ChatGPT, Claude, or Gemini. Each has an export option in settings.</p>
+      <p>Download your conversation history from ChatGPT, Claude, Claude Code, Gemini, or Grok. Each has an export option in settings or session files.</p>
     </div>
     <div class="step">
       <div class="step-num">02</div>
@@ -303,7 +304,7 @@ footer a:hover{color:var(--accent)}
     <div class="diff-vs">vs</div>
     <div class="diff-col diff-col--with">
       <h3>With SoulPrint</h3>
-      <div class="diff-item">One archive across ChatGPT, Claude, and Gemini</div>
+      <div class="diff-item">One archive across ChatGPT, Claude, Claude Code, Gemini, and Grok</div>
       <div class="diff-item">Browsable transcripts with threading and TOC</div>
       <div class="diff-item">Search everything with provenance per result</div>
       <div class="diff-item">Verified Memory Passport with checksums</div>
@@ -314,10 +315,10 @@ footer a:hover{color:var(--accent)}
 
 <!-- Bottom CTA -->
 <div class="bottom-cta">
-  <h2 class="reveal" style="--d:.1s">Your AI memory.<br><em>Plug in and own it.</em></h2>
-  <p class="reveal" style="--d:.15s">Open source. Local-first. Apache-2.0 licensed.<br>No accounts. No cloud. No tracking.</p>
+  <h2 class="reveal" style="--d:.1s">Your AI memory.<br><em>Bring it home.</em></h2>
+  <p class="reveal" style="--d:.15s">Open source. Local-first. Apache-2.0 licensed.<br>No accounts, no analytics, no telemetry, no background sync.<br><span style="color:var(--t3);font-size:14px">Older packaged builds are on GitHub Releases, but source install has the newest fixes.</span></p>
   <div class="hero-actions reveal" style="--d:.2s">
-    <a href="https://github.com/Celestialchris/SoulPrint-Canonical/releases/latest/download/SoulPrint-Setup.exe" class="btn-fill">Download free</a>
+    <a href="https://github.com/Celestialchris/SoulPrint-Canonical#install" class="btn-fill">Install from source</a>
     <a href="https://github.com/Celestialchris/SoulPrint-Canonical" class="btn-outline">View on GitHub</a>
   </div>
 </div>
