@@ -17,6 +17,17 @@ Before cutting a new feature branch, run git checkout main && git pull. Always. 
 - **Never explore without permission.** Do not scan the codebase, list directories, or read files unless the task requires it or the user tells you to.
 - **Check before proposing.** Before suggesting work, check whether it already shipped. When uncertain, ask. Do not re-propose completed tasks.
 
+## Product Coherence Doctrine
+
+- Do not treat SoulPrint as a vague idea.
+- Do not restart from philosophy unless explicitly asked.
+- The current problem is usually not missing capability breadth. The current problem is product coherence.
+- No route sprawl.
+- No dashboard bloat.
+- No fake web execution for flows that are still CLI-only.
+- No broad new capability unless it strengthens product coherence.
+- No slop.
+
 ## Feedback Loop
 
 When the user corrects your approach:
