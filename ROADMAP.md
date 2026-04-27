@@ -26,7 +26,6 @@ Launch pressure removed as of 2026-04-23. These items unpark when a launch windo
 - Fresh screenshots for docs + README with real imported data (Quiet Archive v3)
 - Landing page refresh (soulprint.dev)
 - Reddit posts: r/MyBoyfriendIsAI · r/ChatGPT · r/ClaudeAI
-- Resolve deferred P1: loopback restriction on SOULPRINT_LLM_BASE_URL
 
 ## Next Milestone (post soft launch)
 
