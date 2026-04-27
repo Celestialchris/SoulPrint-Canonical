@@ -18,11 +18,11 @@ This is not a hypothetical risk. It is the default condition for every person us
 
 ## What SoulPrint does about it
 
-SoulPrint is a local-first tool that imports your AI conversations from ChatGPT, Claude, and Gemini, normalizes them into a single SQLite archive on your machine, and gives you full-text search, cross-provider browsing, and intelligence features, all without making a single network call.
+SoulPrint is a local-first tool that imports your AI conversations from ChatGPT, Claude, Claude Code, Gemini, and Grok, normalizes them into a single SQLite archive on your machine, and gives you full-text search, cross-provider browsing, and intelligence features. The core archive is local and offline. Intelligence features call only the LLM provider you've configured, only when you trigger them.
 
 No telemetry. No analytics. No cloud. The archive is a file you own and can verify yourself.
 
-When you use intelligence features like Distill or Ask, conversation data is sent to an LLM provider of your choice, using your own API key, only when you explicitly trigger it. Everything else runs offline.
+When you use intelligence features like Distill or Ask, conversation excerpts are sent to the LLM provider you've configured, only when you explicitly trigger it. The provider can be a local one like Ollama, with no API key and no network egress beyond your machine, or a cloud one like OpenAI or Anthropic with your own API key. Everything else runs offline.
 
 ## Principles
 
@@ -30,9 +30,9 @@ When you use intelligence features like Distill or Ask, conversation data is sen
 
 **Provenance over convenience.** Every conversation carries its source provider, original timestamps, and a checksum chain. Memory Passport exports include a manifest you can validate independently. If you can't verify it, you can't trust it.
 
-**Local by architecture, not by promise.** SoulPrint is offline by default. There is no telemetry, no analytics, no background connectivity. The only network calls happen when you explicitly trigger intelligence features (Ask, Distill, Themes) using your own API key. Outside of that, nothing leaves your machine.
+**Local by architecture, not by promise.** SoulPrint is offline by default. There is no telemetry, no analytics, no background connectivity. The only network calls happen when you explicitly trigger intelligence features against a configured provider. Outside of that, nothing leaves your machine.
 
-**Intelligence without surveillance.** Distillation, theme extraction, and grounded Q&A work across your full conversation history. The computation happens through your own API key, under your own rate limits, with no intermediary.
+**Intelligence without surveillance.** Distillation, theme extraction, and grounded Q&A work across your full conversation history. The computation happens against the provider you choose. With Ollama or another local OpenAI-compatible endpoint, computation happens entirely on your machine. With a cloud provider, it runs against your own API key under your own rate limits, with no intermediary.
 
 ## Who builds this
 
