@@ -10,7 +10,7 @@ AI users now build valuable context across multiple assistants, but that context
 
 ## What SoulPrint Does Today
 
-- Imports user-authorized conversation exports from ChatGPT, Claude, and Gemini with provider auto-detection
+- Imports user-authorized conversation exports from ChatGPT, Claude, Claude Code, Gemini, and Grok with provider auto-detection
 - Normalizes those records into a canonical SQLite ledger with explicit native and imported lanes
 - Provides transcript exploration for imported conversations, including prompt-level navigation and a minimap rail
 - Composes federated retrieval across lanes without collapsing their provenance boundaries
