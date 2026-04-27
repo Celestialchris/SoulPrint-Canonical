@@ -1,16 +1,22 @@
 # Privacy
 
-SoulPrint collects no data. There are no analytics, no tracking
-pixels, no error reporting services, no outbound network calls.
+SoulPrint collects no data. There is no analytics, no telemetry, no
+tracking, no error reporting, and no background sync.
 
-Your conversation archive stays in a local SQLite file. SoulPrint
-never reads, copies, or transmits it anywhere.
+The core archive is local. Import, browse, search, notes, exports,
+Memory Passport, and the answer-trace browser run with no network
+calls beyond loopback. Your conversation archive lives in a local
+SQLite file on your disk.
 
-The only network activity occurs when you explicitly use intelligence
-features (Ask, Distill, Themes) with a configured API key. In that
-case, conversation excerpts are sent to your chosen LLM provider
-(OpenAI or Anthropic). This is opt-in.
+Network activity occurs only when you explicitly trigger an
+intelligence feature such as Ask, Distill, Recurring Themes, or
+Continuity Packet. In that case, conversation excerpts are sent to
+the LLM provider you have configured. Supported paths include a local
+OpenAI-compatible endpoint such as Ollama, OpenAI with your API key,
+or Anthropic with your API key.
 
-The Windows installer writes to %LOCALAPPDATA%\SoulPrint\. No system
-directories are modified. No admin rights required. Uninstall removes
-everything.
+The MCP server speaks to a local MCP client over stdio and does not
+open a network port.
+
+For the full security model, including the threat model, attachment
+custody, and known caveats, see [SECURITY.md](SECURITY.md).
