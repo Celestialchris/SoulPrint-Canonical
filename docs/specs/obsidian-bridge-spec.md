@@ -2,6 +2,15 @@
 
 *One-way export from SoulPrint's canonical ledger to an Obsidian-native vault.*
 
+> **Status (2026-04-27):** Phase 12 of the roadmap shipped an Obsidian
+> Bridge feature. The README directs users at the raw-inbox bridge
+> documented in `docs/obsidian-raw-inbox.md`, which is a simpler one-way
+> export to a vault's `raw/` directory. Whether the structured
+> Chats/Themes/Daily layout described in this spec is live alongside the
+> raw-inbox path, or whether the raw-inbox path superseded it, is not
+> determinable from docs alone. Verify against the source before relying
+> on this spec as current operational truth.
+
 ---
 
 ## What the Bridge Does
@@ -41,7 +50,9 @@ If the vault is deleted, the bridge rebuilds it from SoulPrint.
     References/                     ← provider notes, concept stubs
         ChatGPT.md
         Claude.md
+        ClaudeCode.md
         Gemini.md
+        Grok.md
     Daily/                          ← auto-generated daily notes (empty shells)
         YYYY-MM-DD.md
     Templates/                      ← Obsidian templates (exported by bridge)
@@ -67,7 +78,7 @@ Theme notes: `retrieval-architecture.md` (slugified topic label).
 
 Daily notes: `2026-03-22.md` (ISO date).
 
-Provider refs: `ChatGPT.md`, `Claude.md`, `Gemini.md`.
+Provider refs: `ChatGPT.md`, `Claude.md`, `ClaudeCode.md`, `Gemini.md`, `Grok.md`.
 
 No date prefixes on chat notes. Dates live in frontmatter where Obsidian can query them.
 
