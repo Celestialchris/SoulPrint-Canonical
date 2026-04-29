@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import time
 from pathlib import Path
@@ -41,7 +42,8 @@ def store_asset(
     extension: str | None = suffix.lstrip(".")[:32] or None
     stored_filename = f"{sha256}-{safe_name}"[:255]
     storage_path = f"assets/sha256/{sha256[:2]}/{stored_filename}"
-    abs_path = _resolve_instance_root(instance_root) / storage_path
+    storage_base = _resolve_instance_root(instance_root)
+    abs_path = storage_base / storage_path
 
     asset = Asset(
         stable_id=f"asset:sha256:{sha256}",
@@ -74,6 +76,13 @@ def store_asset(
             recovered_path.write_bytes(data)
         return recovered
 
+    # CodeQL-recognized py/path-injection sanitizer: realpath + startswith.
+    # Inlined at the sink because CodeQL does not follow helpers for this rule.
+    base_real = os.path.realpath(str(storage_base))
+    target_real = os.path.realpath(str(abs_path))
+    base_prefix = base_real.rstrip(os.sep) + os.sep
+    if not (target_real.startswith(base_prefix) or target_real == base_real):
+        raise ValueError("Asset path must be under storage base")
     abs_path.parent.mkdir(parents=True, exist_ok=True)
     abs_path.write_bytes(data)
     db.session.commit()
