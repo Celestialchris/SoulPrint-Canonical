@@ -12,12 +12,12 @@ Section B stance: Senior Engineer
 
 ## Reads consumed during drafting
 
-- `context/experts.md` (project canon) — routing doctrine, Code Quality Engineer stanza, Senior Engineer stance, expert-report format and numbering rules.
-- `context/template-h.md` (project canon) — Template H structure, mandatory-reads block placement, scope-lock conventions, SESSION CONTINUITY closing tasks.
-- `.claude/rules/python-patterns.md` (project canon) — `from __future__ import annotations`, PEP 604 unions, `@dataclass(slots=True, frozen=True)`, no async in Flask, the two-lane storage pattern (not load-bearing here but read in full).
-- `.claude/rules/soulprint-testing.md` (project canon) — `unittest.TestCase` style under pytest, test naming, no shared `app` across tests, no exact-BM25 asserts (the assertion-stability pattern that informed the float comparisons here).
-- `pyproject.toml` (read-to-verify) — current `[project.optional-dependencies]` and `[project.scripts]` shape; verified `soulprint-quality` was not taken.
-- `src/passport/cli.py` (pattern-mirror) — argparse shape, exit-code convention, `--json` flag pattern.
+- `context/experts.md` (project canon): routing doctrine, Code Quality Engineer stanza, Senior Engineer stance, expert-report format and numbering rules.
+- `context/template-h.md` (project canon): Template H structure, mandatory-reads block placement, scope-lock conventions, SESSION CONTINUITY closing tasks.
+- `.claude/rules/python-patterns.md` (project canon): `from __future__ import annotations`, PEP 604 unions, `@dataclass(slots=True, frozen=True)`, no async in Flask, the two-lane storage pattern (not load-bearing here but read in full).
+- `.claude/rules/soulprint-testing.md` (project canon): `unittest.TestCase` style under pytest, test naming, no shared `app` across tests, no exact-BM25 asserts (the assertion-stability pattern that informed the float comparisons here).
+- `pyproject.toml` (read-to-verify): current `[project.optional-dependencies]` and `[project.scripts]` shape; verified `soulprint-quality` was not taken.
+- `src/passport/cli.py` (pattern-mirror): argparse shape, exit-code convention, `--json` flag pattern.
 
 ## Reads consumed during execution by Claude Code
 

@@ -1,6 +1,6 @@
 ## Derive per-function coverage from line-level coverage data, in pure code
 
-**From:** April 29, 2026 — feat/quality-toolchain-mvp
+**From:** April 29, 2026: feat/quality-toolchain-mvp
 
 ---
 
@@ -8,7 +8,7 @@
 
 `coverage.py` reports executed and missing lines per file. `radon`
 reports per-function blocks with `lineno` and `endline`. Joining them
-into per-function coverage is one short, pure function — but it is the
+into per-function coverage is one short, pure function. But it is the
 non-obvious math at the centre of the SoulPrint quality toolchain.
 Getting the denominator wrong skews every score downstream.
 

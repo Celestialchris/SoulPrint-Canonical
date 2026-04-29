@@ -173,7 +173,7 @@ def _join_coverage(
 
 def _format_markdown(results: list[ScoreResult], generated_at: str) -> str:
     lines = [
-        f"# SoulPrint Quality Report — {generated_at}",
+        f"# SoulPrint Quality Report: {generated_at}",
         "",
         f"Formula: `{CRAP_FORMULA_TEXT}`",
         "",
