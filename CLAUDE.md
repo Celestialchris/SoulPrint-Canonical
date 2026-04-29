@@ -3,6 +3,7 @@
 > **Before starting work:** read `context/soul.md` and `context/user.md`.
 > **Before UI/design work:** read `docs/product/design-doctrine-quiet-archive.md`.
 > **Before intelligence features:** read `context/llm-config.md`.
+> **Before any expert-routed prompt:** read `context/experts.md`. Read only the stack docs, project canon, and learned-pattern links attached to the named Section A expert and Section B stance.
 > **Before resuming after a gap:** read the latest file in `ops/sessions/`.
 > **Before revisiting a settled question:** check `DECISIONS.md`.
 > **Extended rules:** `.claude/rules/`
