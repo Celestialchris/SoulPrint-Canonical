@@ -23,7 +23,10 @@ roadmap/SOULPRINT-30-DAY-VISION.md
 roadmap/UPGRADE-CONTINUITY.md
 .pytest_cache/
 .coverage
+coverage.json
 htmlcov/
+ops/quality/report-*.json
+ops/quality/report-*.md
 .mypy_cache/
 .ruff_cache/
 dist/
