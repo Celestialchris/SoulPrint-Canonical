@@ -32,9 +32,13 @@ from datetime import date
 from pathlib import Path
 from typing import Iterable
 
-from radon.complexity import cc_visit
-
 from .scorer import ScoreResult, derive_function_coverage, score_tree
+
+# `radon` is imported lazily inside `_collect_complexity`; `coverage` is
+# invoked as a subprocess. Both live in the `dev` optional-dependency group
+# rather than runtime requirements, so `main()` checks for availability up
+# front and emits a clear install hint instead of letting a deep ImportError
+# surface mid-run. See the install hint in `main()`.
 
 CRAP_FORMULA_TEXT = "CRAP(m) = comp(m)^2 * (1 - cov(m)/100)^3 + comp(m)"
 
@@ -107,6 +111,9 @@ def _collect_complexity(
     `fullname` is radon's qualified name (e.g. `MyClass.my_method`),
     matching what coverage's line ranges will overlap.
     """
+    from radon.complexity import cc_visit
+    from radon.visitors import Class
+
     blocks: list[tuple[str, str, int, int, int]] = []
     for py_file in sorted(src_root.rglob("*.py")):
         try:
@@ -119,6 +126,12 @@ def _collect_complexity(
             continue
         rel_path = _normalize_file_path(str(py_file))
         for fn in functions:
+            # `cc_visit` returns Function, Method, AND Class blocks. Class
+            # complexity aggregates the class's methods, which we already
+            # score individually, so including Class blocks would double-
+            # count the same code regions and skew the ranking.
+            if isinstance(fn, Class):
+                continue
             blocks.append((rel_path, fn.fullname, fn.lineno, fn.endline, fn.complexity))
     return blocks
 
@@ -210,6 +223,16 @@ def _build_report(results: list[ScoreResult], generated_at: str) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv if argv is not None else sys.argv[1:])
+
+    try:
+        import radon  # noqa: F401
+    except ImportError:
+        print(
+            "soulprint-quality requires the 'dev' optional dependencies "
+            "(radon, coverage). Install with: pip install -e \".[dev]\"",
+            file=sys.stderr,
+        )
+        return 1
 
     src_root = Path(args.src)
     if not src_root.exists():
