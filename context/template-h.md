@@ -78,6 +78,25 @@ Then proceed to the task-specific Mandatory reads.
 
 This resolves the standing-read conflict: context files are still respected, but the Mandatory reads list remains task-specific.
 
+## Expert and stance routing
+
+Template H prompts route through `context/experts.md` before drafting. That file is a routing console: pick one technical expert (Section A) and one stance (Section B) for the branch, then read only the stack docs, project canon, and learned-pattern links attached to those two picks.
+
+The reading order around Template H is fixed:
+
+1. `context/experts.md`: pick one Section A expert and one Section B stance.
+2. The selected expert's stack docs, project canon, and learned-pattern links.
+3. The selected stance's posture, concerns, vocabulary, and out-of-scope guardrails.
+4. Template H: walk the structure, fill the sections.
+5. Session journal at session close (`ops/sessions/`).
+
+Two structural rules carry over from `context/experts.md`:
+
+- **One expert, one stance per prompt.** If a task seems to need two Section A experts, it is two prompts on two branches.
+- **Reference the picks at the top of the prompt body.** State the expert and stance once near the Mandatory reads block, e.g., `Section A expert: Flask App Engineer. Section B stance: Lead Product Designer.` The executing agent inherits the lens without re-explanation.
+
+Do not duplicate expert or stance content inside the prompt. The picks are a pointer; `context/experts.md` is the canon.
+
 ## Template H structure, strict order
 
 ### 0. Context preflight
@@ -301,10 +320,13 @@ After the code and tests are complete:
 
 1. If this branch creates a reusable pattern, add a focused note under `ops/learned/`.
 2. Write a session log under `ops/sessions/` using the repo's naming convention.
-3. Keep both files factual. Do not write a narrative postmortem unless this was a debugging campaign.
+3. If this prompt routed through `context/experts.md` (i.e., named a Section A expert and a Section B stance), write `ops/experts/report-NN.md` per the format documented in `context/experts.md`. NN is the next sequential number across all reports.
+4. Keep all three files factual. Do not write a narrative postmortem unless this was a debugging campaign.
 ```
 
 If the prompt is only a review, planning note, or dry spec, omit this section unless a decision was made.
+
+The expert report is the feedback loop that lets `context/experts.md` earn or lose its place over time. Reports record which expert + stance got named, which reads were actually consulted during drafting and execution, and what shipped. Over 20-30 reports, every line in `experts.md` becomes empirically justified or refuted. Skipping this step turns the routing console into dead doctrine.
 
 ## State work protocol
 
@@ -485,5 +507,5 @@ Do not bump version. Do not edit `CHANGELOG.md` unless explicitly requested.
 
 ## SESSION CONTINUITY
 
-If code was committed or a decision was made, write the session log. If a reusable pattern appeared, write the focused learned note.
+If code was committed or a decision was made, write the session log. If a reusable pattern appeared, write the focused learned note. If this prompt named a Section A expert and a Section B stance, write `ops/experts/report-NN.md` per the format in `context/experts.md`.
 ```
