@@ -31,7 +31,9 @@ intelligence = [
   "openai>=2.32.0"
 ]
 dev = [
-  "pytest>=9.0.3"
+  "pytest>=9.0.3",
+  "coverage>=7.0",
+  "radon>=6.0"
 ]
 build = [
   "pyinstaller>=6.19.0,<7"
@@ -40,6 +42,7 @@ build = [
 [project.scripts]
 soulprint = "src.cli:main"
 soulprint-mcp = "src.mcp_server:main"
+soulprint-quality = "src.quality.cli:main"
 
 [tool.setuptools]
 include-package-data = true
