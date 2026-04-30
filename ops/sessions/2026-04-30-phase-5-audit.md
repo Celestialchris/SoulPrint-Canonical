@@ -21,7 +21,7 @@ Per Scope Lock: `context/experts.md`, `context/template-h.md`, `CLAUDE.md`, `DEC
 
 ## Audit outputs
 
-- Three pass-2 recommendations ACCEPTED: Routing Justification block in `template-h.md`, Proof Required field per Section A expert, Docs/Canon Steward fill, Routing Examples section in `experts.md`. (Four total: three plus the audit-cadence governance recommendation routed via Docs/Canon Steward once filled.)
+- Five pass-2 recommendations ACCEPTED: Routing Justification block in `template-h.md`, Proof Required field per Section A expert, Expert Report Audit cadence, Docs/Canon Steward fill, and Routing Examples section in `experts.md`.
 - One DEFERRED: Importer Engineer fill (no empirical evidence yet of three importer branches forced through Data + Flask + Test).
 - One REJECTED for now: Release/Ops Engineer (per pass-2 threshold of 2-3 real reports of recurring friction; we have zero).
 - Governance position on audit cadence: Option 1 with auto-narrowing breaker clause. Phase 5 is the only permanent self-exemption; audit-20.md onward routes through Docs/Canon Steward + Senior Engineer.
