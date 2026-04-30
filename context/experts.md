@@ -64,6 +64,13 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Improve test coverage on X."
 - "Add regression test for the bug we just fixed."
 
+**Proof required.**
+- Quality report path written to `ops/quality/`.
+- Coverage and complexity values before and after the branch.
+- Tests run and passing counts, before and after.
+- Threshold change in `quality-thresholds.json`, if any, and the reason.
+- CRAP-score-ranked target picked from a current report (no off-the-shelf rewrite).
+
 **Out of scope.**
 - New product behavior or features.
 - UI polish, CSS, visual direction.
@@ -103,6 +110,13 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "The sidebar is rendering wrong."
 - "Add a flash message when X."
 
+**Proof required.**
+- Routes added, modified, or removed are named.
+- Templates touched are named.
+- Tests for new behavior added; existing tests still green.
+- If redirect behavior or `next` handling changed, redirect sanitizer canonical pattern is inlined at every redirect sink (per `ops/learned/redirect-after-action-safety.md`).
+- No design-token bypass; no inline hex literals introduced.
+
 **Out of scope.**
 - Database schema changes (Data and Storage Engineer).
 - FTS5 query construction or indexing (Data and Storage Engineer).
@@ -138,6 +152,13 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Wire SEO metadata for `/privacy`."
 - "Migrate the deploy from `landing/` to `site/`."
 - "Add design tokens to the marketing site."
+
+**Proof required.**
+- Page or component shipped is named.
+- SvelteKit prerender contract still passes (`adapter-static` build clean).
+- No runtime integration with the Flask app or canonical ledger introduced.
+- Brand voice rules from `docs/product/brand.md` are honored, or copy was authored under Brand Guardian on a prior branch.
+- Local fonts only; no `fonts.googleapis.com` or other web-font CDN introduced.
 
 **Out of scope.**
 - Flask app templates and routes (Flask App Engineer).
@@ -176,6 +197,13 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Rebuild the FTS index after this import path change."
 - "The query is hitting the wrong storage lane."
 
+**Proof required.**
+- If schema changes, idempotent ALTER guard pattern is used (no Alembic).
+- FTS5 derived structures remain rebuildable from canonical data via `rebuild_fts()`.
+- Two-lane storage boundary preserved (ORM for canonical tables, raw `sqlite3` for FTS and derived indexes).
+- If migration behavior changes, tested against an existing database snapshot; before-and-after row counts named.
+- No vector or semantic storage introduced as canonical (frozen non-goal in `DECISIONS.md`).
+
 **Out of scope.**
 - Route handlers and Jinja templates (Flask App Engineer).
 - Test fixture architecture for database tests (Test Engineer).
@@ -212,6 +240,13 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Add canonical-shape compliance to the new path-handling helper."
 - "Why is the analyzer still flagging this after the fix?"
 
+**Proof required.**
+- Security finding is named; if CodeQL-driven, alert ID and closure are confirmed with a post-fix scan returning zero findings on the named rule.
+- Canonical sanitizer shape inlined at the sink, matching the published rule's example verbatim (no factored helpers, no intermediate booleans).
+- Regression test added that fails before the fix and passes after.
+- No stricter-but-unrecognized variants substituted for the canonical shape (per `ops/learned/static-analyzer-shape-matching.md`).
+- Supply-chain disposition recorded in writing if a CVE was triaged (used / not_used / patched).
+
 **Out of scope.**
 - General code quality and coverage (Code Quality Engineer).
 - Runtime authn/authz design (no current scope; would be a new expert if SoulPrint added it).
@@ -244,6 +279,13 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Why is this test cleanup failing?"
 - "CI is timing out or running slow."
 - "Set up a new test category structure."
+
+**Proof required.**
+- Fixture pattern conforms (`make_test_temp_dir`, `release_app_db_handles`, LIFO cleanup ordering).
+- No bare `tempfile.TemporaryDirectory()` introduced for DB paths.
+- `Config.SQLALCHEMY_DATABASE_URI` is restored after any test that mutates it.
+- Full test suite green when Python or test harness behavior changed; for workflow-only branches, relevant workflow verification is documented. No skipped tests added without a comment naming the reason.
+- CI workflow change is scoped to `.github/workflows/` (no production code touched on harness branches).
 
 **Out of scope.**
 - Coverage targeting and coverage gaps (Code Quality Engineer).
@@ -280,6 +322,13 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Continuity Packet generation is timing out on long conversations."
 - "Add Anthropic as a provider alongside Ollama and OpenAI."
 - "Answer traces aren't appearing in the trace browser."
+
+**Proof required.**
+- Citation handoff preserved (`memory:<id>` resolves to `/memory/<id>`; `imported_conversation:<id>` resolves to `/imported/<id>/explorer`).
+- Answer trace appended to the JSONL log with stable IDs traceable back to canonical records.
+- `LLMProvider` boundary unbroken; no provider-specific imports outside the abstraction layer.
+- Token budget computed before any provider call; transcript truncation logged when applied.
+- No canonical ledger mutation by intelligence-layer code (Layer 3 is derived, never canonical).
 
 **Out of scope.**
 - Schema for storing intelligence outputs (Data and Storage Engineer).
@@ -319,6 +368,13 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "The doctrine changed after this branch."
 - "Run the next routing-system audit (audit-20.md, audit-40.md, etc.)."
 - "Clarify whether a session note, expert report, learned pattern, or decision record owns this evidence."
+
+**Proof required.**
+- Contradiction, stale claim, or doctrine gap is named.
+- Source files checked are named.
+- Replacement rule or retained exception is stated.
+- Deprecated language is removed or explicitly retained with reason.
+- No implementation scope is smuggled into the doctrine edit.
 
 **Out of scope.**
 - Feature implementation in `src/`, `site/`, or any code surface.
