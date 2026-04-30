@@ -97,6 +97,35 @@ Two structural rules carry over from `context/experts.md`:
 
 Do not duplicate expert or stance content inside the prompt. The picks are a pointer; `context/experts.md` is the canon.
 
+### Routing Justification
+
+Naming the picks is not enough. Every Template H prompt also justifies the picks in writing through two short blocks: Why-this-expert and Why-not-adjacent-experts. This converts implicit routing discipline into a structural pressure point that future audits can mechanically check.
+
+Required shape:
+
+```markdown
+## ROUTING
+
+Section A expert: <name>.
+Section B stance: <name>.
+
+**Why this expert.**
+- <bullet>
+- <bullet>
+
+**Why not adjacent experts.**
+- Not <expert name>: <reason>.
+- Not <expert name>: <reason>.
+```
+
+Minimums: at least 2 bullets under each block. No hard maximum. If the Why-not-adjacent list passes 6 bullets, that is a soft signal the Section A pick was uncertain; reconsider before drafting more.
+
+Section B default: Senior Engineer is the implicit default and does not require its own justification when chosen. Any non-default stance (Lead Product Designer, UX Strategist, Brand Guardian, Community-Voice Writer, Teaching Engineer) is justified within the Why-this-expert block, naming the work shape that triggered the non-default pick.
+
+Documented exemptions: audits of the routing system itself (Phase 5, audit-20.md, audit-40.md, etc.) and any branch authorized by a prior audit to bypass routing replace the Routing block with an explicit exemption acknowledgment. The exemption must cite the document that authorized it and must name when normal routing resumes. The forward-reference exemption window from Phase 5 closed at PR #199; new forward-reference exemptions require explicit authorization from a future audit.
+
+Audit hook: audit-20 will count routed prompts that include the Routing block versus those that omit it, and will check whether Why-not-adjacent reasoning ever caught a routing error that the prior structure would have allowed through.
+
 ## Template H structure, strict order
 
 ### 0. Context preflight
@@ -402,6 +431,7 @@ No generated implementation prompt is trusted until it passes this gate:
 - every file path is verified;
 - every Verified Fact is checked against the current authority;
 - every canon file, learned-pattern file, report, spec, or context file cited as a mandatory read or verified authority exists in the repo at the current authority source; if missing, stale, renamed, or only recalled from chat, it belongs in Assumptions to verify or must be removed;
+- the prompt's ROUTING block exists with Why-this-expert and Why-not-adjacent-experts sub-blocks (minimum 2 bullets each), OR an explicit exemption is documented citing the authorizing audit or session note;
 - assumptions are separated from facts;
 - stop conditions are contract-based and unlikely to false-positive;
 - git commands are sane;
@@ -419,6 +449,19 @@ If modifying an existing prompt or template, provide an applied artifact. Do not
 ## CONTEXT PREFLIGHT
 
 [Only if needed. State which context layer has been loaded or must be read.]
+
+## ROUTING
+
+Section A expert: [name].
+Section B stance: [name].
+
+**Why this expert.**
+- [bullet]
+- [bullet]
+
+**Why not adjacent experts.**
+- Not [expert]: [reason].
+- Not [expert]: [reason].
 
 ## MANDATORY READS (do NOT explore the codebase)
 
