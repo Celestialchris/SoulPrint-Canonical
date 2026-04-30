@@ -12,9 +12,10 @@ target_real = os.path.realpath(str(candidate_path))
 base_prefix = base_real.rstrip(os.sep) + os.sep
 if not (target_real.startswith(base_prefix) or target_real == base_real):
     raise ValueError("Path must be under base directory")
-# 4. Use the validated path at the sink.
-abs_path.parent.mkdir(parents=True, exist_ok=True)
-abs_path.write_bytes(data)
+# 4. Use the validated resolved path at the sink (not the original candidate).
+resolved_path = Path(target_real)
+resolved_path.parent.mkdir(parents=True, exist_ok=True)
+resolved_path.write_bytes(data)
 ```
 
 **Why `realpath` on both sides:** Follows symlinks and collapses traversal sequences before comparison. CodeQL recognizes this idiom. `is_relative_to()` and `relative_to()` are not recognized taint sanitizers.
@@ -27,7 +28,7 @@ Live canonical sources in this repo:
 - `src/importers/claude_code_discovery.py:42-53` — home-directory variant (`normalize_projects_path`)
 - `src/app/assets.py:81-85` — storage-base variant, inlined at the write sink
 
-**Dismiss for the `relative_to` early implementation (historical):**
+## Historical: `relative_to` early implementation (dismiss record)
 
 Dismiss as: "Used in tests / Won't fix"
 
