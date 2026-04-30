@@ -3,6 +3,7 @@
 **Recognized shape:**
 ```python
 import os
+from pathlib import Path
 
 # 1. Resolve the base root to its real path.
 base_real = os.path.realpath(str(base_dir))
