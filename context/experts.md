@@ -18,7 +18,7 @@ Two structural rules carry across every project that adopts this file:
 
 ## Current implementation: SoulPrint
 
-> **Phase 3A status.** Section A is seven filled experts plus one parked placeholder (Importer Engineer). Section B is six filled stances: Senior Engineer (default), Lead Product Designer, UX Strategist, Brand Guardian, Community-Voice Writer, Teaching Engineer. Template H integration exists as a paired candidate in `template-h.md` (Expert and stance routing section, plus the report-write closing task). The next milestone is first real use through the Quality Toolchain MVP prompt, followed by `ops/experts/report-01.md`.
+> **Phase 3A status.** Section A is eight filled experts plus one parked placeholder (Importer Engineer). Section B is six filled stances: Senior Engineer (default), Lead Product Designer, UX Strategist, Brand Guardian, Community-Voice Writer, Teaching Engineer. Routed reports 01, 02, and 04 plus the Phase 5 self-audit have validated the routing loop. Docs/Canon Steward is now active for doctrine-integrity work and the audit-NN.md series. Importer Engineer remains deferred until empirical importer friction surfaces.
 
 > **Source materials.** Chris's original SoulPrint Layer 1 product-surface prompt is treated as origin material, not active execution doctrine. That prompt established early product-surface principles:
 >
@@ -288,6 +288,49 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - CodeQL alerts in intelligence code (Security Reviewer).
 - Test fixture or harness work for LLM tests (Test Engineer).
 - Replacing the canonical ledger with vector, semantic, or working-memory storage. Layer 4 extensions never replace Layer 1, and this is frozen as a non-goal in `DECISIONS.md`.
+
+---
+
+### Docs/Canon Steward
+
+**Lens.** Project memory must remain coherent. Canon files, decisions, learned patterns, expert reports, templates, and session doctrine must not drift into contradiction, duplication, stale instruction, or false authority.
+
+**Owns.** Doctrine-integrity work across `CLAUDE.md`, `DECISIONS.md`, `context/template-h.md`, `context/experts.md`, `ops/learned/`, `ops/experts/`, and the `ops/phase-5/audit-NN.md` series; report-observation promotion into canon; deprecated-rule removal; terminology audits; routing-system audits; doctrine portability checks; and cross-file consistency when canon surfaces disagree.
+
+**Stack docs.**
+- *(none for v1; this expert is project-canon integrity, not an external technology stack.)*
+
+**Project canon.**
+- `CLAUDE.md`: project orientation and the standing-read trigger that loads this routing doctrine.
+- `DECISIONS.md`: frozen non-goals and architectural commitments that doctrine must not silently contradict.
+- `context/experts.md`: this file. The routing doctrine itself.
+- `context/template-h.md`: the execution scaffold paired with this file. The Drafter Checklist and Review Protocol live here.
+- `ops/phase-5/audit-phase-5.md`: the first routing-system self-audit and the empirical baseline for this expert's existence.
+
+**Learned patterns.**
+- `ops/learned/typography-self-reference.md`: when a docs branch enforces a typography rule, do not silently reproduce the forbidden artifact in the prompt, session log, learned-pattern file, or canon edit that introduces the rule.
+
+**Triggers.**
+- "These canon files contradict each other."
+- "Promote this report observation into learned patterns or canon."
+- "Audit Template H against `experts.md`."
+- "Prepare this routing system for another project."
+- "Remove stale canon or deprecated rules."
+- "The doctrine changed after this branch."
+- "Run the next routing-system audit (audit-20.md, audit-40.md, etc.)."
+- "Clarify whether a session note, expert report, learned pattern, or decision record owns this evidence."
+
+**Out of scope.**
+- Feature implementation in `src/`, `site/`, or any code surface.
+- Public marketing copy, launch copy, Reddit or HN writing, brand voice authoring (Brand Guardian or Community-Voice Writer).
+- Product strategy decisions about what SoulPrint should build next.
+- Visual or surface decisions (Lead Product Designer); multi-step user paths or information architecture (UX Strategist).
+- Test harness mechanics, fixture architecture, or CI reliability (Test Engineer).
+- CodeQL alert closure, CVE triage, or sanitizer shape compliance (Security Reviewer).
+- Schema, FTS, raw `sqlite3` mechanics, or canonical ledger shape (Data and Storage Engineer).
+- Coverage, complexity, CRAP scoring, or mutation testing (Code Quality Engineer).
+- Intelligence and answering features over canonical evidence (Intelligence/Answering Engineer).
+- Importer implementation or importer regression behavior. Importer Engineer remains parked until empirical importer friction surfaces.
 
 ---
 
