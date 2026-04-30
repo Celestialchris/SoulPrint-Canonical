@@ -401,6 +401,7 @@ No generated implementation prompt is trusted until it passes this gate:
 
 - every file path is verified;
 - every Verified Fact is checked against the current authority;
+- every canon file, learned-pattern file, report, spec, or context file cited as a mandatory read or verified authority exists in the repo at the current authority source; if missing, stale, renamed, or only recalled from chat, it belongs in Assumptions to verify or must be removed;
 - assumptions are separated from facts;
 - stop conditions are contract-based and unlikely to false-positive;
 - git commands are sane;
