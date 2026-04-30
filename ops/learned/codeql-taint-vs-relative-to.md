@@ -1,3 +1,36 @@
+## Path-injection sanitizer: realpath + startswith (CodeQL py/path-injection)
+
+**Recognized shape:**
+```python
+import os
+from pathlib import Path
+
+# 1. Resolve the base root to its real path.
+base_real = os.path.realpath(str(base_dir))
+# 2. Resolve the candidate path to its real path.
+target_real = os.path.realpath(str(candidate_path))
+# 3. Containment check — strip trailing sep to avoid doubled separators on root paths.
+base_prefix = base_real.rstrip(os.sep) + os.sep
+if not (target_real.startswith(base_prefix) or target_real == base_real):
+    raise ValueError("Path must be under base directory")
+# 4. Use the validated resolved path at the sink (not the original candidate).
+resolved_path = Path(target_real)
+resolved_path.parent.mkdir(parents=True, exist_ok=True)
+resolved_path.write_bytes(data)
+```
+
+**Why `realpath` on both sides:** Follows symlinks and collapses traversal sequences before comparison. CodeQL recognizes this idiom. `is_relative_to()` and `relative_to()` are not recognized taint sanitizers.
+
+**Must be inlined at the sink:** CodeQL does not follow the shape through a helper function. The full resolve-base → resolve-candidate → startswith sequence must appear in the same function body as the filesystem write call.
+
+**Trailing-sep normalization:** `base_real.rstrip(os.sep) + os.sep` ensures exactly one separator before startswith, avoiding false rejections on root paths (`/`, `C:\`).
+
+Live canonical sources in this repo:
+- `src/importers/claude_code_discovery.py:42-53` — home-directory variant (`normalize_projects_path`)
+- `src/app/assets.py:81-85` — storage-base variant, inlined at the write sink
+
+## Historical: `relative_to` early implementation (dismiss record)
+
 Dismiss as: "Used in tests / Won't fix"
 
 Reason (paste this):
