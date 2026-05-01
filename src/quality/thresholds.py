@@ -45,13 +45,35 @@ class Thresholds:
 
     Defaults are permissive so a partial config does not silently block
     CI: missing fields evaluate as "not enforced" rather than "strict
-    zero".
+    zero". Field-level invariants (top_n >= 1, max_* >= 0,
+    min_coverage_percent in [0, 100]) are enforced in __post_init__ so a
+    hand-edit typo in quality-thresholds.json fails fast at load time
+    rather than silently disabling enforcement.
     """
 
     max_crap: float = float("inf")
     max_complexity: int = 1_000_000_000
     min_coverage_percent: float = 0.0
     top_n: int = 20
+
+    def __post_init__(self) -> None:
+        if self.top_n < 1:
+            raise ValueError(
+                f"top_n must be >= 1; got {self.top_n}. "
+                "A non-positive top_n would silently disable enforcement "
+                "(evaluate would report a vacuous pass with no functions checked)."
+            )
+        if self.max_crap < 0:
+            raise ValueError(f"max_crap must be >= 0; got {self.max_crap}")
+        if self.max_complexity < 0:
+            raise ValueError(
+                f"max_complexity must be >= 0; got {self.max_complexity}"
+            )
+        if not (0.0 <= self.min_coverage_percent <= 100.0):
+            raise ValueError(
+                "min_coverage_percent must be in [0, 100]; "
+                f"got {self.min_coverage_percent}"
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,9 +133,12 @@ def save_thresholds(path: Path, thresholds: Thresholds) -> None:
 
 
 def _top_n_by_crap(results: Iterable[ScoreResult], top_n: int) -> list[ScoreResult]:
-    """Return the top_n results by CRAP, descending. Defensive sort."""
-    if top_n <= 0:
-        return []
+    """Return the top_n results by CRAP, descending. Defensive sort.
+
+    `top_n` is guaranteed >= 1 by Thresholds.__post_init__; callers always
+    pass `thresholds.top_n` so there is no path here that yields a
+    non-positive value.
+    """
     return sorted(results, key=lambda r: r.crap, reverse=True)[:top_n]
 
 
