@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import unittest
 
+from src.quality.cli import _run_check, _run_ratchet
 from src.quality.scorer import ScoreResult
 from src.quality.thresholds import (
     THRESHOLD_SCHEMA,
@@ -46,6 +47,46 @@ class ThresholdsDefaultsTest(unittest.TestCase):
         self.assertGreater(t.max_complexity, 1_000_000)
         self.assertEqual(t.min_coverage_percent, 0.0)
         self.assertEqual(t.top_n, 20)
+
+
+class ThresholdsValidationTest(unittest.TestCase):
+    """top_n < 1 and other obviously-bad values must fail at construction.
+
+    Rationale: quality-thresholds.json is hand-editable. A typo like
+    `"top_n": -20` would evaluate as a vacuous pass (no functions
+    checked), silently disabling the check gate. The dataclass
+    refuses construction so the failure surfaces at load_thresholds()
+    rather than during evaluation.
+    """
+
+    def test_top_n_zero_rejected(self):
+        with self.assertRaises(ValueError):
+            Thresholds(top_n=0)
+
+    def test_top_n_negative_rejected(self):
+        with self.assertRaises(ValueError):
+            Thresholds(top_n=-20)
+
+    def test_negative_max_crap_rejected(self):
+        with self.assertRaises(ValueError):
+            Thresholds(max_crap=-1.0)
+
+    def test_negative_max_complexity_rejected(self):
+        with self.assertRaises(ValueError):
+            Thresholds(max_complexity=-5)
+
+    def test_min_coverage_above_100_rejected(self):
+        with self.assertRaises(ValueError):
+            Thresholds(min_coverage_percent=150.0)
+
+    def test_min_coverage_below_zero_rejected(self):
+        with self.assertRaises(ValueError):
+            Thresholds(min_coverage_percent=-1.0)
+
+    def test_min_coverage_at_boundaries_accepted(self):
+        # 0 and 100 are the inclusive endpoints; both must be valid.
+        Thresholds(min_coverage_percent=0.0)
+        Thresholds(min_coverage_percent=100.0)
 
 
 class LoadThresholdsTest(unittest.TestCase):
@@ -93,6 +134,29 @@ class LoadThresholdsTest(unittest.TestCase):
     def test_missing_file_raises(self):
         with self.assertRaises(FileNotFoundError):
             load_thresholds(self.tmpdir / "does-not-exist.json")
+
+    def test_malformed_json_raises_json_decode_error(self):
+        path = self.tmpdir / "bad.json"
+        path.write_text("{not valid json", encoding="utf-8")
+        with self.assertRaises(json.JSONDecodeError):
+            load_thresholds(path)
+
+    def test_negative_top_n_in_file_raises_value_error(self):
+        # The hand-edit footgun the validation guards against: a typo
+        # of "top_n": -20 must surface at load time, not as a vacuous
+        # pass during evaluation.
+        path = self.tmpdir / "bad-top-n.json"
+        path.write_text(json.dumps({"top_n": -20}), encoding="utf-8")
+        with self.assertRaises(ValueError):
+            load_thresholds(path)
+
+    def test_non_numeric_max_crap_raises_value_error(self):
+        path = self.tmpdir / "bad-type.json"
+        path.write_text(
+            json.dumps({"max_crap": "not a number"}), encoding="utf-8"
+        )
+        with self.assertRaises(ValueError):
+            load_thresholds(path)
 
 
 class SaveThresholdsTest(unittest.TestCase):
@@ -208,13 +272,6 @@ class EvaluateTest(unittest.TestCase):
         functions = {v.function for v in verdict.violations}
         self.assertEqual(functions, {"worst", "bad"})
 
-    def test_top_n_zero_passes_vacuously(self):
-        results = [_r("a.py", "x", 100, 0.0, 10000.0)]
-        t = Thresholds(max_crap=10.0, top_n=0)
-        verdict = evaluate(results, t)
-        self.assertTrue(verdict.passed)
-        self.assertEqual(verdict.checked_count, 0)
-
     def test_evaluate_does_not_assume_pre_sorted_input(self):
         # score_tree already sorts, but evaluate must be robust to arbitrary order.
         results = [
@@ -312,6 +369,59 @@ class ComputeRatchetTest(unittest.TestCase):
         # Only "worst_crap" (complexity=10) was in scope; complexity tightens to 10.
         self.assertEqual(new.max_complexity, 10)
         self.assertEqual(new.max_crap, 110.0)
+
+
+class CliInvalidConfigTest(unittest.TestCase):
+    """--check and --ratchet must convert load failures into exit 1.
+
+    Without the structured exception handling in _load_thresholds_or_report,
+    a malformed quality-thresholds.json raises uncaught
+    JSONDecodeError/ValueError/OSError, surfacing in CI as a traceback
+    rather than a graceful failure with a useful message.
+    """
+
+    def setUp(self):
+        self.tmpdir = make_test_temp_dir(self, "quality-cli-invalid")
+
+    def test_check_returns_one_on_missing_file(self):
+        rc = _run_check([], self.tmpdir / "missing.json")
+        self.assertEqual(rc, 1)
+
+    def test_check_returns_one_on_malformed_json(self):
+        path = self.tmpdir / "bad.json"
+        path.write_text("{not valid json", encoding="utf-8")
+        rc = _run_check([], path)
+        self.assertEqual(rc, 1)
+
+    def test_check_returns_one_on_invalid_field(self):
+        path = self.tmpdir / "bad.json"
+        path.write_text(json.dumps({"top_n": -20}), encoding="utf-8")
+        rc = _run_check([], path)
+        self.assertEqual(rc, 1)
+
+    def test_check_returns_one_on_non_numeric_field(self):
+        path = self.tmpdir / "bad.json"
+        path.write_text(
+            json.dumps({"max_crap": "infinite"}), encoding="utf-8"
+        )
+        rc = _run_check([], path)
+        self.assertEqual(rc, 1)
+
+    def test_ratchet_returns_one_on_missing_file(self):
+        rc = _run_ratchet([], self.tmpdir / "missing.json")
+        self.assertEqual(rc, 1)
+
+    def test_ratchet_returns_one_on_malformed_json(self):
+        path = self.tmpdir / "bad.json"
+        path.write_text("{not valid json", encoding="utf-8")
+        rc = _run_ratchet([], path)
+        self.assertEqual(rc, 1)
+
+    def test_ratchet_returns_one_on_invalid_field(self):
+        path = self.tmpdir / "bad.json"
+        path.write_text(json.dumps({"top_n": 0}), encoding="utf-8")
+        rc = _run_ratchet([], path)
+        self.assertEqual(rc, 1)
 
 
 class RatchetSaveLoadIntegrationTest(unittest.TestCase):

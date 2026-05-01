@@ -1,7 +1,7 @@
 {
   "schema": "soulprint.quality.thresholds.v1",
-  "max_crap": 550.0,
-  "max_complexity": 70,
+  "max_crap": 510.0224492140788,
+  "max_complexity": 64,
   "min_coverage_percent": 0.0,
   "top_n": 20
 }

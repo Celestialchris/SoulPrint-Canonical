@@ -308,20 +308,55 @@ def _format_ratchet_diff(old: Thresholds, new: Thresholds) -> str:
     )
 
 
-def _run_check(
-    results: list[ScoreResult], thresholds_path: Path
-) -> int:
+def _load_thresholds_or_report(
+    thresholds_path: Path, missing_hint: str
+) -> Thresholds | None:
+    """Load thresholds and convert load failures into stderr + None.
+
+    Returns the Thresholds instance on success, or None when the caller
+    should exit 1. Centralized so --check and --ratchet handle the same
+    failure modes (missing file, malformed JSON, invalid field types,
+    field-validation failures, OS-level read errors) uniformly.
+    """
     try:
-        thresholds = load_thresholds(thresholds_path)
+        return load_thresholds(thresholds_path)
     except FileNotFoundError:
         print(
             f"thresholds policy not found at {thresholds_path}.",
             file=sys.stderr,
         )
+        print(missing_hint, file=sys.stderr)
+        return None
+    except json.JSONDecodeError as exc:
         print(
-            "Create one (see src/quality/README.md for the schema) and re-run.",
+            f"thresholds policy at {thresholds_path} is not valid JSON: {exc}",
             file=sys.stderr,
         )
+        return None
+    except ValueError as exc:
+        # Raised by Thresholds.__post_init__ for negative/out-of-range values
+        # and by load_thresholds when a numeric field cannot be coerced.
+        print(
+            f"thresholds policy at {thresholds_path} is invalid: {exc}",
+            file=sys.stderr,
+        )
+        return None
+    except OSError as exc:
+        print(
+            f"thresholds policy at {thresholds_path} could not be read: {exc}",
+            file=sys.stderr,
+        )
+        return None
+
+
+def _run_check(
+    results: list[ScoreResult], thresholds_path: Path
+) -> int:
+    thresholds = _load_thresholds_or_report(
+        thresholds_path,
+        missing_hint="Create one (see src/quality/README.md for the schema) and re-run.",
+    )
+    if thresholds is None:
         return 1
     verdict = evaluate(results, thresholds)
     print(_format_check_summary(verdict, thresholds))
@@ -331,17 +366,11 @@ def _run_check(
 def _run_ratchet(
     results: list[ScoreResult], thresholds_path: Path
 ) -> int:
-    try:
-        current = load_thresholds(thresholds_path)
-    except FileNotFoundError:
-        print(
-            f"thresholds policy not found at {thresholds_path}.",
-            file=sys.stderr,
-        )
-        print(
-            "Create one first; --ratchet only tightens existing policies.",
-            file=sys.stderr,
-        )
+    current = _load_thresholds_or_report(
+        thresholds_path,
+        missing_hint="Create one first; --ratchet only tightens existing policies.",
+    )
+    if current is None:
         return 1
     new = compute_ratchet(results, current)
     if new == current:
