@@ -11,13 +11,15 @@ Reports are timestamped, never overwritten:
 
 If multiple runs happen on the same day, a -N suffix is appended to both.
 
-Exit codes:
-    0  healthy run, reports written (or JSON emitted to stdout)
-    1  unexpected error (subprocess failure, parse error, etc.)
+Modes:
+    (default)   write timestamped reports under --out-dir
+    --json      emit machine-readable JSON to stdout, write nothing
+    --check     evaluate scores against quality-thresholds.json, exit non-zero on violation
+    --ratchet   tighten quality-thresholds.json based on current measurements (never loosens)
 
-The MVP does not enforce thresholds. The threshold ratchet is a follow-up
-branch (feat/quality-threshold-ratchet); the report shape carries the per-
-function score so the ratchet can lock against it without re-deriving.
+Exit codes:
+    0  healthy run, reports written / JSON emitted / threshold check passed / ratchet completed
+    1  unexpected error (subprocess failure, parse error, etc.) or --check threshold violation
 """
 
 from __future__ import annotations
@@ -33,6 +35,14 @@ from pathlib import Path
 from typing import Iterable
 
 from .scorer import ScoreResult, derive_function_coverage, score_tree
+from .thresholds import (
+    Thresholds,
+    Verdict,
+    compute_ratchet,
+    evaluate,
+    load_thresholds,
+    save_thresholds,
+)
 
 # `radon` is imported lazily inside `_collect_complexity`; `coverage` is
 # invoked as a subprocess. Both live in the `dev` optional-dependency group
@@ -41,6 +51,7 @@ from .scorer import ScoreResult, derive_function_coverage, score_tree
 # surface mid-run. See the install hint in `main()`.
 
 CRAP_FORMULA_TEXT = "CRAP(m) = comp(m)^2 * (1 - cov(m)/100)^3 + comp(m)"
+DEFAULT_THRESHOLDS_PATH = "quality-thresholds.json"
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -58,9 +69,34 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Directory for timestamped reports (default: ops/quality/)",
     )
     parser.add_argument(
+        "--thresholds",
+        default=DEFAULT_THRESHOLDS_PATH,
+        help=(
+            "Path to threshold policy file used by --check and --ratchet "
+            f"(default: {DEFAULT_THRESHOLDS_PATH})"
+        ),
+    )
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--json",
         action="store_true",
         help="Emit machine-readable JSON to stdout instead of writing files",
+    )
+    mode.add_argument(
+        "--check",
+        action="store_true",
+        help=(
+            "Evaluate current scores against the threshold policy and exit "
+            "non-zero on violation. Writes no report files."
+        ),
+    )
+    mode.add_argument(
+        "--ratchet",
+        action="store_true",
+        help=(
+            "Tighten the threshold policy in place based on current "
+            "measurements. Never loosens; refuses to paper over regressions."
+        ),
     )
     return parser
 
@@ -220,6 +256,108 @@ def _build_report(results: list[ScoreResult], generated_at: str) -> dict:
     }
 
 
+def _format_check_summary(verdict: Verdict, thresholds: Thresholds) -> str:
+    """Compact human-readable check result. ASCII only."""
+    if verdict.passed:
+        lines = [
+            "soulprint-quality --check: PASS",
+            f"Checked top {verdict.checked_count} by CRAP. All within thresholds:",
+            f"  max_crap            <= {thresholds.max_crap}",
+            f"  max_complexity      <= {thresholds.max_complexity}",
+            f"  min_coverage_percent >= {thresholds.min_coverage_percent}",
+        ]
+        return "\n".join(lines)
+    lines = [
+        "soulprint-quality --check: FAIL",
+        (
+            f"{len(verdict.violations)} violation(s) in top "
+            f"{verdict.checked_count} by CRAP:"
+        ),
+    ]
+    for v in verdict.violations:
+        if v.kind == "min_coverage_percent":
+            comparator = ">="
+        else:
+            comparator = "<="
+        lines.append(
+            f"  {v.file}::{v.function}: {v.kind} {comparator} "
+            f"{v.threshold} violated (actual {v.actual:.2f})"
+        )
+    lines.append(
+        "Run `soulprint-quality` to write the full ranked report under ops/quality/."
+    )
+    return "\n".join(lines)
+
+
+def _format_ratchet_diff(old: Thresholds, new: Thresholds) -> str:
+    def _line(label: str, old_val, new_val) -> str:
+        if old_val == new_val:
+            return f"  {label}: unchanged at {old_val}"
+        return f"  {label}: {old_val} -> {new_val}"
+
+    return "\n".join(
+        [
+            _line("max_crap", old.max_crap, new.max_crap),
+            _line("max_complexity", old.max_complexity, new.max_complexity),
+            _line(
+                "min_coverage_percent",
+                old.min_coverage_percent,
+                new.min_coverage_percent,
+            ),
+        ]
+    )
+
+
+def _run_check(
+    results: list[ScoreResult], thresholds_path: Path
+) -> int:
+    try:
+        thresholds = load_thresholds(thresholds_path)
+    except FileNotFoundError:
+        print(
+            f"thresholds policy not found at {thresholds_path}.",
+            file=sys.stderr,
+        )
+        print(
+            "Create one (see src/quality/README.md for the schema) and re-run.",
+            file=sys.stderr,
+        )
+        return 1
+    verdict = evaluate(results, thresholds)
+    print(_format_check_summary(verdict, thresholds))
+    return 0 if verdict.passed else 1
+
+
+def _run_ratchet(
+    results: list[ScoreResult], thresholds_path: Path
+) -> int:
+    try:
+        current = load_thresholds(thresholds_path)
+    except FileNotFoundError:
+        print(
+            f"thresholds policy not found at {thresholds_path}.",
+            file=sys.stderr,
+        )
+        print(
+            "Create one first; --ratchet only tightens existing policies.",
+            file=sys.stderr,
+        )
+        return 1
+    new = compute_ratchet(results, current)
+    if new == current:
+        print(
+            "soulprint-quality --ratchet: no tighter thresholds possible "
+            "(current policy is already at or below measured values)."
+        )
+        return 0
+    save_thresholds(thresholds_path, new)
+    print(
+        f"soulprint-quality --ratchet: tightened thresholds in {thresholds_path}"
+    )
+    print(_format_ratchet_diff(current, new))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv if argv is not None else sys.argv[1:])
@@ -248,6 +386,11 @@ def main(argv: list[str] | None = None) -> int:
     blocks = _collect_complexity(src_root)
     coverage_data, complexity_data = _join_coverage(coverage_payload, blocks)
     results = score_tree(coverage_data, complexity_data)
+
+    if args.check:
+        return _run_check(results, Path(args.thresholds))
+    if args.ratchet:
+        return _run_ratchet(results, Path(args.thresholds))
 
     today = date.today().isoformat()
     report = _build_report(results, today)

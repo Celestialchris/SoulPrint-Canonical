@@ -37,9 +37,15 @@ then `coverage json`). Radon is used as a Python library
 ```bash
 soulprint-quality                   # write ops/quality/report-YYYY-MM-DD.{json,md}
 soulprint-quality --json            # emit JSON to stdout, write nothing
+soulprint-quality --check           # evaluate scores against quality-thresholds.json
+soulprint-quality --ratchet         # tighten quality-thresholds.json from current scores
 soulprint-quality --src src/app/    # scope the scan
 soulprint-quality --out-dir /tmp/   # write reports elsewhere
+soulprint-quality --thresholds path/to/thresholds.json   # override threshold file
 ```
+
+`--json`, `--check`, and `--ratchet` are mutually exclusive modes.
+Default behavior (write timestamped reports) is unchanged.
 
 Reports are timestamped, never overwritten. Multiple same-day runs get
 a `-N` suffix on both files.
@@ -69,11 +75,67 @@ for human triage. The full ranked list lives in the JSON sibling.
 
 ### Exit codes
 
-- `0` healthy run; reports written or JSON emitted.
-- `1` unexpected error (subprocess failure, parse error, missing source path).
+- `0` healthy run: reports written, JSON emitted, `--check` passed, or `--ratchet` completed.
+- `1` unexpected error (subprocess failure, parse error, missing source path, missing thresholds file) **or** `--check` threshold violation.
 
-The MVP does not have a regression-detection exit code. That arrives in
-the threshold-ratchet branch (see Coming next).
+`--check` is the regression-detection gate: any function in the top-N
+that exceeds `max_crap` or `max_complexity`, or falls below
+`min_coverage_percent`, fails the run.
+
+## Threshold policy (`quality-thresholds.json`)
+
+The repo-root `quality-thresholds.json` file is the policy layer. It is
+inspectable, hand-editable, and version-controlled. The scorer never
+mutates it; only `--ratchet` does, and only by tightening.
+
+### Schema
+
+```json
+{
+  "schema": "soulprint.quality.thresholds.v1",
+  "max_crap": 550.0,
+  "max_complexity": 70,
+  "min_coverage_percent": 0.0,
+  "top_n": 20
+}
+```
+
+- `max_crap`: ceiling. Any function in the top-N with `crap > max_crap` fails `--check`.
+- `max_complexity`: ceiling on cyclomatic complexity for the top-N.
+- `min_coverage_percent`: floor on per-function coverage for the top-N.
+- `top_n`: how many ranked functions are checked. Functions ranked below this are not enforced (they will be when subsequent ratchets pull `top_n` deeper).
+
+Missing fields take permissive defaults so a partial config does not
+silently block CI; unknown fields are ignored.
+
+### Check mode
+
+```bash
+soulprint-quality --check
+```
+
+Runs the full coverage + radon + scoring pipeline, evaluates the top-N
+ranked functions against the threshold policy, prints a compact summary,
+and exits non-zero on any violation. Writes no report files.
+
+Intended for use as a pre-merge or CI gate. CI wiring is **not** part of
+this branch; the gate is opt-in until the team chooses to wire it.
+
+### Ratchet mode
+
+```bash
+soulprint-quality --ratchet
+```
+
+Reads the current threshold policy, runs the full scoring pipeline,
+computes the strictest possible new policy that the current code still
+satisfies, and writes it back to `quality-thresholds.json` if (and only
+if) anything tightened.
+
+The ratchet is monotonic: it never loosens. If the code is currently
+worse than the policy (`--check` is failing), `--ratchet` will refuse to
+tighten the regressing dimension and report no-op for it. The remedy is
+to harden the offender, not to widen the threshold.
 
 ## Conventions
 
@@ -89,12 +151,12 @@ the threshold-ratchet branch (see Coming next).
 
 ## Coming next
 
-The threshold ratchet (`feat/quality-threshold-ratchet`, planned) adds:
+Layer 2 (threshold checking and ratcheting) shipped in
+`feat/quality-threshold-ratchet`. Still future:
 
-- A locked baseline at `quality-thresholds.json`, capturing per-file or
-  per-function score caps.
-- A `--check` mode that exits non-zero on regression past the lock.
-- A `--ratchet` mode that lowers the lock after a hardening branch.
-
-Until then, the MVP only reports. Threshold enforcement, mutation
-testing, and per-module budgets are deliberately out of scope here.
+- CI wiring of `soulprint-quality --check` as a required pre-merge gate.
+- Per-file or per-function baselines (current policy is global; once
+  too coarse, a v2 schema can carry per-target caps).
+- Mutation testing as a third quality dimension (orthogonal to coverage
+  and complexity).
+- Per-module budgets (Layer 3 policy).
