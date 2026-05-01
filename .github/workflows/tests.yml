@@ -32,3 +32,33 @@ jobs:
 
       - name: Run test suite
         run: python -m pytest tests/ -v
+
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Generate quality report
+        run: soulprint-quality
+
+      - name: Check quality thresholds
+        run: soulprint-quality --check
+
+      - name: Upload quality report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-report
+          path: ops/quality/
+          if-no-files-found: warn
