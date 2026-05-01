@@ -118,8 +118,31 @@ Runs the full coverage + radon + scoring pipeline, evaluates the top-N
 ranked functions against the threshold policy, prints a compact summary,
 and exits non-zero on any violation. Writes no report files.
 
-Intended for use as a pre-merge or CI gate. CI wiring is **not** part of
-this branch; the gate is opt-in until the team chooses to wire it.
+Intended for use as a pre-merge or CI gate. The CI check runs automatically
+on every push and pull request; see the **CI** section below.
+
+## CI
+
+The quality check is wired into `.github/workflows/tests.yml` as a
+standalone `quality` job that runs on `ubuntu-latest` on every push and
+pull request.
+
+The job runs two steps:
+
+1. `soulprint-quality` — runs the full coverage + radon + scoring pipeline
+   and writes timestamped reports to `ops/quality/`.
+2. `soulprint-quality --check` — re-runs the pipeline, evaluates the
+   top-N against `quality-thresholds.json`, and exits non-zero on any
+   violation. This step is the CI gate.
+
+Report artifacts (`ops/quality/report-*.md` and `ops/quality/report-*.json`)
+are uploaded as a GitHub Actions artifact named `quality-report` regardless
+of whether the threshold check passes or fails. Download the artifact from
+the Actions run to inspect which functions are violating.
+
+The ratchet is never run in CI. `quality-thresholds.json` is only tightened
+manually by running `soulprint-quality --ratchet` locally and committing the
+result. CI verifies policy; it does not mutate it.
 
 ### Ratchet mode
 
@@ -151,12 +174,10 @@ to harden the offender, not to widen the threshold.
 
 ## Coming next
 
-Layer 2 (threshold checking and ratcheting) shipped in
-`feat/quality-threshold-ratchet`. Still future:
+Layer 3 (CI reporting) shipped in `feat/quality-ci-reporting`. Still future:
 
-- CI wiring of `soulprint-quality --check` as a required pre-merge gate.
 - Per-file or per-function baselines (current policy is global; once
   too coarse, a v2 schema can carry per-target caps).
 - Mutation testing as a third quality dimension (orthogonal to coverage
   and complexity).
-- Per-module budgets (Layer 3 policy).
+- Per-module budgets (Layer 4 policy).
