@@ -46,7 +46,9 @@ PRIORITIES.md
 
 # Dev tooling (not part of product)
 .agents/
-.codex/
+.codex/*
+!.codex/
+!.codex/AGENTS.md
 openspec/
 
 # Dev debris (screenshot captures, scratch files, MCP caches)
