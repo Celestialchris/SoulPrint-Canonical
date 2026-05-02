@@ -5,7 +5,7 @@ Default local path: Ollama + Gemma 4 via the OpenAI-compatible endpoint.
 
 ## Environment Variables
 
-```
+```bash
 SOULPRINT_LLM_PROVIDER=openai
 SOULPRINT_LLM_BASE_URL=http://localhost:11434/v1
 SOULPRINT_LLM_MODEL=gemma4

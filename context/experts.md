@@ -1,109 +1,154 @@
 # Experts: Project Routing Doctrine
 
-This file is a project-specific implementation of a portable drafting pattern. The pattern travels to future projects; the roster below is SoulPrint's instance. When this file is copied to another project, the structure stays and the payload changes.
+## Purpose
 
-## The portable pattern
+This file is the routing doctrine for SoulPrint implementation prompts. It is a project-specific instance of a portable drafting pattern. The structure can travel to future projects. The SoulPrint payload should not.
 
-1. Pick one technical expert from Section A.
-2. Pick one stance from Section B.
+The file exists to answer one question before a Template H prompt is drafted:
+
+```text
+Which technical domain owns this branch, and which stance should shape the work?
+```
+
+It is a routing reference, not a persona library and not a substitute for Template H.
+
+## Portable pattern
+
+Every real implementation prompt uses this order:
+
+1. Pick one Section A technical expert.
+2. Pick one Section B stance.
 3. Read only the stack docs, project canon, and learned-pattern links attached to those two picks.
-4. Then draft with Template H.
+4. Draft the implementation prompt with `context/template-h.md`.
+5. Close the branch with the required session journal and expert report.
 
-This is a routing reference, read at drafting time. It runs first in a reading order: this file, then the chosen expert's linked content, then Template H, then the session-end journal. The point is to load the right context once, in order, without backtracking.
+Two rules carry across every project that adopts this pattern:
 
-Two structural rules carry across every project that adopts this file:
+- **One technical expert, one stance per prompt.** If a task needs two Section A experts, it is two prompts on two branches.
+- **Out of scope is load-bearing.** Trigger overlap with another expert means the boundary needs sharpening, not that multiple experts should be merged.
 
-- **One technical expert, one stance per prompt.** If a task seems to need two Section A experts, it is two prompts on two branches.
-- **Out of scope is load-bearing.** Each expert names its neighbors when carving boundaries. Trigger overlap with another expert is a sign that *Out of scope* needs sharpening, not that the line is fuzzy.
+## Current SoulPrint status
 
-## Current implementation: SoulPrint
+Section A has eight filled experts and one parked placeholder:
 
-> **Phase 3A status.** Section A is eight filled experts plus one parked placeholder (Importer Engineer). Section B is six filled stances: Senior Engineer (default), Lead Product Designer, UX Strategist, Brand Guardian, Community-Voice Writer, Teaching Engineer. Routed reports 01, 02, and 04 plus the Phase 5 self-audit have validated the routing loop. Docs/Canon Steward is now active for doctrine-integrity work and the audit-NN.md series. Importer Engineer remains deferred until empirical importer friction surfaces.
+- Code Quality Engineer
+- Flask App Engineer
+- Marketing Site Engineer
+- Data and Storage Engineer
+- Security Reviewer
+- Test Engineer
+- Intelligence/Answering Engineer
+- Docs/Canon Steward
+- Importer Engineer, parked until empirical importer friction surfaces
 
-> **Source materials.** Chris's original SoulPrint Layer 1 product-surface prompt is treated as origin material, not active execution doctrine. That prompt established early product-surface principles:
->
-> - "Never start from scratch with AI again."
-> - The import → continue → handoff wedge as the first product slice.
-> - "Memory desk, not a casino terminal" as the surface-feel constraint.
-> - User-facing language over architecture jargon.
-> - One intent at a time; no silent roll into the next phase.
->
-> These principles now feed the Phase 3A stances: Lead Product Designer, UX Strategist, Brand Guardian, and Community-Voice Writer. They do not override the Phase 1 proof decision (Code Quality Engineer + Senior Engineer).
+Section B has six stances:
+
+- Senior Engineer, the implicit default
+- Lead Product Designer
+- UX Strategist
+- Brand Guardian
+- Community-Voice Writer
+- Teaching Engineer
+
+Routed reports 01, 02, and 04 plus the Phase 5 self-audit validated the loop. Docs/Canon Steward is now active for doctrine-integrity work and the `audit-NN.md` series. Routing Examples, Importer Engineer, Release/Ops Engineer, and audit-20 remain parked doctrine backlog unless explicitly reopened.
+
+## Source material boundary
+
+Chris's original SoulPrint Layer 1 product-surface prompt is origin material, not active execution doctrine. It established early surface principles:
+
+- "Never start from scratch with AI again."
+- The import, continue, handoff wedge as the first product slice.
+- "Memory desk, not a casino terminal" as the surface-feel constraint.
+- User-facing language over architecture jargon.
+- One intent at a time. No silent roll into the next phase.
+
+Those principles inform the non-default stances, especially Lead Product Designer, UX Strategist, Brand Guardian, and Community-Voice Writer. They do not override the routed expert and stance chosen for a branch.
 
 ---
 
 ## Section A: Technical Experts
 
-A Section A expert defines what domain a branch sits in. Only one applies per prompt.
+A Section A expert defines the technical domain of a branch. Only one applies per prompt.
 
 ---
 
 ### Code Quality Engineer
 
-**Lens.** Measurable code hardening through SoulPrint's quality toolchain. The toolchain combines coverage and cyclomatic complexity into a CRAP-style score, ranks high-risk functions, and ratchets thresholds tighter over time. Pressure systems applied branch-by-branch with small reversible changes; the toolchain is a means, not a goal.
+**Lens.** Measurable code hardening through SoulPrint's quality toolchain. The toolchain combines coverage and cyclomatic complexity into CRAP-style scores, ranks risky functions, and ratchets thresholds over time. It is a pressure system, not an excuse for broad rewrites.
 
-**Owns.** The SoulPrint quality toolchain itself (`src/quality/`), CRAP scoring on the canonical Python tree, coverage-and-complexity reports written to `ops/quality/`, the threshold ratchet at `quality-thresholds.json`, post-feature hardening branches that consume those reports, and regression-proofing of fixed bugs.
+**Owns.** `src/quality/`, CRAP scoring, coverage-and-complexity reports under `ops/quality/`, `quality-thresholds.json`, threshold ratchets, post-feature hardening branches that consume quality reports, regression-proofing fixed bugs, mutation-testing workflow, mutation survivor reports, survivor triage, and mutation-killing hardening branches.
 
 **Stack docs.**
-- pytest: https://docs.pytest.org/en/stable/
+
+- [pytest](https://docs.pytest.org/en/stable/)
 
 **Project canon.**
-- `src/quality/README.md`: how the toolchain is wired, what compounding ratchets exist (created when the toolchain ships).
-- `.claude/rules/soulprint-testing.md`: `unittest.TestCase` discipline, custom temp helpers, no pytest fixtures, anti-patterns.
-- `.claude/rules/python-patterns.md`: language-level idioms and the storage two-lane pattern.
 
-**Internal dependencies.** `coverage.py`, `radon`, optionally `mutmut`. These power the toolchain. They are not the routing target.
+- `src/quality/README.md`: current quality-toolchain wiring and report shape.
+- `.claude/rules/soulprint-testing.md`: `unittest.TestCase` discipline, custom temp helpers, and test anti-patterns.
+- `.claude/rules/python-patterns.md`: language idioms and the storage two-lane pattern.
 
 **Learned patterns.**
-- *(populate after the first hardening branch produces a reusable pattern, likely `ops/learned/crap-ratchet-discipline.md`)*
+
+- `ops/learned/per-function-coverage-from-line-data.md`: coverage.py line data joined to radon function spans.
 
 **Triggers.**
+
 - "Run the quality report on the canonical tree."
 - "Drive CRAP score down on this module."
 - "Ratchet the threshold after this hardening branch."
 - "Improve test coverage on X."
-- "Add regression test for the bug we just fixed."
+- "Add a regression test for the bug we just fixed."
+- "Run mutation testing and triage surviving mutants."
 
 **Proof required.**
+
 - Quality report path written to `ops/quality/`.
 - Coverage and complexity values before and after the branch.
-- Tests run and passing counts, before and after.
-- Threshold change in `quality-thresholds.json`, if any, and the reason.
-- CRAP-score-ranked target picked from a current report (no off-the-shelf rewrite).
+- Tests run and passing counts before and after.
+- Threshold change in `quality-thresholds.json`, if any, with reason.
+- Target chosen from a current CRAP-ranked report, not from taste.
+- Mutation report path or survivor count before and after, when mutation testing is in scope.
+- Surviving mutations killed, ignored, or explicitly deferred with rationale.
 
 **Out of scope.**
+
 - New product behavior or features.
-- UI polish, CSS, visual direction.
+- UI polish, CSS, or visual direction.
 - Public copy or marketing language.
-- CodeQL canonical-shape compliance (Security Reviewer's territory).
-- Sweeping cross-module refactors. The toolchain produces ranked work items; it does not license one-shot rewrites.
-- Off-the-shelf tools as the answer. The toolchain consumes them; the routing target is the toolchain itself.
+- CodeQL canonical-shape compliance, which belongs to Security Reviewer.
+- Sweeping cross-module refactors.
+- Treating off-the-shelf tools as the answer. The toolchain may consume them, but the routing target is SoulPrint's own quality pressure system.
 
 ---
 
 ### Flask App Engineer
 
-**Lens.** Server-side Python, route handlers, Jinja templates, vanilla CSS. The bulk of SoulPrint's surface lives here. Idiomatic Flask, no smuggled async, no smuggled framework patterns; small reversible changes per branch.
+**Lens.** Server-side Python, route handlers, Jinja templates, vanilla CSS, and request lifecycle behavior. The work should be idiomatic Flask and small enough to reverse.
 
-**Owns.** All routes under `src/app/`, Jinja templates, server-side form handling, viewmodel boundaries between routes and templates, vanilla CSS in `src/app/static/app.css`, session and request lifecycles, flash messaging, redirect targets. Uses the SQLAlchemy ORM lane for reads and writes against canonical tables, but does not own schema shape (Data and Storage Engineer owns schema).
+**Owns.** Routes under `src/app/`, Jinja templates, server-side forms, viewmodel boundaries, vanilla CSS in `src/app/static/app.css`, session and request lifecycles, flash messages, and redirect targets. Uses SQLAlchemy ORM for canonical reads and writes, but does not own schema shape.
 
 **Stack docs.**
-- Flask: https://flask.palletsprojects.com/en/stable/
-- Jinja2: https://jinja.palletsprojects.com/en/stable/
-- SQLAlchemy ORM: https://docs.sqlalchemy.org/en/20/orm/
+
+- [Flask](https://flask.palletsprojects.com/en/stable/)
+- [Jinja2](https://jinja.palletsprojects.com/en/stable/)
+- [SQLAlchemy ORM](https://docs.sqlalchemy.org/en/20/orm/)
 
 **Project canon.**
-- `.claude/rules/python-patterns.md`: language-level idioms and the two-lane storage pattern (ORM vs raw `sqlite3`).
-- `.claude/rules/coding-style.md`: TS/JS style (only relevant when Jinja templates include inline JS).
-- `docs/product/design-doctrine-quiet-archive.md`: design tokens and visual rules for any CSS work.
+
+- `.claude/rules/python-patterns.md`: language idioms and the ORM/raw-SQLite split.
+- `.claude/rules/coding-style.md`: TypeScript and JavaScript style for inline template scripts.
+- `docs/product/design-doctrine-quiet-archive.md`: visual tokens and surface rules for CSS work.
 - `docs/product/brand.md`: warm nav labels and user-facing language.
 
 **Learned patterns.**
-- `ops/learned/flask-abort-log-before-discard.md`: log structured request context before `abort()` since abort discards it.
+
+- `ops/learned/flask-abort-log-before-discard.md`: log structured request context before `abort()`.
 - `ops/learned/redirect-after-action-safety.md`: canonical `next` parameter sanitizer pattern.
-- `ops/learned/typography-self-reference.md`: design-token discipline for CSS work.
+- `ops/learned/typography-self-reference.md`: typography-rule documentation can reintroduce forbidden artifacts.
 
 **Triggers.**
+
 - "Add a route at `/X`."
 - "Wire this template to the new viewmodel."
 - "Fix the form handler on `/imported`."
@@ -111,85 +156,98 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Add a flash message when X."
 
 **Proof required.**
+
 - Routes added, modified, or removed are named.
 - Templates touched are named.
-- Tests for new behavior added; existing tests still green.
-- If redirect behavior or `next` handling changed, redirect sanitizer canonical pattern is inlined at every redirect sink (per `ops/learned/redirect-after-action-safety.md`).
-- No design-token bypass; no inline hex literals introduced.
+- Tests for new behavior are added or existing coverage is explicitly sufficient.
+- If redirect behavior or `next` handling changed, the canonical sanitizer is inlined at every redirect sink.
+- No design-token bypass and no inline hex literals introduced.
 
 **Out of scope.**
-- Database schema changes (Data and Storage Engineer).
-- FTS5 query construction or indexing (Data and Storage Engineer).
-- SvelteKit marketing-site work under `site/` (Marketing Site Engineer).
-- CodeQL alert shape compliance (Security Reviewer).
-- Test fixture or harness changes (Test Engineer).
-- Coverage hardening of route handlers (Code Quality Engineer).
+
+- Database schema changes, which belong to Data and Storage Engineer.
+- FTS5 query construction or indexing, which belongs to Data and Storage Engineer.
+- SvelteKit marketing-site work under `site/`, which belongs to Marketing Site Engineer.
+- CodeQL alert closure, which belongs to Security Reviewer.
+- Test fixture or harness architecture, which belongs to Test Engineer.
+- Coverage hardening, which belongs to Code Quality Engineer.
 
 ---
 
 ### Marketing Site Engineer
 
-**Lens.** Static-rendered marketing surfaces under `site/`. SvelteKit + TypeScript + adapter-static, no runtime integration with the Flask app, no calls to the canonical ledger. Marketing copy and visual identity follow from the brand guide; the engineering job is to render them cleanly and ship them.
+**Lens.** Static-rendered marketing surfaces under `site/`. The site is a public surface, not the canonical ledger and not the Flask app.
 
-**Owns.** Everything under `site/`. SvelteKit routes, layouts, build configuration, the prerender contract, static assets in `site/static/`, the deploy contract (currently `landing/` via Netlify; future cutover to `site/build/` is owned by this expert when scheduled).
+**Owns.** Everything under `site/`: SvelteKit routes, layouts, build configuration, prerender contract, static assets, and future deployment cutover from the legacy `landing/` surface when explicitly scheduled.
 
 **Stack docs.**
-- SvelteKit: https://svelte.dev/docs/kit/introduction
-- TypeScript: https://www.typescriptlang.org/docs/
-- Vite: https://vite.dev/guide/
+
+- [SvelteKit](https://svelte.dev/docs/kit/introduction)
+- [TypeScript](https://www.typescriptlang.org/docs/)
+- [Vite](https://vite.dev/guide/)
 
 **Project canon.**
+
 - `site/README.md`: current marketing-site scope.
-- `docs/specs/frontend-evolution-doctrine.md`: long-term frontend direction. The cockpit surface is gated behind Phase 2 JSON endpoints and is not active work in this expert's domain yet.
-- `docs/product/brand.md`: voice, naming, and warm-language rules that apply to public copy.
+- `docs/specs/frontend-evolution-doctrine.md`: long-term frontend direction and cockpit boundary.
+- `docs/product/brand.md`: public voice, naming, and warm-language rules.
+- `ops/sessions/2026-04-30-netlify-to-cloudflare-pivot.md`: Netlify is not the default forward path unless reopened deliberately.
 
 **Learned patterns.**
-- *(empty for v1; the foundation just landed in PR #187. Add once the first follow-up branch produces a reusable pattern.)*
+
+- *(empty until a follow-up marketing-site branch produces a reusable pattern.)*
 
 **Triggers.**
+
 - "Add a page to the marketing site."
 - "Implement approved landing hero copy."
 - "Wire SEO metadata for `/privacy`."
-- "Migrate the deploy from `landing/` to `site/`."
+- "Migrate the public site deployment."
 - "Add design tokens to the marketing site."
 
 **Proof required.**
+
 - Page or component shipped is named.
-- SvelteKit prerender contract still passes (`adapter-static` build clean).
-- No runtime integration with the Flask app or canonical ledger introduced.
-- Brand voice rules from `docs/product/brand.md` are honored, or copy was authored under Brand Guardian on a prior branch.
-- Local fonts only; no `fonts.googleapis.com` or other web-font CDN introduced.
+- SvelteKit prerender contract passes.
+- No runtime integration with Flask or the canonical ledger is introduced.
+- Brand voice rules are honored, or copy was authored under Brand Guardian in a prior branch.
+- Local fonts only. No web-font CDN introduced.
 
 **Out of scope.**
-- Flask app templates and routes (Flask App Engineer).
-- The cockpit surface (gated behind Phase 2 JSON endpoints; not active work).
-- Any feature that requires SSR. The adapter-static contract enforces prerender.
-- Database access of any kind. The marketing site is fully static.
-- Brand voice decisions (Brand Guardian, Phase 3). This expert renders copy, does not author it.
+
+- Flask app templates and routes, which belong to Flask App Engineer.
+- The future cockpit surface, which is gated behind clean JSON endpoints.
+- SSR-dependent features. The marketing site is static unless a future deployment decision changes that.
+- Database access of any kind.
+- Brand voice decisions. This expert renders approved copy; Brand Guardian owns the voice baseline.
 
 ---
 
 ### Data and Storage Engineer
 
-**Lens.** SQLite schema, FTS5 mechanics, raw `sqlite3` patterns, migration discipline, the canonical-versus-derived boundary. The ledger is authoritative. Derived structures (FTS index, summaries, themes) must be rebuildable from canonical data and never become the source of truth.
+**Lens.** SQLite schema, FTS5 mechanics, raw `sqlite3` patterns, migration discipline, and the canonical-versus-derived boundary. The ledger is authoritative. Derived structures must be rebuildable.
 
-**Owns.** Schema decisions, idempotent ALTER guards (no Alembic in this project), FTS5 virtual table mechanics, `MATCH` query construction, `sanitize_fts_query` boundaries, raw `sqlite3` connection lifecycle, the two-lane storage pattern (ORM for canonical tables, raw `sqlite3` for FTS and derived indexes), schema rebuild paths, attachment storage filesystem layout.
+**Owns.** Schema decisions, idempotent ALTER guards, FTS5 virtual tables, `MATCH` query construction, `sanitize_fts_query`, raw `sqlite3` connection lifecycle, the ORM/raw-SQLite two-lane storage pattern, rebuild paths, and attachment-storage filesystem layout.
 
 **Stack docs.**
-- SQLite: https://www.sqlite.org/docs.html
-- SQLite FTS5: https://www.sqlite.org/fts5.html
-- SQLAlchemy ORM: https://docs.sqlalchemy.org/en/20/orm/
+
+- [SQLite](https://www.sqlite.org/docs.html)
+- [SQLite FTS5](https://www.sqlite.org/fts5.html)
+- [SQLAlchemy ORM](https://docs.sqlalchemy.org/en/20/orm/)
 
 **Project canon.**
-- `.claude/rules/python-patterns.md`: the "two lanes, by design" storage section is the canonical reference.
-- `CLAUDE.md`: the four-layer architecture and the `record → retrieve → browse → answer → trace → inspect` trust chain.
-- `DECISIONS.md`: schema and FTS decisions that should not be reopened without explicit cause.
+
+- `.claude/rules/python-patterns.md`: the canonical storage two-lane pattern.
+- `CLAUDE.md`: four-layer architecture and the `record -> retrieve -> browse -> answer -> trace -> inspect` trust chain.
+- `DECISIONS.md`: schema and FTS decisions that should not be reopened casually.
 
 **Learned patterns.**
-- `ops/learned/fts-timestamp-sort-stability.md`: BM25 score instability across SQLite versions; sort by timestamp, not score.
-- `ops/learned/transcript-budget-before-provider.md`: token-budget-before-LLM-call discipline; touches the boundary between ledger and intelligence.
+
+- `ops/learned/fts-timestamp-sort-stability.md`: sort by timestamp, not BM25 score, across SQLite versions.
+- `ops/learned/transcript-budget-before-provider.md`: token-budget discipline at the ledger/intelligence boundary.
 
 **Triggers.**
+
 - "Add a column to `ImportedConversation`."
 - "FTS search is returning weird results."
 - "We need a new derived index for X."
@@ -198,42 +256,48 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "The query is hitting the wrong storage lane."
 
 **Proof required.**
-- If schema changes, idempotent ALTER guard pattern is used (no Alembic).
-- FTS5 derived structures remain rebuildable from canonical data via `rebuild_fts()`.
-- Two-lane storage boundary preserved (ORM for canonical tables, raw `sqlite3` for FTS and derived indexes).
-- If migration behavior changes, tested against an existing database snapshot; before-and-after row counts named.
-- No vector or semantic storage introduced as canonical (frozen non-goal in `DECISIONS.md`).
+
+- Schema changes use the established idempotent guard pattern. No Alembic.
+- FTS5 structures remain rebuildable from canonical data.
+- ORM and raw `sqlite3` lane boundaries are preserved.
+- Migration behavior is tested against an existing database shape when relevant.
+- No vector or semantic store is introduced as canonical.
 
 **Out of scope.**
-- Route handlers and Jinja templates (Flask App Engineer).
-- Test fixture architecture for database tests (Test Engineer).
-- LLM provider boundaries and intelligence features (Intelligence/Answering Engineer).
-- Replacing the canonical ledger with vector or semantic storage. Frozen non-goal in `DECISIONS.md`.
+
+- Route handlers and Jinja templates, which belong to Flask App Engineer.
+- Test fixture architecture, which belongs to Test Engineer.
+- LLM provider boundaries and intelligence outputs, which belong to Intelligence/Answering Engineer.
+- Replacing the canonical ledger with vector, semantic, or working-memory storage.
 
 ---
 
 ### Security Reviewer
 
-**Lens.** Static-analyzer shape compliance, sanitizer canonical patterns, supply-chain hygiene, redirect safety, path validation. Shape-first discipline: for CodeQL alert closure, logical safety is required but not sufficient. The fix must also match the analyzer-recognized canonical shape, since CodeQL pattern-matches canonical examples rather than reasoning about logic.
+**Lens.** Static-analyzer shape compliance, sanitizer canonical patterns, supply-chain hygiene, redirect safety, and path validation. Logical safety is required but not sufficient. CodeQL closure requires analyzer-recognized shape at the sink.
 
-**Owns.** CodeQL alerts and their shape-compliant resolutions, `py/path-injection` patterns, `py/url-redirection` patterns, `py/sql-injection` patterns, `py/reflective-xss` patterns, `py/command-line-injection` patterns, redirect-after-action sanitizer placement, supply-chain CVE triage (e.g., the lxml not-used disposition), security-related learned patterns under `ops/learned/`.
+**Owns.** CodeQL alerts and shape-compliant resolutions, `py/path-injection`, `py/url-redirection`, `py/sql-injection`, `py/reflective-xss`, `py/command-line-injection`, redirect-after-action sanitizer placement, supply-chain CVE triage, and security learned patterns.
 
 **Stack docs.**
-- CodeQL Python rules: https://codeql.github.com/codeql-query-help/python/
-- OWASP Secure Coding Practices: https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/
-- GitHub Security Advisories: https://github.com/advisories
+
+- [CodeQL Python rules](https://codeql.github.com/codeql-query-help/python/)
+- [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/)
+- [GitHub Security Advisories](https://github.com/advisories)
 
 **Project canon.**
-- `ops/learned/static-analyzer-shape-matching.md`: the foundational principle. Static analyzers match shapes, not logic.
-- `ops/learned/codeql-taint-vs-relative-to.md`: canonical shapes for `py/path-injection` and `py/url-redirection`.
-- `ops/learned/codeql-debugging-commands.md`: operational commands for re-running CodeQL locally.
-- `ops/learned/redirect-after-action-safety.md`: canonical sanitizer pattern at every redirect sink.
+
+- `ops/learned/static-analyzer-shape-matching.md`: static analyzers match shapes, not intent.
+- `ops/learned/codeql-taint-vs-relative-to.md`: canonical shapes for path injection and URL redirection.
+- `ops/learned/codeql-debugging-commands.md`: local CodeQL commands.
+- `ops/learned/redirect-after-action-safety.md`: redirect sanitizer discipline.
 - `SECURITY.md`: published threat model and disclosure posture.
 
 **Learned patterns.**
-- (See Project canon. The four `ops/learned/` entries above are the active corpus.)
+
+- See the Project canon list. The security corpus already lives there.
 
 **Triggers.**
+
 - "CodeQL flagged X."
 - "Fix the redirect after the new POST route."
 - "Triage this CVE in our supply chain."
@@ -241,39 +305,46 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Why is the analyzer still flagging this after the fix?"
 
 **Proof required.**
-- Security finding is named; if CodeQL-driven, alert ID and closure are confirmed with a post-fix scan returning zero findings on the named rule.
-- Canonical sanitizer shape inlined at the sink, matching the published rule's example verbatim (no factored helpers, no intermediate booleans).
-- Regression test added that fails before the fix and passes after.
-- No stricter-but-unrecognized variants substituted for the canonical shape (per `ops/learned/static-analyzer-shape-matching.md`).
-- Supply-chain disposition recorded in writing if a CVE was triaged (used / not_used / patched).
+
+- Security finding is named. If CodeQL-driven, alert ID and post-fix scan result are named.
+- Canonical sanitizer shape is inlined at the sink.
+- Regression test fails before the fix and passes after, when applicable.
+- No stricter-but-unrecognized variant replaces the canonical shape.
+- Supply-chain disposition is recorded if a CVE was triaged.
 
 **Out of scope.**
-- General code quality and coverage (Code Quality Engineer).
-- Runtime authn/authz design (no current scope; would be a new expert if SoulPrint added it).
-- Encryption at rest (no current scope).
-- Threat modeling beyond `SECURITY.md`. Threat modeling at scale is its own discipline; current scope is alert-shape compliance and supply-chain triage.
+
+- General code quality and coverage, which belong to Code Quality Engineer.
+- Test harness design, which belongs to Test Engineer.
+- Broad threat modeling beyond `SECURITY.md`.
+- Runtime authn/authz design, unless SoulPrint explicitly adds that domain later.
+- Encryption at rest, unless reopened as a dedicated product/security decision.
 
 ---
 
 ### Test Engineer
 
-**Lens.** Fixture architecture, test harness design, CI reliability, test ergonomics. SoulPrint runs `unittest.TestCase` under pytest, with custom temp helpers that earned their existence by failing on Windows SQLite handle locking. The harness IS the discipline.
+**Lens.** Fixture architecture, test harness design, CI reliability, and test ergonomics. SoulPrint runs `unittest.TestCase` under pytest with custom temp helpers. The harness is part of the product's discipline.
 
-**Owns.** `make_test_temp_dir`, `release_app_db_handles`, custom test fixtures, the LIFO cleanup ordering between app DB handles and tempdir cleanup, test naming conventions (`test_<specific_behavior>`), assertion stability rules (no exact-BM25-score asserts), the per-test app + DB pattern, the seeding helper pattern, GitHub Actions CI configuration and reliability.
+**Owns.** `make_test_temp_dir`, `release_app_db_handles`, custom test fixtures, LIFO cleanup ordering, test naming conventions, assertion stability rules, per-test app and DB setup, seeding helper patterns, and GitHub Actions CI reliability.
 
 **Stack docs.**
-- pytest: https://docs.pytest.org/en/stable/
-- Python `unittest`: https://docs.python.org/3/library/unittest.html
-- GitHub Actions: https://docs.github.com/en/actions
+
+- [pytest](https://docs.pytest.org/en/stable/)
+- [Python unittest](https://docs.python.org/3/library/unittest.html)
+- [GitHub Actions](https://docs.github.com/en/actions)
 
 **Project canon.**
-- `.claude/rules/soulprint-testing.md`: the canonical reference. `unittest.TestCase` style, Flask app + DB per test, naming, anti-patterns.
-- `.github/workflows/tests.yml`: the CI reality.
+
+- `.claude/rules/soulprint-testing.md`: canonical test style and anti-patterns.
+- `.github/workflows/tests.yml`: CI reality.
 
 **Learned patterns.**
-- *(empty for v1 specifically about test ergonomics; promote the next time a harness pattern is generalized from a real failure, e.g., the Windows SQLite handle saga.)*
+
+- `ops/learned/github-actions-bot-pr-gating.md`: bot-authored PR job gating and required-status-check caveat.
 
 **Triggers.**
+
 - "The test suite is flaky on Windows."
 - "We need a new fixture pattern for X."
 - "Why is this test cleanup failing?"
@@ -281,41 +352,46 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Set up a new test category structure."
 
 **Proof required.**
-- Fixture pattern conforms (`make_test_temp_dir`, `release_app_db_handles`, LIFO cleanup ordering).
+
+- Fixture pattern conforms to the established tempdir and DB-handle discipline.
 - No bare `tempfile.TemporaryDirectory()` introduced for DB paths.
-- `Config.SQLALCHEMY_DATABASE_URI` is restored after any test that mutates it.
-- Full test suite green when Python or test harness behavior changed; for workflow-only branches, relevant workflow verification is documented. No skipped tests added without a comment naming the reason.
-- CI workflow change is scoped to `.github/workflows/` (no production code touched on harness branches).
+- `Config.SQLALCHEMY_DATABASE_URI` is restored after tests that mutate it.
+- Full suite is green when Python or harness behavior changes.
+- Workflow-only branches document relevant workflow verification.
 
 **Out of scope.**
-- Coverage targeting and coverage gaps (Code Quality Engineer).
-- Mutation testing and complexity reduction (Code Quality Engineer).
-- Adding tests to prove a specific feature works. That belongs to the feature's expert; Test Engineer designs HOW tests run, not WHAT they prove.
-- Production code under test. Test Engineer never edits the system under test as part of a harness branch.
+
+- Coverage targeting, mutation testing, and complexity reduction, which belong to Code Quality Engineer.
+- Adding feature-specific tests while implementing a feature. That belongs to the feature's expert.
+- Production code under test. Test Engineer edits the harness, not the system under test.
 
 ---
 
 ### Intelligence/Answering Engineer
 
-**Lens.** Layer 3 derived intelligence over canonical evidence. Every Ask answer, Distill output, Recurring Theme, and Continuity Packet traces back to stable IDs in the ledger. The LLMProvider boundary is structural: providers are interchangeable, groundedness rules live in one place, and intelligence never becomes the source of truth.
+**Lens.** Layer 3 derived intelligence over canonical evidence. Ask answers, Distill outputs, Recurring Themes, and Continuity Packets must trace back to stable IDs. Intelligence never becomes canonical memory.
 
-**Owns.** Ask (grounded answering), Distill (summarization across selected conversations), Recurring Themes, Continuity Packets (the five typed artifacts: summary, decisions, open loops, entity map, bridge packet), answer traces (JSONL append-only), citation handoff (`memory:<id>` → `/memory/<id>`, `imported_conversation:<id>` → `/imported/<id>/explorer`), the LLMProvider abstraction layer, the Ollama and OpenAI-compatible and Anthropic provider paths, groundedness rules, and prompt/input-budget behavior before any provider call.
+**Owns.** Ask, Distill, Recurring Themes, Continuity Packets, answer traces, citation handoff, LLMProvider abstraction, Ollama, OpenAI-compatible and Anthropic provider paths, groundedness rules, and prompt/input-budget behavior before provider calls.
 
 **Stack docs.**
-- Ollama API: https://github.com/ollama/ollama/blob/main/docs/api.md
-- OpenAI Chat Completions: https://platform.openai.com/docs/api-reference/chat
-- Anthropic Messages API: https://docs.claude.com/en/api/messages
+
+- [Ollama API](https://github.com/ollama/ollama/blob/main/docs/api.md)
+- [OpenAI Chat Completions](https://platform.openai.com/docs/api-reference/chat)
+- [Anthropic Messages API](https://docs.claude.com/en/api/messages)
 
 **Project canon.**
-- `context/llm-config.md`: provider configuration, model defaults, the Gemma 4 model-size matrix, the `OLLAMA_CONTEXT_LENGTH` discipline.
-- `CLAUDE.md`: Layer 3 is "derived, never canonical." The trust chain ends with `inspect`; intelligence outputs must trace back to canonical IDs.
-- `DECISIONS.md`: frozen non-goals. No vector DB. No semantic memory replacement of the ledger. mem0 is Layer 4, never Layer 1.
-- `docs/specs/intent-prompts-spec.md`: classifier reference for any intelligence work that touches user-message intent classification via Gemma4.
+
+- `context/llm-config.md`: provider configuration, model defaults, Gemma 4 model-size matrix, and `OLLAMA_CONTEXT_LENGTH` discipline.
+- `CLAUDE.md`: Layer 3 is derived, never canonical.
+- `DECISIONS.md`: no vector DB, no semantic replacement of the ledger, and mem0 only as a downstream layer.
+- `docs/specs/intent-prompts-spec.md`: classifier reference for intent extraction work.
 
 **Learned patterns.**
-- `ops/learned/transcript-budget-before-provider.md`: token-budget discipline. Compute the budget before the provider call, not after a context overflow.
+
+- `ops/learned/transcript-budget-before-provider.md`: compute input budget before provider calls.
 
 **Triggers.**
+
 - "Add Distill output for the new selection UI."
 - "Ask answers aren't citing their sources."
 - "Wire Gemma4 for the Intent Prompts classifier."
@@ -324,19 +400,21 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - "Answer traces aren't appearing in the trace browser."
 
 **Proof required.**
-- Citation handoff preserved (`memory:<id>` resolves to `/memory/<id>`; `imported_conversation:<id>` resolves to `/imported/<id>/explorer`).
-- Answer trace appended to the JSONL log with stable IDs traceable back to canonical records.
-- `LLMProvider` boundary unbroken; no provider-specific imports outside the abstraction layer.
-- Token budget computed before any provider call; transcript truncation logged when applied.
-- No canonical ledger mutation by intelligence-layer code (Layer 3 is derived, never canonical).
+
+- Citation handoff resolves from stable IDs back to canonical records.
+- Answer trace is appended with stable IDs.
+- `LLMProvider` boundary remains intact.
+- Token budget is computed before provider calls.
+- No canonical ledger mutation occurs in intelligence-layer code.
 
 **Out of scope.**
-- Schema for storing intelligence outputs (Data and Storage Engineer).
-- Route handlers and Jinja templates that surface intelligence features (Flask App Engineer).
-- Coverage hardening of intelligence code paths (Code Quality Engineer).
-- CodeQL alerts in intelligence code (Security Reviewer).
-- Test fixture or harness work for LLM tests (Test Engineer).
-- Replacing the canonical ledger with vector, semantic, or working-memory storage. Layer 4 extensions never replace Layer 1, and this is frozen as a non-goal in `DECISIONS.md`.
+
+- Schema for storing intelligence outputs, which belongs to Data and Storage Engineer.
+- Routes and templates that surface intelligence features, which belong to Flask App Engineer.
+- Coverage hardening, which belongs to Code Quality Engineer.
+- Security alerts, which belong to Security Reviewer.
+- LLM test harness architecture, which belongs to Test Engineer.
+- Replacing the canonical ledger with vector, semantic, or working-memory storage.
 
 ---
 
@@ -347,29 +425,34 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 **Owns.** Doctrine-integrity work across `CLAUDE.md`, `DECISIONS.md`, `context/template-h.md`, `context/experts.md`, `ops/learned/`, `ops/experts/`, and the `ops/phase-5/audit-NN.md` series; report-observation promotion into canon; deprecated-rule removal; terminology audits; routing-system audits; doctrine portability checks; and cross-file consistency when canon surfaces disagree.
 
 **Stack docs.**
-- *(none for v1; this expert is project-canon integrity, not an external technology stack.)*
+
+- None for v1. This expert owns project-canon integrity, not an external technology stack.
 
 **Project canon.**
-- `CLAUDE.md`: project orientation and the standing-read trigger that loads this routing doctrine.
-- `DECISIONS.md`: frozen non-goals and architectural commitments that doctrine must not silently contradict.
-- `context/experts.md`: this file. The routing doctrine itself.
-- `context/template-h.md`: the execution scaffold paired with this file. The Drafter Checklist and Review Protocol live here.
-- `ops/phase-5/audit-phase-5.md`: the first routing-system self-audit and the empirical baseline for this expert's existence.
+
+- `CLAUDE.md`: project orientation and standing-read trigger.
+- `DECISIONS.md`: frozen non-goals and architectural commitments.
+- `context/experts.md`: this file.
+- `context/template-h.md`: the paired execution scaffold.
+- `ops/phase-5/audit-phase-5.md`: first routing-system self-audit and empirical baseline for this expert.
 
 **Learned patterns.**
-- `ops/learned/typography-self-reference.md`: when a docs branch enforces a typography rule, do not silently reproduce the forbidden artifact in the prompt, session log, learned-pattern file, or canon edit that introduces the rule.
+
+- `ops/learned/typography-self-reference.md`: docs about forbidden typography must not reproduce the forbidden artifact.
 
 **Triggers.**
+
 - "These canon files contradict each other."
 - "Promote this report observation into learned patterns or canon."
 - "Audit Template H against `experts.md`."
 - "Prepare this routing system for another project."
 - "Remove stale canon or deprecated rules."
 - "The doctrine changed after this branch."
-- "Run the next routing-system audit (audit-20.md, audit-40.md, etc.)."
+- "Run the next routing-system audit."
 - "Clarify whether a session note, expert report, learned pattern, or decision record owns this evidence."
 
 **Proof required.**
+
 - Contradiction, stale claim, or doctrine gap is named.
 - Source files checked are named.
 - Replacement rule or retained exception is stated.
@@ -377,147 +460,159 @@ A Section A expert defines what domain a branch sits in. Only one applies per pr
 - No implementation scope is smuggled into the doctrine edit.
 
 **Out of scope.**
+
 - Feature implementation in `src/`, `site/`, or any code surface.
-- Public marketing copy, launch copy, Reddit or HN writing, brand voice authoring (Brand Guardian or Community-Voice Writer).
+- Public marketing copy, launch copy, Reddit or HN writing, and brand voice authoring.
 - Product strategy decisions about what SoulPrint should build next.
-- Visual or surface decisions (Lead Product Designer); multi-step user paths or information architecture (UX Strategist).
-- Test harness mechanics, fixture architecture, or CI reliability (Test Engineer).
-- CodeQL alert closure, CVE triage, or sanitizer shape compliance (Security Reviewer).
-- Schema, FTS, raw `sqlite3` mechanics, or canonical ledger shape (Data and Storage Engineer).
-- Coverage, complexity, CRAP scoring, or mutation testing (Code Quality Engineer).
-- Intelligence and answering features over canonical evidence (Intelligence/Answering Engineer).
-- Importer implementation or importer regression behavior. Importer Engineer remains parked until empirical importer friction surfaces.
+- Visual or surface decisions, which belong to Lead Product Designer.
+- Multi-step user paths and information architecture, which belong to UX Strategist.
+- Test harness mechanics and CI reliability, which belong to Test Engineer.
+- CodeQL alert closure, CVE triage, and sanitizer shape compliance, which belong to Security Reviewer.
+- Schema, FTS, raw `sqlite3`, and canonical ledger shape, which belong to Data and Storage Engineer.
+- Coverage, complexity, CRAP scoring, and mutation testing, which belong to Code Quality Engineer.
+- Intelligence and answering features, which belong to Intelligence/Answering Engineer.
+- Importer implementation or importer regression behavior. Importer Engineer remains parked.
 
 ---
 
-### Importer Engineer  *(Phase 2.5: missing domain, not yet decided)*
+### Importer Engineer, parked
 
-Cross-cuts current experts. New importer work touches schema mapping (Data and Storage Engineer), parsing (closest to Flask App Engineer), and fixture-based testing (Test Engineer), but no expert owns "I am writing the next provider importer end to end." Decide whether to fill or defer when the next importer branch surfaces.
+Importer work currently cross-cuts Data and Storage Engineer, Flask App Engineer, and Test Engineer. No filled expert owns end-to-end provider import work yet.
+
+Keep this expert parked until a real importer branch exposes repeated routing friction. When it is promoted, it should own provider export parsing, malformed export handling, source metadata mapping, duplicate detection policy, importer summaries, skipped/imported counts, source conversation IDs, and importer-specific regression tests.
 
 ---
 
 ## Section B: Stances
 
-A Section B stance defines the posture taken while doing the work. Only one applies per prompt. Senior Engineer is the implicit default; a stronger stance is named explicitly when one applies.
+A Section B stance defines the posture taken while doing the work. Only one applies per prompt. Senior Engineer is the implicit default; a stronger stance is named explicitly when it matters.
 
 ---
 
 ### Senior Engineer
 
-**Posture.** Production-grade, idiomatic, boring-when-possible engineering. Cleverness is paid for in maintenance debt; reach for it only when the problem demands it.
+**Posture.** Production-grade, idiomatic, boring-when-possible engineering. Cleverness is paid for in maintenance debt. Use it only when the problem demands it.
 
-**Concerns brought.** Small reversible changes. Clear module boundaries. Failure modes named explicitly before code lands. Testability before abstraction. Idiomatic style for the stack in front of us. No premature generalization, no future-proofing for problems that have not arrived.
+**Concerns brought.** Small reversible changes, clear module boundaries, named failure modes, testability before abstraction, idiomatic style, and no premature generalization.
 
 **Vocabulary.**
-- Use: idiomatic, production-grade, scoped, reversible, measurable, regression-safe, boring (as praise).
-- Avoid: premium, magical, elegant, beautiful, slick, polished, world-class, best-in-class, unless backed by a concrete user-facing constraint that cashes out in code.
 
-**Default behavior.** Applies when no stronger stance is named. Most engineering branches operate under this stance implicitly.
+- Use: idiomatic, production-grade, scoped, reversible, measurable, regression-safe, boring as praise.
+- Avoid: premium, magical, elegant, beautiful, slick, polished, world-class, and best-in-class unless backed by a concrete constraint.
 
-**Out of scope.** Brand voice. Emotional product narrative. Marketing copy. Visual direction. Strategic product decisions about what to build (versus how to build it well).
+**Default behavior.** Applies when no stronger stance is named.
+
+**Out of scope.** Brand voice, emotional product narrative, marketing copy, visual direction, and strategic product decisions about what to build next.
 
 ---
 
 ### Lead Product Designer
 
-**Posture.** The user encounters the surface. Calm, weighty, restrained. Memory desk, not casino terminal. Decisions in this stance are about what the user sees, where it sits, what it weighs, and what it feels like to interact with. They are never about implementation cleverness or architectural elegance.
+**Posture.** The person encounters the surface. Calm, weighty, restrained. Memory desk, not casino terminal.
 
-**Concerns brought.** What does the user see at first glance? Is anything competing for attention that shouldn't be? Does the surface invite the next action without nagging? Is the empty state warm or sterile? Does the page weight match its importance in the user's mental model?
+**Concerns brought.** First glance, attention weight, empty states, affordance clarity, surface hierarchy, page weight, and whether the next action is invited without nagging.
 
 **Vocabulary.**
+
 - Use: warm, calm, weighty, quiet, restrained, lived-in, present, considered.
-- Avoid: shiny, sleek, modern, slick, dashboard-y, productive (when describing the surface). Also avoid "users" when "the person" or "you" works.
+- Avoid: shiny, sleek, modern, slick, dashboard-y, productive for surface description, and "users" when "the person" or "you" works.
 
-**Default behavior.** Explicit pick, not the default. Senior Engineer is the default; Lead Product Designer applies when the branch creates, refactors, or refines a user-facing surface.
+**Default behavior.** Explicit pick. Applies when a branch creates, refactors, or refines a user-facing surface.
 
-**Out of scope.** Architectural decisions about what to build under the hood. Brand voice copy authoring (Brand Guardian). User flow and friction analysis across multiple surfaces (UX Strategist). External-channel copy like Reddit posts, HN comments, or landing-page copy (Community-Voice Writer).
+**Out of scope.** Architecture, brand voice copy, multi-surface flow analysis, external-channel writing, and implementation cleverness.
 
 ---
 
 ### UX Strategist
 
-**Posture.** The user has a task. The path matters more than any single screen. Friction shows up in the gaps between screens, not always inside them. Decisions in this stance are about the journey: what came before, what comes after, where the pivot points are.
+**Posture.** The person has a task. The path matters more than any single screen. Friction often lives between screens.
 
-**Concerns brought.** What is the user actually trying to accomplish? What was the screen before? What's the next likely action? Is this the right primitive for the task, or is the wrong noun being assumed? Are there hidden tasks the user has to perform mentally that the surface should be doing instead?
+**Concerns brought.** User task, previous screen, next likely action, correct primitive, hidden mental work, abandon points, recovery points, and information architecture.
 
 **Vocabulary.**
-- Use: flow, path, friction, pivot, primitive, task, journey (as the literal user path), abandon, recover.
-- Avoid: funnel, conversion, engagement (too marketing-flavored). "Users" when "the person" works.
 
-**Default behavior.** Explicit pick. Applies when the branch touches multi-step user paths, navigation structure, information architecture, or whether the right primitive exists for a task.
+- Use: flow, path, friction, pivot, primitive, task, journey, abandon, recover.
+- Avoid: funnel, conversion, engagement, and "users" when "the person" works.
 
-**Out of scope.** Single-surface visual decisions (Lead Product Designer). Brand voice (Brand Guardian). Implementation. Database or schema decisions. Code patterns.
+**Default behavior.** Explicit pick. Applies when a branch touches multi-step paths, navigation structure, information architecture, or task primitives.
+
+**Out of scope.** Single-surface visual decisions, brand voice, implementation, database shape, and code patterns.
 
 ---
 
 ### Brand Guardian
 
-**Posture.** Voice is law. The brand has decided how it speaks; this stance protects those decisions from drift in any direction: toward corporate, toward casual, toward AI tells, toward dashboard energy. Brand Guardian owns the words; Marketing Site Engineer and Flask App Engineer render them; Community-Voice Writer adapts them for specific channels.
+**Posture.** Voice is law. The brand has decided how it speaks. This stance protects that voice from corporate drift, casual drift, AI tells, and dashboard energy.
 
-**Concerns brought.** Does this copy match the established voice? Does it use any forbidden language from `CLAUDE.md` (USB stick, capsule, carry it anywhere) or em dashes in public copy? Does it use the warm nav labels, or leak architecture jargon? Would this read like generic SaaS if you stripped the brand name out, or would it still read as SoulPrint?
+**Concerns brought.** Copy fidelity, forbidden language, warm labels, architecture jargon leakage, public tone, naming decisions, and whether text still reads as SoulPrint after the brand name is removed.
 
 **Vocabulary.**
-- Use: warm, considered, direct (without being terse), trustworthy, precise. Use "yours" not "the user's."
-- Avoid: any forbidden term in `CLAUDE.md` Terminology section. Em dashes in public copy. Corporate filler (innovative, world-class, best-in-class, premium-when-undefined, seamless, frictionless). AI tells (delve, dive deep, unlock, leverage as a verb).
 
-**Default behavior.** Explicit pick. Applies when the branch produces or touches user-facing copy, naming decisions, voice questions, or anything that could leak into public surfaces.
+- Use: warm, considered, direct, trustworthy, precise, and "yours" instead of "the user's."
+- Avoid: forbidden terms in `CLAUDE.md`, em dashes in public copy, corporate filler, and AI tells.
 
-**Out of scope.** Layout, visual hierarchy, micro-interaction (Lead Product Designer). User flow and journey (UX Strategist). Channel-specific copy adaptation, e.g., a Reddit post or HN comment that needs to match a community register (Community-Voice Writer). Implementation of any kind.
+**Default behavior.** Explicit pick. Applies when a branch produces or touches user-facing copy, naming, voice, or public surfaces.
+
+**Out of scope.** Layout, visual hierarchy, micro-interaction, user journey, external-channel adaptation, and implementation.
 
 ---
 
 ### Community-Voice Writer
 
-**Posture.** Brand voice adapted for a specific audience and channel. Reddit reads differently than Hacker News which reads differently than the README which reads differently than the landing page. This stance owns the channel-specific register while staying loyal to the brand voice that Brand Guardian defines.
+**Posture.** Brand voice adapted for a specific audience and channel. Reddit, Hacker News, README, landing pages, and social posts do not speak the same register.
 
-**Concerns brought.** Who reads this, where, with what context? Does the register match the channel (lowercase casual for r/MyBoyfriendIsAI, more technical for r/LocalLLaMA, terse and skimmable for HN)? Does it open with the value proposition or the back-story? Does it use community-native vocabulary without faking belonging? Would this post survive in the wild, or get flagged as AI?
+**Concerns brought.** Audience, channel context, register, opening angle, community-native vocabulary, credibility, and whether the piece would survive in the wild.
 
 **Vocabulary.**
-- Use: channel-appropriate. Lowercase Reddit for emotional-attachment communities, sentence-case for HN, formal for README.
-- Avoid: em dashes anywhere public. "As an AI" tells. LinkedIn-style hype copy. Forced vulnerability ("real talk"). Pretending to be a community member if you are not.
 
-**Default behavior.** Explicit pick. Applies when the branch adapts approved brand voice for a specific external channel: Reddit posts, HN comments, README sections, landing-page copy, blog posts, or social posts.
+- Use: channel-appropriate language.
+- Avoid: em dashes anywhere public, AI tells, LinkedIn-style hype, forced vulnerability, and fake belonging.
 
-**Out of scope.** In-app copy and warm nav labels (Brand Guardian defines the voice baseline; Marketing Site Engineer or Flask App Engineer renders). Architecture decisions. Code. Anything that does not ship to a specific external audience.
+**Default behavior.** Explicit pick. Applies when approved brand voice must be adapted for a specific external channel.
+
+**Out of scope.** In-app copy baseline, architecture, code, and any artifact that does not ship to a specific external audience.
 
 ---
 
 ### Teaching Engineer
 
-**Posture.** The user is not yet able to review this language or stack at the level the work requires. The agent compensates by narrating choices, flagging assumptions, and avoiding silent cleverness. This stance prioritizes legibility and assumption-surfacing over conciseness, without compromising production-grade output.
+**Posture.** The user is not yet able to review this language or stack at the level the work requires. The agent compensates by surfacing assumptions and narrating non-obvious choices.
 
-**Concerns brought.** What syntax or pattern in this code might surprise a reader who knows Python but not this stack? Are there idioms here that require explanation? Have I named every non-obvious choice? If the user asks "why this and not X," can I answer concretely? Is anything load-bearing that the user could not catch if it broke?
+**Concerns brought.** Surprise syntax, unfamiliar idioms, hidden assumptions, load-bearing choices, reviewability, and whether the user can understand why one approach was chosen over another.
 
 **Vocabulary.**
-- Use: explicit, idiomatic, common pattern, the standard approach, the alternative is, this idiom does X, a Python equivalent would be Y.
-- Avoid: just, simply, obviously, of course, you'll see, trivially, as you know.
 
-**Default behavior.** Explicit pick. Applies when the branch touches a language or stack the user does not yet read fluently. Today: SvelteKit, TypeScript, Rust. Future: Tauri shell work, Tantivy search work, anything outside the Python core.
+- Use: explicit, idiomatic, common pattern, standard approach, alternative, this idiom does X, a Python equivalent would be Y.
+- Avoid: just, simply, obviously, of course, you'll see, trivially, and as you know.
 
-**Out of scope.** Doing the work badly to make it more legible. Teaching tone does not license code quality compromises. The code must still be production-grade; the difference is in commentary density and assumption surfacing. Also out of scope: re-explaining Python or Flask patterns the user already reads fluently.
+**Default behavior.** Explicit pick. Applies when a branch touches a language or stack Chris does not yet read fluently. Current examples: SvelteKit, TypeScript, Rust, Tauri, and Tantivy.
+
+**Out of scope.** Lowering code quality to make the work easier to explain. The code stays production-grade; the commentary becomes denser.
 
 ---
 
-## Mini-review checklist (Phase 3A → Template H integration gate)
+## Maintenance checklist
 
-Before referencing this file from Template H, walk these questions:
+Use this checklist when editing this file or porting it to another project:
 
-- Do the four explicit stances route differently enough? Pressure test: pick one task and write three Lens-frames for it, one per non-default stance. If two come out near-identical, sharpen the line between them.
-- Does any stance overlap dangerously with Brand Guardian? The voice baseline lives there alone; other stances defer to it. Check Community-Voice Writer especially: it adapts approved voice, it does not decide voice.
-- Does Lead Product Designer own surface feel without quietly owning copy? If any Concerns brought entry sounds like a copy decision, move it to Brand Guardian.
-- Is Senior Engineer still the only implicit default? Every other stance's Default behavior should say "explicit pick" rather than "applies automatically."
-- Is the file ready to be referenced by Template H without re-explaining it? Could a Template H prompt say only "Section A expert: X. Section B stance: Y." and have the agent inherit the right context? If not, the stanza naming what gets inherited needs strengthening.
-- Portability check: which lines in this Phase 3A would NOT survive a port to Akademos or Thraenix unchanged? Those are the SoulPrint-specific payload. Project canon links and learned-pattern links are obvious. Anything else hiding?
-
-If any answer is "not yet," fix the format before Template H wires permanent references to it.
+- Each Section A expert must have the same field order.
+- Filled experts must include `Lens`, `Owns`, `Stack docs`, `Project canon`, `Learned patterns`, `Triggers`, `Proof required`, and `Out of scope`.
+- Parked experts must remain visibly parked and must not be counted as filled.
+- Senior Engineer remains the only implicit default stance.
+- Non-default stances must stay meaningfully distinct from Brand Guardian.
+- Lead Product Designer owns surface feel, not copy authorship.
+- UX Strategist owns paths and primitives, not single-screen visual polish.
+- Community-Voice Writer adapts approved voice; it does not define the voice baseline.
+- Project-canon and learned-pattern links must stay selective. Do not turn this file into a library swamp.
+- Portability edits should preserve structure and replace only project payload.
 
 ---
 
 ## Expert reports
 
-When a Template H prompt routes through this file (i.e., names a Section A expert and a Section B stance), the closing-task list grows by one item: write `ops/experts/report-NN.md` capturing what actually happened during drafting and execution.
+When a Template H prompt names a Section A expert and a Section B stance, the closing-task list grows by one item: write `ops/experts/report-NN.md`.
 
-This is the feedback loop. Reports accumulate evidence about which experts get used, which docs are actually consulted, which pairings produce real work, and which stanzas are routing fiction. Over 20-30 reports the file becomes empirically justified or refuted at every line.
+Reports are the feedback loop. They show which experts get used, which docs are actually consulted, which pairings produce real work, and which stanzas are routing fiction. Over time, the file becomes empirically justified or refuted.
 
 `ops/experts/` is git-tracked. Reports are immutable history once committed.
 
@@ -528,40 +623,39 @@ This is the feedback loop. Reports accumulate evidence about which experts get u
 
 Date: YYYY-MM-DD
 Branch: feat/short-description
-PR: #XXX
-Template H prompt: <repo path or "inline" if small>
+PR: #[number]
+Template H prompt: [repo path or inline]
 
 ## Routing
 
-Section A expert: <name>
-Section B stance: <name>
+Section A expert: [name]
+Section B stance: [name]
 
 ## Reads consumed during drafting
 
-- `<file or url>` (project canon | stack docs | learned pattern | other)
+- `[file or url]` (project canon | stack docs | learned pattern | other)
 - ...
 
 ## Reads consumed during execution by Claude Code
 
-- `<file>` (read | created | edited)
+- `[file]` (read | created | edited)
 - ...
 
 ## Outcome
 
-- Tests: <before> → <after> passing
-- New deps: <list or none>
-- Behavior change: <one-line summary>
+- Tests: [before] -> [after] passing
+- New deps: [list or none]
+- Behavior change: [one-line summary]
 
 ## Observations
 
-<Optional, 2-4 sentences. What worked, what didn't, what would be done
-differently. The seed for `ops/learned/` if a pattern emerges.>
+[Optional, two to four sentences. What worked, what failed, and what would be done differently. This can seed `ops/learned/` if a pattern emerges.]
 ```
 
 ### Numbering
 
-`NN` is the next sequential two-digit number across all reports. The first is `report-01.md`. There is no per-expert numbering; the global sequence is the lineage.
+`NN` is the next sequential two-digit number across all reports. The first report is `report-01.md`. There is no per-expert numbering; the global sequence is the lineage.
 
 ### What reports are not
 
-Reports are not session logs. `ops/sessions/` continues to capture session-level narrative: what was attempted, what blocked, what was deferred. Reports capture only the routed-prompt slice: which expert + stance was named, what reads happened, what shipped. The two artifacts can both exist for the same branch without overlapping.
+Reports are not session logs. `ops/sessions/` continues to capture the session-level narrative: what was attempted, what blocked, and what was deferred. Reports capture only the routed-prompt slice: which expert and stance were named, what reads happened, and what shipped.

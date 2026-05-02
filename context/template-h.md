@@ -1,12 +1,18 @@
-# Template H - Claude Code Prompt Structure, Context Layer Edition v2.1
+# Template H - Claude Code Prompt Structure, Context Layer Edition v2.2
 
 ## Purpose
 
-Template H is the operating contract for implementation prompts sent to Claude Code or another coding agent. Its job is to convert a scoped product or engineering intent into one branch, one prompt, and one merge.
+Template H is the operating contract for implementation prompts sent to Claude Code or another coding agent.
 
-This edition assumes SoulPrint now has a context layer. The context layer carries persistent project doctrine, agent behavior, user preferences, and session continuity. Template H should not repeat that material inside every task prompt. It should point the agent at the correct context boundary, then spend the rest of the prompt on the task-specific facts that decide the diff.
+Its job is to convert a scoped product or engineering intent into:
 
-## MODE
+```text
+one prompt -> one branch -> one reviewable diff -> one merge
+```
+
+This edition assumes SoulPrint has a context layer. The context layer carries persistent project doctrine, agent behavior, user preferences, and session continuity. Template H should not repeat that material inside every task prompt. It should point the agent at the correct context boundary, then spend the prompt on the task-specific facts that decide the diff.
+
+## Mode
 
 Execution mode. This prompt is already the implementation plan.
 
@@ -24,9 +30,9 @@ Use this order of authority when drafting, reviewing, or executing a Template H 
 4. GitHub, only when Chris asks for web verification or repo reconciliation.
 5. Model memory or chat recollection.
 
-A state capsule is orientation. It is not implementation authority. For code-level prompts, use a fresh repo zip, exact file excerpts, or the coding agent's current checked-out repo as the authority.
+A state capsule is orientation. It is not implementation authority. For code-level prompts, use a fresh repo zip, exact file excerpts, or the coding agent's checked-out repo as authority.
 
-Do not convert memory into Verified Facts. If it was not checked against files, it belongs in Assumptions to verify or in a State capsule.
+Do not convert memory into Verified Facts. If a claim was not checked against files, it belongs in Assumptions to verify or in a state capsule.
 
 ## Context handling doctrine
 
@@ -35,7 +41,7 @@ The old Template H repeated agent disposition, project architecture, branch disc
 The context layer now carries that information:
 
 - `CLAUDE.md`: project orientation, architecture, workflow defaults, branch and test expectations.
-- `context/soul.md`: agent behavior, feedback loop, session continuity protocol, skill routing.
+- `context/soul.md`: agent behavior, feedback loop, session continuity protocol, and skill routing.
 - `context/user.md`: Chris' operating style, prompt expectations, tone, and environment.
 - latest `ops/sessions/*.md`: recent work, current branch state, unresolved queue.
 - `context/llm-config.md`: only when working on intelligence or local model behavior.
@@ -80,26 +86,26 @@ This resolves the standing-read conflict: context files are still respected, but
 
 ## Expert and stance routing
 
-Template H prompts route through `context/experts.md` before drafting. That file is a routing console: pick one technical expert (Section A) and one stance (Section B) for the branch, then read only the stack docs, project canon, and learned-pattern links attached to those two picks.
+Template H prompts route through `context/experts.md` before drafting. That file is a routing console: pick one technical expert from Section A and one stance from Section B, then read only the stack docs, project canon, and learned-pattern links attached to those two picks.
 
 The reading order around Template H is fixed:
 
 1. `context/experts.md`: pick one Section A expert and one Section B stance.
 2. The selected expert's stack docs, project canon, and learned-pattern links.
 3. The selected stance's posture, concerns, vocabulary, and out-of-scope guardrails.
-4. Template H: walk the structure, fill the sections.
-5. Session journal at session close (`ops/sessions/`).
+4. Template H: walk the structure and fill the sections.
+5. Session journal at session close, when the branch scope allows it.
 
 Two structural rules carry over from `context/experts.md`:
 
 - **One expert, one stance per prompt.** If a task seems to need two Section A experts, it is two prompts on two branches.
-- **Reference the picks at the top of the prompt body.** State the expert and stance once near the Mandatory reads block, e.g., `Section A expert: Flask App Engineer. Section B stance: Lead Product Designer.` The executing agent inherits the lens without re-explanation.
+- **Reference the picks near the top of the prompt body.** State the expert and stance once near the Mandatory reads block, for example: `Section A expert: Flask App Engineer. Section B stance: Lead Product Designer.` The executing agent inherits the lens without re-explanation.
 
-Do not duplicate expert or stance content inside the prompt. The picks are a pointer; `context/experts.md` is the canon.
+Do not duplicate expert or stance content inside the prompt. The picks are a pointer. `context/experts.md` is the canon.
 
-### Routing Justification
+### Routing justification
 
-Naming the picks is not enough. Every Template H prompt also justifies the picks in writing through two short blocks: Why-this-expert and Why-not-adjacent-experts. This converts implicit routing discipline into a structural pressure point that future audits can mechanically check.
+Naming the picks is not enough. Every Template H prompt must justify the picks through two short blocks: Why this expert and Why not adjacent experts. This converts implicit routing discipline into a structural pressure point that future audits can check.
 
 Required shape:
 
@@ -118,13 +124,25 @@ Section B stance: <name>.
 - Not <expert name>: <reason>.
 ```
 
-Minimums: at least 2 bullets under each block. No hard maximum. If the Why-not-adjacent list passes 6 bullets, that is a soft signal the Section A pick was uncertain; reconsider before drafting more.
+Minimums:
 
-Section B default: Senior Engineer is the implicit default and does not require its own justification when chosen. Any non-default stance (Lead Product Designer, UX Strategist, Brand Guardian, Community-Voice Writer, Teaching Engineer) is justified within the Why-this-expert block, naming the work shape that triggered the non-default pick.
+- At least 2 bullets under Why this expert.
+- At least 2 bullets under Why not adjacent experts.
+- No hard maximum, but more than 6 Why not adjacent bullets is a soft signal that the Section A pick may be uncertain.
 
-Documented exemptions: audits of the routing system itself (Phase 5, audit-20.md, audit-40.md, etc.) and any branch authorized by a prior audit to bypass routing replace the Routing block with an explicit exemption acknowledgment. The exemption must cite the document that authorized it and must name when normal routing resumes. The forward-reference exemption window from Phase 5 closed at PR #199; new forward-reference exemptions require explicit authorization from a future audit.
+Section B default:
 
-Audit hook: audit-20 will count routed prompts that include the Routing block versus those that omit it, and will check whether Why-not-adjacent reasoning ever caught a routing error that the prior structure would have allowed through.
+- Senior Engineer is the implicit default and does not require a separate justification when chosen.
+- Any non-default stance must be justified inside Why this expert by naming the work shape that triggered it.
+
+Documented exemptions:
+
+- Audits of the routing system itself, such as Phase 5, audit-20.md, audit-40.md, and similar audit branches.
+- Any branch explicitly authorized by a prior audit to bypass routing.
+
+Exempted prompts replace the Routing block with an explicit exemption acknowledgment. The exemption must cite the document that authorized it and state when normal routing resumes. The forward-reference exemption window from Phase 5 closed at PR #199. New forward-reference exemptions require explicit authorization from a future audit.
+
+Audit hook: audit-20 will count routed prompts that include the Routing block versus those that omit it, and will check whether Why not adjacent reasoning caught any routing error the prior structure would have allowed through.
 
 ## Template H structure, strict order
 
@@ -132,9 +150,15 @@ Audit hook: audit-20 will count routed prompts that include the Routing block ve
 
 Use only when needed. Do not let this section become a second prompt. It should establish which context layer the agent has loaded and whether any context file must be read manually.
 
-### 1. Mandatory reads, task-specific only
+### 1. Routing
 
-Name only the files needed for this branch. Keep to 4 to 8 files. If the list grows past 8, split the branch.
+Name the Section A expert and Section B stance. Include Why this expert and Why not adjacent experts.
+
+Omit this section only when an explicit exemption applies.
+
+### 2. Mandatory reads, task-specific only
+
+Name only the files needed for this branch. Keep the list to 4 to 8 files. If the list grows past 8, split the branch.
 
 ```markdown
 ## MANDATORY READS (do NOT explore the codebase)
@@ -153,7 +177,7 @@ Each mandatory read must declare why it is included. Use one or both labels:
 
 If a file is listed only because the drafter felt nervous, remove it. Nervousness belongs in Assumptions to verify, not in Mandatory reads.
 
-### 2. Verified facts
+### 3. Verified facts
 
 Verified facts are claims already checked against the authority source. They are not guesses and not instructions.
 
@@ -175,9 +199,9 @@ Rules:
 - Never put unchecked memory claims here.
 - Never use Verified Facts to freeze implementation strategy. Facts describe what is true, not what should be built.
 
-### 3. Assumptions to verify, optional
+### 4. Assumptions to verify, optional
 
-Use this only when a claim is plausible but not yet confirmed.
+Use this only when a claim is plausible but not confirmed.
 
 ```markdown
 ## ASSUMPTIONS TO VERIFY
@@ -190,9 +214,9 @@ Before editing, verify these against the Mandatory reads. If any fails, STOP and
 
 If this block has more than 3 assumptions, the drafter has not done enough preflight or the branch is too broad.
 
-### 4. Pre-draft design decisions
+### 5. Design decisions, optional
 
-Use this in the chat or prompt preamble when the branch contains non-obvious choices.
+Use this when the branch contains non-obvious choices.
 
 ```markdown
 ## DESIGN DECISIONS
@@ -203,7 +227,7 @@ Use this in the chat or prompt preamble when the branch contains non-obvious cho
 
 Keep this to 2 or 3 decisions. If there are more, split the task.
 
-### 5. Objective
+### 6. Objective
 
 One sentence. No background essay.
 
@@ -213,7 +237,7 @@ One sentence. No background essay.
 Ship the asset ledger and content-addressed file storage foundation without adding routes, UI, parsing, or export behavior.
 ```
 
-### 6. Starting state
+### 7. Starting state
 
 Describe the current code and product state that matters for this branch.
 
@@ -226,7 +250,7 @@ Include:
 
 Do not re-explain SoulPrint's whole architecture.
 
-### 7. Target state
+### 8. Target state
 
 Describe what exists after the branch succeeds.
 
@@ -240,7 +264,7 @@ Include:
 - routes explicitly not added;
 - user-visible behavior explicitly unchanged when that matters.
 
-### 8. Step-by-step tasks
+### 9. Step-by-step tasks
 
 Every step must be verifiable. Use small tasks. Avoid broad verbs such as "wire up everything" or "make it robust."
 
@@ -259,7 +283,7 @@ Bad task shape:
 1. Implement attachments.
 ```
 
-### 9. Scope lock and DO NOT EDIT
+### 10. Scope lock and DO NOT EDIT
 
 Explicitly list what is allowed and what is forbidden.
 
@@ -275,9 +299,9 @@ Always include these in DO NOT EDIT unless the task specifically requires touchi
 - unrelated importers, exporters, intelligence providers, and UI templates
 - files owned by another in-flight branch
 
-If a task needs a session log or learned pattern update, make that an explicit final task and carve out only the exact `ops/` path needed.
+If a task needs a session log, learned pattern, expert report, or other `ops/` update, make that an explicit final task and carve out only the exact `ops/` path needed.
 
-### 10. Stop conditions
+### 11. Stop conditions
 
 Stop conditions should protect against wrong facts, scope creep, and dangerous migrations. They should not halt on harmless refactors.
 
@@ -299,11 +323,11 @@ STOP and ask before continuing if:
 
 Avoid count-based stop conditions such as "STOP if there are three helper branches." They are brittle and create false positives.
 
-### 11. Tests and verification
+### 12. Tests and verification
 
-Name exact commands. Include the narrow tests first, then the full suite when appropriate.
+Name exact commands. Include narrow tests first, then the full suite when appropriate.
 
-```markdown
+````markdown
 ## TESTS AND VERIFICATION
 
 Run:
@@ -314,13 +338,13 @@ pytest
 ```
 
 If the full suite has pre-existing failures, stop and report them without masking them as branch failures.
-```
+````
 
-### 12. Git instructions
+### 13. Git instructions
 
 Always specify the branch and commit message. One prompt, one branch, one merge.
 
-```markdown
+````markdown
 ## GIT INSTRUCTIONS
 
 ```bash
@@ -336,11 +360,44 @@ git push -u origin feat/asset-ledger-storage
 ```
 
 Do not bump version. Do not edit `CHANGELOG.md` unless Chris explicitly asks.
+````
+
+### 14. PR instructions
+
+Include this section when the branch should open a pull request.
+
+````markdown
+## PR INSTRUCTIONS
+
+Open a PR after pushing the branch.
+
+Title:
+`<title>`
+
+Body rules:
+- Describe the cleanup class or user-facing outcome.
+- Do not mention internal audit filenames unless explicitly instructed.
+- Do not repeat removed sensitive strings, local paths, usernames, secret names, or private artifact names.
+- Use `--body-file` instead of inline shell strings when the body contains Markdown.
+- If PR creation or editing fails due to shell escaping, token scopes, or GitHub CLI issues, STOP and report instead of improvising.
+
+Suggested body:
+
+[body]
+
+
+After PR creation, verify the body:
+
+```bash
+gh pr view <number> --json body -q '.body'
 ```
 
-### 13. Session log and learned pattern update
+If the body contains forbidden provenance, sensitive strings, or malformed Markdown, stop and report.
+````
 
-For real work prompts, close with the repository's continuity duties.
+### 15. Session continuity
+
+Include this section only when the branch scope allows continuity artifacts.
 
 ```markdown
 ## SESSION CONTINUITY
@@ -349,13 +406,13 @@ After the code and tests are complete:
 
 1. If this branch creates a reusable pattern, add a focused note under `ops/learned/`.
 2. Write a session log under `ops/sessions/` using the repo's naming convention.
-3. If this prompt routed through `context/experts.md` (i.e., named a Section A expert and a Section B stance), write `ops/experts/report-NN.md` per the format documented in `context/experts.md`. NN is the next sequential number across all reports.
+3. If this prompt routed through `context/experts.md`, write `ops/experts/report-NN.md` per the format documented in `context/experts.md`. NN is the next sequential number across all reports.
 4. Keep all three files factual. Do not write a narrative postmortem unless this was a debugging campaign.
 ```
 
 If the prompt is only a review, planning note, or dry spec, omit this section unless a decision was made.
 
-The expert report is the feedback loop that lets `context/experts.md` earn or lose its place over time. Reports record which expert + stance got named, which reads were actually consulted during drafting and execution, and what shipped. Over 20-30 reports, every line in `experts.md` becomes empirically justified or refuted. Skipping this step turns the routing console into dead doctrine.
+The expert report is the feedback loop that lets `context/experts.md` earn or lose its place over time. Reports record which expert and stance were named, which reads were actually consulted during drafting and execution, and what shipped. Over 20 to 30 reports, every line in `experts.md` becomes empirically justified or refuted. Skipping this step turns the routing console into dead doctrine.
 
 ## State work protocol
 
@@ -422,8 +479,6 @@ Only ledger metadata plus filesystem custody.
 Duplicate file bytes must store once by sha256.
 ```
 
-This is the bone before nerves and skin.
-
 ## Review protocol for generated prompts
 
 No generated implementation prompt is trusted until it passes this gate:
@@ -431,7 +486,8 @@ No generated implementation prompt is trusted until it passes this gate:
 - every file path is verified;
 - every Verified Fact is checked against the current authority;
 - every canon file, learned-pattern file, report, spec, or context file cited as a mandatory read or verified authority exists in the repo at the current authority source; if missing, stale, renamed, or only recalled from chat, it belongs in Assumptions to verify or must be removed;
-- the prompt's ROUTING block exists with Why-this-expert and Why-not-adjacent-experts sub-blocks (minimum 2 bullets each), OR an explicit exemption is documented citing the authorizing audit or session note;
+- the prompt's Routing block exists with Why this expert and Why not adjacent experts sub-blocks, OR an explicit exemption is documented citing the authorizing audit or session note;
+- if the branch opens a PR, the prompt includes PR instructions with safe body rules and post-creation body verification;
 - assumptions are separated from facts;
 - stop conditions are contract-based and unlikely to false-positive;
 - git commands are sane;
@@ -443,7 +499,7 @@ If modifying an existing prompt or template, provide an applied artifact. Do not
 
 ## Compact skeleton
 
-```markdown
+````markdown
 # [Prompt title]
 
 ## CONTEXT PREFLIGHT
@@ -549,7 +605,35 @@ git push -u origin feat/[branch]
 
 Do not bump version. Do not edit `CHANGELOG.md` unless explicitly requested.
 
+## PR INSTRUCTIONS
+
+[Omit if this branch does not open a PR.]
+
+Open a PR after pushing the branch.
+
+Title:
+`<title>`
+
+Body rules:
+- Describe the cleanup class or user-facing outcome.
+- Do not mention internal audit filenames unless explicitly instructed.
+- Do not repeat removed sensitive strings, local paths, usernames, secret names, or private artifact names.
+- Use `--body-file` instead of inline shell strings when the body contains Markdown.
+- If PR creation or editing fails due to shell escaping, token scopes, or GitHub CLI issues, STOP and report instead of improvising.
+
+Suggested body:
+
+[body]
+
+After PR creation, verify:
+
+```bash
+gh pr view <number> --json body -q '.body'
+```
+
 ## SESSION CONTINUITY
 
+[Omit if this branch does not allow `ops/` changes.]
+
 If code was committed or a decision was made, write the session log. If a reusable pattern appeared, write the focused learned note. If this prompt named a Section A expert and a Section B stance, write `ops/experts/report-NN.md` per the format in `context/experts.md`.
-```
+````
