@@ -57,3 +57,14 @@ openspec/
 /*.png
 New Text Document*.txt
 .playwright-mcp/
+
+# Local security/export artifacts (added 2026-05-02)
+alert_*.json
+codeql-alert*.json
+security-alert*.json
+*.sarif
+
+# Glob-style patterns for moved internal docs (prevents future path-move bypass)
+**/LAUNCH-PLAYBOOK.md
+**/SOULPRINT-30-DAY-VISION.md
+**/UPGRADE-CONTINUITY.md

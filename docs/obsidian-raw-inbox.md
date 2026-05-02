@@ -32,7 +32,7 @@ Set the `SOULPRINT_EXPORT_DIR` environment variable to the absolute path of your
 ```powershell
 [Environment]::SetEnvironmentVariable(
   "SOULPRINT_EXPORT_DIR",
-  "C:\Users\chr\Obsidian-Vault\kepano-obsidian-main\raw",
+  "$env:USERPROFILE\Obsidian\SoulPrint\raw",
   "User"
 )
 ```
@@ -42,7 +42,7 @@ Restart your terminal after setting. Verify with `echo $env:SOULPRINT_EXPORT_DIR
 **macOS / Linux (`~/.zshrc` or `~/.bashrc`):**
 
 ```bash
-export SOULPRINT_EXPORT_DIR="$HOME/Obsidian-Vault/kepano-obsidian-main/raw"
+export SOULPRINT_EXPORT_DIR="$HOME/Obsidian/SoulPrint/raw"
 ```
 
 ### 2. Export conversations from SoulPrint
@@ -154,16 +154,14 @@ SoulPrint never creates the directory for you. If `SOULPRINT_EXPORT_DIR` points 
 
 ### Recommended setup for a multi-vault workflow
 
-If you run multiple vaults (a work vault and a personal vault, say), swap `SOULPRINT_EXPORT_DIR` before exporting:
+If you run multiple vaults, set `$env:SOULPRINT_EXPORT_DIR` per terminal session before exporting. The variable is session-scoped, so changing it in one terminal does not affect any other:
 
 ```powershell
-# Export conversations into the work vault
-$env:SOULPRINT_EXPORT_DIR = "C:\Users\chr\Work-Vault\raw"
+# Set the target vault for this session
+$env:SOULPRINT_EXPORT_DIR = "$env:USERPROFILE\Obsidian\SoulPrint\raw"
 # ... export from SoulPrint UI ...
 
-# Switch to personal vault
-$env:SOULPRINT_EXPORT_DIR = "C:\Users\chr\Obsidian-Vault\kepano-obsidian-main\raw"
-# ... export ...
+# To switch vaults, set it again to a different path of your choice
 ```
 
 Setting it per-terminal-session gives you ad-hoc routing without losing the permanent default.
