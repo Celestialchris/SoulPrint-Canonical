@@ -10,6 +10,7 @@ condition for the quality toolchain).
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import unittest
 
@@ -42,11 +43,56 @@ class ThresholdsDefaultsTest(unittest.TestCase):
     def test_defaults_are_permissive(self):
         # A bare Thresholds() must not block any valid measurement,
         # so partial configs that omit fields cannot silently fail CI.
+        # The exact default values are pinned so a silent drift (e.g.,
+        # 1_000_000_000 -> 1_000_000_001) surfaces here instead of in CI.
         t = Thresholds()
         self.assertEqual(t.max_crap, float("inf"))
-        self.assertGreater(t.max_complexity, 1_000_000)
+        self.assertEqual(t.max_complexity, 1_000_000_000)
         self.assertEqual(t.min_coverage_percent, 0.0)
         self.assertEqual(t.top_n, 20)
+
+
+class ThresholdSchemaConstantTest(unittest.TestCase):
+    """The schema string is the on-disk format marker. Tests that compare
+    saved JSON against the imported constant cannot detect a constant
+    refactor, so the literal value is pinned here.
+    """
+
+    def test_schema_marker_is_canonical_string(self):
+        self.assertEqual(THRESHOLD_SCHEMA, "soulprint.quality.thresholds.v1")
+
+
+class ThresholdsDataclassContractTest(unittest.TestCase):
+    """Thresholds, Violation, and Verdict use `@dataclass(frozen=True, slots=True)`.
+    Mutation testing showed the suite did not enforce either half of that
+    contract; these tests pin both.
+    """
+
+    def test_thresholds_is_frozen(self):
+        t = Thresholds()
+        with self.assertRaises(dataclasses.FrozenInstanceError):
+            t.max_crap = 999.0  # type: ignore[misc]
+
+    def test_thresholds_class_defines_slots(self):
+        self.assertTrue(hasattr(Thresholds, "__slots__"))
+
+    def test_violation_is_frozen(self):
+        v = Violation(
+            kind="max_crap", file="x.py", function="f", actual=1.0, threshold=0.0
+        )
+        with self.assertRaises(dataclasses.FrozenInstanceError):
+            v.actual = 999.0  # type: ignore[misc]
+
+    def test_violation_class_defines_slots(self):
+        self.assertTrue(hasattr(Violation, "__slots__"))
+
+    def test_verdict_is_frozen(self):
+        v = Verdict(passed=True, violations=(), checked_count=0)
+        with self.assertRaises(dataclasses.FrozenInstanceError):
+            v.passed = False  # type: ignore[misc]
+
+    def test_verdict_class_defines_slots(self):
+        self.assertTrue(hasattr(Verdict, "__slots__"))
 
 
 class ThresholdsValidationTest(unittest.TestCase):
@@ -87,6 +133,59 @@ class ThresholdsValidationTest(unittest.TestCase):
         # 0 and 100 are the inclusive endpoints; both must be valid.
         Thresholds(min_coverage_percent=0.0)
         Thresholds(min_coverage_percent=100.0)
+
+    def test_max_crap_at_zero_accepted(self):
+        # `max_crap >= 0` is the documented invariant; 0 is the inclusive
+        # lower bound. Guards against `< 0` being tightened to `<= 0` or `< 1`.
+        Thresholds(max_crap=0.0)
+
+    def test_max_crap_below_one_accepted(self):
+        # Specifically guards against `< 0` -> `< 1`, which would reject
+        # the legal value 0.5.
+        Thresholds(max_crap=0.5)
+
+    def test_max_complexity_at_zero_accepted(self):
+        # Documented as `max_complexity >= 0`; zero must construct cleanly.
+        Thresholds(max_complexity=0)
+
+    def test_min_coverage_just_above_one_hundred_rejected(self):
+        # 100.5 is just past the upper bound; guards against the inclusive
+        # check `<= 100.0` being widened to `<= 101.0`.
+        with self.assertRaises(ValueError):
+            Thresholds(min_coverage_percent=100.5)
+
+    def test_top_n_error_message_is_canonical(self):
+        # Exact-match the full message so that any string mutation
+        # (wholesale, wrap, or replacement) trips this test. Substring
+        # checks would not catch wrap-style mutations like "XX...XX".
+        with self.assertRaises(ValueError) as ctx:
+            Thresholds(top_n=0)
+        self.assertEqual(
+            str(ctx.exception),
+            "top_n must be >= 1; got 0. "
+            "A non-positive top_n would silently disable enforcement "
+            "(evaluate would report a vacuous pass with no functions checked).",
+        )
+
+    def test_max_crap_error_message_is_canonical(self):
+        with self.assertRaises(ValueError) as ctx:
+            Thresholds(max_crap=-1.0)
+        self.assertEqual(str(ctx.exception), "max_crap must be >= 0; got -1.0")
+
+    def test_max_complexity_error_message_is_canonical(self):
+        with self.assertRaises(ValueError) as ctx:
+            Thresholds(max_complexity=-5)
+        self.assertEqual(
+            str(ctx.exception), "max_complexity must be >= 0; got -5"
+        )
+
+    def test_min_coverage_error_message_is_canonical(self):
+        with self.assertRaises(ValueError) as ctx:
+            Thresholds(min_coverage_percent=-1.0)
+        self.assertEqual(
+            str(ctx.exception),
+            "min_coverage_percent must be in [0, 100]; got -1.0",
+        )
 
 
 class LoadThresholdsTest(unittest.TestCase):
@@ -283,6 +382,23 @@ class EvaluateTest(unittest.TestCase):
         self.assertEqual(verdict.checked_count, 1)
         # The single checked function must be the worst by CRAP, not the first by index.
         self.assertEqual(verdict.violations[0].function, "hi")
+
+    def test_actual_equal_to_max_crap_does_not_violate(self):
+        # max_crap is a strict ceiling per the docstring: only `r.crap > max_crap`
+        # fails. Equality is a pass. Guards against `>` being relaxed to `>=`,
+        # which would turn the documented inclusive ceiling into an exclusive one.
+        results = [_r("a.py", "exact", 10, 0.0, 110.0)]
+        t = Thresholds(max_crap=110.0, max_complexity=20, top_n=20)
+        verdict = evaluate(results, t)
+        self.assertTrue(verdict.passed)
+
+    def test_actual_equal_to_max_complexity_does_not_violate(self):
+        # max_complexity is a strict ceiling: only `r.complexity > max_complexity`
+        # fails. Symmetric to the max_crap boundary above.
+        results = [_r("a.py", "exact", 20, 100.0, 20.0)]
+        t = Thresholds(max_crap=1000.0, max_complexity=20, top_n=20)
+        verdict = evaluate(results, t)
+        self.assertTrue(verdict.passed)
 
 
 class ComputeRatchetTest(unittest.TestCase):
