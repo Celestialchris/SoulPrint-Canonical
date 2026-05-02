@@ -9,6 +9,7 @@ instrumentation is a documented stop condition).
 
 from __future__ import annotations
 
+import dataclasses
 import unittest
 
 from src.quality.scorer import (
@@ -67,6 +68,46 @@ class DeriveFunctionCoverageTest(unittest.TestCase):
         missing = {4, 5, 60, 70}
         cov = derive_function_coverage(executed, missing, 10, 20)
         self.assertIsNone(cov)
+
+    def test_endline_plus_one_excluded_from_span(self):
+        # The span is inclusive of endline; one line past endline must NOT
+        # count toward this function's coverage. Guards against an off-by-one
+        # in `range(lineno, endline + 1)`.
+        cov = derive_function_coverage(
+            executed_lines={21}, missing_lines=set(), lineno=10, endline=20
+        )
+        self.assertIsNone(cov)
+
+    def test_lineno_minus_one_excluded_from_span(self):
+        # Symmetric guard for the lower bound: a line at lineno - 1 is outside.
+        cov = derive_function_coverage(
+            executed_lines=set(), missing_lines={9}, lineno=10, endline=20
+        )
+        self.assertIsNone(cov)
+
+
+class ScoreResultContractTest(unittest.TestCase):
+    """ScoreResult is part of the project's `@dataclass(frozen=True, slots=True)`
+    pattern (python-patterns.md). Mutation testing showed neither the
+    immutability nor the slots layout was enforced by the suite; this class
+    pins both.
+    """
+
+    def setUp(self):
+        self.result = ScoreResult(
+            file="src/x.py",
+            function="f",
+            complexity=1,
+            coverage_pct=100.0,
+            crap=1.0,
+        )
+
+    def test_score_result_is_frozen(self):
+        with self.assertRaises(dataclasses.FrozenInstanceError):
+            self.result.complexity = 99  # type: ignore[misc]
+
+    def test_score_result_class_defines_slots(self):
+        self.assertTrue(hasattr(ScoreResult, "__slots__"))
 
 
 class ScoreTreeTest(unittest.TestCase):
