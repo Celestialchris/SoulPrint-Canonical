@@ -172,12 +172,71 @@ to harden the offender, not to widen the threshold.
 - File paths are normalized to forward slashes so reports are stable
   across Windows and Linux runs.
 
+## Mutation Testing
+
+Mutation testing complements CRAP scoring. Where CRAP measures risk
+(complexity × uncovered lines), mutation testing measures suite strength: it
+systematically introduces one-line corruptions to source code and verifies that
+the test suite catches each one. A function with 100% line coverage can still
+let mutations survive if tests call code without asserting outcomes.
+
+CRAP and mutation scores are orthogonal signals. Both are needed for confident
+hardening.
+
+### Running locally
+
+`mutmut==2.5.1` is in the `dev` optional-dependency group. After
+`pip install -e ".[dev]"`:
+
+```bash
+# Run mutations scoped to the quality module (fast, targeted):
+mutmut run --paths-to-mutate src/quality/
+
+# View summary (survived / killed / timed out):
+mutmut results
+
+# Inspect a surviving mutant — one the tests did not catch:
+mutmut show <id>
+```
+
+Start with `src/quality/` as the target. It has a focused test suite and the
+smallest blast radius. Do not run mutation testing against the full repo without
+first measuring the time cost.
+
+`mutmut run` writes a `.mutmut-cache` file in the working directory. This file
+is gitignored and must not be committed.
+
+### Interpreting results alongside the CRAP report
+
+The CRAP report identifies highest-risk functions by score. Mutation results
+identify weakest tests by survival rate. Overlapping the two signals:
+
+- **High CRAP + surviving mutants**: highest-priority hardening target. The code
+  is risky and the tests are not catching breakage.
+- **Low CRAP + surviving mutants**: assertions are weak but the function is not
+  dangerous today. The test suite provides false confidence.
+- **High CRAP + all mutants killed**: risk comes from complexity, not weak tests.
+  Refactoring is the lever, not more assertions.
+
+### Why mutation testing is not in CI yet
+
+Mutation runs execute the full test suite once per mutant. For `src/quality/`
+this takes seconds; for larger scopes it grows proportionally. The MVP runs
+locally, on-demand, against scoped targets. CI wiring belongs to a later branch
+after the signal quality and scope are calibrated.
+
+The ratchet pattern from the CRAP layer could eventually apply here: track a
+mutation survival rate baseline in `quality-thresholds.json` and fail CI when
+it rises. That extension is out of scope for this layer.
+
 ## Coming next
 
-Layer 3 (CI reporting) shipped in `feat/quality-ci-reporting`. Still future:
+Layer 3 (CI reporting) shipped in `feat/quality-ci-reporting`.
+Layer 4 (mutation testing MVP) shipped in `feat/mutation-testing-mvp`. Still future:
 
 - Per-file or per-function baselines (current policy is global; once
   too coarse, a v2 schema can carry per-target caps).
-- Mutation testing as a third quality dimension (orthogonal to coverage
-  and complexity).
-- Per-module budgets (Layer 4 policy).
+- Mutation score baseline in `quality-thresholds.json`: track survival rate
+  per module and fail CI when it rises.
+- CI wiring for mutation testing once scope and noise are calibrated.
+- Per-module budgets (Layer 5 policy).
