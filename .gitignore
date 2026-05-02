@@ -29,6 +29,7 @@ ops/quality/report-*.json
 ops/quality/report-*.md
 .mypy_cache/
 .ruff_cache/
+.mutmut-cache
 dist/
 build/
 *.spec.bak
