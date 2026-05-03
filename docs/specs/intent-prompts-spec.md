@@ -177,7 +177,7 @@ The Interpretation section currently contains: Recurring themes, Create a digest
 
 ---
 
-## 8. Build sequence (for future Template H prompts)
+## 8. Build sequence (for future implementation prompts)
 
 One prompt per task. Small scope. Strict scope-lock. Merge between each.
 
@@ -222,7 +222,7 @@ Post-v1, consider an opt-in setting: *"Automatically classify new imports"*, def
 3. **UI label:** *Directive prompts* (route: `/prompts`).
 4. **Classifier trigger:** On-demand only via the "Build my prompt library" button.
 
-No further blocking decisions remain. Section 8 is ready to be executed as a series of Template H prompts for Claude Code.
+No further blocking decisions remain. Section 8 is ready to be executed as a series of implementation prompts for Claude Code.
 
 ---
 
