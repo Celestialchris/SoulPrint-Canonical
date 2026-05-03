@@ -64,7 +64,6 @@ This shape is a heading, not a ticket. Individual tickets (extension manifest, P
 
 - Frozen decisions: `DECISIONS.md`
 - Release notes: `docs/releases/RELEASE-v0.1.0.md`
-- Launch playbook: `docs/releases/LAUNCH-PLAYBOOK.md`
 - Intent Prompts spec: `docs/specs/intent-prompts-spec.md`
 - Obsidian Bridge spec: `docs/specs/obsidian-bridge-spec.md`
 - Memory Passport spec: `docs/specs/memory-passport-spec.md`

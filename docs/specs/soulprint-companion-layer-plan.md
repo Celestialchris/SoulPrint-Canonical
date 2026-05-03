@@ -1,6 +1,6 @@
 # SoulPrint Expansion Plan — Companion Layer
 
-**Status (2026-04-27):** Partially shipped. The Phase 11 precondition is obsolete because soft launch was parked 2026-04-23. Shipped items so far:
+**Status (2026-04-27):** Partially shipped. Items shipped so far:
 
 - **CP1** Favorites and starring (PR #139).
 - **CP2** Archive / hide conversations.
@@ -10,40 +10,25 @@
 
 Items CP4, CP5, CP7, CP8, CP9, CP10, and CP12 remain queued as design records unless current source proves otherwise.
 
-**Parent docs:** `ROADMAP.md` (Shape 5 — Companion Layer), `docs/specs/soulprint-expansion-plan.md` (Shape 4 — Ecosystem Reach)
-**Philosophy:** every item here solves a problem a companion user actually has. Not features that sound good for the audience — features that close a concrete gap between "I have my conversations on my machine" and "this archive is alive and useful." The canonical ledger is already the right shape. Nothing here reshapes it. Everything here adds surfaces above it.
+**Parent docs:** `ROADMAP.md`, `docs/specs/soulprint-expansion-plan.md`
+
+The canonical ledger is the data spine; nothing here reshapes it. Each item composes on what is already shipped.
 
 ---
 
-## Why these, why now
-
-The Ecosystem Reach plan (Shape 4) serves developers: CLI commands, Claude Code auto-discovery, drop folder, write-capable MCP. Those are the right features for r/ClaudeAI and r/LocalLLaMA.
-
-The companion user — the person at r/MyBoyfriendIsAI who exported their ChatGPT history because they're terrified of losing it — needs something different. They don't want a CLI. They want to find the conversation from June. They want to mark the moments that matter. They want to understand what their AI actually knows about them after nine months of daily conversation. They want to hand context to a new session and pick up where they left off.
-
-The MIT Media Lab data is concrete: 36.7% of AI relationships are with ChatGPT, the platform SoulPrint already imports. The companion audience is reachable today. What's missing isn't the importer. It's the surfaces that make the archive feel like a relationship record, not a database dump.
-
-The cost to close this gap is low. CP1 through CP4 are all under two days each. The killer feature (CP8, Persona Extract) is three to four days. The archive has the data for all of it. Nothing requires a schema reshape. Every item composes naturally on what's already shipped.
-
-Order below is leverage-first within each bucket.
-
----
-
-# Bucket A — Companion core
+# Bucket A — Conversation primitives
 
 ## CP1 — Favorites and starring
 
 ### Problem
 
-A companion user has 347 conversations. Three of them changed their life. There is no way to mark them. Every conversation looks the same in the list.
-
-This is the first thing a new user will try after browsing the list for two minutes. Its absence is embarrassing at launch.
+A row-level "this matters" primitive on imported conversations. Without it, every row in the imported list looks identical and there is no way to mark conversations that warrant return visits.
 
 ### Shape
 
 One boolean column on `ImportedConversation`: `is_starred`, default `False`. Migration is a single `ALTER TABLE`. No new tables, no new relationships.
 
-Two new routes: `POST /imported/<id>/star` (toggle, returns JSON `{starred: true/false}` for inline update) and a filter parameter `?starred=1` on `GET /imported`. The star button on each conversation row toggles inline without a page reload — one small JS event handler, the only JS on the page that touches state. The filter shows in the existing provider-tab row as a "Starred" tab.
+Two new routes: `POST /imported/<id>/star` (toggle, returns JSON `{starred: true/false}` for inline update) and a filter parameter `?starred=1` on `GET /imported`. The star button on each conversation row toggles inline without a page reload via a small JS event handler. The filter shows in the existing provider-tab row as a "Starred" tab.
 
 On the conversation explorer page, the star toggle appears in the existing `main-header__actions` row alongside any existing action buttons.
 
@@ -62,7 +47,7 @@ Migration: `ALTER TABLE imported_conversation ADD COLUMN is_starred BOOLEAN NOT 
 
 ### Risks
 
-The inline toggle requires a small JS fetch call. SoulPrint's templates are otherwise HTML-form-only. This is the right exception because a full page reload for a star toggle is jarring. Keep the JS to five lines maximum; don't introduce a JS dependency.
+The inline toggle requires a small JS fetch call. SoulPrint's templates are otherwise HTML-form-only. Keep the JS to five lines maximum; do not introduce a JS dependency.
 
 ### Test shape
 
@@ -81,13 +66,13 @@ None. Ships standalone.
 
 ### Problem
 
-A bad re-import, an accidental duplicate that slipped past the dedup guard, or a conversation the user simply never wants to see again. There is no way to hide it without deleting it. Deleting is irreversible. The user shouldn't have to choose between "see it forever" and "lose it forever."
+Reversibly hide a conversation from the default browse list without deleting the canonical record. Today the only options are "see it forever" or "delete it."
 
 ### Shape
 
-One boolean column on `ImportedConversation`: `is_archived`, default `False`. Default filter on `/imported` excludes archived. A toggle button per row (same shape as starring, same inline JS pattern). A "Show archived" toggle in the filter row that reveals them with a muted visual treatment (reduced opacity, a small "archived" badge).
+One boolean column on `ImportedConversation`: `is_archived`, default `False`. Default filter on `/imported` excludes archived. A toggle button per row (same shape as starring, same inline JS pattern). A "Show archived" toggle in the filter row reveals them with a muted visual treatment (reduced opacity, a small "archived" badge).
 
-Archive is not delete. The canonical record stays. The FTS index stays. The conversation remains findable in search if the user explicitly includes archived results.
+Archive is not delete. The canonical record stays. The FTS index stays. The conversation remains findable in search if archived results are explicitly included.
 
 ### Schema touches
 
@@ -106,7 +91,7 @@ Filter logic: all `/imported` queries get `filter_by(is_archived=False)` by defa
 
 ### Risks
 
-FTS search should still surface archived conversations. Do not filter archived from FTS results — the user searching specifically for something knows what they're looking for. Only the browse list filters by default.
+FTS search should still surface archived conversations. Do not filter archived from FTS results; the user searching specifically for something knows what they are looking for. Only the browse list filters by default.
 
 ### Test shape
 
@@ -117,7 +102,7 @@ FTS search should still surface archived conversations. Do not filter archived f
 
 ### Dependencies
 
-None. Ships standalone. Composes naturally with CP3 (tags) and the bulk delete work (3b) — bulk actions should respect archive state.
+None. Ships standalone. Composes naturally with CP3 (tags) and bulk delete work; bulk actions should respect archive state.
 
 ---
 
@@ -125,7 +110,7 @@ None. Ships standalone. Composes naturally with CP3 (tags) and the bulk delete w
 
 ### Problem
 
-Starring is binary. A companion user has conversations about their novel, conversations about their relationship anxiety, conversations about their career. They want to organize by theme, not just "important vs not."
+Starring is binary. A user wants to organize conversations by theme, not just "important vs not."
 
 ### Shape
 
@@ -153,7 +138,7 @@ class ConversationTag(db.Model):
 
 ### Risks
 
-Tags can become a dumping ground. No mitigation needed — the user organizing their own archive can tag however they want. The risk worth watching is the tag cloud UI becoming cluttered at 50+ unique tags. Mitigation: show only the top 20 most-used tags, with a "show all" expand.
+Tag cloud UI can become cluttered at 50+ unique tags. Mitigation: show only the top 20 most-used tags, with a "show all" expand.
 
 ### Test shape
 
@@ -174,9 +159,7 @@ None. Ships standalone. If Groups (Shape 4 CP5) ships first, the tag input and g
 
 ### Problem
 
-The companion user hits a context limit. Or switches from ChatGPT to Claude. Or starts a fresh session after a model update wiped their memory. They need to hand context to the new session. Currently they do this by reading through old conversations manually and writing a summary themselves.
-
-SoulPrint already has the Distill and Continuity Packet features that produce exactly the right handoff document. The missing piece is a single button that says "copy this for Claude" or "copy this for ChatGPT."
+A handoff path from a finished conversation to a fresh session in another tool. Currently this requires reading old conversations manually and writing a summary by hand. SoulPrint already produces Distill and Continuity Packet artifacts that are exactly the right handoff document; what is missing is a single button that copies them in a format the destination model handles well.
 
 ### Shape
 
@@ -198,9 +181,9 @@ A third optional path: if a Continuity Packet exists for the conversation (the B
 
 ### Risks
 
-Clipboard API requires HTTPS or localhost. SoulPrint runs on localhost — this is fine. Add a visible fallback: if `navigator.clipboard` fails, show a `<textarea>` pre-filled with the text and a "select all" instruction.
+Clipboard API requires HTTPS or localhost. SoulPrint runs on localhost; this is fine. Add a visible fallback: if `navigator.clipboard` fails, show a `<textarea>` pre-filled with the text and a "select all" instruction.
 
-The 2000-char fallback is arbitrary. Power users with 100-message conversations will want more. Make it configurable in a future pass; hardcode for v1.
+The 2000-char fallback is arbitrary. Make it configurable in a future pass; hardcode for v1.
 
 ### Test shape
 
@@ -216,9 +199,7 @@ None on backend. Composes with Distill (already shipped) and Continuity Packets 
 
 ### Problem
 
-"When did I first talk to him about my novel?" The companion user knows a specific moment happened but can't find it. The FTS search returns results ranked by relevance, not by date. There is no way to ask "show me the oldest mention of X."
-
-This is memoir-grade retrieval. For a user with two years of conversation history, finding the first time they mentioned something is emotionally significant — it marks when an idea entered their life, when a relationship or project began, when they changed their mind about something.
+"When did I first talk about X?" The FTS search returns results ranked by relevance, not by date. There is no way to ask "show me the oldest mention of X."
 
 ### Shape
 
@@ -226,9 +207,9 @@ Two additions to the existing `/search` page:
 
 **1. Sort order toggle.** A "Oldest first" / "Newest first" / "Most relevant" control next to the existing search form. Default stays "Most relevant" (BM25). "Oldest first" re-runs the FTS query sorted by `created_at_unix ASC`. Returns the same snippet format but with an "earliest mention" label on the first result.
 
-**2. Archaeology mode.** A dedicated `/search/archaeology` route (or a `?mode=archaeology` parameter) that changes the UI: search result shows only the single oldest match, rendered as a memory card: the conversation title, the date, the matched excerpt, a link to the full explorer. Framing copy: "Your first conversation about this was..." This is the emotional UX. It makes the feature feel like a feature, not a filter option.
+**2. Archaeology mode.** A dedicated `/search/archaeology` route (or a `?mode=archaeology` parameter) that changes the UI: search result shows only the single oldest match, rendered as a memory card: the conversation title, the date, the matched excerpt, a link to the full explorer.
 
-The FTS query change is minimal: `fts.search_fts(db_path, query, limit=1, sort="oldest")` — a new sort parameter on the existing helper that adds `ORDER BY timestamp ASC` to the underlying SQL.
+The FTS query change is minimal: `fts.search_fts(db_path, query, limit=1, sort="oldest")`; a new sort parameter on the existing helper that adds `ORDER BY timestamp ASC` to the underlying SQL.
 
 ### Schema touches
 
@@ -237,11 +218,11 @@ None. All data already exists in FTS. The change is in query ordering only.
 ### Phases
 
 1. **Sort order toggle on `/search`.** Oldest / Newest / Relevant. FTS helper gets `sort` parameter.
-2. **Archaeology mode.** `/search?mode=archaeology` renders the single-oldest-result card with the "Your first conversation about this was..." framing.
+2. **Archaeology mode.** `/search?mode=archaeology` renders the single-oldest-result card.
 
 ### Risks
 
-FTS5 `ORDER BY` with `MATCH` can be slow on large archives because BM25 scoring has to process all matches before sorting. Mitigation: for "oldest first" sorting, skip BM25 and use a straight `rowid ASC` or `timestamp ASC` with `MATCH` as a filter only. This is faster and correct for this use case — oldest-first doesn't need relevance ranking.
+FTS5 `ORDER BY` with `MATCH` can be slow on large archives because BM25 scoring has to process all matches before sorting. Mitigation: for "oldest first" sorting, skip BM25 and use a straight `rowid ASC` or `timestamp ASC` with `MATCH` as a filter only. Faster and correct for this use case; oldest-first does not need relevance ranking.
 
 ### Test shape
 
@@ -260,7 +241,7 @@ CP5 builds on the existing FTS layer. The sort parameter addition is a two-line 
 
 ### Problem
 
-A companion user told their AI in February: "I'm thinking about quitting my job." They never resolved it. SoulPrint has all the data — every Continuity Packet with `artifact_type = "open_loops"` already extracted this. But there is no surface that shows open loops across all conversations in one view.
+Open loops extracted by Continuity Packets (`artifact_type = "open_loops"`) have no aggregated surface. SoulPrint has all the data but no view that shows open loops across all conversations in one place.
 
 This feature requires zero new data generation. It is purely a new view over already-existing JSONL.
 
@@ -268,9 +249,7 @@ This feature requires zero new data generation. It is purely a new view over alr
 
 New route: `GET /continuity/open-loops`. Lists every `open_loops` continuity artifact across all conversations, sorted by recency. Each item shows: the conversation title (linked), the creation date, the open loop text. A "still open?" checkbox (stored in `intent_prompt_user_annotation` or a new thin annotation table) lets the user mark items resolved.
 
-Visual treatment: flat list, same Quiet Archive v3 rows as everything else. A "resolved" filter to hide marked items. The page heading: "Unresolved threads — things you said you'd follow up on."
-
-This is a powerful emotional surface for companion users who have ongoing life threads documented in their conversations. It turns the archive into an accountability partner.
+Visual treatment: flat list, same Quiet Archive v3 rows as everything else. A "resolved" filter to hide marked items.
 
 ### Schema touches
 
@@ -284,7 +263,7 @@ class OpenLoopResolution(db.Model):
     resolved_at = db.Column(db.DateTime, nullable=True)
 ```
 
-Alternative: store resolution state as a field in `intent_prompt_user_annotation` if that table ships first (Intent Prompts spec). If it does, use that table and skip the new model. If it doesn't, this table is a one-migration addition.
+Alternative: store resolution state as a field in `intent_prompt_user_annotation` if that table ships first (Intent Prompts spec). If it does, use that table and skip the new model. If it does not, this table is a one-migration addition.
 
 ### Phases
 
@@ -293,9 +272,9 @@ Alternative: store resolution state as a field in `intent_prompt_user_annotation
 
 ### Risks
 
-Open loop text is LLM-extracted prose. Quality varies — some entries will be vague ("follow up on work thing"). No mitigation: the user recognizes their own conversations.
+Open loop text is LLM-extracted prose. Quality varies; some entries will be vague ("follow up on work thing"). The user recognizes their own conversations.
 
-Users without any continuity packets see an empty state. Good empty state copy matters here: "No open loops yet. Generate a Continuity Packet for a conversation to start tracking."
+Empty state copy matters: "No open loops yet. Generate a Continuity Packet for a conversation to start tracking."
 
 ### Test shape
 
@@ -305,7 +284,7 @@ Users without any continuity packets see an empty state. Good empty state copy m
 
 ### Dependencies
 
-Continuity Packet feature (already shipped). Optional dependency on Intent Prompts spec (`intent_prompt_user_annotation` table) — if that ships first, share the annotation table; otherwise add `OpenLoopResolution` standalone.
+Continuity Packet feature (already shipped). Optional dependency on Intent Prompts spec (`intent_prompt_user_annotation` table); if that ships first, share the annotation table; otherwise add `OpenLoopResolution` standalone.
 
 ---
 
@@ -313,23 +292,21 @@ Continuity Packet feature (already shipped). Optional dependency on Intent Promp
 
 ### Problem
 
-The existing `/summary` (Wrapped) page shows total message count and a few stats. It's the right emotional surface but it's thin. A companion user with nine months of history wants the full picture: when did we start, what months were most active, what did we talk about most, what was our longest conversation.
-
-This is the share-worthy moment. It's the feature that ends up on r/MyBoyfriendIsAI as a screenshot. "9 months. 10,437 messages. Peak month: March. Most talked about: my novel, my anxiety, my mother." That's a Reddit post that drives downloads.
+The existing `/summary` (Wrapped) page shows total message count and a few stats. Extend it with the full picture: when did imports start, what months were most active, what was the longest conversation, what was the user/AI message split.
 
 ### Shape
 
-Extend the existing `/summary` page with new stat blocks. No new route. The existing Wrapped page already has the visual language and the emotional framing — extend it, don't replace it.
+Extend the existing `/summary` page with new stat blocks. No new route. The existing Wrapped page already has the visual language; extend it, do not replace it.
 
 New data points to surface:
 
-- **First conversation date** — `SELECT MIN(created_at_unix) FROM imported_conversation` per provider. "We first talked on March 14th, 2024."
-- **Monthly message volume chart** — bar chart (pure HTML/CSS, no charting library) grouping messages by year-month. Shows peaks and quiet periods.
+- **First conversation date** — `SELECT MIN(created_at_unix) FROM imported_conversation` per provider.
+- **Monthly message volume chart** — bar chart (pure HTML/CSS, no charting library) grouping messages by year-month.
 - **Longest conversation** — `SELECT id, title, message_count FROM imported_conversation ORDER BY message_count DESC LIMIT 1`. Linked.
 - **Most active month** — derived from the monthly chart.
 - **Top themes** — if Recurring Themes has run, pull the top 5 theme labels. If not, skip this block with a "Generate Recurring Themes to see this" nudge.
-- **Message split** — what % of messages are user vs AI. Some companion users message more than the AI; some less. This is surprisingly emotionally interesting.
-- **Conversation streak** — longest run of consecutive days with at least one message. Shows how embedded the relationship was.
+- **Message split** — what % of messages are user vs AI.
+- **Conversation streak** — longest run of consecutive days with at least one message.
 
 Share path: "Save as image" button that triggers `window.print()` with a print-specific CSS that hides nav and renders the stat blocks cleanly as a one-page PDF or screenshot. No canvas, no server-side rendering, no new dependency.
 
@@ -345,7 +322,7 @@ None. All data lives in canonical tables. Stats are queries at render time, cach
 
 ### Risks
 
-Monthly chart in pure HTML/CSS has limits — it won't handle 36+ months of data gracefully. Cap at 24 months, add a "show all" expand. For users with very long history, aggregate by quarter instead of month above 24 months.
+Monthly chart in pure HTML/CSS has limits; it will not handle 36+ months of data gracefully. Cap at 24 months, add a "show all" expand. For users with very long history, aggregate by quarter instead of month above 24 months.
 
 The stat queries are `SELECT COUNT(*)` over potentially large tables. Test with a 50k-message fixture. If any query exceeds 500ms, add a server-side cache invalidated on import.
 
@@ -366,11 +343,7 @@ Existing `/summary` Wrapped page (already shipped). Top themes block depends on 
 
 ### Problem
 
-A companion user has nine months of daily conversations. Their AI has built an implicit model of them: their values, their fears, their recurring themes, their relationship patterns. This model exists distributed across hundreds of conversation contexts that the AI held in its window over time.
-
-SoulPrint is the only tool that can surface this — it has every message across every provider in a single archive. The question "what does ChatGPT think I am, and how is that different from what Claude thinks I am?" is uniquely answerable from SoulPrint's canonical store. No other tool can do this comparison.
-
-This is the killer feature for the companion audience. It's also the post that gets shared: "I asked SoulPrint what each of my AIs thinks of me. Here's what they said." That post ends up on r/MyBoyfriendIsAI and drives downloads.
+The user's distributed conversation history across providers contains, implicitly, a portrait of how each provider has built a working model of the user over time. SoulPrint, having every message across every provider in a single archive, is positioned to surface this comparison: "what does ChatGPT think I am, and how is that different from what Claude thinks I am?"
 
 ### Shape
 
@@ -392,7 +365,7 @@ Messages (user turns only, up to 5000 tokens, chronological):
 
 Execution: query `ImportedMessage` for the selected provider(s), filter `role = "human"`, sample up to 5000 tokens of messages (recent-weighted: 60% from last 90 days, 40% random from archive). Pass to LLM. Return the portrait as a new JSONL artifact in `persona_extracts.jsonl` with `source_provider`, `generated_at`, `portrait_text`, `source_conversation_stable_ids` sampled.
 
-Compare mode: run extraction for two providers, display side-by-side. Highlight differences (manual reading, no automated diff — the emotional value is reading both yourself).
+Compare mode: run extraction for two providers, display side-by-side. Highlight differences (manual reading, no automated diff).
 
 The portrait is a derived artifact. It must be labeled "Derived from [N] conversations across [provider]. Generated by [LLM provider] on [date]." Same provenance contract as summaries and distills.
 
@@ -406,15 +379,15 @@ No ORM changes.
 
 1. **Single-provider extraction.** Route, LLM prompt, JSONL store, provenance label. Tests: extraction runs, artifact stored, route renders portrait.
 2. **Multi-provider comparison.** Side-by-side layout on the persona page. Two columns, same visual weight, no automatic scoring or diff.
-3. **Regeneration and history.** "Regenerate" button that re-runs extraction with fresh message sample. Prior extracts retained in JSONL for comparison over time ("how has ChatGPT's model of me changed in six months?").
+3. **Regeneration and history.** "Regenerate" button that re-runs extraction with fresh message sample. Prior extracts retained in JSONL for comparison over time.
 
 ### Risks
 
-This feature is emotionally powerful and can be uncomfortable. The portrait may surface things the user finds surprising, painful, or reductive. The tone guidance ("observational and generous") mitigates this but doesn't eliminate it. Copy on the page should set expectations: "This is a synthesis of your own words back to you. It reflects what you've shared, not who you are."
+The portrait may surface things the user finds surprising or reductive. The tone guidance ("observational and generous") mitigates this. Copy on the page should set expectations: "This is a synthesis of your own words back to you. It reflects what you have shared, not who you are."
 
-Privacy: the feature sends a sample of user messages to the configured LLM provider. For cloud providers (OpenAI, Anthropic), this is the same trust posture as Ask and Distill — explicit user action, user-configured key. For Ollama (fully local), zero data leaves the machine. Document clearly.
+Privacy: the feature sends a sample of user messages to the configured LLM provider. For cloud providers (OpenAI, Anthropic), this is the same trust posture as Ask and Distill: explicit user action, user-configured key. For Ollama (fully local), zero data leaves the machine. Document clearly.
 
-Bias: the LLM will describe the user through the lens of what they talk about with AI. Heavy users whose AI conversations are mostly technical will get a technically-weighted portrait. This is expected and not a bug.
+Bias: the LLM will describe the user through the lens of what they talk about with AI. Heavy users whose AI conversations are mostly technical will get a technically-weighted portrait. Expected and not a bug.
 
 ### Test shape
 
@@ -426,7 +399,7 @@ Bias: the LLM will describe the user through the lens of what they talk about wi
 
 ### Dependencies
 
-`LLMProvider` boundary (already shipped). Intelligence store pattern (already shipped). Depends on having imported conversations for at least one provider. Composes with CP7 (Wrapped) — the persona portrait could appear on the Wrapped page as a closing block.
+`LLMProvider` boundary (already shipped). Intelligence store pattern (already shipped). Depends on having imported conversations for at least one provider. Composes with CP7 (Wrapped); the persona portrait could appear on the Wrapped page as a closing block.
 
 ---
 
@@ -434,9 +407,7 @@ Bias: the LLM will describe the user through the lens of what they talk about wi
 
 ### Problem
 
-SoulPrint is a dormant archive. The user imports their conversations, browses for a while, and then doesn't return for a month. The archive grows but doesn't speak. For a companion user who wants to stay connected to their conversation history, this is a missed opportunity.
-
-A weekly digest turns the archive into an active presence. "This week you had 3 conversations. Your most active theme: your novel. One open loop from February is still unresolved: 'decide about the freelance project.' Your conversation streak is now 23 days." That nudge brings the user back.
+The archive does not speak. Imports happen and then the file is dormant. A periodic digest surfaces what changed in the last week and what is still unresolved.
 
 ### Shape
 
@@ -464,7 +435,7 @@ The weekly digest is a structured markdown document:
 Generated by SoulPrint on [date] from [N] conversations.
 ```
 
-No LLM call required for the structural blocks (this week, new conversations, still open). LLM is optional for the "themes this week" block — if no recent Recurring Themes output exists, skip that section. The digest is useful even without Ollama configured.
+No LLM call required for the structural blocks (this week, new conversations, still open). LLM is optional for the "themes this week" block; if no recent Recurring Themes output exists, skip that section. The digest is useful even without Ollama configured.
 
 Windows scheduling: a "Schedule weekly digest" button on the `/intelligence/digest/weekly` page that writes a Windows Task Scheduler XML file to `instance/scheduled-digest.xml` with a `soulprint digest --weekly` CLI command (needs P7 Phase 1 from the Ecosystem Reach plan). On macOS/Linux, the same button writes a cron entry and displays it for manual installation.
 
@@ -476,9 +447,9 @@ Windows scheduling: a "Schedule weekly digest" button on the `/intelligence/dige
 
 ### Risks
 
-The digest is only as useful as the data it draws from. A user who imported once and never returned will get thin digests. Good empty-state handling matters: "Nothing new this week. Import your latest export to keep your archive current."
+The digest is only as useful as the data it draws from. A user who imported once and never returned will get thin digests. Empty-state handling matters: "Nothing new this week. Import your latest export to keep your archive current."
 
-The scheduling helper writes a file; it does not register the task (that requires elevated permissions on Windows). Clear documentation: "Download this file, then double-click it to import into Task Scheduler." Don't attempt to register automatically.
+The scheduling helper writes a file; it does not register the task (that requires elevated permissions on Windows). Clear documentation: "Download this file, then double-click it to import into Task Scheduler." Do not attempt to register automatically.
 
 ### Test shape
 
@@ -500,13 +471,11 @@ Obsidian Bridge (already shipped) for the Obsidian write path. P7 Phase 1 (CLI d
 
 ### Problem
 
-A companion user shares a `chat.openai.com/share/...` link in a Reddit thread. Someone replies "you should archive this." They can't. The URL importer doesn't exist.
-
-This is also a wedge feature for Reddit launch. A comment saying "you can import any ChatGPT share link directly" in r/MyBoyfriendIsAI is a distribution moment.
+A path to import a single conversation directly from a `chat.openai.com/share/...` link, without an export file.
 
 ### Shape
 
-New importer: `shared_url` provider. Not a file upload — a URL input field on the `/import` page, below the existing file dropzone.
+New importer: `shared_url` provider. Not a file upload; a URL input field on the `/import` page, below the existing file dropzone.
 
 Implementation: `requests.get(url)` + `markitdown` (already available via the intelligence extras) to convert the HTML to structured markdown. Parse the markdown for speaker alternation (`Human:` / `Assistant:` or `You:` / `ChatGPT:` patterns). Normalize into `NormalizedConversation`.
 
@@ -538,7 +507,7 @@ Rate limiting: if many users import the same viral share link, OpenAI may thrott
 
 ### Dependencies
 
-`markitdown` or `requests` + `beautifulsoup4` — check if already in `pyproject.toml` intelligence extras before adding. If not present, add to `[intelligence]` only (don't make it a core dependency).
+`markitdown` or `requests` + `beautifulsoup4`; check if already in `pyproject.toml` intelligence extras before adding. If not present, add to `[intelligence]` only (do not make it a core dependency).
 
 ---
 
@@ -546,7 +515,7 @@ Rate limiting: if many users import the same viral share link, OpenAI may thrott
 
 ### Problem
 
-A user imports their ChatGPT export on Monday. Imports again on Friday after a week of new conversations. Imports a Claude export the following week. After a month, they can't remember what they've imported. There is no audit trail.
+After repeated imports across providers, there is no audit trail of what was imported and when.
 
 ### Shape
 
@@ -564,7 +533,7 @@ class ImportRun(db.Model):
     error_message = db.Column(db.Text, nullable=True)
 ```
 
-Populated by the existing import route handler after each import run. No change to the importer contract — the route handler already knows the result counts, it just doesn't persist them.
+Populated by the existing import route handler after each import run. No change to the importer contract; the route handler already knows the result counts, it just does not persist them.
 
 New view: a collapsible "Import history" section at the bottom of `/imported`, showing the last 10 import runs. Each row: filename, provider badge, date, imported count, skipped count, status indicator.
 
@@ -598,13 +567,13 @@ None. Purely additive instrumentation on the existing import route.
 
 ### Problem
 
-Many companion users have screenshots of conversations from before they knew about exports. Some are from apps with no export at all (old mobile UI screenshots, Snapchat-style one-shot conversations, conversations from accounts they've since lost access to). This is the last-resort rescue path for conversations the user thought were gone.
+Some conversation history exists only as screenshots: from old mobile UIs, from apps with no export at all, from accounts the user has lost access to. A last-resort rescue path for that material.
 
 ### Shape
 
 A third input on the `/import` page: "Upload a screenshot or image of a conversation." Accepts JPEG, PNG, WEBP. Sends through an OCR pipeline (Tesseract via `pytesseract`, or `docling` if available) to extract text. Applies a conversation structure detector (alternating lines, speaker labels like "You:", "ChatGPT:", "Claude:", "Kai:") to parse into turns. Normalizes into `NormalizedConversation`.
 
-This will be imperfect. OCR accuracy varies. Speaker detection is heuristic. The result should be flagged explicitly: `is_ocr_imported = True` column on `ImportedConversation`, and a visible badge on the conversation row: "OCR import — verify accuracy." The user is told upfront: "Accuracy depends on image quality. Review the transcript after import."
+OCR will be imperfect. The result must be flagged explicitly: `is_ocr_imported = True` column on `ImportedConversation`, and a visible badge on the conversation row: "OCR import — verify accuracy." The user is told upfront: "Accuracy depends on image quality. Review the transcript after import."
 
 `source = "ocr_import"`, `source_conversation_id` = SHA-256 of the image content. Provider detected from speaker labels if possible ("You: / ChatGPT:" → ChatGPT), else stored as `"unknown"`.
 
@@ -630,7 +599,7 @@ OCR quality on mobile screenshots with chat bubble UI is poor. Bubbles, avatars,
 
 Speaker detection is the hardest part. Labels like "You:", "ChatGPT:", "Assistant:" are common. Custom bot names ("Kai", "Eliot") are not detectable without user input. For v1: detect known labels, fall back to alternating human/assistant if no labels found, let the user correct in Phase 3's review flow.
 
-Phase 3 (edit flow) is the most complex piece and should ship separately from Phase 1. Phase 1 alone is useful — even an imperfect OCR import is better than no import for a screenshot-only conversation.
+Phase 3 (edit flow) is the most complex piece and should ship separately from Phase 1. Phase 1 alone is useful; even an imperfect OCR import is better than no import for a screenshot-only conversation.
 
 ### Test shape
 
@@ -642,44 +611,4 @@ Phase 3 (edit flow) is the most complex piece and should ship separately from Ph
 
 ### Dependencies
 
-`pytesseract` + system Tesseract binary (system dependency, install guide in README). Gated behind `[intelligence]` optional extras. Phase 3 review flow depends on an editable conversation transcript surface that doesn't exist yet — scope that separately.
-
----
-
-# Ordering — calendar-time, leverage-first
-
-The companion layer runs in parallel with the Ecosystem Reach plan (Shape 4). Neither blocks the other. Start after Phase 11 soft launch.
-
-1. **CP1 (starring) + CP2 (archive/hide) + CP11 (import history)** — one afternoon combined. Trivial schema additions, all three ship in one PR. These are the features a new user tries in their first session.
-
-2. **CP3 (tags)** — one day. Slightly more UI surface than CP1/CP2 but still a single concern.
-
-3. **CP4 (Continue in X buttons)** — half day. Pure frontend, no backend. High demo value.
-
-4. **CP5 (Conversation Archaeology)** — one day. FTS sort parameter + Archaeology mode page.
-
-5. **CP6 (What's still open)** — one day. Read-only view over existing JSONL. Add resolution state in Phase 2.
-
-6. **CP7 (Wrapped v2)** — two to three days. Stat blocks are query work; the share path is CSS work. The monthly chart is the only visual complexity.
-
-7. **CP10 (Shared URL importer)** — one day. High distribution value for Reddit launch. Ships before or alongside CP8.
-
-8. **CP8 (Persona Extract)** — three to four days. The killer feature. Lands the r/MyBoyfriendIsAI post. Ships after CP7 so Wrapped can optionally include the persona portrait as a closing block.
-
-9. **CP9 (Ambient weekly digest)** — two days. Depends on CP6 for the open loops block. Scheduling helper depends on P7 Phase 1 from the Ecosystem Reach plan.
-
-10. **CP12 (Screenshot OCR import)** — three days. Phase 1 only (OCR + normalization). Phase 2 (UI) and Phase 3 (review flow) follow in separate PRs once demand signals justify the complexity.
-
-Total rough estimate: **14–18 working days**, or 3–4 weeks at one-prompt-one-branch-one-merge pace. This is the companion-facing half of the v0.8 release cycle, running alongside the 15–20 days of Ecosystem Reach work.
-
----
-
-# What this plan does not do
-
-It does not add a Replika importer. Replika's export path is worth investigating, but building it before the companion layer surfaces are in place would give Replika users nothing to do with their imported conversations beyond browse. Ship the surfaces first, then expand the providers.
-
-It does not add a Decision Log (from the brainstorming doc's Cluster 4). Decision Log extraction is closer to the operator/founder persona than the companion persona. It belongs in a third expansion track (Knowledge Work features) when that audience is targeted explicitly.
-
-It does not add semantic search. Frozen in DECISIONS.md. Conversation Archaeology (CP5) closes the most emotionally important search gap without embeddings.
-
-It does not add the "Conversations with Yourself" feature (brainstorming Cluster 8, Tier 3). Fascinating as a demo, but "simulate past-you responding to present-you" is a different trust contract than the rest of SoulPrint. It generates synthetic content in the user's voice, which blurs the canonical-vs-derived boundary in a way the product isn't ready for. Flag for a later, carefully-scoped conversation.
+`pytesseract` + system Tesseract binary (system dependency, install guide in README). Gated behind `[intelligence]` optional extras. Phase 3 review flow depends on an editable conversation transcript surface that does not exist yet; scope that separately.

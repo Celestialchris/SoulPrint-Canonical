@@ -61,7 +61,6 @@ These audiences share the same product but read it in completely different vocab
 
 - **Frozen product principles** — those live in [`positioning.md`](positioning.md).
 - **Frozen architectural decisions** — those live in [`../../DECISIONS.md`](../../DECISIONS.md).
-- **Launch plan and distribution** — lives in [`../releases/LAUNCH-PLAYBOOK.md`](../releases/LAUNCH-PLAYBOOK.md) and [`../releases/SOULPRINT-30-DAY-VISION.md`](../releases/SOULPRINT-30-DAY-VISION.md).
 - **Feature roadmap** — lives in [`../../ROADMAP.md`](../../ROADMAP.md).
 
 This file is the bridge between doctrine (what SoulPrint is) and distribution (how SoulPrint reaches people). It should be short, current, and updated when the landscape changes.

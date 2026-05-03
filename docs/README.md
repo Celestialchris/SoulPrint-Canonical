@@ -32,12 +32,9 @@
 - [Project status (2026-03-09)](reference/history/project-status-2026-03-09.md)
 - [Repair notes](reference/history/repair-notes.md)
 - [Repo audit baseline](reference/history/repo-audit-baseline.md)
-- [Future directions v2](reference/ideas/future-directions-v2.md) *(speculative; see also [v1](reference/ideas/future-directions.md))*
 
 ## Releases
 - [v0.1.0 release notes](releases/RELEASE-v0.1.0.md)
-- [Launch playbook](releases/LAUNCH-PLAYBOOK.md)
-- [30-day vision](releases/SOULPRINT-30-DAY-VISION.md)
 
 ## Archive
 

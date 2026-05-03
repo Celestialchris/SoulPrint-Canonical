@@ -82,7 +82,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 ### Docs
 - `docs/product/brand.md` and `docs/product/visual-direction.md` rewritten for Quiet Archive v3.
 - Phase 4 archival: retired Magenta Sanctum doctrine and USB Drive mockup moved to `docs/archive/`, SP-drive.svg files removed, internal development scaffolding created, `.gitignore` sweep for dev debris.
-- Stale "Magenta Sanctum" and "USB Drive" references scrubbed from `app.css` comments, `LAUNCH-PLAYBOOK.md`, `obsidian-bridge-spec.md`.
+- Stale "Magenta Sanctum" and "USB Drive" references scrubbed from `app.css` comments and `obsidian-bridge-spec.md`.
 - `docs/README.md` index updated with landscape, intent-prompts-spec entries; archive section repointed at `docs/archive/`.
 - Fresh Quiet Archive v3 screenshots replace Magenta Sanctum era images.
 
@@ -232,7 +232,6 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 ## Repo Audit Reconciliation (2026-03-28)
 - README: requirements-minimal.txt → requirements.txt
 - README: test counts updated, surface count updated, obsidian/ added to repo map
-- LAUNCH-PLAYBOOK: Torchlit Vault → USB Drive reference fixed
 - PRODUCT-GRAMMAR-LOCK.md: noted as merged into brand.md and CLAUDE.md
 - Freemium gate tests: investigated root cause (instance/license.key)
 
