@@ -25,7 +25,7 @@ Preserve provenance, stable IDs, portability, and deterministic retrieval behavi
 3. Write tests before implementation when practical; for migrations and refactors, add or update regression coverage before changing behavior.
 4. Review code after implementation.
 5. Verify behavior with build, tests, lint, and security checks.
-6. Do not commit private session state, agent journals, or learned-pattern notes to the public distribution tree.
+6. Do not commit private session state, agent journals, or learned-pattern notes to the public distribution tree. See `CLAUDE.md` → `Private operating material` for the public-surface boundary.
 7. Generated quality reports may live under `ops/quality/`.
 
 ## Architecture Priorities
