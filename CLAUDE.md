@@ -1,7 +1,6 @@
 # CLAUDE.md — SoulPrint Contributor Reference
 
 > **Before starting work:** read `AGENTS.md`, then inspect the current branch, task scope, and relevant public project files.
-> **Private context note:** internal development history, private operating notes, and agent-process material are maintained outside the public distribution tree.
 > **Quality reports:** generated quality reports may still write to `ops/quality/`.
 
 ## What SoulPrint Is
@@ -14,6 +13,23 @@ A local-first memory continuity system for AI users. Import AI conversation hist
 2. **Browsing / Retrieval**: Read-only over ledger. Imported browser, explorer, federated search.
 3. **Intelligence / Answering**: Derived, never canonical. Summaries, topics, digests, continuity, grounded answers, traces.
 4. **Optional Extensions**: mem0, RAG, semantic layers. Never replace the ledger.
+
+## Private operating material
+
+Internal development history, private operating notes, agent-process records, and
+session continuity material are maintained outside the public distribution tree.
+
+When executing in this repository, follow:
+
+1. `AGENTS.md`
+2. `CLAUDE.md`
+3. The current task prompt
+4. Current repository files
+
+Do not search this repository for private context directories or private session
+records. They are not maintained on the public surface. Do not create public
+session logs in this repository unless the current task explicitly authorizes a
+release-safe record. Generated quality reports may write to `ops/quality/`.
 
 ## Patterns
 
