@@ -6,8 +6,7 @@ Codex-local boot guide, not a second project constitution.
 ## Authority Order
 
 1. Obey the repo root `AGENTS.md` first.
-2. Treat `CLAUDE.md`, `context/experts.md`, `context/template-h.md`, and
-   `ops/checkpoints/` as project context that constrains work.
+2. Treat `AGENTS.md`, `CLAUDE.md`, and the current task prompt as the public project context that constrains work. Private operating doctrine and checkpoints are maintained outside the public distribution tree.
 3. Treat `.codex/config.toml` as a description of available Codex tooling
    and defaults. It does not outrank repo law, user scope locks, or current
    task instructions.
@@ -42,7 +41,7 @@ Codex agents under `.codex/agents/`:
 - `reviewer.toml`
 
 These are role presets for bounded work. They are not autonomous authority
-and do not override `AGENTS.md`, `context/experts.md`, or the current prompt.
+and do not override `AGENTS.md`, `CLAUDE.md`, or the current prompt.
 
 Codex-local skills under `.codex/skills/`:
 
@@ -71,20 +70,11 @@ current task, follow the higher authority.
 
 ## Current Project Radar
 
-Treat `ops/checkpoints/queued-plans.md` as the live radar, not execution
-doctrine.
-
-Current strategic state from the checkpoint:
-
-- Phase 5 doctrine hardening reached a clean pause point.
-- Parked Phase 5 work must not resume unless explicitly requested.
-- The active campaign is the Uncle Bob Quality Engine.
-- The next code lane is `feat/quality-threshold-ratchet`.
+Use the current task prompt and fresh git state as the live radar. Do not assume private checkpoint files exist in this repository.
 
 ## Guardrails
 
-- Do not edit `.claude/`, `.agents/`, `.github/`, `context/`, or
-  `ops/checkpoints/` from a Codex harness-doc sync unless explicitly scoped.
+- Do not edit `.claude/`, `.agents/`, or `.github/` from a Codex harness-doc sync unless explicitly scoped.
 - Do not modify `.codex/config.toml`, `.codex/agents/`, or `.codex/skills/`
   when the task is only documentation alignment.
 - Do not add new agents, new skills, new MCP servers, or new workflows from

@@ -41,6 +41,18 @@ import_rescue.py
 tools/ecc/
 REPO-AUDIT-REPORT.html
 
+# Local/private development material
+context/
+ops/*
+
+# Public quality-tooling output path kept intentionally
+!ops/quality/
+!ops/quality/.gitkeep
+
+# Generated quality reports
+ops/quality/report-*.json
+ops/quality/report-*.md
+
 # User data / exports
 exports/
 PRIORITIES.md

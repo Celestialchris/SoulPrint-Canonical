@@ -5,6 +5,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 ## [Unreleased]
 
 ### Changed
+
 - **Explorer Copy transcript button promoted from inline styles to `.page-action-copy` class.** Followup to PR #160. No behavior or visual change. `.copy-confirm` reformatted from single-line to multi-line block matching stylesheet house style.
 - **Copy UX normalized across handoff surfaces.** `/continuity/<id>` gains a "Copied ✓" confirm state to match `/digest/result`. `/imported/<id>/explorer` gains a "Copy transcript" button for the first time, reading `#transcriptPane` directly. One new shared `.copy-confirm` CSS class promoted. Digest untouched.
 - **ROADMAP retires "Phase 11: Soft launch" framing.** Launch pressure removed per end-of-session context 2026-04-23. Phase 11 items (multi-select export, landing refresh, Reddit posts, fresh screenshots, loopback restriction) moved to a Parked section. Observable Archive v0 added to Completed.
@@ -18,6 +19,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - **Archive Status provider rows are links.** On Workspace, each provider row in the right panel now navigates to `/imported?provider=<slug>` with a hover treatment matching the existing context-panel interactive patterns.
 
 ### Added
+
 - **Attachment-aware exports (full arc).** Conversations and messages support file attachments stored in the canonical ledger. Markdown exports embed Obsidian-style wiki-link markers (`[[<stem>.assets/<file>]]`) for each attached file. When a conversation has attachments, exporting writes a `<stem>.assets/` sibling folder next to the markdown (directory export) or a `.zip` containing the markdown, the same `<stem>.assets/` subtree of attached files, and a `manifest.json` (browser download). Multi-select export compiles per-conversation asset subtrees into one zip with no cross-contamination. Manifests record original filenames, MIME types, sizes, SHA-256 hashes, and the owning conversation/message relationship. Single-conversation browser export remains a plain `.md` when no attachments exist.
 - **Workspace archive health badge.** Always-visible three-state signal (healthy / needs attention / no archive yet) above Archive status panel in the Workspace right panel, linking to `/archive/health`. Backed by lightweight `quick_health_summary` in `src/verify.py` that skips integrity and orphan checks — badge pays glance-cost, `/archive/health` pays full-truth cost. (PR next-4, Observable Archive v0, 4/4)
 - **`/archive/health` read-only page.** Surfaces full `verify_archive()` output (five checks + overall healthy/issues status) and last-import activity per provider from `ImportRun` history. All five providers always render; zero-history providers show "Never imported". New `last_import_run_per_provider()` helper in `src/app/import_runs.py`. Sanctum sidebar gains a third entry. (PR next-3, Observable Archive v0, 3/4)
@@ -28,15 +30,18 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - **Starring (CP1).** `is_starred` Boolean column on `ImportedConversation` and `MemoryEntry` (nullable=False, default=False, server_default="0", indexed). Four POST routes: `/imported/<id>/star`, `/imported/<id>/unstar`, `/memory/<id>/star`, `/memory/<id>/unstar`. Each sets `session["export_notice"]` and honors a `next` form field, falling back to `federated_browser` or `chats`. Star toggle UI on five surfaces: federated browse rows, imported list row actions, chats notes list, imported_explorer header, memory_detail header. `FederatedReadResult` dataclass gained `starred: bool = False`; both lanes populate it from `row.is_starred`. New test file `tests/test_starring.py` with 13 tests across five classes. (PR #139)
 
 ### Security
+
 - **CodeQL py/url-redirection alerts #12-19 closed.** Two-pass hardening of the `next` redirect parameter on star/unstar routes. Pass 1 (#12-15): added `urlparse`-based validation with backslash rejection and expanded `test_star_rejects_bad_next` coverage from 3 cases to 7 (adding `https://evil.com/path`, `\\evil.com`, `/\evil.com`, `javascript:alert(1)`). Pass 2 (#16-19): inlined CodeQL's canonical sanitizer shape at each redirect sink (`replace("\\", "")` then inline double `urlparse(nxt).netloc` / `urlparse(nxt).scheme` guard with early return). Factoring through a helper broke taint-tracker recognition even with identical logic; the idiom must be visible at the sink. Test assertions updated from literal-string containment (`assertNotIn("evil.com", location)`) to browser-level safety (`assertFalse(location.startswith("http:"))` and equivalents) since the canonical shape strips backslashes rather than rejecting on their presence.
 - **Dependabot lxml alert dismissed** as `not_used`. `requirements.txt` removed at commit 042bc36; `pyproject.toml` pins `lxml>=6.1.0` as the single source of truth.
 
 ### Removed
+
 - **Left rail (Column A).** The 64px workspace rail at the far left is removed. It contained an SP logo duplicating the sidebar wordmark, three placeholder provider icons (outdated since PR #145 extended provider coverage to five), an Import shortcut duplicating the sidebar Continuity nav item, and a non-functional settings placeholder. All functions remain accessible via the sidebar and page-header actions.
 - **`_safe_next` helper** from `src/app/__init__.py`. Retained across the two CodeQL passes as a revert-safety fallback; now that the inline canonical pattern has stabilized at all four redirect sinks and CodeQL is green, the dead code is deleted.
 - **`requirements.txt`** at repo root (superseded by `pyproject.toml`).
 
 ### Fixed
+
 - **README provider coverage corrected to five providers.** Tagline, "What it does" Import line, "Why this exists" opening, and Providers table all now list ChatGPT, Claude, Claude Code, Gemini, and Grok in canonical order. Claude Code row was missing from the Providers table entirely.
 - **`/archive/health` distinguishes pre-instrumentation state from never-imported.** Providers with conversations in the archive but no `ImportRun` row (i.e. imported before PR #154 began tracking) now render "Not tracked" with the archive count, instead of the misleading "Never imported". Footnote below the table clarifies that import history began April 24, 2026.
 - **Workspace Archive Status panel now shows all five providers.** Previously providers with zero imports were silently absent from the right panel because the SQL GROUP BY that built `provider_recent` only yielded provider rows with at least one import. Zero-count providers now render at the tail of the list with `count=0`, ordered by `PROVIDER_DISPLAY_NAMES` insertion order. The "N providers connected" summary uses a new `providers_connected_count` field so it continues to reflect only active providers.
@@ -76,7 +81,7 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 
 ### Docs
 - `docs/product/brand.md` and `docs/product/visual-direction.md` rewritten for Quiet Archive v3.
-- Phase 4 archival: retired Magenta Sanctum doctrine and USB Drive mockup moved to `docs/archive/`, SP-drive.svg files removed, `ops/sessions/` and `ops/learned/` scaffolding created, `.gitignore` sweep for dev debris.
+- Phase 4 archival: retired Magenta Sanctum doctrine and USB Drive mockup moved to `docs/archive/`, SP-drive.svg files removed, internal development scaffolding created, `.gitignore` sweep for dev debris.
 - Stale "Magenta Sanctum" and "USB Drive" references scrubbed from `app.css` comments, `LAUNCH-PLAYBOOK.md`, `obsidian-bridge-spec.md`.
 - `docs/README.md` index updated with landscape, intent-prompts-spec entries; archive section repointed at `docs/archive/`.
 - Fresh Quiet Archive v3 screenshots replace Magenta Sanctum era images.
