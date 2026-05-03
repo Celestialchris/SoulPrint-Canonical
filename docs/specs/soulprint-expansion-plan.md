@@ -1,26 +1,15 @@
 # SoulPrint Expansion Plan — Ecosystem Reach & Hygiene
 
-**Status (2026-04-27):** Partially shipped. The Phase 11 precondition is obsolete because soft launch was parked 2026-04-23. Shipped items so far:
+**Status (2026-04-27):** Partially shipped. Items shipped so far:
 
 - **P1** Claude Code session auto-discovery (importer at `src/importers/claude_code.py`, discovery helper at `src/importers/claude_code_discovery.py`, `/imported/scan-claude-code` route in `src/app/__init__.py`). The `soulprint scan claude-code` CLI verb in P1's plan body is *not* shipped; scanning is web-UI only today.
 - **P7 Phase 1** CLI dispatch (`pyproject.toml` exposes `soulprint = "src.cli:main"`; `src/cli.py` registers `serve`, `info`, `verify`, and `mcp-config` subcommands). P7 Phases 2 through 4 (`search`, `import`, `scan`, `export` verbs) are not shipped.
 
 Items P3, P4, P5, and P6 are not verified from docs alone. Check the source before treating any P-section below as queued or shipped.
 
-**Parent docs:** `ROADMAP.md` (Shape 4 — Ecosystem Reach), `SECURITY.md` (extended per Bucket 3)
-**Philosophy:** every item here has either a shipped MCA equivalent or a concrete trust-signal purpose. We adapt shape, not code. Apache-2.0 stays intact. Clean-room implementations against normalized formats, not against MCA's source tree.
+**Parent docs:** `ROADMAP.md`, `SECURITY.md` (extended per Bucket 3)
 
----
-
-## Why these, why now
-
-MCA proves the developer-native pattern works. Auto-discovery of Claude Code sessions, drop folders, thread groups, write-capable MCP. These aren't novel ideas. They're established conventions in the local-first AI tools space. SoulPrint shipping without them reads as incomplete to the developer audience even though the web UI is more polished and the provenance story is stronger.
-
-Bucket 3 is smaller in scope but compounds with Bucket 2. An expanded SECURITY.md backs the README's Trust section with concrete architecture details. A CoC signals community readiness. Proper pyproject metadata surfaces SoulPrint in `pip search` and future PyPI. Individually these are cheap; collectively they're the difference between "indie project" and "indie project ready for adoption."
-
-The cost to close both gaps is low because the canonical ledger is already the right shape. Every Bucket 2 item is either a new importer adapter, a new CLI verb, a new MCP tool, or a small join table. No architectural reshape. No frozen decision from `DECISIONS.md` gets touched. Bucket 3 is doc edits and pyproject metadata, hours of work total.
-
-Order below is leverage-first within each bucket.
+The canonical ledger shape is unchanged by every item below. Each is either a new importer adapter, a new CLI verb, a new MCP tool, or a small join table. No frozen decision from `DECISIONS.md` is touched. Bucket 3 is doc edits and pyproject metadata.
 
 ---
 
@@ -30,33 +19,33 @@ Order below is leverage-first within each bucket.
 
 ### Problem
 
-Claude Code writes session transcripts to `~/.claude/projects/*/`*.jsonl` on every machine. Developers using Claude Code accumulate dozens to hundreds of sessions. Today SoulPrint can't see any of it unless the user hand-exports, and Claude Code has no export UI. The entire working memory of SoulPrint's most valuable developer persona is invisible.
+Claude Code writes session transcripts to `~/.claude/projects/*/`*.jsonl` on every machine. Without an importer, the entire session history is invisible to SoulPrint until hand-exported, and Claude Code has no export UI.
 
 ### Shape
 
-Add a fifth provider to the importer registry: `claude_code`. Implement the `ConversationImporter` protocol in `src/importers/claude_code.py`. Source format is JSONL, one record per line, with `type: "user" | "assistant"`, `message.content` as either string or list-of-blocks (text, tool_use, tool_result), and ISO-8601 or epoch-ms `timestamp`. Tool uses and tool results preserve as inline text markers in the content field (`[Tool: Bash] ls -la` for tool_use, truncated results for tool_result). This matches how a human reading the transcript would want to see it.
+Add a fifth provider to the importer registry: `claude_code`. Implement the `ConversationImporter` protocol in `src/importers/claude_code.py`. Source format is JSONL, one record per line, with `type: "user" | "assistant"`, `message.content` as either string or list-of-blocks (text, tool_use, tool_result), and ISO-8601 or epoch-ms `timestamp`. Tool uses and tool results preserve as inline text markers in the content field (`[Tool: Bash] ls -la` for tool_use, truncated results for tool_result).
 
 Auto-discovery is a separate mechanism, not part of the importer contract. Lives in `src/importers/claude_code_discovery.py`. Scans `~/.claude/projects/`, reads each project's `sessions-index.json` for metadata (project path, summary, created/modified timestamps), yields file paths. The normal import pipeline takes over from there.
 
-Per-project naming: each session becomes an imported conversation titled from the sessions-index summary if present, else from the project path, else from the session UUID. The project path becomes `source_metadata["project_path"]`. This makes conversation lists readable (you see "refactor auth module" not a UUID) and sets up the groups feature (P5) to filter by project.
+Per-project naming: each session becomes an imported conversation titled from the sessions-index summary if present, else from the project path, else from the session UUID. The project path becomes `source_metadata["project_path"]`. This makes conversation lists readable and sets up the groups feature (P5) to filter by project.
 
 ### Schema touches
 
 None. `ImportedConversation.source = "claude_code"`, `source_conversation_id = session_uuid`, messages get stable `source_message_id` from the JSONL record's `sessionId` plus sequence index. The existing persistence helpers handle it.
 
-Contract additions in `src/importers/contracts.py`: add `PROVIDER_CLAUDE_CODE = "claude_code"` to the frozen set. Registry registration in `src/importers/registry.py`. Detector `looks_like_claude_code_export` checks for JSONL shape with `type: "user" | "assistant"` records — rejects regular Claude `.json` exports (which are single JSON objects, different shape).
+Contract additions in `src/importers/contracts.py`: add `PROVIDER_CLAUDE_CODE = "claude_code"` to the frozen set. Registry registration in `src/importers/registry.py`. Detector `looks_like_claude_code_export` checks for JSONL shape with `type: "user" | "assistant"` records; rejects regular Claude `.json` exports (which are single JSON objects, different shape).
 
 ### Phases
 
-1. **Adapter only.** Implement `ClaudeCodeImporter.parse_payload` against a user-supplied JSONL file. Fixture: one real session file, anonymized. Tests in `tests/test_claude_code_importer.py`: empty file, single session, multi-turn with tool uses, malformed lines (gracefully skipped), missing timestamps. Registry integration, contract test. Ships as "point SoulPrint at a `.jsonl` file and it imports." Roughly 300 lines of adapter code plus tests.
-2. **Auto-discovery scanner.** Add a `/imported/scan-claude-code` route and CLI verb `soulprint scan claude-code [--path ~/.claude]`. Route shows a pre-import summary (N sessions, M projects, date range) with per-session checkboxes so the user doesn't blind-import 400 sessions. Submit runs the normal import pipeline per-session with the adapter. Tests use a fake `~/.claude/projects/` tree.
+1. **Adapter only.** Implement `ClaudeCodeImporter.parse_payload` against a user-supplied JSONL file. Fixture: one real session file, anonymized. Tests in `tests/test_claude_code_importer.py`: empty file, single session, multi-turn with tool uses, malformed lines (gracefully skipped), missing timestamps. Registry integration, contract test. Roughly 300 lines of adapter code plus tests.
+2. **Auto-discovery scanner.** Add a `/imported/scan-claude-code` route and CLI verb `soulprint scan claude-code [--path ~/.claude]`. Route shows a pre-import summary (N sessions, M projects, date range) with per-session checkboxes so the user does not blind-import 400 sessions. Submit runs the normal import pipeline per-session with the adapter. Tests use a fake `~/.claude/projects/` tree.
 3. **Watcher option (deferred).** A background thread or scheduled task that picks up new sessions as Claude Code writes them. Nice-to-have. Not in initial scope. Ships later if demand signals warrant.
 
 ### Risks
 
 Claude Code's JSONL format is undocumented. It has changed at least once in the wild (the tool_use block shape is newer). Mitigation: version detection in the parser (look for shape signals like presence of `sessionId` field, block types in content array), graceful skip on unknown record types, warning output instead of hard failure. Test fixtures should capture at least two known format generations once we find them.
 
-Tool_result blocks can be enormous (a `ls -R /` or a test suite output). The 500-char truncation in MCA's parser is reasonable but loses information. SoulPrint's version should truncate to a configurable limit (default 2000 chars) and surface a warning per-conversation like "N tool results truncated" rather than silently dropping.
+Tool_result blocks can be enormous (a `ls -R /` or a test suite output). The 500-char truncation typical in similar tools loses information. SoulPrint's version should truncate to a configurable limit (default 2000 chars) and surface a warning per-conversation like "N tool results truncated" rather than silently dropping.
 
 ### Test shape
 
@@ -75,11 +64,11 @@ None on other Bucket 2 items. Can ship standalone. P5 (groups) composes naturall
 
 ### Problem
 
-Current flow: open app, navigate to /import, click upload button, browse filesystem, select file, submit. Five clicks for something that recurs weekly as users re-export their ChatGPT history. Power users notice.
+The current import flow is five clicks from app open to file imported. For users re-importing weekly, this friction compounds.
 
 ### Shape
 
-A watched directory. Default `~/SoulPrint/imports/` (configurable via `SOULPRINT_IMPORTS_DIR` env var). Anything dropped in gets auto-detected and imported on startup and on-demand. SHA-256 dedup by file content (not filename — people rename files) so re-dropping the same export is a no-op. Source files stay in place after import; the audit log records the import timestamp and result in a dedicated table.
+A watched directory. Default `~/SoulPrint/imports/` (configurable via `SOULPRINT_IMPORTS_DIR` env var). Anything dropped in gets auto-detected and imported on startup and on-demand. SHA-256 dedup by file content (not filename, people rename files) so re-dropping the same export is a no-op. Source files stay in place after import; the audit log records the import timestamp and result in a dedicated table.
 
 Not a filesystem watcher. A polled scan. Two triggers:
 
@@ -107,7 +96,7 @@ class DropFolderImport(db.Model):
 
 This is a derived-layer audit log, not canonical. A user wiping and re-scanning rebuilds it transparently.
 
-Alternative considered: `.soulprint-imported.json` sidecar files next to each source file. Dismissed. Users back up their imports folder, copy it across machines, and the sidecar files would go stale relative to the SoulPrint database they're pretending to mirror. Database-owned audit log is cleaner.
+Alternative considered: `.soulprint-imported.json` sidecar files next to each source file. Dismissed. Users back up their imports folder, copy it across machines, and the sidecar files would go stale relative to the SoulPrint database they are pretending to mirror. Database-owned audit log is cleaner.
 
 ### Phases
 
@@ -117,9 +106,9 @@ Alternative considered: `.soulprint-imported.json` sidecar files next to each so
 
 ### Risks
 
-False positives on provider detection for files that match multiple detectors. Today the registry raises `ImportProviderDetectionError` on multi-match, which is correct for single-file uploads. For drop folder, surface the ambiguity in the audit log with status `needs_provider_hint` and a UI action "Reimport as ChatGPT / Claude / …". Don't crash the whole scan over one ambiguous file.
+False positives on provider detection for files that match multiple detectors. Today the registry raises `ImportProviderDetectionError` on multi-match, which is correct for single-file uploads. For drop folder, surface the ambiguity in the audit log with status `needs_provider_hint` and a UI action "Reimport as ChatGPT / Claude / …". Do not crash the whole scan over one ambiguous file.
 
-Very large drop folders (user dumps 200 exports) can stall the workspace load. Cap on-startup scan to last-modified-within-7-days or similar. The manual rescan has no cap. Document clearly.
+Very large drop folders (200+ exports) can stall the workspace load. Cap on-startup scan to last-modified-within-7-days or similar. The manual rescan has no cap. Document clearly.
 
 ### Test shape
 
@@ -131,7 +120,7 @@ Very large drop folders (user dumps 200 exports) can stall the workspace load. C
 
 ### Dependencies
 
-None. Composes with P1 — Claude Code JSONL files dropped in the folder get auto-imported by the same pipeline.
+None. Composes with P1; Claude Code JSONL files dropped in the folder get auto-imported by the same pipeline.
 
 ---
 
@@ -139,21 +128,19 @@ None. Composes with P1 — Claude Code JSONL files dropped in the folder get aut
 
 ### Problem
 
-Today SoulPrint's MCP surface is read-only. Claude Code can search past conversations, but when a useful insight surfaces mid-coding ("oh, this connects to the payment-retry thing from last month"), there's no way to capture it back into SoulPrint without tab-switching to the web UI. The archive grows only through uploads. Not through use.
-
-MCA's `capture_thought` closes this loop. It's the single most underappreciated feature in their toolkit.
+SoulPrint's MCP surface is read-only. When a useful insight surfaces mid-coding ("oh, this connects to the payment-retry thing from last month"), there is no way to capture it back into SoulPrint without tab-switching to the web UI. The archive grows only through uploads, not through use.
 
 ### Shape
 
-Add `soulprint_capture_note` to `src/mcp_server.py`. Takes `content` (required, the note body), `tags` (optional list of strings), and `source_context` (optional dict with `conversation_id`, `message_id`, `reasoning` to record what the note connects to). Writes a row to the existing `MemoryEntry` table with `role = "user"` (it's user-authored via the agent), `timestamp = now`, tags stored in the existing `tags` Text column.
+Add `soulprint_capture_note` to `src/mcp_server.py`. Takes `content` (required, the note body), `tags` (optional list of strings), and `source_context` (optional dict with `conversation_id`, `message_id`, `reasoning` to record what the note connects to). Writes a row to the existing `MemoryEntry` table with `role = "user"` (it is user-authored via the agent), `timestamp = now`, tags stored in the existing `tags` Text column.
 
 Provenance is the whole game here. Every captured note needs to know:
 
 - Was it written by a human typing in the UI, or by an agent via MCP? → new column `source_kind` on `MemoryEntry`.
-- Which agent, which session? → MCP doesn't give session identity directly. Best we can do: record the MCP tool name and timestamp. Good enough for v1.
+- Which agent, which session? → MCP does not give session identity directly. Best we can do: record the MCP tool name and timestamp. Good enough for v1.
 - What did the agent say it was capturing? → `source_context.reasoning` field. Stored as structured JSON in a new `capture_context` Text column on MemoryEntry.
 
-Annotate the tool with `readOnlyHint: False, destructiveHint: False, idempotentHint: False, openWorldHint: False`. This tells MCP clients the tool writes but doesn't destroy — important for agent frameworks that gate on these hints.
+Annotate the tool with `readOnlyHint: False, destructiveHint: False, idempotentHint: False, openWorldHint: False`. This tells MCP clients the tool writes but does not destroy; important for agent frameworks that gate on these hints.
 
 ### Rate limiting
 
@@ -162,7 +149,7 @@ Agents can loop. An LLM with tool access could capture thousands of notes in a r
 - **Per-call:** reject empty or duplicate-of-recent (content match within last 5 minutes) captures with a structured error.
 - **Per-session:** max 100 captures in a 10-minute window, return a rate-limit error with `retry_after` hint.
 
-Both defenses live in the MCP tool handler, not in `MemoryEntry` validation — agent-shape concern, not data concern.
+Both defenses live in the MCP tool handler, not in `MemoryEntry` validation; agent-shape concern, not data concern.
 
 ### Schema touches
 
@@ -178,7 +165,7 @@ Backfill existing rows to `source_kind = "ui"` on migration (or leave NULL and t
 ### Phases
 
 1. **Schema migration + MCP tool.** Write the tool, thin shell over `db.session.add(MemoryEntry(…))`. Tests: capture with required content, capture with tags and context, capture with empty content (rejected), duplicate capture within 5 minutes (rejected).
-2. **UI surface for captured notes.** `/memory` page already shows MemoryEntry rows. Add a filter/badge for `source_kind = "mcp_capture"` so users can see what the agent wrote. Hovering shows `capture_context`. This is a trust surface — users need to see what the agent is doing on their behalf.
+2. **UI surface for captured notes.** `/memory` page already shows MemoryEntry rows. Add a filter/badge for `source_kind = "mcp_capture"` so users can see what the agent wrote. Hovering shows `capture_context`. This is a trust surface; users need to see what the agent is doing on their behalf.
 3. **Write-back into conversation explorer.** When the agent captures with `source_context.conversation_id`, surface the note on the conversation explorer page as a linked annotation: "Claude Code captured a note on this conversation 3 hours ago." Closes the loop visually.
 
 ### Risks
@@ -187,7 +174,7 @@ Agent loops (defenses above).
 
 User trust. Write-capable MCP is a different trust posture than read-only. Document prominently in README and MCP connection docs. The first thing a user sees when they enable the capture tool should be "This lets connected AI agents add notes to your archive. Notes are always tagged with their source. You can filter or delete them at any time."
 
-Privacy. Agents capturing notes is a new way for conversation content to flow back into SoulPrint. If the agent is Claude Code against a Claude API key the user controls, fine. If it's some third-party agent in a Cursor config the user forgot about, it's a surprise. Mitigation: per-session rate limit and the prominent UI surface in phase 2.
+Privacy. Agents capturing notes is a new way for conversation content to flow back into SoulPrint. If the agent is Claude Code against a Claude API key the user controls, fine. If it is some third-party agent in a Cursor config the user forgot about, it is a surprise. Mitigation: per-session rate limit and the prominent UI surface in phase 2.
 
 ### Test shape
 
@@ -207,13 +194,13 @@ None on other Bucket 2 items. Schema migration (two new columns) is the only inf
 
 ### Problem
 
-SoulPrint's archive mixes everything. Personal ChatGPT chats, work Claude sessions, random Grok experiments, Claude Code project work. Users want to scope search to "just my coding archive" or "just the work around SoulPrint itself." Today's only scoping is per-provider, which is the wrong axis: work and personal chats both happen in ChatGPT.
+SoulPrint's archive mixes everything: personal ChatGPT chats, work Claude sessions, random Grok experiments, Claude Code project work. The only existing scoping is per-provider, which is the wrong axis: work and personal chats both happen in ChatGPT.
 
 ### Shape
 
-A `thread_group` table, a `conversation_group` join table, and a `group` filter parameter on `soulprint_search`, `soulprint_list_conversations`, the `/imported` page, the `/federated` search page, and the CLI search (P7). That's the whole feature.
+A `thread_group` table, a `conversation_group` join table, and a `group` filter parameter on `soulprint_search`, `soulprint_list_conversations`, the `/imported` page, the `/federated` search page, and the CLI search (P7). That is the whole feature.
 
-MCA names them "groups" because their unit is a "thread." SoulPrint's unit is a conversation — same thing, different word. We call them "groups" too; UX label is "Groups," surface vocabulary matches MCA. No need to invent a new term.
+The unit is a conversation. UX label is "Groups."
 
 ### Schema
 
@@ -239,13 +226,13 @@ Groups do not interact with Projects (Shape 1 capture pipeline). Projects become
 ### Phases
 
 1. **Schema + CRUD.** Migration, `ThreadGroup`, `ConversationGroup`. Routes: `GET /groups`, `POST /groups`, `DELETE /groups/<id>`, `POST /groups/<id>/members`, `DELETE /groups/<id>/members/<conv_id>`. Minimal UI on `/groups` page listing groups with conversation counts. Tests round-trip.
-2. **Group assignment UI.** On `/imported`, add a "Group" column with an inline dropdown per-row ("Add to coding… / Add to personal… / Create new group…"). On conversation explorer, breadcrumb chip showing current groups with remove action. Multi-select on `/imported` plus bulk-assign-to-group button (composes with Phase 11 multi-select export — same checkbox surface).
+2. **Group assignment UI.** On `/imported`, add a "Group" column with an inline dropdown per-row ("Add to coding… / Add to personal… / Create new group…"). On conversation explorer, breadcrumb chip showing current groups with remove action. Multi-select on `/imported` plus bulk-assign-to-group button (composes with Phase 11 multi-select export; same checkbox surface).
 3. **Group-scoped search.** Add `group` parameter to `soulprint_search`, `soulprint_list_conversations`, FTS query helpers, `/federated` search form, `/imported` filter dropdown. Filter semantics: if group specified, return only conversations with a row in `conversation_group` with matching `group_id`. CLI `soulprint search "query" --group coding` (needs P7).
-4. **MCP tool: group management.** Add `soulprint_list_groups` (read-only) and optionally `soulprint_create_group` / `soulprint_add_to_group` (write-capable, same trust posture as P4). Agents can organize the archive as they search. Deferred — gated on P4 shipping first so the write-MCP trust story is already established.
+4. **MCP tool: group management.** Add `soulprint_list_groups` (read-only) and optionally `soulprint_create_group` / `soulprint_add_to_group` (write-capable, same trust posture as P4). Agents can organize the archive as they search. Deferred; gated on P4 shipping first so the write-MCP trust story is already established.
 
 ### Risks
 
-Groups could balloon into a tagging system. Resist. Groups are named buckets with membership, not a taxonomy. If users want multi-dimensional tagging, that's a different feature (and probably not worth building — the `MemoryEntry.tags` field already handles freeform tagging at the note level).
+Groups could balloon into a tagging system. Resist. Groups are named buckets with membership, not a taxonomy. If users want multi-dimensional tagging, that is a different feature (and probably not worth building; the `MemoryEntry.tags` field already handles freeform tagging at the note level).
 
 A conversation in zero groups and a conversation in three groups need to render consistently in the imported list. Test the edge cases.
 
@@ -260,7 +247,7 @@ A conversation in zero groups and a conversation in three groups need to render 
 
 ### Dependencies
 
-Shipped order: P5 Phase 1 (schema) → P1 Phase 2 (Claude Code auto-discovery with project_path in source_metadata) → P5 Phase 2 (bulk assign — Claude Code conversations naturally group by project). P7 (CLI) unblocks P5 Phase 3's CLI verb. P4 enables P5 Phase 4.
+Shipped order: P5 Phase 1 (schema) → P1 Phase 2 (Claude Code auto-discovery with project_path in source_metadata) → P5 Phase 2 (bulk assign; Claude Code conversations naturally group by project). P7 (CLI) unblocks P5 Phase 3's CLI verb. P4 enables P5 Phase 4.
 
 ---
 
@@ -268,11 +255,11 @@ Shipped order: P5 Phase 1 (schema) → P1 Phase 2 (Claude Code auto-discovery wi
 
 ### Problem
 
-SoulPrint ships as `soulprint` — one command, starts the web server. Power users and scripters want `soulprint search "something"` to print results to a terminal without opening a browser. MCA's `mychatarchive search --platform claude --since 2026-01-01` is the shape.
+SoulPrint ships as `soulprint`: one command, starts the web server. Power users and scripters want `soulprint search "something"` to print results to a terminal without opening a browser.
 
 ### Shape
 
-Extend the existing `soulprint` entry point with subcommands. Today it's a single server-start command; after this it's `soulprint [serve|search|import|export|info|scan]`. Server-start stays the default when no subcommand is given (backwards compatible).
+Extend the existing `soulprint` entry point with subcommands. Today it is a single server-start command; after this it is `soulprint [serve|search|import|export|info|scan]`. Server-start stays the default when no subcommand is given (backwards compatible).
 
 Candidate subcommands:
 
@@ -288,14 +275,14 @@ Implementation: argparse (stdlib, no new dependency, matches codebase style). Su
 
 ### Phases
 
-1. **Restructure entry point.** `soulprint serve` becomes canonical, `soulprint` with no args dispatches to `serve` for backwards compat. Add `soulprint info` (P8) and `soulprint mcp-config` as the first two subcommands — both read-only, both fast, both demonstrate the pattern. Two evenings of work.
+1. **Restructure entry point.** `soulprint serve` becomes canonical, `soulprint` with no args dispatches to `serve` for backwards compat. Add `soulprint info` (P8) and `soulprint mcp-config` as the first two subcommands; both read-only, both fast, both demonstrate the pattern. Two evenings of work.
 2. **`soulprint search`.** Reuses `src/retrieval/fts.py` with a terminal-output renderer. `--json` for scripting. Tests: basic query, provider filter, empty result, malformed FTS query (sanitized gracefully).
 3. **`soulprint import` and `soulprint scan`.** Wires up P1 and P3 as CLI verbs. Tests: import a sample file, import with `--dry-run`, scan a fake drop folder.
-4. **`soulprint export`.** The simple markdown dump. Passport export stays as its own thing (`soulprint passport export`) to keep the mental model clean — passport is a sealed, validated artifact; this export is a utility dump.
+4. **`soulprint export`.** The simple markdown dump. Passport export stays as its own thing (`soulprint passport export`) to keep the mental model clean; passport is a sealed, validated artifact; this export is a utility dump.
 
 ### Risks
 
-CLI argument schemas grow organically and become incoherent. Mitigation: every subcommand takes the same common flags (`--db`, `--verbose`, `--json`) and feature-specific flags. Documented in a CLI reference section in CONTRIBUTING.md (not README — keep README product-focused).
+CLI argument schemas grow organically and become incoherent. Mitigation: every subcommand takes the same common flags (`--db`, `--verbose`, `--json`) and feature-specific flags. Documented in a CLI reference section in CONTRIBUTING.md (not README; keep README product-focused).
 
 Backwards compat. Today `soulprint` starts the server. Changing that would break shortcuts and desktop launchers. The phase-1 pattern (bare `soulprint` still starts the server) is a hard requirement.
 
@@ -316,7 +303,7 @@ Must land before P5 Phase 3's CLI group filter. No other upstream dependencies. 
 
 ### Problem
 
-No paste-worthy proof of archive size. MCA's README has `mychatarchive info` showing 47,832 messages and 1,204 threads — that single block is the most persuasive thing on their page. SoulPrint's workspace has the same stats in the UI but there's no terminal command to capture them into a screenshot, a blog post, or a Reddit thread.
+No paste-worthy proof of archive size from the terminal. The workspace UI has counts but there is no terminal command to capture them into a screenshot or a script.
 
 ### Shape
 
@@ -340,11 +327,11 @@ SoulPrint — ~/.soulprint/soulprint.db
   Intelligence: Ollama + gemma4 configured (last ran 2 hours ago)
 ```
 
-The last line is the differentiation hook. MCA doesn't surface LLM config status; SoulPrint's intelligence-is-local story benefits from making it visible.
+The intelligence-config line surfaces local-LLM status visibly.
 
 ### Schema touches
 
-None. All stats are queries over existing tables. The "intelligence configured" line reads from the provider config (`SOULPRINT_LLM_PROVIDER` env plus `src/intelligence/provider.py::is_llm_configured()`). Last-ran timestamp requires either a new column on the existing summary store to record generation time (probably already there — check `src/intelligence/store.py`), or filesystem mtime on the summary store file.
+None. All stats are queries over existing tables. The "intelligence configured" line reads from the provider config (`SOULPRINT_LLM_PROVIDER` env plus `src/intelligence/provider.py::is_llm_configured()`). Last-ran timestamp requires either a new column on the existing summary store to record generation time (probably already there; check `src/intelligence/store.py`), or filesystem mtime on the summary store file.
 
 ### Phases
 
@@ -371,7 +358,7 @@ Needs P7 Phase 1 (CLI dispatch). Trivial after that.
 
 ### Problem
 
-SoulPrint MCP today runs on stdio. Stdio MCP is local-only by design — connected tool spawns the server as a subprocess, reads/writes via pipes. Works perfectly for Claude Code / Cursor on the same machine. Fails entirely for "access my archive from my phone" or "have my NAS run the server and every machine in the house connects to it."
+SoulPrint MCP today runs on stdio. Stdio MCP is local-only by design; connected tool spawns the server as a subprocess, reads/writes via pipes. Works for Claude Code / Cursor on the same machine. Fails for "access my archive from my phone" or "have my NAS run the server and every machine in the house connects to it."
 
 ### Shape
 
@@ -416,45 +403,41 @@ SSE specifically (versus WebSocket or HTTP long-poll) is the MCP standard right 
 
 ### Dependencies
 
-Ships independent of other P-items. Lowest priority because the user base that needs remote MCP is small. Don't prioritize over P1/P3/P4/P5.
+Ships independent of other P-items.
 
 ---
 
 # Bucket 3 — Doc and repo hygiene
 
-These items are small individually. Their value is compound: an expanded SECURITY.md makes the README's Trust section land with specifics; a Code of Conduct signals community readiness; proper pyproject metadata surfaces SoulPrint in package search; a LICENSING.md disambiguates Apache-2.0 plus bundled assets. None takes more than a couple hours. All land before v0.8 ships.
-
 ## D1 — SECURITY.md extension
 
 ### Problem
 
-Current SECURITY.md is 16 lines. It covers the big points (local-first, BYOK, vulnerability reporting) but doesn't enumerate attack surface, doesn't document the security posture of specific subsystems, doesn't tell a developer auditing SoulPrint what they're looking at.
-
-The README's Trust section makes concrete promises: no telemetry, no phone-home, explicit outbound on intelligence features only. SECURITY.md is where those promises become technical claims with file paths and function names behind them.
+Current SECURITY.md is 16 lines. It covers the big points (local-first, BYOK, vulnerability reporting) but does not enumerate attack surface, document the security posture of specific subsystems, or tell a developer auditing SoulPrint what they are looking at.
 
 ### Shape
 
 Extend SECURITY.md to enumerate:
 
-1. **Data locations.** `instance/soulprint.db` (canonical), `exports/` (passports, markdown), `instance/license.key` (license), `instance/mcp-token` (future P9). Filesystem permissions guidance (0600 for token, 0644 for db is fine because it's read by the user).
+1. **Data locations.** `instance/soulprint.db` (canonical), `exports/` (passports, markdown), `instance/license.key` (license), `instance/mcp-token` (future P9). Filesystem permissions guidance (0600 for token, 0644 for db is fine because it is read by the user).
 2. **Attack surface enumeration.**
-   - Import parsers (malformed export files — gracefully-handled parse errors, no eval/exec in any parser).
-   - Flask web UI on 127.0.0.1:5678 (loopback only — don't bind 0.0.0.0 without auth).
+   - Import parsers (malformed export files; gracefully-handled parse errors, no eval/exec in any parser).
+   - Flask web UI on 127.0.0.1:5678 (loopback only; do not bind 0.0.0.0 without auth).
    - MCP server on stdio (subprocess-spawned, no network surface).
    - Intelligence features (the sole outbound network call; explicit per-feature consent).
    - Future SSE MCP (P9) documented as opt-in remote, auth-required.
    - Obsidian bridge (file writes to a user-configured vault directory; no filesystem escape).
 3. **What SoulPrint does not do.** No analytics, no telemetry, no phone-home, no auto-update, no crash reporting, no third-party SDK, no tracking pixel. Named, not implied.
-4. **What a supply-chain attack against SoulPrint looks like.** pip install compromise is the primary risk. Users should verify the release signature (when we ship one) and pin versions in production use. We don't sign releases today; this is a known gap and listed as such.
-5. **Best-practices runbook.** Don't open ports to the internet. Use local-only Ollama for intelligence features. Back up your SQLite file. Rotate your `SOULPRINT_LICENSE_OVERRIDE` if you leaked it. Lock down your `instance/` directory on shared machines.
+4. **What a supply-chain attack against SoulPrint looks like.** pip install compromise is the primary risk. Users should verify the release signature (when shipped) and pin versions in production use. Releases are not signed today; this is a known gap and listed as such.
+5. **Best-practices runbook.** Do not open ports to the internet. Use local-only Ollama for intelligence features. Back up your SQLite file. Rotate your `SOULPRINT_LICENSE_OVERRIDE` if leaked. Lock down your `instance/` directory on shared machines.
 
 ### Phases
 
-One phase, ~80-100 lines of markdown. Done in an afternoon. See the draft at the end of this document.
+One phase, ~80-100 lines of markdown.
 
 ### Dependencies
 
-None. Write this first because the README's Trust section references it.
+None.
 
 ---
 
@@ -462,15 +445,15 @@ None. Write this first because the README's Trust section references it.
 
 ### Problem
 
-SoulPrint is approaching a public Reddit launch. Contributor communities form at launch, not before. Having a CoC present at launch signals "this is a project that takes community seriously" to potential contributors and filters out bad-faith actors.
+No CoC currently present. Public contribution onboarding benefits from one.
 
 ### Shape
 
-Drop-in Contributor Covenant 2.1. MCA uses it. Most mature OSS projects use it. The text is standard; the only SoulPrint-specific edit is the contact email. Use whatever reporting channel exists (GitHub Security Advisories for security issues, an email for CoC reports).
+Drop-in Contributor Covenant 2.1. The text is standard; the only project-specific edit is the contact email (GitHub Security Advisories for security issues, an email for CoC reports).
 
 ### Phases
 
-One phase. Copy-paste, one substitution, commit. 15 minutes.
+One phase. Copy-paste, one substitution, commit.
 
 ### Dependencies
 
@@ -482,7 +465,7 @@ None.
 
 ### Problem
 
-Thin `pyproject.toml` hurts pip discoverability and future PyPI publish readiness. MCA has keywords and classifiers populated; SoulPrint likely doesn't (audit first).
+Thin `pyproject.toml` hurts pip discoverability and future PyPI publish readiness.
 
 ### Shape
 
@@ -490,7 +473,7 @@ Add or extend:
 
 - `keywords` — `["ai", "chat", "archive", "mcp", "local-first", "llm", "memory", "conversation-history", "chatgpt", "claude", "gemini"]`
 - `classifiers` — Development Status, Intended Audience, License, Python versions, Topic, OS (Windows/macOS/Linux).
-- `[project.urls]` — Homepage (soulprint.dev), Repository (github), Issues, Documentation, Releases.
+- `[project.urls]` — Homepage, Repository (github), Issues, Documentation, Releases.
 - `[project.optional-dependencies]` — Confirm `[intelligence]` extras are listed. Consider `[dev]` extras for test dependencies (pytest, ruff) so `pip install -e ".[dev]"` works as expected for contributors.
 
 ### Phases
@@ -499,7 +482,7 @@ One phase. 30 minutes to audit and update.
 
 ### Dependencies
 
-None. Lands anytime.
+None.
 
 ---
 
@@ -507,7 +490,7 @@ None. Lands anytime.
 
 ### Problem
 
-CONTRIBUTING.md exists. Haven't fully audited it. Likely covers setup and style but probably not enough: test patterns, importer contract, how to add a provider, how MCP tools are registered, how the trust chain is preserved across changes.
+CONTRIBUTING.md exists but has not been audited recently. May not cover test patterns, importer contract, how to add a provider, how MCP tools are registered, and how the trust chain is preserved across changes.
 
 ### Shape
 
@@ -516,13 +499,13 @@ Audit current CONTRIBUTING.md against these checkpoints:
 1. **Quick-start for contributors.** `git clone`, `pip install -e ".[dev]"`, `pytest`, `soulprint`. Should work in 60 seconds on a clean machine.
 2. **Architecture pointer.** Four-layer architecture summary (canonical → legibility → intelligence → distribution) with pointers to `docs/architecture.md` for depth.
 3. **Adding a provider.** Pointer to `docs/specs/` or a dedicated `docs/adding-a-provider.md` that walks through the importer contract, detector, fixture, registry entry, tests. Use the existing four providers as templates.
-4. **Adding an MCP tool.** Pattern from `src/mcp_server.py` — FastMCP decorator, annotations, docstring conventions.
+4. **Adding an MCP tool.** Pattern from `src/mcp_server.py`; FastMCP decorator, annotations, docstring conventions.
 5. **Test patterns.** Pointer to `.claude/rules/soulprint-testing.md` if committed, or inline the key points (make_test_temp_dir, release_app_db_handles, no mocking SQLAlchemy).
-6. **What not to do.** Frozen decisions from DECISIONS.md — no vector DB, no semantic search replacement, no agent frameworks, no async routes. Link to DECISIONS.md for the full list.
+6. **What not to do.** Frozen decisions from DECISIONS.md; no vector DB, no semantic search replacement, no agent frameworks, no async routes. Link to DECISIONS.md for the full list.
 
 ### Phases
 
-One phase. A couple hours if the current file is thin; longer if gaps emerge.
+One phase.
 
 ### Dependencies
 
@@ -534,7 +517,7 @@ None.
 
 ### Problem
 
-Apache-2.0 on the code is clear. Bundled assets are less clear — bundled fonts (Playfair, DM Sans, JetBrains Mono), bundled logo, bundled sample data. Each has its own license. A LICENSING.md (or an expanded section in README) disambiguates what's Apache-2.0 code, what's OFL fonts, what's other.
+Apache-2.0 on the code is clear. Bundled assets are less clear; bundled fonts (Playfair, DM Sans, JetBrains Mono), bundled logo, bundled sample data. Each has its own license.
 
 ### Shape
 
@@ -542,12 +525,12 @@ A short LICENSING.md that enumerates:
 
 - **Code.** Apache-2.0. See LICENSE.
 - **Bundled fonts.** Playfair Display (OFL), DM Sans (OFL), JetBrains Mono (OFL). All redistributable under the SIL Open Font License.
-- **Bundled logo / brand assets.** If any — clarify user rights.
-- **Sample data.** Sample imports in `sample_data/` — synthetic, CC0 / public domain dedicated so users can round-trip tests without license worry.
+- **Bundled logo / brand assets.** If any; clarify user rights.
+- **Sample data.** Sample imports in `sample_data/`; synthetic, CC0 / public domain dedicated so users can round-trip tests without license worry.
 
 ### Phases
 
-One phase. 30 minutes.
+One phase.
 
 ### Dependencies
 
@@ -559,47 +542,16 @@ None.
 
 ### Problem
 
-Today SoulPrint releases are unsigned. An attacker who compromises the GitHub Releases CDN could substitute a malicious installer and users would have no way to detect it. For a product that promises "local-first, no cloud, verifiable," unsigned binaries are a gap worth naming.
+SoulPrint releases are unsigned. An attacker who compromises the GitHub Releases CDN could substitute a malicious installer and users would have no way to detect it.
 
 ### Shape
 
-Sign future releases with a PGP key. Document the key fingerprint and verification instructions in SECURITY.md. Alternative (simpler) path: publish SHA-256 sums in release notes, signed by a PGP key or committed under a Git tag that GitHub signs. Either way, the user can verify.
+Sign future releases with a PGP key. Document the key fingerprint and verification instructions in SECURITY.md. Alternative path: publish SHA-256 sums in release notes, signed by a PGP key or committed under a Git tag that GitHub signs. Either way, the user can verify.
 
 ### Phases
 
-Not scheduled. Listed in SECURITY.md as "future work" so users know we're aware of the gap. Schedule when the user base gets large enough to be a target.
+Not scheduled. Listed in SECURITY.md as "future work" so users know the gap is acknowledged.
 
 ### Dependencies
 
-None on Bucket 2. Relies on having a stable signing key which is an operational decision, not a code change.
-
----
-
-# Ordering — calendar-time, leverage-first
-
-1. **D1 (SECURITY.md extension)** — afternoon. Unblocks README Trust section having something to point at. Ships in the same PR as the README rewrite.
-2. **D3 (pyproject.toml) + D5 (LICENSING.md) + D2 (CoC)** — one afternoon combined. Hygiene sweep.
-3. **D4 (CONTRIBUTING.md audit)** — a couple hours. Lands before soft launch.
-4. **P1 Phase 1 (Claude Code adapter)** — 1-2 days. Highest-leverage single win. Lands a Reddit post in r/ClaudeAI on landing.
-5. **P8 + P7 Phase 1 (soulprint info + CLI dispatch)** — 1 day. Unblocks everything else and lets us screenshot a real stats block for the README.
-6. **P3 Phase 1 (drop folder on-startup scan)** — 2 days. Dramatic friction reduction, one Reddit post worth alone.
-7. **P1 Phase 2 (Claude Code auto-discovery UI)** — 1-2 days. Upgrades P1 Phase 1's wow factor.
-8. **P5 Phases 1 + 2 (groups schema + UI)** — 2-3 days. Unlocks the "scope my coding archive" query pattern.
-9. **P4 Phases 1 + 2 (capture MCP + UI surface)** — 2 days. Closes the read-write MCP loop.
-10. **P7 Phases 2 + 3 (search, import, scan CLI)** — 1-2 days once P7 Phase 1 is in.
-11. **P5 Phase 3 (group-scoped search)** — 1 day. Finishes groups.
-12. **P9 (SSE MCP)** — 2-3 days if scoped to localhost-only. Optional.
-
-Total rough estimate: Bucket 3 is ~1 day end-to-end. Bucket 2 is 15–20 working days, or 4–5 weeks at one-prompt-one-branch-one-merge pace. This is the v0.8 release cycle.
-
-Everything after Phase 11 soft launch. Nothing before.
-
----
-
-# What this plan does not do
-
-It does not add semantic search via embeddings. DECISIONS.md has that frozen, and nothing here changes the thesis that FTS5 + Ollama is the right local-first retrieval stack. If semantic search ever ships, it goes in as a derived layer above canonical, clearly labeled derived, opt-in.
-
-It does not add a Cursor importer. Explicit cut. Cursor's conversation store is a local SQLite with undocumented schema that changes. Audience is small, maintenance cost is high. Not worth it.
-
-It does not change the importer contract, the canonical ledger shape, the provenance rules, the design system, or the two-audience distribution strategy. Everything here is additive to surfaces (new CLI verbs, new MCP tools, new importer adapters, new join tables) rather than reshaping core.
+Operational decision (signing key), not a code change.
