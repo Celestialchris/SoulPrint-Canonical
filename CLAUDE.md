@@ -1,12 +1,8 @@
 # CLAUDE.md — SoulPrint Contributor Reference
 
-> **Before starting work:** read `context/soul.md` and `context/user.md`.
-> **Before UI/design work:** read `docs/product/design-doctrine-quiet-archive.md`.
-> **Before intelligence features:** read `context/llm-config.md`.
-> **Before any expert-routed prompt:** read `context/experts.md`. Read only the stack docs, project canon, and learned-pattern links attached to the named Section A expert and Section B stance.
-> **Before resuming after a gap:** read the latest file in `ops/sessions/`.
-> **Before revisiting a settled question:** check `DECISIONS.md`.
-> **Extended rules:** `.claude/rules/`
+> **Before starting work:** read `AGENTS.md`, then inspect the current branch, task scope, and relevant public project files.
+> **Private context note:** internal development history, private operating notes, and agent-process material are maintained outside the public distribution tree.
+> **Quality reports:** generated quality reports may still write to `ops/quality/`.
 
 ## What SoulPrint Is
 
@@ -33,7 +29,7 @@ A local-first memory continuity system for AI users. Import AI conversation hist
 
 ## Trust Chain
 
-```
+```text
 record → retrieve → browse → answer → trace → inspect
 ```
 
@@ -79,6 +75,7 @@ Use instead: continuity, exportability, interoperability, local ownership, Memor
 ## Product Context
 
 Full brand, positioning, and design files live in `docs/product/`:
+
 - `brand.md` — mission, voice, naming rules
 - `positioning.md` — what SoulPrint is, what it's not, who it's for
 - `visual-direction.md` — design system lineage and authority chain

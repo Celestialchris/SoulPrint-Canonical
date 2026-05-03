@@ -167,7 +167,7 @@ No JavaScript. The add-input submits on Enter (browser default for a single inpu
 
 ### Redirect-after-action safety
 
-Both routes use the canonical sanitizer pattern that CP1 starring closed CodeQL on. Not a helper; inlined at each sink. See `ops/learned/static-analyzer-shape-matching.md`.
+Both routes use the same inlined CodeQL-recognized sanitizer pattern that CP1 starring closed. Not a helper; the sanitizer shape is visible at each redirect sink.
 
 ```python
 nxt = request.form.get("next", "")

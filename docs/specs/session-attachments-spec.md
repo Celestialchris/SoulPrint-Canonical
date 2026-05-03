@@ -6,9 +6,7 @@
 > state" section below documents the pre-implementation state and is
 > preserved as design history. Verify against `src/app/models/__init__.py`
 > and `src/app/__init__.py` for current shape. Session logs covering
-> implementation: `ops/sessions/april-25-2026-6.md` through
-> `ops/sessions/april-25-2026-11.md`, plus
-> `ops/sessions/april-27-2026-1.md`.
+> Implementation status: partially shipped across April 2026 attachment/export work. Private session logs are maintained outside the public distribution tree.
 
 Target path in repo: `docs/specs/session-attachments-spec.md`
 Scope: product and architecture spec only. No implementation in this branch.
