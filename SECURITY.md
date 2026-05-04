@@ -1,6 +1,6 @@
 # Security Policy
 
-SoulPrint is a local-first archive for AI conversation history. The security posture follows from that shape: canonical data lives on your machine, the application makes no outbound network calls in core mode, and trust boundaries are explicit and inspectable.
+SoulPrint is a local-first archive for AI conversation history. The security posture follows from that shape: canonical data lives on your machine, the application makes no outbound network calls in core mode, and trust boundaries are explicit and inspectable. See [docs/privacy.md](docs/privacy.md) for the user-facing privacy posture; this document focuses on the security model.
 
 ## Supported versions
 
