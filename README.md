@@ -109,6 +109,8 @@ SoulPrint is built around custody, not access.
 - Intelligence features (Ask, Distill, Recurring Themes, Continuity Packet) contact only the LLM provider you have explicitly configured, and only when you trigger them.
 - The Ollama path is fully local: no API key, no network egress beyond `localhost`.
 
+See [docs/privacy.md](docs/privacy.md) for the privacy posture: what stays local, what leaves the machine when, and what never leaves.
+
 See [SECURITY.md](SECURITY.md) for the security model, network behavior, and vulnerability reporting.
 
 ---
