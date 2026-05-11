@@ -6,6 +6,7 @@
 {% block page_desc %}your own note{% endblock %}
 
 {% block page_actions %}
+  <a class="topbar-action topbar-action--ghost" href="http://127.0.0.1:5173/?source=note&id={{ entry.id }}" target="_blank" rel="noopener">Listen</a>
   <form method="post"
         action="/memory/{{ entry.id }}/{{ 'unstar' if entry.is_starred else 'star' }}"
         style="display:inline;">
