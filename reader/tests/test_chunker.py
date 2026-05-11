@@ -98,6 +98,31 @@ def test_chunk_ids_sequential():
     assert indexes == [0, 1, 2]
 
 
+def test_single_oversized_sentence_is_hard_sliced():
+    """Regression: a single sentence/unpunctuated run longer than the hard max
+    must be sliced, not emitted whole. The Reader contract is that no chunk
+    ever exceeds _MAX_CHARS (1600 chars) so Chatterbox never sees oversized text.
+    """
+    text = "a" * 1700
+    chunks = chunk_text(text)
+    assert len(chunks) >= 2
+    assert all(len(c["text"]) <= 1600 for c in chunks)
+    assert all(c["kind"] == "sentence_group" for c in chunks)
+
+
+def test_oversized_sentence_with_spaces_prefers_word_boundaries():
+    """When the oversized text has whitespace, slicing should prefer word
+    boundaries so the seam is not in the middle of a word."""
+    word = "blockchain "  # 11 chars including trailing space
+    text = word * 200  # ~2200 chars, well over the hard max
+    chunks = chunk_text(text)
+    assert all(len(c["text"]) <= 1600 for c in chunks)
+    # No chunk should end mid-word.
+    for c in chunks:
+        last_token = c["text"].rsplit(" ", 1)[-1].strip()
+        assert last_token == "blockchain", f"slice ended mid-word: {last_token!r}"
+
+
 def test_chunk_kind_values_are_documented():
     """All chunk kinds returned must be one of the documented enum values."""
     text = (

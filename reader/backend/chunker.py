@@ -163,17 +163,20 @@ def _split_long_paragraph(block: dict[str, Any]) -> list[dict[str, Any]]:
         s_len = len(sentence)
 
         if s_len > _MAX_CHARS:
-            # A single sentence already exceeds max: emit alone.
+            # A single sentence already exceeds the hard max. Slice it into
+            # pieces of at most _MAX_CHARS, preferring word boundaries, so we
+            # never hand oversized text to Chatterbox.
             flush()
-            groups.append(
-                {
-                    "kind": "sentence_group",
-                    "text": sentence,
-                    "char_start": char_pos,
-                    "char_end": char_pos + s_len,
-                }
-            )
-            char_pos += s_len + 1
+            for slice_text in _hard_slice(sentence, _MAX_CHARS):
+                groups.append(
+                    {
+                        "kind": "sentence_group",
+                        "text": slice_text,
+                        "char_start": char_pos,
+                        "char_end": char_pos + len(slice_text),
+                    }
+                )
+                char_pos += len(slice_text) + 1
             continue
 
         projected = current_len + s_len + (1 if current else 0)
@@ -194,3 +197,28 @@ def _split_long_paragraph(block: dict[str, Any]) -> list[dict[str, Any]]:
 def _split_sentences(text: str) -> list[str]:
     parts = _SENTENCE_END_RE.split(text.strip())
     return [p.strip() for p in parts if p.strip()]
+
+
+def _hard_slice(text: str, max_chars: int) -> list[str]:
+    """Slice text into pieces of at most ``max_chars``.
+
+    Prefers slicing at the last whitespace within the window so we don't cut
+    mid-word, but falls back to a hard cut when there is no whitespace (or it
+    is too far back to be useful).
+    """
+    pieces: list[str] = []
+    pos = 0
+    n = len(text)
+    while pos < n:
+        end = min(pos + max_chars, n)
+        if end < n:
+            space = text.rfind(" ", pos, end)
+            if space > pos:
+                end = space
+        piece = text[pos:end].strip()
+        if piece:
+            pieces.append(piece)
+        pos = end
+        while pos < n and text[pos] == " ":
+            pos += 1
+    return pieces
