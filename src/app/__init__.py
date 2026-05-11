@@ -992,7 +992,7 @@ def create_app():
 
     @app.get("/api/notes")
     def api_notes():
-        entries = MemoryEntry.query.order_by(MemoryEntry.timestamp.desc()).limit(100).all()
+        entries = MemoryEntry.query.order_by(MemoryEntry.timestamp.desc(), MemoryEntry.id.desc()).limit(100).all()
         return jsonify([_serialize_note(e) for e in entries])
 
     @app.get("/api/notes/<int:note_id>")
