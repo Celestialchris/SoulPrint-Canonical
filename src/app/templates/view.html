@@ -84,6 +84,8 @@
               </button>
             </form>
             <span style="color:var(--t3);"> · </span>
+            <a class="ghost-link" href="http://127.0.0.1:5173/?source=note&id={{ e.id }}" target="_blank" rel="noopener">Listen</a>
+            <span style="color:var(--t3);"> · </span>
             <form method="POST" action="{{ url_for('delete_memory', memory_id=e.id) }}"
                   style="display:inline" onsubmit="return confirm('Delete this note?')">
               <button type="submit" class="note-delete-btn">Delete</button>

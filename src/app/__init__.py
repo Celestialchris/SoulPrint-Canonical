@@ -703,6 +703,25 @@ def create_app():
         from ..importers.contracts import PROVIDER_DISPLAY_NAMES
         return PROVIDER_DISPLAY_NAMES.get(slug, (slug or "").capitalize())
 
+    # CORS for /api/notes — scoped to the Reader dev server origin only
+    @app.before_request
+    def _cors_preflight():
+        if request.method == "OPTIONS" and request.path.startswith("/api/notes"):
+            response = app.make_response("")
+            response.status_code = 204
+            response.headers["Access-Control-Allow-Origin"] = "http://127.0.0.1:5173"
+            response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            return response
+
+    @app.after_request
+    def _cors_notes_headers(response):
+        if request.path.startswith("/api/notes"):
+            response.headers["Access-Control-Allow-Origin"] = "http://127.0.0.1:5173"
+            response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        return response
+
     @app.get("/")
     def home():
         from ..answering.trace import default_trace_store_path
@@ -959,6 +978,29 @@ def create_app():
             logger.warning("FTS indexing failed", exc_info=True)
 
         return jsonify({"status": "ok", "note_id": entry.id})
+
+    def _serialize_note(entry: MemoryEntry) -> dict:
+        tags = [t.strip() for t in (entry.tags or "").split(",") if t.strip()]
+        return {
+            "id": entry.id,
+            "content": entry.content,
+            "tags": tags,
+            "is_starred": entry.is_starred,
+            "timestamp": entry.timestamp.isoformat() if entry.timestamp is not None else None,
+            "role": entry.role,
+        }
+
+    @app.get("/api/notes")
+    def api_notes():
+        entries = MemoryEntry.query.order_by(MemoryEntry.timestamp.desc()).limit(100).all()
+        return jsonify([_serialize_note(e) for e in entries])
+
+    @app.get("/api/notes/<int:note_id>")
+    def api_notes_detail(note_id: int):
+        entry = MemoryEntry.query.filter_by(id=note_id).first()
+        if entry is None:
+            return jsonify({"error": "not found"}), 404
+        return jsonify(_serialize_note(entry))
 
     @app.get("/imported/<int:conversation_id>/explorer")
     def imported_explorer(conversation_id: int):
