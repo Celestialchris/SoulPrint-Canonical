@@ -123,6 +123,25 @@ def test_oversized_sentence_with_spaces_prefers_word_boundaries():
         assert last_token == "blockchain", f"slice ended mid-word: {last_token!r}"
 
 
+def test_oversized_code_block_is_sliced():
+    """Regression: a fenced code block longer than the hard max must be sliced.
+    Structural blocks were previously bypassing the size check entirely."""
+    body = "print('x')\n" * 200  # ~2200 chars of code
+    text = "```python\n" + body + "```"
+    chunks = chunk_text(text)
+    assert all(len(c["text"]) <= 1600 for c in chunks), \
+        f"oversized code block leaked: {max(len(c['text']) for c in chunks)} chars"
+    # At least one of the resulting chunks must still be a code chunk.
+    assert any(c["kind"] == "code" for c in chunks)
+
+
+def test_oversized_heading_is_sliced():
+    """Regression: an absurdly long heading line must not bypass the hard max."""
+    text = "# " + ("Word " * 400)  # ~2000-char heading line
+    chunks = chunk_text(text)
+    assert all(len(c["text"]) <= 1600 for c in chunks)
+
+
 def test_chunk_kind_values_are_documented():
     """All chunk kinds returned must be one of the documented enum values."""
     text = (

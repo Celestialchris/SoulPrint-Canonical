@@ -34,13 +34,15 @@ def chunk_text(text: str) -> list[dict[str, Any]]:
 
     chunks: list[dict[str, Any]] = []
     for block in blocks:
-        if block["kind"] in ("heading", "code"):
+        if len(block["text"]) <= _MAX_CHARS:
             chunks.append(block)
+        elif block["kind"] == "paragraph":
+            chunks.extend(_split_long_paragraph(block))
         else:
-            if len(block["text"]) <= _MAX_CHARS:
-                chunks.append(block)
-            else:
-                chunks.extend(_split_long_paragraph(block))
+            # Headings and code blocks larger than the hard max still need to
+            # be sliced. Chatterbox cannot reliably handle oversized chunks,
+            # regardless of structural kind.
+            chunks.extend(_hard_slice_block(block))
 
     for i, chunk in enumerate(chunks):
         chunk["index"] = i
@@ -197,6 +199,24 @@ def _split_long_paragraph(block: dict[str, Any]) -> list[dict[str, Any]]:
 def _split_sentences(text: str) -> list[str]:
     parts = _SENTENCE_END_RE.split(text.strip())
     return [p.strip() for p in parts if p.strip()]
+
+
+def _hard_slice_block(block: dict[str, Any]) -> list[dict[str, Any]]:
+    """Slice an oversized structural block (heading or code) preserving its kind."""
+    pieces = _hard_slice(block["text"], _MAX_CHARS)
+    out: list[dict[str, Any]] = []
+    char_pos = block["char_start"]
+    for piece in pieces:
+        out.append(
+            {
+                "kind": block["kind"],
+                "text": piece,
+                "char_start": char_pos,
+                "char_end": char_pos + len(piece),
+            }
+        )
+        char_pos += len(piece) + 1
+    return out
 
 
 def _hard_slice(text: str, max_chars: int) -> list[str]:
