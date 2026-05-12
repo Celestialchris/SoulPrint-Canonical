@@ -253,14 +253,17 @@ export function createReaderState(): ReaderState {
     },
 
     async startReading(): Promise<void> {
+      // Cancel any prior in-flight generation up front, before any async work,
+      // so a second click cleanly replaces the first instead of racing it.
+      stopPolling();
+      activeJobId = null;
+      hasAutoStarted = false;
       if (!selectedNote) return;
       if (!selectedVoice) {
         generationError = 'no voice selected';
         return;
       }
       generationError = null;
-      hasAutoStarted = false;
-      activeJobId = null;
       try {
         const start = await startGeneration(selectedNote.content, selectedVoice, speed);
         // Seed an empty job snapshot so pageState flips to 'listening' before the first poll.
@@ -361,11 +364,10 @@ export function createReaderState(): ReaderState {
     onChunkEnded(): void {
       const nextIndex = currentChunkIndex + 1;
       if (nextIndex >= chunks.length) {
-        // No more chunks. If job is complete, stop cleanly; otherwise wait.
-        if (job && job.status === 'complete') {
-          isPlaying = false;
-          audioSrc = '';
-        }
+        // No more chunks to advance to — playback is done regardless of
+        // whether the next poll has observed status === 'complete' yet.
+        isPlaying = false;
+        audioSrc = '';
         return;
       }
       const next = chunks[nextIndex];
