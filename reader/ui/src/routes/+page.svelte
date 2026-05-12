@@ -2,7 +2,7 @@
   import { onDestroy, onMount } from 'svelte';
   import Sigil from '$lib/components/Sigil.svelte';
   import Dock from '$lib/components/Dock.svelte';
-  import { createReaderState, type PageState } from '$lib/stores.svelte';
+  import { createReaderState } from '$lib/stores.svelte';
   import type { Note } from '$lib/api';
 
   const reader = createReaderState();
@@ -22,12 +22,6 @@
   $effect(() => {
     reader.registerAudio(audioEl);
   });
-
-  function dockState(s: PageState): 'idle' | 'ready' | 'playing' {
-    if (s === 'loaded') return 'ready';
-    if (s === 'listening') return 'playing';
-    return 'idle';
-  }
 
   function noteTitle(content: string): string {
     return content.split('\n')[0].slice(0, 80);
@@ -262,6 +256,13 @@
           Read aloud
         </button>
 
+        {#if reader.generationError}
+          <div class="generation-error" role="alert">
+            <p class="subtitle">{reader.generationError}</p>
+            <button class="cta-read-aloud" type="button" onclick={tryAgain}>Try again</button>
+          </div>
+        {/if}
+
       </div>
 
     <!-- ═══════════════════ LISTENING STATE ═══════════════════ -->
@@ -349,7 +350,7 @@
       />
     {:else}
       <Dock
-        state={dockState(reader.pageState)}
+        state={reader.isPlaying ? 'playing' : 'ready'}
         progress={dockProgress}
         current={reader.currentChunkIndex + 1}
         total={totalChunks}
