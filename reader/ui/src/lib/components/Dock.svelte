@@ -52,16 +52,16 @@
         </div>
       </div>
 
-      <div class="dock-zone-right">
-        {#if state === 'playing' && previewText}
+      {#if state === 'playing' && previewText}
+        <div class="dock-zone-right">
           <div class="dock-preview-plate">
             <p class="dock-preview-text">{previewText}</p>
             {#if previewMeta}
               <p class="dock-preview-meta">{previewMeta}</p>
             {/if}
           </div>
-        {/if}
-      </div>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
