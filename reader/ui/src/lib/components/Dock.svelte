@@ -8,6 +8,9 @@
     speed?: number;
     previewText?: string;
     previewMeta?: string;
+    onPlayPause?: () => void;
+    onSkipForward?: () => void;
+    onSkipBack?: () => void;
   }
 
   let {
@@ -18,7 +21,10 @@
     voice = '',
     speed = 1.0,
     previewText = '',
-    previewMeta = ''
+    previewMeta = '',
+    onPlayPause,
+    onSkipForward,
+    onSkipBack
   }: Props = $props();
 </script>
 
@@ -29,11 +35,15 @@
     <div class="dock-row">
       <div class="dock-zone-left">
         <div class="dock-transport">
-          <button class="dock-btn" aria-label="Skip back">⏮</button>
-          <button class="dock-btn primary play-pause {state === 'playing' ? 'active' : ''}" aria-label={state === 'playing' ? 'Pause' : 'Play'}>
+          <button class="dock-btn" aria-label="Skip back" onclick={() => onSkipBack?.()}>⏮</button>
+          <button
+            class="dock-btn primary play-pause {state === 'playing' ? 'active' : ''}"
+            aria-label={state === 'playing' ? 'Pause' : 'Play'}
+            onclick={() => onPlayPause?.()}
+          >
             {state === 'playing' ? '❚❚' : '▶'}
           </button>
-          <button class="dock-btn" aria-label="Skip forward">⏭</button>
+          <button class="dock-btn" aria-label="Skip forward" onclick={() => onSkipForward?.()}>⏭</button>
         </div>
       </div>
 

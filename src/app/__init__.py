@@ -981,6 +981,9 @@ def create_app():
 
     def _serialize_note(entry: MemoryEntry) -> dict:
         tags = [t.strip() for t in (entry.tags or "").split(",") if t.strip()]
+        # MemoryEntry is the native lane; provider lives on the imported lane only.
+        # We surface a null provider so Reader clients keep a stable shape and
+        # render the default lane color for native notes.
         return {
             "id": entry.id,
             "content": entry.content,
@@ -988,6 +991,7 @@ def create_app():
             "is_starred": entry.is_starred,
             "timestamp": entry.timestamp.isoformat() if entry.timestamp is not None else None,
             "role": entry.role,
+            "provider": None,
         }
 
     @app.get("/api/notes")
