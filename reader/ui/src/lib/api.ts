@@ -1,4 +1,4 @@
-export const SOULPRINT_API = 'http://127.0.0.1:5000';
+export const SOULPRINT_API = 'http://127.0.0.1:5678';
 export const VOICEFORGE_API = 'http://127.0.0.1:5001';
 
 export interface Note {
