@@ -227,7 +227,9 @@
     {:else if reader.pageState === 'loaded' && reader.selectedNote}
       <div class="content-loaded">
 
-        <p class="eyebrow">From Note</p>
+        <button class="eyebrow back-link" type="button" onclick={() => reader.selectNote(null)}>
+          ← Back to notes
+        </button>
         <h1 class="display-heading">{noteTitle(reader.selectedNote.content)}</h1>
 
         <div class="header-meta">
@@ -269,7 +271,9 @@
     {:else if reader.pageState === 'listening' && reader.selectedNote}
       <div class="content-loaded">
 
-        <p class="eyebrow">Listening</p>
+        <button class="eyebrow back-link" type="button" onclick={() => reader.selectNote(null)}>
+          ← Back to notes
+        </button>
         <h1 class="display-heading">{noteTitle(reader.selectedNote.content)}</h1>
 
         <div class="header-meta">

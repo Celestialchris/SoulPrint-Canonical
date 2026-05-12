@@ -39,7 +39,7 @@ export interface ReaderState {
   readonly readyChunkCount: number;
 
   loadInitial(): Promise<void>;
-  selectNote(note: Note): void;
+  selectNote(note: Note | null): void;
   setVoice(filename: string): void;
   setSpeed(value: number): void;
   startReading(): Promise<void>;
@@ -224,8 +224,9 @@ export function createReaderState(): ReaderState {
       isLoadingVoices = false;
     },
 
-    selectNote(note: Note): void {
-      // Switching notes resets any in-flight job state.
+    selectNote(note: Note | null): void {
+      // Switching notes (or clearing the selection with null) resets any
+      // in-flight job state.
       stopPolling();
       activeJobId = null;
       hasAutoStarted = false;
@@ -263,9 +264,15 @@ export function createReaderState(): ReaderState {
         generationError = 'no voice selected';
         return;
       }
+      // Capture the note identity we're generating for. If the user navigates
+      // back or switches notes during the await, this lets us drop the
+      // response instead of seeding a phantom job for a note that's no
+      // longer selected.
+      const startedFor = selectedNote;
       generationError = null;
       try {
         const start = await startGeneration(selectedNote.content, selectedVoice, speed);
+        if (selectedNote !== startedFor) return;
         // Seed an empty job snapshot so pageState flips to 'listening' before the first poll.
         chunks = Array.from({ length: start.total_chunks }, (_, i) => ({
           chunk_id: `c${String(i + 1).padStart(3, '0')}`,
