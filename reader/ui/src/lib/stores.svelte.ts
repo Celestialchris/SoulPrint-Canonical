@@ -82,6 +82,14 @@ export function createReaderState(): ReaderState {
   let pollHandle: ReturnType<typeof setInterval> | null = null;
   let audioEl: HTMLAudioElement | null = null;
   let pendingAutoPlay = false; // set when onChunkEnded waits for next chunk to become ready
+  // Identity of the job whose responses we still want to apply. Cleared on
+  // selectNote/resetJob so an in-flight pollJob() that resolves after a switch
+  // cannot overwrite the now-current job's state.
+  let activeJobId: string | null = null;
+  // One-shot latch for chunk-0 auto-play. Polls keep arriving while a user is
+  // paused; without this latch, every successful poll would see "first chunk
+  // ready, nothing playing" and restart playback from the top.
+  let hasAutoStarted = false;
 
   // Derived values.
   const pageStateDerived = $derived<PageState>(
@@ -124,10 +132,12 @@ export function createReaderState(): ReaderState {
   }
 
   function tryAutoStart(): void {
+    if (hasAutoStarted) return;
     if (chunks.length === 0) return;
     if (isPlaying) return;
     const first = chunks[0];
     if (first.status === 'ready') {
+      hasAutoStarted = true;
       currentChunkIndex = 0;
       loadChunkIntoAudio(0);
     }
@@ -145,6 +155,7 @@ export function createReaderState(): ReaderState {
   async function pollOnce(jobId: string): Promise<void> {
     try {
       const next = await pollJob(jobId);
+      if (jobId !== activeJobId) return; // user switched notes or reset; drop stale response
       job = next;
       chunks = next.chunks;
       if (next.status === 'error') {
@@ -156,6 +167,7 @@ export function createReaderState(): ReaderState {
         stopPolling();
       }
     } catch (err: unknown) {
+      if (jobId !== activeJobId) return; // same stale guard for error responses
       const message = err instanceof Error ? err.message : 'poll failed';
       generationError = message;
       stopPolling();
@@ -215,6 +227,8 @@ export function createReaderState(): ReaderState {
     selectNote(note: Note): void {
       // Switching notes resets any in-flight job state.
       stopPolling();
+      activeJobId = null;
+      hasAutoStarted = false;
       selectedNote = note;
       job = null;
       chunks = [];
@@ -245,6 +259,8 @@ export function createReaderState(): ReaderState {
         return;
       }
       generationError = null;
+      hasAutoStarted = false;
+      activeJobId = null;
       try {
         const start = await startGeneration(selectedNote.content, selectedVoice, speed);
         // Seed an empty job snapshot so pageState flips to 'listening' before the first poll.
@@ -264,6 +280,8 @@ export function createReaderState(): ReaderState {
           chunks
         };
         currentChunkIndex = 0;
+        // Mark this job as the only one whose poll responses are still welcome.
+        activeJobId = start.job_id;
         // Begin polling immediately, then on interval.
         const jobId = start.job_id;
         await pollOnce(jobId);
@@ -317,6 +335,8 @@ export function createReaderState(): ReaderState {
 
     resetJob(): void {
       stopPolling();
+      activeJobId = null;
+      hasAutoStarted = false;
       job = null;
       chunks = [];
       currentChunkIndex = 0;
