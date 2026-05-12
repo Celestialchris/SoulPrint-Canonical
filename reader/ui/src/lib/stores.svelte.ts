@@ -39,7 +39,7 @@ export interface ReaderState {
   readonly readyChunkCount: number;
 
   loadInitial(): Promise<void>;
-  selectNote(note: Note): void;
+  selectNote(note: Note | null): void;
   setVoice(filename: string): void;
   setSpeed(value: number): void;
   startReading(): Promise<void>;
@@ -224,8 +224,9 @@ export function createReaderState(): ReaderState {
       isLoadingVoices = false;
     },
 
-    selectNote(note: Note): void {
-      // Switching notes resets any in-flight job state.
+    selectNote(note: Note | null): void {
+      // Switching notes (or clearing the selection with null) resets any
+      // in-flight job state.
       stopPolling();
       activeJobId = null;
       hasAutoStarted = false;
