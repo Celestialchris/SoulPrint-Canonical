@@ -264,9 +264,15 @@ export function createReaderState(): ReaderState {
         generationError = 'no voice selected';
         return;
       }
+      // Capture the note identity we're generating for. If the user navigates
+      // back or switches notes during the await, this lets us drop the
+      // response instead of seeding a phantom job for a note that's no
+      // longer selected.
+      const startedFor = selectedNote;
       generationError = null;
       try {
         const start = await startGeneration(selectedNote.content, selectedVoice, speed);
+        if (selectedNote !== startedFor) return;
         // Seed an empty job snapshot so pageState flips to 'listening' before the first poll.
         chunks = Array.from({ length: start.total_chunks }, (_, i) => ({
           chunk_id: `c${String(i + 1).padStart(3, '0')}`,
