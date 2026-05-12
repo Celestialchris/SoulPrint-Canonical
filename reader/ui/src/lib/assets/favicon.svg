@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>SoulPrint Reader</title>
+
+  <!-- Outer ring -->
+  <circle cx="50" cy="50" r="44" fill="none" stroke="#181614" stroke-width="2.5"/>
+
+  <!-- Cardinal tick marks (N, S, E, W) crossing the ring -->
+  <line x1="50" y1="9"  x2="50" y2="2"  stroke="#181614" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="50" y1="91" x2="50" y2="98" stroke="#181614" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="9"  y1="50" x2="2"  y2="50" stroke="#181614" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="91" y1="50" x2="98" y2="50" stroke="#181614" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Inner memory grooves (two rings for favicon legibility) -->
+  <circle cx="50" cy="50" r="32" fill="none" stroke="#181614" stroke-width="1.2" opacity="0.5"/>
+  <circle cx="50" cy="50" r="18" fill="none" stroke="#181614" stroke-width="1.2" opacity="0.35"/>
+
+  <!-- Diamond at north cardinal point -->
+  <polygon points="50,0 54,3.5 50,7 46,3.5" fill="#181614"/>
+</svg>
