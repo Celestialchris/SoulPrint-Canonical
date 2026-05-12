@@ -36,7 +36,7 @@
 
         <div class="sigil-container">
           <div class="sigil-entrance">
-            <Sigil size={64} />
+            <Sigil size={80} />
           </div>
         </div>
 
@@ -57,7 +57,7 @@
         <div class="decorative-rule">
           <div class="rule-line"></div>
           <div class="rule-sigil">
-            <Sigil size={16} />
+            <Sigil size={18} />
           </div>
           <div class="rule-line"></div>
         </div>
@@ -98,7 +98,7 @@
         <div class="decorative-rule">
           <div class="rule-line"></div>
           <div class="rule-sigil">
-            <Sigil size={16} />
+            <Sigil size={18} />
           </div>
           <div class="rule-line"></div>
         </div>
@@ -142,7 +142,7 @@
         <div class="decorative-rule">
           <div class="rule-line"></div>
           <div class="rule-sigil">
-            <Sigil size={16} />
+            <Sigil size={18} />
           </div>
           <div class="rule-line"></div>
         </div>
