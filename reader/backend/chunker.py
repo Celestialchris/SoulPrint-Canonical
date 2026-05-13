@@ -18,7 +18,7 @@ _TARGET_CHARS = 1000
 _SENTENCE_END_RE = re.compile(r"(?<=[.!?])\s+")
 
 
-def chunk_text(text: str) -> list[dict[str, Any]]:
+def chunk_text(text: str, first_chunk_max: int = 400) -> list[dict[str, Any]]:
     """Split text into Reader chunks.
 
     Returns a list of dicts shaped:
@@ -26,6 +26,11 @@ def chunk_text(text: str) -> list[dict[str, Any]]:
          "char_start": int, "char_end": int}
 
     Returns an empty list for empty or whitespace-only input.
+
+    ``first_chunk_max`` caps the size of the *first* chunk only, so first audio
+    reaches the user roughly 4x faster than waiting for a full-sized chunk to
+    synthesize. All subsequent chunks keep the normal ~1600-char ceiling for
+    fewer chunk-boundary stitches in the playback stream.
     """
     if not text or not text.strip():
         return []
@@ -43,6 +48,10 @@ def chunk_text(text: str) -> list[dict[str, Any]]:
             # be sliced. Chatterbox cannot reliably handle oversized chunks,
             # regardless of structural kind.
             chunks.extend(_hard_slice_block(block))
+
+    if chunks and first_chunk_max > 0 and len(chunks[0]["text"]) > first_chunk_max:
+        head = _split_first_chunk(chunks[0], first_chunk_max)
+        chunks = head + chunks[1:]
 
     for i, chunk in enumerate(chunks):
         chunk["index"] = i
@@ -217,6 +226,69 @@ def _hard_slice_block(block: dict[str, Any]) -> list[dict[str, Any]]:
         )
         char_pos += len(piece) + 1
     return out
+
+
+def _split_first_chunk(chunk: dict[str, Any], target_max: int) -> list[dict[str, Any]]:
+    """Slice the first chunk into target_max-sized pieces, preserving its kind.
+
+    Prefers sentence boundaries so the cut isn't audible mid-sentence; falls
+    back to word-boundary hard slicing when no sentence break fits.
+    """
+    pieces_text = _slice_at_sentences(chunk["text"], target_max)
+    out: list[dict[str, Any]] = []
+    char_pos = chunk["char_start"]
+    for piece in pieces_text:
+        out.append(
+            {
+                "kind": chunk["kind"],
+                "text": piece,
+                "char_start": char_pos,
+                "char_end": char_pos + len(piece),
+            }
+        )
+        char_pos += len(piece) + 1
+    return out
+
+
+def _slice_at_sentences(text: str, max_chars: int) -> list[str]:
+    """Group sentences into pieces of at most ``max_chars`` characters.
+
+    Sentences longer than ``max_chars`` themselves fall through to
+    ``_hard_slice`` so we never emit a piece that exceeds the cap.
+    """
+    sentences = _split_sentences(text)
+    if not sentences:
+        return _hard_slice(text, max_chars)
+
+    pieces: list[str] = []
+    current: list[str] = []
+    current_len = 0
+
+    def flush() -> None:
+        nonlocal current, current_len
+        if not current:
+            return
+        pieces.append(" ".join(current))
+        current = []
+        current_len = 0
+
+    for sentence in sentences:
+        s_len = len(sentence)
+        if s_len > max_chars:
+            flush()
+            pieces.extend(_hard_slice(sentence, max_chars))
+            continue
+        projected = current_len + s_len + (1 if current else 0)
+        if current and projected > max_chars:
+            flush()
+            current = [sentence]
+            current_len = s_len
+        else:
+            current.append(sentence)
+            current_len = projected
+
+    flush()
+    return pieces
 
 
 def _hard_slice(text: str, max_chars: int) -> list[str]:

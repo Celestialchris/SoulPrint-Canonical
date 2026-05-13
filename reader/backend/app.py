@@ -16,6 +16,7 @@ import os
 import threading
 import time
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +27,7 @@ from pydantic import BaseModel, Field
 
 from . import config, job_store
 from .chunker import chunk_text
-from .tts_engine import generate_chunk
+from .tts_engine import generate_chunk, warmup
 
 
 def _detect_device() -> str:
@@ -38,7 +39,14 @@ def _detect_device() -> str:
         return "cpu_unknown"
 
 
-app = FastAPI(title="SoulPrint Reader", version="0.1.0")
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    # Pay the cold-start cost at boot, not on the first user request.
+    warmup()
+    yield
+
+
+app = FastAPI(title="SoulPrint Reader", version="0.1.0", lifespan=_lifespan)
 
 app.add_middleware(
     CORSMiddleware,
