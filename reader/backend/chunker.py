@@ -237,66 +237,78 @@ def _hard_slice_block(block: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _split_first_chunk(chunk: dict[str, Any], target_max: int) -> list[dict[str, Any]]:
-    """Slice the first chunk into target_max-sized pieces, preserving its kind.
+    """Emit a small starter chunk plus the remainder as a normally-chunked tail.
 
-    Prefers sentence boundaries so the cut isn't audible mid-sentence; falls
-    back to word-boundary hard slicing when no sentence break fits.
+    The starter is cut at the last sentence boundary within ``target_max``
+    when possible, then at the last word boundary, then at a hard cut. The
+    remainder is kept as a single chunk when it fits ``_MAX_CHARS`` so a
+    1500-char first paragraph becomes [starter, rest] — not three or four
+    small slices. When the remainder exceeds ``_MAX_CHARS`` it flows through
+    the same long-paragraph / hard-slice path the initial pass would use.
+
+    Offsets are computed against the original chunk's text rather than
+    approximated by joined-piece lengths, so separators wider than one
+    character (double space, indented newline) don't drift the indices.
     """
-    pieces_text = _slice_at_sentences(chunk["text"], target_max)
-    out: list[dict[str, Any]] = []
-    char_pos = chunk["char_start"]
-    for piece in pieces_text:
-        out.append(
-            {
-                "kind": chunk["kind"],
-                "text": piece,
-                "char_start": char_pos,
-                "char_end": char_pos + len(piece),
-            }
-        )
-        char_pos += len(piece) + 1
-    return out
+    text = chunk["text"]
+    base = chunk["char_start"]
+    kind = chunk["kind"]
+
+    cut = _find_head_cut(text, target_max)
+
+    head_raw = text[:cut]
+    head_lead = len(head_raw) - len(head_raw.lstrip())
+    head_trail = len(head_raw) - len(head_raw.rstrip())
+    head = {
+        "kind": kind,
+        "text": head_raw.strip(),
+        "char_start": base + head_lead,
+        "char_end": base + cut - head_trail,
+    }
+
+    rest_raw = text[cut:]
+    rest_text = rest_raw.strip()
+    if not rest_text:
+        return [head]
+
+    rest_lead = len(rest_raw) - len(rest_raw.lstrip())
+    rest_trail = len(rest_raw) - len(rest_raw.rstrip())
+    rest = {
+        "kind": kind,
+        "text": rest_text,
+        "char_start": base + cut + rest_lead,
+        "char_end": base + len(text) - rest_trail,
+    }
+
+    if len(rest_text) <= _MAX_CHARS:
+        return [head, rest]
+    if kind == "paragraph":
+        return [head] + _split_long_paragraph(rest)
+    return [head] + _hard_slice_block(rest)
 
 
-def _slice_at_sentences(text: str, max_chars: int) -> list[str]:
-    """Group sentences into pieces of at most ``max_chars`` characters.
+def _find_head_cut(text: str, target_max: int) -> int:
+    """Return an index ``n`` such that ``text[:n]`` is the starter piece.
 
-    Sentences longer than ``max_chars`` themselves fall through to
-    ``_hard_slice`` so we never emit a piece that exceeds the cap.
+    Prefers the largest sentence boundary at or under ``target_max``, then
+    the last word boundary within ``target_max``, then a hard cut.
     """
-    sentences = _split_sentences(text)
-    if not sentences:
-        return _hard_slice(text, max_chars)
+    if len(text) <= target_max:
+        return len(text)
 
-    pieces: list[str] = []
-    current: list[str] = []
-    current_len = 0
+    last_sentence_end = 0
+    for m in _SENTENCE_END_RE.finditer(text):
+        if m.end() > target_max:
+            break
+        last_sentence_end = m.end()
+    if last_sentence_end > 0:
+        return last_sentence_end
 
-    def flush() -> None:
-        nonlocal current, current_len
-        if not current:
-            return
-        pieces.append(" ".join(current))
-        current = []
-        current_len = 0
+    space = text.rfind(" ", 0, target_max)
+    if space > 0:
+        return space + 1
 
-    for sentence in sentences:
-        s_len = len(sentence)
-        if s_len > max_chars:
-            flush()
-            pieces.extend(_hard_slice(sentence, max_chars))
-            continue
-        projected = current_len + s_len + (1 if current else 0)
-        if current and projected > max_chars:
-            flush()
-            current = [sentence]
-            current_len = s_len
-        else:
-            current.append(sentence)
-            current_len = projected
-
-    flush()
-    return pieces
+    return target_max
 
 
 def _hard_slice(text: str, max_chars: int) -> list[str]:

@@ -170,3 +170,62 @@ def test_first_chunk_max_does_not_split_code_block():
     assert chunks[0]["kind"] == "code"
     assert "```python" in chunks[0]["text"]
     assert chunks[0]["text"].rstrip().endswith("```")
+
+
+def test_first_chunk_shrink_emits_two_chunks_for_long_first_paragraph():
+    """A first paragraph longer than first_chunk_max but inside _MAX_CHARS
+    must split into exactly two chunks: a small starter and the remainder
+    as one normal chunk. Previously the optimization emitted N starter-sized
+    chunks across the whole paragraph; only the first chunk needs to be
+    small for fast time-to-first-audio."""
+    sentence = "This is a moderately long sentence with several words. "  # 55 chars
+    text = (sentence * 25).rstrip()
+    # Sanity: between 1200 and 1500, inside _MAX_CHARS so the chunker would
+    # normally produce ONE paragraph chunk.
+    assert 1200 <= len(text) <= 1500
+    assert len(chunk_text(text, first_chunk_max=10_000)) == 1
+
+    chunks = chunk_text(text, first_chunk_max=400)
+    assert len(chunks) == 2
+    assert len(chunks[0]["text"]) <= 400
+    # Remainder is kept whole, not further sliced into 400-char pieces.
+    assert len(chunks[1]["text"]) > 400
+
+
+def test_first_chunk_offsets_preserved_with_double_space_separators():
+    """When source sentences are separated by double spaces, head['char_end']
+    must point at the real position in the ORIGINAL text where the starter
+    ends — not at a position computed from a single-space-joined piece
+    length. The character just before char_end should be a sentence
+    terminator, not a mid-word letter."""
+    sentence = "A short sentence here."  # 22 chars
+    text = "  ".join([sentence] * 25)  # double-space separator, ~598 chars
+
+    chunks = chunk_text(text, first_chunk_max=400)
+    head = chunks[0]
+
+    # The exact char at char_end - 1 must be a real sentence terminator in
+    # the original text; under the old approximation it landed mid-word.
+    assert text[head["char_end"] - 1] in ".!?", (
+        f"char_end landed at offset {head['char_end']}; "
+        f"surrounding original text: "
+        f"{text[max(0, head['char_end'] - 8):head['char_end'] + 4]!r}"
+    )
+    # And the original span between char_start and char_end should match
+    # the head's stored text exactly (no approximation drift).
+    assert text[head["char_start"]:head["char_end"]] == head["text"]
+
+
+def test_first_chunk_offsets_preserved_with_newline_separators():
+    """Paragraphs that span multiple input lines (joined with '\\n' by the
+    block walker) must still produce truthful offsets — a newline counts
+    as one separator char, but if the original source had indented
+    continuations, the head's char_end shouldn't drift either."""
+    line = "A sentence that ends with a period."  # 35 chars
+    text = "\n".join([line] * 15)  # 15 lines, ~539 chars
+
+    chunks = chunk_text(text, first_chunk_max=400)
+    head = chunks[0]
+
+    assert text[head["char_end"] - 1] == "."
+    assert text[head["char_start"]:head["char_end"]] == head["text"]
