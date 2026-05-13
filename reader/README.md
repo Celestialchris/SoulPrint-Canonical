@@ -6,7 +6,7 @@ This is a separate service from the SoulPrint Flask app and runs in its own Pyth
 
 ## Prerequisites
 
-- An existing Chatterbox virtualenv (e.g. `D:\VoiceForge\.venv-chatter`) with Python 3.11, `chatterbox-tts`, `torch`, and `torchaudio` installed.
+- An existing Chatterbox virtualenv (e.g. `C:\Users\chr\SoulPrint\VoiceForge\.venv-chatter`) with Python 3.11, `chatterbox-tts`, `torch`, and `torchaudio` installed.
 - An NVIDIA GPU with CUDA for realistic generation speeds (CPU mode is supported but slow).
 - A directory of reference voice clips (`.wav`) for Chatterbox to clone from.
 
@@ -15,7 +15,7 @@ This is a separate service from the SoulPrint Flask app and runs in its own Pyth
 Install the API-layer dependencies into the Chatterbox venv:
 
 ```powershell
-D:\VoiceForge\.venv-chatter\Scripts\pip.exe install -r reader\requirements.txt
+C:\Users\chr\SoulPrint\VoiceForge\.venv-chatter\Scripts\pip.exe install -r reader\requirements.txt
 ```
 
 `torch`, `torchaudio`, and `chatterbox-tts` are NOT in `requirements.txt`; they are already present in the Chatterbox venv.
@@ -23,8 +23,8 @@ D:\VoiceForge\.venv-chatter\Scripts\pip.exe install -r reader\requirements.txt
 ## Run
 
 ```powershell
-$env:READER_HOME = "D:\VoiceForge"
-D:\VoiceForge\.venv-chatter\Scripts\python.exe -m uvicorn reader.backend.app:app --host 127.0.0.1 --port 5001
+$env:READER_HOME = "C:\Users\chr\SoulPrint\VoiceForge"
+C:\Users\chr\SoulPrint\VoiceForge\.venv-chatter\Scripts\python.exe -m uvicorn reader.backend.app:app --host 127.0.0.1 --port 5001
 ```
 
 The service listens on `http://127.0.0.1:5001`.
@@ -33,7 +33,7 @@ The service listens on `http://127.0.0.1:5001`.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `READER_HOME` | `D:\VoiceForge` | Root for refs and output. |
+| `READER_HOME` | `C:\Users\chr\SoulPrint\VoiceForge` | Root for refs and output. |
 | `READER_REFS_DIR` | `$READER_HOME\refs` | Directory of reference voice `.wav` files. |
 | `READER_OUTPUT_DIR` | `$READER_HOME\output` | Directory where generated chunk WAVs are written, one subdirectory per job. |
 | `READER_CORS_ORIGIN` | `http://127.0.0.1:5173` | Allowed CORS origin (Reader UI dev server). |
@@ -55,7 +55,7 @@ Generation is progressive: chunks generate sequentially and each chunk's audio U
 ## Test
 
 ```powershell
-D:\VoiceForge\.venv-chatter\Scripts\python.exe -m pytest reader\tests\ -v
+C:\Users\chr\SoulPrint\VoiceForge\.venv-chatter\Scripts\python.exe -m pytest reader\tests\ -v
 ```
 
 All tests run without a GPU: the TTS engine is mocked and the background worker runs synchronously under test.
