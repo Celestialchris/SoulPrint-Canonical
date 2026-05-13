@@ -53,7 +53,7 @@ export interface ReaderState {
   cleanup(): void;
 }
 
-const POLL_INTERVAL_MS = 1000;
+const POLL_INTERVAL_MS = 300;
 
 export function createReaderState(): ReaderState {
   // Backing state — all reactive via $state runes.

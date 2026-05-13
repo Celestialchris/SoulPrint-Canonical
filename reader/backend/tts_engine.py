@@ -13,6 +13,8 @@ unused in the underlying call.
 """
 from __future__ import annotations
 
+import os
+import tempfile
 import threading
 
 _LOCK = threading.Lock()
@@ -53,3 +55,38 @@ def generate_chunk(
         wav = model.generate(text, audio_prompt_path=ref_audio_path)
         ta.save(output_path, wav, model.sr)
     return output_path
+
+
+def warmup() -> None:
+    """Eagerly load the model and run one throwaway synthesis.
+
+    Without this the first /generate request pays the full cold-start cost
+    (weight load, CUDA memory allocation, first-token latency). Running it
+    once at boot moves that wait to a moment the user isn't watching.
+
+    Best-effort: any failure here (no voice fixtures yet, chatterbox absent in
+    this env, transient torch error) must not prevent the API from coming up.
+    Real problems will resurface clearly on the first real /generate.
+    """
+    try:
+        from . import config
+
+        refs_dir = config.READER_REFS_DIR
+        if not os.path.isdir(refs_dir):
+            return
+        wavs = sorted(f for f in os.listdir(refs_dir) if f.lower().endswith(".wav"))
+        if not wavs:
+            return
+        voice_path = os.path.join(refs_dir, wavs[0])
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            tmp_path = tmp.name
+        try:
+            generate_chunk("warmup", voice_path, tmp_path)
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+    except Exception:  # noqa: BLE001 — warmup must never block service startup
+        return

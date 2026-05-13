@@ -18,7 +18,7 @@ _TARGET_CHARS = 1000
 _SENTENCE_END_RE = re.compile(r"(?<=[.!?])\s+")
 
 
-def chunk_text(text: str) -> list[dict[str, Any]]:
+def chunk_text(text: str, first_chunk_max: int = 400) -> list[dict[str, Any]]:
     """Split text into Reader chunks.
 
     Returns a list of dicts shaped:
@@ -26,6 +26,11 @@ def chunk_text(text: str) -> list[dict[str, Any]]:
          "char_start": int, "char_end": int}
 
     Returns an empty list for empty or whitespace-only input.
+
+    ``first_chunk_max`` caps the size of the *first* chunk only, so first audio
+    reaches the user roughly 4x faster than waiting for a full-sized chunk to
+    synthesize. All subsequent chunks keep the normal ~1600-char ceiling for
+    fewer chunk-boundary stitches in the playback stream.
     """
     if not text or not text.strip():
         return []
@@ -43,6 +48,18 @@ def chunk_text(text: str) -> list[dict[str, Any]]:
             # be sliced. Chatterbox cannot reliably handle oversized chunks,
             # regardless of structural kind.
             chunks.extend(_hard_slice_block(block))
+
+    # Skip code: first-chunk shrink is for spoken-narrative latency, and
+    # splitting a fenced block puts the opening ``` and closing ``` on
+    # separate chunks for no audible benefit.
+    if (
+        chunks
+        and chunks[0]["kind"] != "code"
+        and first_chunk_max > 0
+        and len(chunks[0]["text"]) > first_chunk_max
+    ):
+        head = _split_first_chunk(chunks[0], first_chunk_max)
+        chunks = head + chunks[1:]
 
     for i, chunk in enumerate(chunks):
         chunk["index"] = i
@@ -217,6 +234,81 @@ def _hard_slice_block(block: dict[str, Any]) -> list[dict[str, Any]]:
         )
         char_pos += len(piece) + 1
     return out
+
+
+def _split_first_chunk(chunk: dict[str, Any], target_max: int) -> list[dict[str, Any]]:
+    """Emit a small starter chunk plus the remainder as a normally-chunked tail.
+
+    The starter is cut at the last sentence boundary within ``target_max``
+    when possible, then at the last word boundary, then at a hard cut. The
+    remainder is kept as a single chunk when it fits ``_MAX_CHARS`` so a
+    1500-char first paragraph becomes [starter, rest] — not three or four
+    small slices. When the remainder exceeds ``_MAX_CHARS`` it flows through
+    the same long-paragraph / hard-slice path the initial pass would use.
+
+    Offsets are computed against the original chunk's text rather than
+    approximated by joined-piece lengths, so separators wider than one
+    character (double space, indented newline) don't drift the indices.
+    """
+    text = chunk["text"]
+    base = chunk["char_start"]
+    kind = chunk["kind"]
+
+    cut = _find_head_cut(text, target_max)
+
+    head_raw = text[:cut]
+    head_lead = len(head_raw) - len(head_raw.lstrip())
+    head_trail = len(head_raw) - len(head_raw.rstrip())
+    head = {
+        "kind": kind,
+        "text": head_raw.strip(),
+        "char_start": base + head_lead,
+        "char_end": base + cut - head_trail,
+    }
+
+    rest_raw = text[cut:]
+    rest_text = rest_raw.strip()
+    if not rest_text:
+        return [head]
+
+    rest_lead = len(rest_raw) - len(rest_raw.lstrip())
+    rest_trail = len(rest_raw) - len(rest_raw.rstrip())
+    rest = {
+        "kind": kind,
+        "text": rest_text,
+        "char_start": base + cut + rest_lead,
+        "char_end": base + len(text) - rest_trail,
+    }
+
+    if len(rest_text) <= _MAX_CHARS:
+        return [head, rest]
+    if kind == "paragraph":
+        return [head] + _split_long_paragraph(rest)
+    return [head] + _hard_slice_block(rest)
+
+
+def _find_head_cut(text: str, target_max: int) -> int:
+    """Return an index ``n`` such that ``text[:n]`` is the starter piece.
+
+    Prefers the largest sentence boundary at or under ``target_max``, then
+    the last word boundary within ``target_max``, then a hard cut.
+    """
+    if len(text) <= target_max:
+        return len(text)
+
+    last_sentence_end = 0
+    for m in _SENTENCE_END_RE.finditer(text):
+        if m.end() > target_max:
+            break
+        last_sentence_end = m.end()
+    if last_sentence_end > 0:
+        return last_sentence_end
+
+    space = text.rfind(" ", 0, target_max)
+    if space > 0:
+        return space + 1
+
+    return target_max
 
 
 def _hard_slice(text: str, max_chars: int) -> list[str]:
