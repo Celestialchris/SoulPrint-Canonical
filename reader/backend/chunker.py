@@ -49,7 +49,15 @@ def chunk_text(text: str, first_chunk_max: int = 400) -> list[dict[str, Any]]:
             # regardless of structural kind.
             chunks.extend(_hard_slice_block(block))
 
-    if chunks and first_chunk_max > 0 and len(chunks[0]["text"]) > first_chunk_max:
+    # Skip code: first-chunk shrink is for spoken-narrative latency, and
+    # splitting a fenced block puts the opening ``` and closing ``` on
+    # separate chunks for no audible benefit.
+    if (
+        chunks
+        and chunks[0]["kind"] != "code"
+        and first_chunk_max > 0
+        and len(chunks[0]["text"]) > first_chunk_max
+    ):
         head = _split_first_chunk(chunks[0], first_chunk_max)
         chunks = head + chunks[1:]
 

@@ -154,3 +154,19 @@ def test_chunk_kind_values_are_documented():
     allowed = {"heading", "paragraph", "code", "sentence_group"}
     for c in chunks:
         assert c["kind"] in allowed, f"Unknown kind: {c['kind']}"
+
+
+def test_first_chunk_max_does_not_split_code_block():
+    """First-chunk shrink is for spoken-narrative latency. A fenced code block
+    at the head of the document, even if longer than first_chunk_max, must
+    remain a single code chunk so the opening and closing fences stay together.
+    """
+    text = "```python\n" + ("print('hello')\n" * 80) + "```"
+    # Sanity: this block stays under the hard max, so without the kind guard
+    # it would otherwise be split by the first_chunk_max=400 logic.
+    assert len(text) < 1600
+    chunks = chunk_text(text, first_chunk_max=400)
+    assert len(chunks) == 1
+    assert chunks[0]["kind"] == "code"
+    assert "```python" in chunks[0]["text"]
+    assert chunks[0]["text"].rstrip().endswith("```")
