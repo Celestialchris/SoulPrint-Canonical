@@ -82,9 +82,12 @@ def store_asset(
     target_real = os.path.realpath(str(abs_path))
     base_prefix = base_real.rstrip(os.sep) + os.sep
     if not (target_real.startswith(base_prefix) or target_real == base_real):
+        db.session.rollback()
         raise ValueError("Asset path must be under storage base")
-    abs_path.parent.mkdir(parents=True, exist_ok=True)
-    abs_path.write_bytes(data)
+
+    resolved_path = Path(target_real)
+    resolved_path.parent.mkdir(parents=True, exist_ok=True)
+    resolved_path.write_bytes(data)
     db.session.commit()
     return asset
 
