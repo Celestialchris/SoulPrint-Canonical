@@ -17,7 +17,6 @@ import threading
 import time
 import uuid
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -134,8 +133,14 @@ def generate(req: GenerateRequest) -> dict[str, Any]:
     if not req.text or not req.text.strip():
         raise HTTPException(status_code=400, detail="text is required")
 
-    voice_filename = os.path.basename(req.voice)  # defense against path traversal in voice arg
-    voice_path = os.path.join(config.READER_REFS_DIR, voice_filename)
+    base_path = os.path.realpath(config.READER_REFS_DIR)
+    voice_filename = os.path.basename(req.voice)
+    try:
+        voice_path = os.path.realpath(os.path.join(base_path, voice_filename))
+    except (OSError, ValueError):
+        raise HTTPException(status_code=400, detail=f"voice not found: {req.voice}")
+    if not voice_path.startswith(base_path + os.sep):
+        raise HTTPException(status_code=400, detail=f"voice not found: {req.voice}")
     if not os.path.isfile(voice_path):
         raise HTTPException(status_code=400, detail=f"voice not found: {req.voice}")
 
@@ -167,20 +172,19 @@ def get_job(job_id: str) -> dict[str, Any]:
 
 @app.get("/audio/{job_id}/{filename}")
 def serve_audio(job_id: str, filename: str):
-    output_root = Path(config.READER_OUTPUT_DIR).resolve()
+    base_path = os.path.realpath(config.READER_OUTPUT_DIR)
     try:
-        job_dir = (output_root / job_id).resolve()
-        requested = (job_dir / filename).resolve()
+        job_dir = os.path.realpath(os.path.join(base_path, job_id))
+        fullpath = os.path.realpath(os.path.join(job_dir, filename))
     except (OSError, ValueError):
         raise HTTPException(status_code=404, detail="audio not found")
-
-    # Reject path traversal: requested must live under job_dir, which must live under output_root.
-    try:
-        requested.relative_to(job_dir)
-        job_dir.relative_to(output_root)
-    except ValueError:
+    # Two-stage containment: job_dir must live under base_path, fullpath
+    # must live under job_dir.  The inner check prevents cross-job leakage
+    # via symlinks that point from one job's directory at another's.
+    if not job_dir.startswith(base_path + os.sep):
         raise HTTPException(status_code=404, detail="audio not found")
-
-    if not requested.is_file():
+    if not fullpath.startswith(job_dir + os.sep):
         raise HTTPException(status_code=404, detail="audio not found")
-    return FileResponse(str(requested), media_type="audio/wav")
+    if not os.path.isfile(fullpath):
+        raise HTTPException(status_code=404, detail="audio not found")
+    return FileResponse(fullpath, media_type="audio/wav")

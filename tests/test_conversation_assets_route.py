@@ -71,7 +71,7 @@ class ConversationAssetRouteTest(unittest.TestCase):
         data = b"attachment content for listing" * 5
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "notes.pdf",
                 "application/pdf",
@@ -160,7 +160,7 @@ class ConversationAssetRouteTest(unittest.TestCase):
         data = b"downloadable content bytes" * 12
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "report.pdf",
                 "application/pdf",
@@ -184,7 +184,7 @@ class ConversationAssetRouteTest(unittest.TestCase):
         data = b"scoped content bytes" * 8
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "scoped.txt",
                 "text/plain",
@@ -217,7 +217,7 @@ class ConversationAssetRouteTest(unittest.TestCase):
         data = b"constraint test bytes" * 6
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "constraint_test.txt",
                 "text/plain",

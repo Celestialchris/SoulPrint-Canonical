@@ -87,7 +87,7 @@ class MessageAssetRouteTest(unittest.TestCase):
         data = b"attachment for first message" * 5
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "evidence.pdf",
                 "application/pdf",
@@ -112,7 +112,7 @@ class MessageAssetRouteTest(unittest.TestCase):
         data = b"only for first message" * 8
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "scoped_evidence.txt",
                 "text/plain",
@@ -210,7 +210,7 @@ class MessageAssetRouteTest(unittest.TestCase):
         data = b"downloadable message attachment bytes" * 12
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "report.pdf",
                 "application/pdf",
@@ -235,7 +235,7 @@ class MessageAssetRouteTest(unittest.TestCase):
         data = b"scoped content" * 8
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "scoped.txt",
                 "text/plain",
@@ -256,7 +256,7 @@ class MessageAssetRouteTest(unittest.TestCase):
         data = b"message scoped attachment" * 8
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "msg0_only.txt",
                 "text/plain",
@@ -294,7 +294,7 @@ class MessageAssetRouteTest(unittest.TestCase):
         data = b"constraint test content" * 6
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "constraint_test.txt",
                 "text/plain",
@@ -317,7 +317,7 @@ class MessageAssetRouteTest(unittest.TestCase):
         data = b"shared asset different messages" * 6
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "shared_asset.txt",
                 "text/plain",

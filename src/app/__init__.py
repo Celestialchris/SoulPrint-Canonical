@@ -1,6 +1,7 @@
 from dataclasses import asdict
 from urllib.parse import urlparse
 from flask import Flask, abort, redirect, render_template, request, jsonify, send_file, session, url_for
+from werkzeug.utils import secure_filename
 from datetime import datetime, timezone
 import json
 import logging
@@ -1087,13 +1088,30 @@ def create_app():
             session["attachment_error"] = "Choose a file before attaching."
             return redirect(url_for("imported_explorer", conversation_id=conversation.id))
 
-        asset = store_asset(
+        raw_fn = upload.filename or "unnamed_file"
+        # secure_filename strips non-ASCII chars then leading dots, which
+        # collapses a non-ASCII basename plus ASCII extension to just the
+        # extension stub with no dot.  Split the filename first so basename
+        # and extension survive sanitization independently and rejoin them
+        # to preserve the .ext suffix on disk and the extension metadata.
+        base, ext = os.path.splitext(raw_fn)
+        safe_base = secure_filename(base) or "unnamed_file"
+        safe_ext = secure_filename(ext)
+        safe_fn = f"{safe_base}.{safe_ext}" if safe_ext else safe_base
+        asset, created = store_asset(
             upload.stream,
-            upload.filename or "unnamed_file",
+            safe_fn,
             upload.mimetype,
             source="manual",
             instance_root=app.instance_path,
         )
+        # secure_filename strips non-ASCII and special chars for path safety, but
+        # the display name in the database must keep the user's original filename.
+        # Only patch on fresh creation: deduplicated rows already carry the original
+        # uploader's filename and must not be renamed by subsequent uploads.
+        if created:
+            asset.original_filename = raw_fn
+            db.session.commit()
 
         # Fast path: avoid the exception for the common single-request duplicate.
         # IntegrityError handling below covers the concurrent-upload race.
@@ -1146,13 +1164,30 @@ def create_app():
             session["attachment_error"] = "Choose a file before attaching."
             return redirect(url_for("imported_explorer", conversation_id=conversation.id))
 
-        asset = store_asset(
+        raw_fn = upload.filename or "unnamed_file"
+        # secure_filename strips non-ASCII chars then leading dots, which
+        # collapses a non-ASCII basename plus ASCII extension to just the
+        # extension stub with no dot.  Split the filename first so basename
+        # and extension survive sanitization independently and rejoin them
+        # to preserve the .ext suffix on disk and the extension metadata.
+        base, ext = os.path.splitext(raw_fn)
+        safe_base = secure_filename(base) or "unnamed_file"
+        safe_ext = secure_filename(ext)
+        safe_fn = f"{safe_base}.{safe_ext}" if safe_ext else safe_base
+        asset, created = store_asset(
             upload.stream,
-            upload.filename or "unnamed_file",
+            safe_fn,
             upload.mimetype,
             source="manual",
             instance_root=app.instance_path,
         )
+        # secure_filename strips non-ASCII and special chars for path safety, but
+        # the display name in the database must keep the user's original filename.
+        # Only patch on fresh creation: deduplicated rows already carry the original
+        # uploader's filename and must not be renamed by subsequent uploads.
+        if created:
+            asset.original_filename = raw_fn
+            db.session.commit()
 
         existing = _find_message_asset(message.id, asset.id)
         if existing is not None:
