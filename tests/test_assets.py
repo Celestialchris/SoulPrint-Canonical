@@ -97,7 +97,7 @@ class AssetsStoreTest(unittest.TestCase):
         expected_sha256 = hashlib.sha256(data).hexdigest()
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "report.pdf",
                 "application/pdf",
@@ -137,8 +137,8 @@ class AssetsDeduplicationTest(unittest.TestCase):
         data = b"deduplicated content for test" * 10
 
         with self.app.app_context():
-            asset1 = store_asset(io.BytesIO(data), "first.txt", instance_root=self.tmpdir)
-            asset2 = store_asset(io.BytesIO(data), "second.txt", instance_root=self.tmpdir)
+            asset1, _ = store_asset(io.BytesIO(data), "first.txt", instance_root=self.tmpdir)
+            asset2, _ = store_asset(io.BytesIO(data), "second.txt", instance_root=self.tmpdir)
             count = Asset.query.count()
             id1 = asset1.id
             id2 = asset2.id
@@ -175,7 +175,7 @@ class AssetsSameAssetTwoConversationsTest(unittest.TestCase):
             conv2_id = conv2.id
 
         with self.app.app_context():
-            asset = store_asset(io.BytesIO(data), "notes.pdf", instance_root=self.tmpdir)
+            asset, _ = store_asset(io.BytesIO(data), "notes.pdf", instance_root=self.tmpdir)
             asset_id = asset.id
             attach_asset_to_conversation(conv1_id, asset_id)
             attach_asset_to_conversation(conv2_id, asset_id)
@@ -198,7 +198,7 @@ class AssetsMessageAttachTest(unittest.TestCase):
         data = b"screenshot bytes" * 20
 
         with self.app.app_context():
-            asset = store_asset(io.BytesIO(data), "screenshot.png", "image/png", instance_root=self.tmpdir)
+            asset, _ = store_asset(io.BytesIO(data), "screenshot.png", "image/png", instance_root=self.tmpdir)
             attach_asset_to_message(
                 msg_id, asset.id,
                 placement="after_message_content",
@@ -253,7 +253,7 @@ class AssetsSanitizationTest(unittest.TestCase):
         data = b"safe content" * 10
 
         with self.app.app_context():
-            asset = store_asset(
+            asset, _ = store_asset(
                 io.BytesIO(data),
                 "../evil/../../report?.pdf",
                 instance_root=self.tmpdir,
@@ -407,8 +407,8 @@ class AssetsIntegrityErrorRecoveryTest(unittest.TestCase):
         data = b"dedup after fix" * 12
 
         with self.app.app_context():
-            a1 = store_asset(io.BytesIO(data), "a.txt", instance_root=self.tmpdir)
-            a2 = store_asset(io.BytesIO(data), "b.txt", instance_root=self.tmpdir)
+            a1, _ = store_asset(io.BytesIO(data), "a.txt", instance_root=self.tmpdir)
+            a2, _ = store_asset(io.BytesIO(data), "b.txt", instance_root=self.tmpdir)
             self.assertEqual(a1.id, a2.id)
             self.assertEqual(Asset.query.count(), 1)
 

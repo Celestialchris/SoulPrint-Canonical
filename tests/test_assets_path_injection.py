@@ -38,7 +38,7 @@ class AssetsPathInjectionTest(unittest.TestCase):
     def test_normal_write_lands_under_instance_root(self):
         with self.app.app_context():
             stream = io.BytesIO(b"in-base payload")
-            asset = store_asset(
+            asset, _ = store_asset(
                 stream,
                 "hello.txt",
                 instance_root=self.instance_root,
@@ -81,7 +81,7 @@ class AssetsPathInjectionTest(unittest.TestCase):
     def test_traversal_filename_still_lands_in_base(self):
         with self.app.app_context():
             stream = io.BytesIO(b"hostile filename payload")
-            asset = store_asset(
+            asset, _ = store_asset(
                 stream,
                 "../../../etc/passwd",
                 instance_root=self.instance_root,

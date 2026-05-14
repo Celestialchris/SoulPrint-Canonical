@@ -19,12 +19,16 @@ def store_asset(
     *,
     source: str = "manual",
     instance_root=None,
-) -> Asset:
+) -> tuple[Asset, bool]:
     """Persist bytes from file_stream to content-addressed storage.
 
     Deduplicates by SHA256: if the same bytes were stored before, returns the
     existing Asset row without creating a second physical file. Commits the new
     Asset row when one is created.
+
+    Returns:
+        (asset, created) where created is True when a new Asset row was inserted
+        and False when an existing row was returned via SHA256 deduplication.
     """
     data = file_stream.read()
     sha256 = hashlib.sha256(data).hexdigest()
@@ -35,7 +39,7 @@ def store_asset(
         if not abs_path.exists():
             abs_path.parent.mkdir(parents=True, exist_ok=True)
             abs_path.write_bytes(data)
-        return existing
+        return existing, False
 
     safe_name = _sanitize_filename(original_filename)
     suffix = Path(safe_name).suffix
@@ -74,7 +78,7 @@ def store_asset(
         if not recovered_path.exists():
             recovered_path.parent.mkdir(parents=True, exist_ok=True)
             recovered_path.write_bytes(data)
-        return recovered
+        return recovered, False
 
     # CodeQL-recognized py/path-injection sanitizer: realpath + startswith.
     # Inlined at the sink because CodeQL does not follow helpers for this rule.
@@ -86,7 +90,7 @@ def store_asset(
     abs_path.parent.mkdir(parents=True, exist_ok=True)
     abs_path.write_bytes(data)
     db.session.commit()
-    return asset
+    return asset, True
 
 
 def attach_asset_to_conversation(
