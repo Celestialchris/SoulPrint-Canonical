@@ -70,6 +70,27 @@ class LocalServiceSpawnFlagsTest(unittest.TestCase):
         kwargs = popen_mock.call_args.kwargs
         self.assertIs(kwargs["preexec_fn"], os_module.setsid)
 
+    def test_child_env_carries_allocated_host_and_port(self):
+        tmpdir = make_test_temp_dir(self, "ls-env-inject")
+        service = LocalService(
+            name="flask",
+            command_tokens=["python", "-c", "pass"],
+            host="127.0.0.1",
+            port=5679,
+            log_path=tmpdir / "flask.log",
+        )
+
+        with patch(
+            "src.runtime.supervisor.subprocess.Popen",
+            return_value=_make_popen_mock(),
+        ) as popen_mock:
+            service.start()
+
+        kwargs = popen_mock.call_args.kwargs
+        env = kwargs["env"]
+        self.assertEqual(env["SOULPRINT_HOST"], "127.0.0.1")
+        self.assertEqual(env["SOULPRINT_PORT"], "5679")
+
 
 class LocalServiceStopTest(unittest.TestCase):
     @unittest.skipUnless(sys.platform == "win32", "Windows graceful-signal path")

@@ -77,11 +77,16 @@ class LocalService:
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
         self._log_handle = open(self.log_path, "ab", buffering=0)
 
+        child_env = os.environ.copy()
+        child_env["SOULPRINT_HOST"] = self.host
+        child_env["SOULPRINT_PORT"] = str(self.port)
+
         popen_kwargs: dict = {
             "stdin": subprocess.DEVNULL,
             "stdout": subprocess.PIPE,
             "stderr": subprocess.PIPE,
             "bufsize": 0,
+            "env": child_env,
         }
         if sys.platform == "win32":
             popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
