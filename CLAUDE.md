@@ -16,8 +16,7 @@ A local-first memory continuity system for AI users. Import AI conversation hist
 
 ## Private operating material
 
-Internal development history, private operating notes, agent-process records, and
-session continuity material are maintained outside the public distribution tree.
+Internal development history, private operating notes, agent-process records, and session continuity material are maintained outside the public distribution tree.
 
 When executing in this repository, follow:
 
@@ -26,10 +25,72 @@ When executing in this repository, follow:
 3. The current task prompt
 4. Current repository files
 
-Do not search this repository for private context directories or private session
-records. They are not maintained on the public surface. Do not create public
-session logs in this repository unless the current task explicitly authorizes a
-release-safe record. Generated quality reports may write to `ops/quality/`.
+Do not search this repository for private context directories or private session records. They are not maintained on the public surface. Do not create public session logs in this repository unless the current task explicitly authorizes a release-safe record. Generated quality reports may write to `ops/quality/`.
+
+## Execution Discipline
+
+The root `AGENTS.md` contains the baseline execution harness. In practice, this means:
+
+- make the smallest reversible change that satisfies the task;
+- read the nearby implementation, callers, tests, fixtures, and exports before writing new code;
+- use deterministic checks whenever code, tests, git, or the filesystem can answer the question;
+- surface conflicting project patterns instead of blending them;
+- write tests that prove intent, not only output shape;
+- checkpoint after significant steps;
+- fail loud when verification is partial, skipped, or uncertain.
+
+### Deterministic checks over model guesses
+
+Use code, commands, or file inspection for deterministic facts:
+
+```text
+branch state
+file existence
+dependency presence
+test results
+schema shape
+registered providers
+route names
+status-code behavior
+import/export output
+```
+
+Use model judgment for:
+
+```text
+classification
+summarization
+copy drafting
+tradeoff explanation
+threat modeling
+design critique
+```
+
+If code can answer, code answers.
+
+### Conflict handling
+
+When two patterns disagree, do not average them. Prefer the pattern that is:
+
+1. local to the touched module;
+2. covered by tests;
+3. newer and already integrated;
+4. explicitly documented in this file or nearby project docs.
+
+Name the conflict in the final report or PR summary if it affected the implementation.
+
+### Topology check for non-trivial work
+
+Before schema, importer, retrieval, answering, export, security, repository-boundary, or app-surface work, identify:
+
+```text
+State: where truth is stored.
+Feedback: where errors, traces, reports, or verification appear.
+Blast radius: what breaks if this file, route, model, or rule changes.
+Timing: any ordering, async, retry, import/export, or lifecycle concern.
+```
+
+Skip this for tiny copy edits, typo fixes, obvious test-only edits, and isolated style cleanup.
 
 ## Patterns
 
@@ -73,6 +134,9 @@ python -m src.answering.cli --db instance/soulprint.db "question"
 - Never replace canonical storage with summaries or semantic memory
 - Never make the user drown in scrolling — use TOC, minimap, pagination
 - Never use "unify" when describing lane behavior (lanes are composed read-only, not unified)
+- Never hide skipped records, skipped tests, partial migrations, or partial verification behind “completed”
+- Never create a second implementation beside an existing one before reading the existing exports, callers, and tests
+- Never blend contradictory conventions silently
 
 ## Terminology
 
