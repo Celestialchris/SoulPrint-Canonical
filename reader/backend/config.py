@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 
-READER_HOME = os.environ.get("READER_HOME", r"C:\Users\chr\SoulPrint\VoiceForge")
+READER_HOME = os.environ.get("READER_HOME", os.path.expanduser("~/SoulPrint/VoiceForge"))
 READER_REFS_DIR = os.environ.get(
     "READER_REFS_DIR", os.path.join(READER_HOME, "refs")
 )

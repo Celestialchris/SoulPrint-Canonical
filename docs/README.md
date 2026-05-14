@@ -28,11 +28,6 @@
 ## Guides
 - [Obsidian raw inbox bridge](obsidian-raw-inbox.md): feeding a Kepano-style vault
 
-## Reference
-- [Project status (2026-03-09)](reference/history/project-status-2026-03-09.md)
-- [Repair notes](reference/history/repair-notes.md)
-- [Repo audit baseline](reference/history/repo-audit-baseline.md)
-
 ## Releases
 - [v0.1.0 release notes](releases/RELEASE-v0.1.0.md)
 
