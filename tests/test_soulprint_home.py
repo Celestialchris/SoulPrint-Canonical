@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from src import soulprint_home
-from src.config import Config
+from src.runtime import default_app_home
 from tests.temp_helpers import make_test_temp_dir, temp_soulprint_home
 
 
@@ -37,13 +37,12 @@ class SoulprintHomeTest(unittest.TestCase):
 
         self.assertEqual(result, Path(str(tmpdir)).resolve())
 
-    def test_default_when_env_unset_returns_user_home_subpath(self):
+    def test_default_when_env_unset_delegates_to_default_app_home(self):
         self._override_env(None)
 
         result = soulprint_home.resolve()
 
-        expected = (Path.home() / "SoulPrint" / "Home").resolve()
-        self.assertEqual(result, expected)
+        self.assertEqual(result, default_app_home())
 
     def test_ensure_layout_creates_run_logs_config(self):
         home = temp_soulprint_home(self, "sp-ensure")
@@ -69,9 +68,6 @@ class SoulprintHomeTest(unittest.TestCase):
         tmpdir = make_test_temp_dir(self, "sp-parents")
         deep = tmpdir / "a" / "b" / "soulprint-home"
         self._override_env(str(deep))
-        prior_config = Config.SOULPRINT_HOME
-        Config.SOULPRINT_HOME = str(deep)
-        self.addCleanup(lambda: setattr(Config, "SOULPRINT_HOME", prior_config))
 
         result = soulprint_home.ensure_layout()
 

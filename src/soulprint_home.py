@@ -1,33 +1,25 @@
-"""SOULPRINT_HOME canonical local directory layout.
+"""SoulPrint local home subdirectories.
 
-The stable root under which runtime artifacts (ports.json, logs, config files)
-live. Independent of `default_app_home()` in `src/runtime.py`, which continues
-to govern the legacy `instance/` and `uploads/` paths for backward compatibility.
-
-Default root: ``~/SoulPrint/Home``. Override via ``SOULPRINT_HOME`` env var.
+Provides ``run/``, ``logs/``, and ``config/`` paths beneath the application
+home and a one-shot ``ensure_layout()`` helper that creates them. The home
+root itself is owned by ``src/runtime.py::default_app_home()``, which honors
+the ``SOULPRINT_HOME`` environment variable for the entire application home
+(including the legacy ``instance/`` and ``uploads/`` trees). This module
+does not introduce a new ``SOULPRINT_HOME`` meaning; it composes additional
+subdirectories under the same existing home.
 """
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
-_ENV_VAR = "SOULPRINT_HOME"
-_DEFAULT_HOME = Path.home() / "SoulPrint" / "Home"
+from .runtime import default_app_home
 
 
 def resolve() -> Path:
-    """Return the absolute SOULPRINT_HOME path. Does not create the directory.
+    """Return the SoulPrint home root by delegating to ``default_app_home()``."""
 
-    Reads ``SOULPRINT_HOME`` env var when set and non-empty; otherwise returns
-    the default ``~/SoulPrint/Home``. The env var is read on each call so tests
-    can toggle the value freely.
-    """
-
-    override = os.environ.get(_ENV_VAR, "").strip()
-    if override:
-        return Path(override).expanduser().resolve()
-    return _DEFAULT_HOME.expanduser().resolve()
+    return default_app_home()
 
 
 def run_dir() -> Path:
@@ -43,16 +35,13 @@ def logs_dir() -> Path:
 
 
 def config_dir() -> Path:
-    """Path for user-editable config (ui.json and similar, added by later campaigns)."""
+    """Path for user-editable config (added by later campaigns)."""
 
     return resolve() / "config"
 
 
 def ensure_layout() -> Path:
-    """Create SOULPRINT_HOME and its canonical subdirectories. Idempotent.
-
-    Returns the home root path so callers can compose further paths inline.
-    """
+    """Create the home subdirectories. Idempotent. Returns the home root."""
 
     home = resolve()
     home.mkdir(parents=True, exist_ok=True)
