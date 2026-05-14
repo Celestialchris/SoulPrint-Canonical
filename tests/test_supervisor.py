@@ -172,6 +172,51 @@ class SupervisorRunTest(unittest.TestCase):
         self.assertEqual(len(FakeService.instances), 0)
         self.assertEqual(ports_module.read_entries(), {})
 
+    def test_two_services_receive_distinct_ports(self):
+        # FakeService.start() is a no-op that never binds, so without the
+        # supervisor's reservation set both allocations would probe and
+        # hand back the same preferred port. The fix prevents that.
+        procfile = _write_procfile(
+            self.tmpdir,
+            "flask: python -m src.main\nworker: python -m src.worker\n",
+        )
+        supervisor = Supervisor(service_factory=_factory(), poll_interval=0.01)
+
+        with patch("src.runtime.supervisor.time.sleep", side_effect=KeyboardInterrupt):
+            code = supervisor.run(procfile)
+
+        self.assertEqual(code, EXIT_OK)
+        self.assertEqual(len(FakeService.instances), 2)
+        port_a = FakeService.instances[0].port
+        port_b = FakeService.instances[1].port
+        self.assertNotEqual(port_a, port_b)
+
+    def test_service_exit_during_wait_loop_clears_ports_entry(self):
+        procfile = _write_procfile(self.tmpdir, "flask: python -m src.main\n")
+        supervisor = Supervisor(service_factory=_factory(), poll_interval=0.01)
+
+        state = {"sleep_count": 0}
+
+        def _sleep_side_effect(*_args, **_kwargs):
+            state["sleep_count"] += 1
+            if state["sleep_count"] == 1:
+                # Simulate the child crashing between poll ticks. The next
+                # iteration of the wait loop should observe the exit and
+                # clear the ports.json entry.
+                FakeService.instances[0]._alive = False
+                return
+            raise KeyboardInterrupt
+
+        with patch.object(ports_module, "clear_entry") as clear_mock, patch(
+            "src.runtime.supervisor.time.sleep", side_effect=_sleep_side_effect
+        ):
+            code = supervisor.run(procfile)
+
+        self.assertEqual(code, EXIT_OK)
+        flask_calls = [c for c in clear_mock.call_args_list if c.args == ("flask",)]
+        # Once when the wait loop first sees the exit, once at shutdown.
+        self.assertEqual(len(flask_calls), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

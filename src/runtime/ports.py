@@ -20,7 +20,7 @@ import socket
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from src import soulprint_home
 
@@ -49,19 +49,37 @@ def _is_port_free(host: str, port: int) -> bool:
         sock.close()
 
 
-def allocate_port(host: str, preferred: int, max_attempts: int = 10) -> int:
+def allocate_port(
+    host: str,
+    preferred: int,
+    max_attempts: int = 10,
+    exclude: Iterable[int] | None = None,
+) -> int:
     """Return the preferred port if free, otherwise the next available port.
 
     Walks from ``preferred`` upward by 1 until a port binds, up to
     ``max_attempts`` candidates total. Each probe attempt is printed to stderr
     so cockpit-style observers can surface preferred-port-busy behavior.
+
+    ``exclude`` is a set of ports the caller has already reserved this run.
+    Excluded ports are skipped without a socket probe, so the supervisor can
+    avoid handing the same port to two services when their actual child
+    processes have not yet bound it.
     """
 
     if max_attempts < 1:
         raise ValueError("max_attempts must be at least 1")
 
+    excluded = set(exclude) if exclude is not None else set()
+
     for offset in range(max_attempts):
         candidate = preferred + offset
+        if candidate in excluded:
+            print(
+                f"port-allocate: {host}:{candidate} already reserved, trying next",
+                file=sys.stderr,
+            )
+            continue
         if _is_port_free(host, candidate):
             if offset > 0:
                 print(

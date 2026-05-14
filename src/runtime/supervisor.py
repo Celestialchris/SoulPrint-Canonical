@@ -221,11 +221,14 @@ class Supervisor:
 
         soulprint_home.ensure_layout()
         started: list[LocalService] = []
+        assigned_ports: set[int] = set()
 
         try:
             for name, command_tokens in entries:
                 try:
-                    port = ports_module.allocate_port(self.host, self.preferred_port)
+                    port = ports_module.allocate_port(
+                        self.host, self.preferred_port, exclude=assigned_ports
+                    )
                 except ports_module.PortExhaustionError as exc:
                     print(f"supervisor: {exc}", file=sys.stderr)
                     self._stop_all(started)
@@ -247,6 +250,7 @@ class Supervisor:
                     return EXIT_START_FAILED
 
                 started.append(service)
+                assigned_ports.add(port)
                 pid_value = service.pid if service.pid is not None else -1
                 ports_module.write_entry(name, self.host, port, pid_value)
 
@@ -256,7 +260,12 @@ class Supervisor:
             return EXIT_OK
 
     def _wait_loop(self, services: list[LocalService]) -> int:
-        """Block until KeyboardInterrupt, logging child exits but not restarting."""
+        """Block until KeyboardInterrupt, logging child exits but not restarting.
+
+        When a service is first observed as not alive, its ``ports.json`` entry
+        is cleared so the file does not advertise a dead PID/port for the rest
+        of the supervisor's lifetime.
+        """
 
         already_logged_exit: set[str] = set()
         try:
@@ -269,6 +278,14 @@ class Supervisor:
                             file=sys.stderr,
                         )
                         already_logged_exit.add(service.name)
+                        try:
+                            ports_module.clear_entry(service.name)
+                        except Exception as exc:
+                            print(
+                                f"supervisor: error clearing ports.json entry "
+                                f"for {service.name!r}: {exc}",
+                                file=sys.stderr,
+                            )
         except KeyboardInterrupt:
             pass
         self._stop_all(services)

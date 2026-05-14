@@ -45,6 +45,20 @@ class AllocatePortTest(unittest.TestCase):
         self.assertGreater(result, busy_port)
         self.assertLess(result, busy_port + 10)
 
+    def test_exclude_skips_excluded_port_even_when_bindable(self):
+        # Reserve an ephemeral port, release it, then ask allocate_port to
+        # skip it. Without ``exclude`` the function would return it; with
+        # ``exclude={preferred}`` it must walk to the next free port.
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("127.0.0.1", 0))
+        preferred = sock.getsockname()[1]
+        sock.close()
+
+        result = ports.allocate_port("127.0.0.1", preferred, exclude={preferred})
+
+        self.assertNotEqual(result, preferred)
+        self.assertGreater(result, preferred)
+
     def test_exhaustion_raises_port_exhaustion_error(self):
         listeners: list[socket.socket] = []
         # Bind consecutive ports so allocate_port has nothing free in its
