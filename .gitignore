@@ -59,10 +59,10 @@ PRIORITIES.md
 
 # Dev tooling (not part of product)
 .agents/
-.codex/*
-!.codex/
-!.codex/AGENTS.md
+.codex/
 openspec/
+.github/skills/openspec-*/
+.github/prompts/opsx-*.prompt.md
 
 # Dev debris (screenshot captures, scratch files, MCP caches)
 # Intentional screenshots live under docs/screenshots/, landing/assets/, src/app/static/.
@@ -80,3 +80,7 @@ security-alert*.json
 **/LAUNCH-PLAYBOOK.md
 **/SOULPRINT-30-DAY-VISION.md
 **/UPGRADE-CONTINUITY.md
+
+docs/ideation/
+
+soulprint-db/

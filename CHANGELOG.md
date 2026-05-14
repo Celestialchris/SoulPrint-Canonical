@@ -17,6 +17,9 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - **Right-panel provider dots.** Increased from 8×8px to 10×10px for visual weight.
 - **Star glyph unified.** All star-rendering surfaces now use `★` regardless of starred state; color carries the state (accent when starred, muted when not). Eliminates the visual size drift between `★` and `☆` glyphs in sans-serif fonts. Affects `/federated`, `/imported`, `/chats`, `/imported/<id>/explorer`, and `/memory/<id>`.
 - **Archive Status provider rows are links.** On Workspace, each provider row in the right panel now navigates to `/imported?provider=<slug>` with a hover treatment matching the existing context-panel interactive patterns.
+- **`reader/README.md` local Windows user path replaced with `<path-to-VoiceForge>` placeholder.** Three occurrences in Prerequisites, Install, and Run sections.
+- **`reader/backend/config.py` `READER_HOME` default fallback** changed from a hardcoded local maintainer path to `os.path.expanduser("~/SoulPrint/VoiceForge")`. Override via the `READER_HOME` environment variable still wins.
+- **`site/README.md` now points visitors at `landing/index.html`** as the live marketing surface for soulprint.dev, clarifying that `site/` is the in-progress SvelteKit rewrite and does not deploy yet. (`landing/README.md` already cross-referenced `site/`.)
 
 ### Added
 
@@ -39,6 +42,13 @@ All notable changes to SoulPrint are documented here, backfilled from git histor
 - **Left rail (Column A).** The 64px workspace rail at the far left is removed. It contained an SP logo duplicating the sidebar wordmark, three placeholder provider icons (outdated since PR #145 extended provider coverage to five), an Import shortcut duplicating the sidebar Continuity nav item, and a non-functional settings placeholder. All functions remain accessible via the sidebar and page-header actions.
 - **`_safe_next` helper** from `src/app/__init__.py`. Retained across the two CodeQL passes as a revert-safety fallback; now that the inline canonical pattern has stabilized at all four redirect sinks and CodeQL is green, the dead code is deleted.
 - **`requirements.txt`** at repo root (superseded by `pyproject.toml`).
+- **Stale `sample_data/SP-drive*.svg` files** completing the Phase 4 archival.
+- **`docs/reference/history/`** internal audit snapshots removed from public tree.
+- **`docs/archive/superpowers/`** pre-shipping planning artifacts removed from public tree.
+
+### Internal
+
+- **Untracked internal workflow files from public tree:** `.github/skills/openspec-*/`, `.github/prompts/opsx-*.prompt.md`, `.codex/AGENTS.md`. Added matching `.gitignore` patterns and flattened the `.codex/*` + `!.codex/AGENTS.md` re-include into a plain `.codex/` ignore.
 
 ### Fixed
 
