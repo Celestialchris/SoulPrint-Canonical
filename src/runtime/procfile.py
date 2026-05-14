@@ -34,9 +34,15 @@ class MalformedProcfileError(ValueError):
 
 
 def parse(text: str) -> list[tuple[str, list[str]]]:
-    """Parse Procfile text into ``(name, command_tokens)`` pairs in declared order."""
+    """Parse Procfile text into ``(name, command_tokens)`` pairs in declared order.
+
+    Duplicate service names are rejected: ``ports.json`` is keyed by service
+    name, so a repeat would silently overwrite the first entry and make the
+    first process unreachable to discovery and shutdown bookkeeping.
+    """
 
     services: list[tuple[str, list[str]]] = []
+    seen_names: set[str] = set()
     for index, raw_line in enumerate(text.splitlines(), start=1):
         stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
@@ -50,6 +56,11 @@ def parse(text: str) -> list[tuple[str, list[str]]]:
             raise MalformedProcfileError(index, raw_line, f"invalid service name {name!r}")
         if not command:
             raise MalformedProcfileError(index, raw_line, "empty command")
+        if name in seen_names:
+            raise MalformedProcfileError(
+                index, raw_line, f"duplicate service name {name!r}"
+            )
+        seen_names.add(name)
         tokens = command.split()
         services.append((name, tokens))
     return services

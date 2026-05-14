@@ -63,6 +63,15 @@ class ProcfileParseTest(unittest.TestCase):
 
         self.assertEqual(ctx.exception.line_number, 4)
 
+    def test_duplicate_service_names_raise(self):
+        text = "flask: python -m src.main\nflask: python -m src.other\n"
+
+        with self.assertRaises(MalformedProcfileError) as ctx:
+            parse(text)
+
+        self.assertEqual(ctx.exception.line_number, 2)
+        self.assertIn("duplicate service name", ctx.exception.reason)
+
 
 class ProcfileParseFileTest(unittest.TestCase):
     def test_parse_file_reads_disk(self):
