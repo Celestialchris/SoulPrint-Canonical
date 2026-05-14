@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import unittest
 from dataclasses import dataclass
@@ -62,3 +63,35 @@ def release_app_db_handles(app, *, drop_all: bool = False) -> None:
             db.drop_all()
         db.session.remove()
         db.engine.dispose()
+
+
+def temp_soulprint_home(
+    test_case: unittest.TestCase,
+    prefix: str = "soulprint-home",
+) -> Path:
+    """Override SOULPRINT_HOME to a fresh temp dir for the duration of the test.
+
+    Mutates both the ``SOULPRINT_HOME`` env var and ``Config.SOULPRINT_HOME``,
+    and registers a restore via ``addCleanup`` so the original values come back
+    after the test. Returns the path to the temp home.
+    """
+
+    home_path = make_test_temp_dir(test_case, prefix)
+
+    prior_env = os.environ.get("SOULPRINT_HOME")
+    os.environ["SOULPRINT_HOME"] = str(home_path)
+
+    from src.config import Config
+
+    prior_config = Config.SOULPRINT_HOME
+    Config.SOULPRINT_HOME = str(home_path)
+
+    def _restore() -> None:
+        if prior_env is None:
+            os.environ.pop("SOULPRINT_HOME", None)
+        else:
+            os.environ["SOULPRINT_HOME"] = prior_env
+        Config.SOULPRINT_HOME = prior_config
+
+    test_case.addCleanup(_restore)
+    return home_path

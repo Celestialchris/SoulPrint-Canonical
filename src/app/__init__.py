@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 from .imported_explorer import anchor_for_message, build_prompt_toc, format_timestamp
 from .models.db import db
+from .. import soulprint_home
 from ..config import Config, normalize_sqlite_uri
 from ..runtime import default_instance_dir, static_dir, templates_dir
 from .models import ConversationAsset, ImportedConversation, ImportedMessage, ImportRun, MemoryEntry, MessageAsset
@@ -596,6 +597,7 @@ def _write_asset_bundle_to_zip(
 
 
 def create_app():
+    soulprint_home.ensure_layout()
     instance_dir = default_instance_dir()
     app = Flask(
         __name__,
