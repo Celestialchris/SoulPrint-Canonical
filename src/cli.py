@@ -28,6 +28,13 @@ def _cmd_serve(args: argparse.Namespace) -> None:
     run_server()
 
 
+def _cmd_supervise(args: argparse.Namespace) -> int:
+    from src.runtime.supervisor import Supervisor
+
+    procfile_path = Path(args.procfile) if args.procfile else Path.cwd() / "Procfile.dev"
+    return Supervisor().run(procfile_path)
+
+
 def _cmd_info(args: argparse.Namespace) -> None:
     db_path = Path(args.db) if args.db else _default_db()
     if not db_path.exists():
@@ -217,6 +224,9 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("mcp-config", help="Print a ready-to-paste .mcp.json block")
 
+    supervise_p = sub.add_parser("_supervise", help=argparse.SUPPRESS)
+    supervise_p.add_argument("--procfile", default=None, metavar="PATH")
+
     args = parser.parse_args(argv)
 
     if args.command is None:
@@ -230,3 +240,9 @@ def main(argv: list[str] | None = None) -> None:
         _cmd_verify(args)
     elif args.command == "mcp-config":
         _cmd_mcp_config(args)
+    elif args.command == "_supervise":
+        sys.exit(_cmd_supervise(args))
+
+
+if __name__ == "__main__":
+    main()
