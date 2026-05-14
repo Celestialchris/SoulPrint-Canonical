@@ -84,3 +84,8 @@ security-alert*.json
 docs/ideation/
 
 soulprint-db/
+
+# Local supervisor runtime artifacts (Campaign 02 B2)
+/run/
+/logs/
+/config/
