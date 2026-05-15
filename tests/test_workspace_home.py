@@ -27,7 +27,7 @@ class WorkspaceHomeTest(unittest.TestCase):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
 
     def _get_workspace_html(self) -> str:
-        response = self.client.get("/")
+        response = self.client.get("/library")
         self.assertEqual(response.status_code, 200)
         return response.get_data(as_text=True)
 

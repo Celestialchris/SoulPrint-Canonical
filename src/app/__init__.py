@@ -598,6 +598,80 @@ def _write_asset_bundle_to_zip(
     )
 
 
+def gather_service_data() -> dict:
+    """Return the runtime service snapshot shared by /api/services and cockpit.
+
+    Reads ports.json (if present), probes the Flask entry over HTTP, and
+    returns the same schema /api/services has emitted since B3. Production
+    code calls this directly; the JSON route just wraps it in jsonify().
+    """
+
+    entries = runtime_ports.read_entries()
+    ports_json_path = soulprint_home.run_dir() / "ports.json"
+    ports_json_present = ports_json_path.exists()
+
+    services: list[dict] = []
+    supervisor_running = False
+
+    for name, info in entries.items():
+        host = info.get("host", "127.0.0.1")
+        port = info.get("port")
+        pid = info.get("pid")
+        started_at = info.get("started_at")
+
+        pid_alive = pid is not None and runtime_ports.is_pid_alive(int(pid))
+
+        if not pid_alive:
+            services.append({
+                "name": name,
+                "ok": False,
+                "latency_ms": None,
+                "detail": "process not running",
+                "host": host,
+                "port": port,
+                "pid": pid,
+                "started_at": started_at,
+            })
+            continue
+
+        supervisor_running = True
+
+        if name == "flask" and port is not None:
+            probe = HTTPProbe(
+                name="flask",
+                url=f"http://{host}:{port}/healthz",
+            )
+            result = probe.probe()
+            services.append({
+                "name": name,
+                "ok": result.ok,
+                "latency_ms": result.latency_ms,
+                "detail": result.detail,
+                "host": host,
+                "port": port,
+                "pid": pid,
+                "started_at": started_at,
+            })
+        else:
+            services.append({
+                "name": name,
+                "ok": True,
+                "latency_ms": None,
+                "detail": "process running; no probe configured",
+                "host": host,
+                "port": port,
+                "pid": pid,
+                "started_at": started_at,
+            })
+
+    return {
+        "schema_version": 1,
+        "supervisor_running": supervisor_running,
+        "ports_json_present": ports_json_present,
+        "services": services,
+    }
+
+
 def create_app():
     soulprint_home.ensure_layout()
     instance_dir = default_instance_dir()
@@ -728,7 +802,63 @@ def create_app():
         return response
 
     @app.get("/")
-    def home():
+    def cockpit():
+        from ..answering.trace import default_trace_store_path
+
+        sqlite_uri = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+        db_path = _sqlite_path_from_uri(sqlite_uri)
+        trace_store = default_trace_store_path(db_path)
+
+        service_data = gather_service_data()
+
+        # Ledger pulse: a small slice of the workspace summary, used so the
+        # cockpit can show that the local archive has a heartbeat even when
+        # the supervisor is not running. We deliberately keep the slice small.
+        try:
+            workspace = build_workspace_summary(trace_store_path=trace_store)
+            ledger_pulse = [
+                {
+                    "id": row["id"],
+                    "title": row.get("title") or "Untitled",
+                    "provider": row.get("source", ""),
+                    "relative_time": _relative_time_from_unix(
+                        row.get("updated_at_unix") or row.get("created_at_unix")
+                    ),
+                }
+                for row in workspace.recent_imported[:5]
+            ]
+            imported_conversation_count = workspace.imported_conversation_count
+        except Exception:
+            logger.warning("Cockpit ledger pulse unavailable", exc_info=True)
+            ledger_pulse = []
+            imported_conversation_count = 0
+
+        # Preferred-port-busy passive note: when the Flask service is bound to
+        # a port other than the preferred 5678, surface a small note so the
+        # user can see what actually happened without changing allocation.
+        preferred_port = 5678
+        active_flask_port: int | None = None
+        for svc in service_data["services"]:
+            if svc.get("name") == "flask" and svc.get("port") is not None:
+                active_flask_port = int(svc["port"])
+                break
+        preferred_port_busy = (
+            active_flask_port is not None and active_flask_port != preferred_port
+        )
+
+        return render_template(
+            "cockpit.html",
+            service_data=service_data,
+            ledger_pulse=ledger_pulse,
+            imported_conversation_count=imported_conversation_count,
+            reader_status="Reader: unmanaged in v1",
+            preferred_port=preferred_port,
+            active_flask_port=active_flask_port,
+            preferred_port_busy=preferred_port_busy,
+        )
+
+    @app.get("/library")
+    def library():
         from ..answering.trace import default_trace_store_path
         from ..intelligence.store import default_distillation_store_path, list_distillations
         import json as _json
@@ -1017,70 +1147,7 @@ def create_app():
 
     @app.get("/api/services")
     def api_services():
-        entries = runtime_ports.read_entries()
-        ports_json_path = soulprint_home.run_dir() / "ports.json"
-        ports_json_present = ports_json_path.exists()
-
-        services: list[dict] = []
-        supervisor_running = False
-
-        for name, info in entries.items():
-            host = info.get("host", "127.0.0.1")
-            port = info.get("port")
-            pid = info.get("pid")
-            started_at = info.get("started_at")
-
-            pid_alive = pid is not None and runtime_ports.is_pid_alive(int(pid))
-
-            if not pid_alive:
-                services.append({
-                    "name": name,
-                    "ok": False,
-                    "latency_ms": None,
-                    "detail": "process not running",
-                    "host": host,
-                    "port": port,
-                    "pid": pid,
-                    "started_at": started_at,
-                })
-                continue
-
-            supervisor_running = True
-
-            if name == "flask" and port is not None:
-                probe = HTTPProbe(
-                    name="flask",
-                    url=f"http://{host}:{port}/healthz",
-                )
-                result = probe.probe()
-                services.append({
-                    "name": name,
-                    "ok": result.ok,
-                    "latency_ms": result.latency_ms,
-                    "detail": result.detail,
-                    "host": host,
-                    "port": port,
-                    "pid": pid,
-                    "started_at": started_at,
-                })
-            else:
-                services.append({
-                    "name": name,
-                    "ok": True,
-                    "latency_ms": None,
-                    "detail": "process running; no probe configured",
-                    "host": host,
-                    "port": port,
-                    "pid": pid,
-                    "started_at": started_at,
-                })
-
-        return jsonify({
-            "schema_version": 1,
-            "supervisor_running": supervisor_running,
-            "ports_json_present": ports_json_present,
-            "services": services,
-        })
+        return jsonify(gather_service_data())
 
     @app.get("/imported/<int:conversation_id>/explorer")
     def imported_explorer(conversation_id: int):

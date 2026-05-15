@@ -16,7 +16,7 @@
     {# Column B: Sidebar (240px) #}
     <aside class="sidebar" id="sidebar" aria-label="Primary">
       <div class="sidebar-header">
-        <a class="sidebar-header__brand" href="{{ url_for('home') }}">SoulPrint</a>
+        <a class="sidebar-header__brand" href="{{ url_for('cockpit') }}">SoulPrint</a>
       </div>
 
       <div class="sidebar-search">
@@ -34,7 +34,7 @@
       <div class="sidebar-scroll">
         <nav class="sidebar-group" aria-label="Sanctum">
           <span class="sidebar-group__label">Sanctum</span>
-          {{ sidebar_item(url_for('home'), 'Workspace', request.path == url_for('home')) }}
+          {{ sidebar_item(url_for('library'), 'Library', request.path == url_for('library')) }}
           {{ sidebar_item(url_for('ask'), 'Ask', request.path.startswith('/ask')) }}
           {{ sidebar_item(url_for('archive_health'), 'Archive health', request.path.startswith('/archive/health')) }}
         </nav>
