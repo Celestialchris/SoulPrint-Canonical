@@ -3,7 +3,7 @@
 **Status (2026-04-27):** Partially shipped. Items shipped so far:
 
 - **P1** Claude Code session auto-discovery (importer at `src/importers/claude_code.py`, discovery helper at `src/importers/claude_code_discovery.py`, `/imported/scan-claude-code` route in `src/app/__init__.py`). The `soulprint scan claude-code` CLI verb in P1's plan body is *not* shipped; scanning is web-UI only today.
-- **P7 Phase 1** CLI dispatch (`pyproject.toml` exposes `soulprint = "src.cli:main"`; `src/cli.py` registers `serve`, `info`, `verify`, and `mcp-config` subcommands). P7 Phases 2 through 4 (`search`, `import`, `scan`, `export` verbs) are not shipped.
+- **P7 Phase 1** CLI dispatch (`pyproject.toml` exposes `soulprint = "src.cli:main"`; bare `soulprint` is the canonical local runtime command, and `src/cli.py` registers `info`, `verify`, and `mcp-config` subcommands). P7 Phases 2 through 4 (`search`, `import`, `scan`, `export` verbs) are not shipped.
 
 Items P3, P4, P5, and P6 are not verified from docs alone. Check the source before treating any P-section below as queued or shipped.
 
@@ -259,11 +259,10 @@ SoulPrint ships as `soulprint`: one command, starts the web server. Power users 
 
 ### Shape
 
-Extend the existing `soulprint` entry point with subcommands. Today it is a single server-start command; after this it is `soulprint [serve|search|import|export|info|scan]`. Server-start stays the default when no subcommand is given (backwards compatible).
+Extend the existing `soulprint` entry point with subcommands. Today bare `soulprint` is the canonical local runtime command; after this work the shape is `soulprint [search|import|export|info|scan]`. Server-start stays the default when no subcommand is given (backwards compatible).
 
 Candidate subcommands:
 
-- `soulprint serve` — explicit version of the default. `--port 5678`, `--host 127.0.0.1`, `--no-browser`.
 - `soulprint search <query>` — FTS over the archive. `--provider chatgpt`, `--group coding` (needs P5), `--limit 20`, `--json`, `--since 2026-01-01`.
 - `soulprint import <file>` — import a single file. `--provider claude` hint, `--dry-run` shows what would be imported.
 - `soulprint scan [drop-folder|claude-code]` — explicit scan of a drop folder or ~/.claude. Needs P1 and P3.
@@ -275,7 +274,7 @@ Implementation: argparse (stdlib, no new dependency, matches codebase style). Su
 
 ### Phases
 
-1. **Restructure entry point.** `soulprint serve` becomes canonical, `soulprint` with no args dispatches to `serve` for backwards compat. Add `soulprint info` (P8) and `soulprint mcp-config` as the first two subcommands; both read-only, both fast, both demonstrate the pattern. Two evenings of work.
+1. **Restructure entry point.** Shipped: bare `soulprint` is the canonical local runtime command; `soulprint info` (P8) and `soulprint mcp-config` are registered as the first two subcommands. Both read-only, both fast, both demonstrate the pattern.
 2. **`soulprint search`.** Reuses `src/retrieval/fts.py` with a terminal-output renderer. `--json` for scripting. Tests: basic query, provider filter, empty result, malformed FTS query (sanitized gracefully).
 3. **`soulprint import` and `soulprint scan`.** Wires up P1 and P3 as CLI verbs. Tests: import a sample file, import with `--dry-run`, scan a fake drop folder.
 4. **`soulprint export`.** The simple markdown dump. Passport export stays as its own thing (`soulprint passport export`) to keep the mental model clean; passport is a sealed, validated artifact; this export is a utility dump.
@@ -290,8 +289,7 @@ Backwards compat. Today `soulprint` starts the server. Changing that would break
 
 - Subcommand dispatch: `soulprint info`, `soulprint search "query"`, `soulprint --help` all exit 0.
 - JSON output parseable with `json.loads`.
-- `soulprint serve` starts the server on the correct port and returns cleanly on SIGINT.
-- Bare `soulprint` with no args matches `soulprint serve` behavior.
+- Bare `soulprint` starts the server on the correct port and returns cleanly on SIGINT.
 
 ### Dependencies
 
@@ -368,7 +366,7 @@ MCP's SSE (Server-Sent Events) transport is the standard answer. FastMCP (the li
 mcp.run(transport="sse", host="127.0.0.1", port=8420)
 ```
 
-CLI flag: `soulprint serve --mcp-transport sse --mcp-port 8420` (default stays stdio). Binds to 127.0.0.1 by default so SSE on localhost works immediately and remote access is opt-in. Opt-in remote requires `--mcp-host 0.0.0.0` and a warning printed at startup.
+CLI flag: `soulprint --mcp-transport sse --mcp-port 8420` (default stays stdio). Binds to 127.0.0.1 by default so SSE on localhost works immediately and remote access is opt-in. Opt-in remote requires `--mcp-host 0.0.0.0` and a warning printed at startup.
 
 Remote access requires either a VPN (Tailscale, WireGuard) or an auth layer. SSE MCP without auth on 0.0.0.0 is an open archive. Very bad. Shipping order:
 
