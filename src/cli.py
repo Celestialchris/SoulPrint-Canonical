@@ -236,9 +236,10 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.command is None:
         from src.config import Config
-        if Config.USE_SUPERVISOR:
+        procfile_path = Path.cwd() / "Procfile.dev"
+        if Config.USE_SUPERVISOR and procfile_path.exists():
             from src.runtime.supervisor import Supervisor
-            sys.exit(Supervisor().run(Path.cwd() / "Procfile.dev"))
+            sys.exit(Supervisor().run(procfile_path))
         else:
             from src.main import main as run_server
             run_server()

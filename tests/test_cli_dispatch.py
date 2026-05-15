@@ -349,6 +349,21 @@ class CLIVerblessSupervisorDispatchTest(unittest.TestCase):
         supervisor_mock.return_value.run.assert_called_once()
         run_server_mock.assert_not_called()
 
+    def test_bare_soulprint_flag_on_falls_back_when_no_procfile(self) -> None:
+        from src.cli import main
+        from src.config import Config
+        tmpdir = make_test_temp_dir(self, "no-procfile")
+        original_cwd = os.getcwd()
+        self.addCleanup(os.chdir, original_cwd)
+        os.chdir(tmpdir)
+        with patch.object(Config, "USE_SUPERVISOR", True):
+            with patch("src.main.main") as run_server_mock, patch(
+                "src.runtime.supervisor.Supervisor"
+            ) as supervisor_mock:
+                main([])
+        run_server_mock.assert_called_once()
+        supervisor_mock.assert_not_called()
+
     def test_bare_soulprint_flag_on_uses_cwd_procfile_dev(self) -> None:
         from src.cli import main
         from src.config import Config
