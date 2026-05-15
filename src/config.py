@@ -26,6 +26,13 @@ def sqlite_uri_from_path(path: str | Path) -> str:
     return normalize_sqlite_uri(f"sqlite:///{Path(path).resolve().as_posix()}")
 
 
+def _use_supervisor_enabled() -> bool:
+    value = os.getenv("SOULPRINT_USE_SUPERVISOR")
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev")
     SQLALCHEMY_DATABASE_URI = sqlite_uri_from_path(
@@ -34,3 +41,4 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = str(default_upload_dir())
     SOULPRINT_EXPORT_DIR = os.environ.get("SOULPRINT_EXPORT_DIR", "")
+    USE_SUPERVISOR = _use_supervisor_enabled()

@@ -7,7 +7,7 @@ import sqlite3
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from tests.temp_helpers import make_test_temp_dir
 
@@ -274,5 +274,111 @@ class CLIServeDispatchTest(unittest.TestCase):
         self.assertIn("info", out)
         self.assertIn("mcp-config", out)
         self.assertIn("verify", out)
+
+
+class ConfigUseSupervisorFlagTest(unittest.TestCase):
+    """Cover the parser helper for ``SOULPRINT_USE_SUPERVISOR`` (Campaign 02 B5a)."""
+
+    def test_flag_defaults_false_when_env_unset(self) -> None:
+        from src.config import _use_supervisor_enabled
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("SOULPRINT_USE_SUPERVISOR", None)
+            self.assertFalse(_use_supervisor_enabled())
+
+    def test_flag_truthy_variants_enable(self) -> None:
+        from src.config import _use_supervisor_enabled
+        truthy = ["1", "true", "True", "TRUE", "yes", "YES", "on", "ON", "  true  "]
+        for value in truthy:
+            with self.subTest(value=value):
+                with patch.dict(os.environ, {"SOULPRINT_USE_SUPERVISOR": value}):
+                    self.assertTrue(_use_supervisor_enabled())
+
+    def test_flag_falsy_variants_disable(self) -> None:
+        from src.config import _use_supervisor_enabled
+        falsy = ["", "0", "false", "FALSE", "no", "off", "random-text", "2"]
+        for value in falsy:
+            with self.subTest(value=value):
+                with patch.dict(os.environ, {"SOULPRINT_USE_SUPERVISOR": value}):
+                    self.assertFalse(_use_supervisor_enabled())
+
+    def test_config_class_attribute_is_bool(self) -> None:
+        from src.config import Config
+        self.assertIsInstance(Config.USE_SUPERVISOR, bool)
+
+
+class CLIVerblessSupervisorDispatchTest(unittest.TestCase):
+    """Cover bare ``soulprint`` dispatch under the B5a flag matrix."""
+
+    def test_bare_soulprint_flag_off_invokes_legacy_serve(self) -> None:
+        from src.cli import main
+        from src.config import Config
+        with patch.object(Config, "USE_SUPERVISOR", False):
+            with patch("src.main.main") as run_server_mock, patch(
+                "src.runtime.supervisor.Supervisor"
+            ) as supervisor_mock:
+                main([])
+        run_server_mock.assert_called_once()
+        supervisor_mock.assert_not_called()
+
+    def test_bare_soulprint_flag_on_invokes_supervisor(self) -> None:
+        from src.cli import main
+        from src.config import Config
+        supervisor_mock = MagicMock()
+        supervisor_mock.return_value.run.return_value = 0
+        with patch.object(Config, "USE_SUPERVISOR", True):
+            with patch("src.main.main") as run_server_mock, patch(
+                "src.runtime.supervisor.Supervisor", supervisor_mock
+            ):
+                with self.assertRaises(SystemExit) as ctx:
+                    main([])
+        self.assertEqual(int(ctx.exception.code or 0), 0)
+        supervisor_mock.return_value.run.assert_called_once()
+        run_server_mock.assert_not_called()
+
+    def test_bare_soulprint_flag_on_uses_cwd_procfile_dev(self) -> None:
+        from src.cli import main
+        from src.config import Config
+        supervisor_mock = MagicMock()
+        supervisor_mock.return_value.run.return_value = 0
+        with patch.object(Config, "USE_SUPERVISOR", True):
+            with patch("src.runtime.supervisor.Supervisor", supervisor_mock):
+                with self.assertRaises(SystemExit):
+                    main([])
+        called_path = supervisor_mock.return_value.run.call_args.args[0]
+        self.assertEqual(called_path, Path.cwd() / "Procfile.dev")
+
+    def test_bare_soulprint_flag_on_propagates_exit_code(self) -> None:
+        from src.cli import main
+        from src.config import Config
+        supervisor_mock = MagicMock()
+        supervisor_mock.return_value.run.return_value = 3
+        with patch.object(Config, "USE_SUPERVISOR", True):
+            with patch("src.runtime.supervisor.Supervisor", supervisor_mock):
+                with self.assertRaises(SystemExit) as ctx:
+                    main([])
+        self.assertEqual(int(ctx.exception.code or 0), 3)
+
+    def test_soulprint_serve_unaffected_by_flag_on(self) -> None:
+        from src.cli import main
+        from src.config import Config
+        with patch.object(Config, "USE_SUPERVISOR", True):
+            with patch("src.main.main") as run_server_mock, patch(
+                "src.runtime.supervisor.Supervisor"
+            ) as supervisor_mock:
+                main(["serve", "--no-browser"])
+        run_server_mock.assert_called_once()
+        supervisor_mock.assert_not_called()
+
+    def test_soulprint_supervise_subcommand_unaffected_by_flag_off(self) -> None:
+        from src.cli import main
+        from src.config import Config
+        supervisor_mock = MagicMock()
+        supervisor_mock.return_value.run.return_value = 0
+        with patch.object(Config, "USE_SUPERVISOR", False):
+            with patch("src.runtime.supervisor.Supervisor", supervisor_mock):
+                with self.assertRaises(SystemExit) as ctx:
+                    main(["_supervise"])
+        self.assertEqual(int(ctx.exception.code or 0), 0)
+        supervisor_mock.return_value.run.assert_called_once()
 
 
