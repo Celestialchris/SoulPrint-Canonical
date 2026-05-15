@@ -18,6 +18,11 @@ def _default_db() -> Path:
 
 
 def _cmd_serve(args: argparse.Namespace) -> None:
+    print(
+        "soulprint serve is deprecated; use `soulprint` directly. "
+        "The supervisor will become the only entry point in a future release.",
+        file=sys.stderr,
+    )
     if args.port is not None:
         os.environ["SOULPRINT_PORT"] = str(args.port)
     if args.host is not None:

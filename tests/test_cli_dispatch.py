@@ -237,12 +237,6 @@ class CLIVerifyTest(unittest.TestCase):
 
 
 class CLIServeDispatchTest(unittest.TestCase):
-    def test_bare_soulprint_invokes_serve_handler(self) -> None:
-        from src.cli import main
-        with patch("src.main.main") as mock_run:
-            main([])
-        mock_run.assert_called_once()
-
     def test_serve_flags_bridge_to_env(self) -> None:
         from src.cli import main
         saved = {
@@ -277,13 +271,13 @@ class CLIServeDispatchTest(unittest.TestCase):
 
 
 class ConfigUseSupervisorFlagTest(unittest.TestCase):
-    """Cover the parser helper for ``SOULPRINT_USE_SUPERVISOR`` (Campaign 02 B5a)."""
+    """Cover the parser helper for ``SOULPRINT_USE_SUPERVISOR`` (Campaign 02 B5b)."""
 
-    def test_flag_defaults_false_when_env_unset(self) -> None:
+    def test_flag_defaults_true_when_env_unset(self) -> None:
         from src.config import _use_supervisor_enabled
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("SOULPRINT_USE_SUPERVISOR", None)
-            self.assertFalse(_use_supervisor_enabled())
+            self.assertTrue(_use_supervisor_enabled())
 
     def test_flag_truthy_variants_enable(self) -> None:
         from src.config import _use_supervisor_enabled
@@ -295,11 +289,31 @@ class ConfigUseSupervisorFlagTest(unittest.TestCase):
 
     def test_flag_falsy_variants_disable(self) -> None:
         from src.config import _use_supervisor_enabled
-        falsy = ["", "0", "false", "FALSE", "no", "off", "random-text", "2"]
+        falsy = [
+            "0",
+            "false",
+            "False",
+            "FALSE",
+            "no",
+            "No",
+            "NO",
+            "off",
+            "OFF",
+            "  false  ",
+            "  0  ",
+        ]
         for value in falsy:
             with self.subTest(value=value):
                 with patch.dict(os.environ, {"SOULPRINT_USE_SUPERVISOR": value}):
                     self.assertFalse(_use_supervisor_enabled())
+
+    def test_flag_unrecognized_variants_enable(self) -> None:
+        from src.config import _use_supervisor_enabled
+        unrecognized = ["", "  ", "random-text", "banana", "2", "tru", "yeah", "yep"]
+        for value in unrecognized:
+            with self.subTest(value=value):
+                with patch.dict(os.environ, {"SOULPRINT_USE_SUPERVISOR": value}):
+                    self.assertTrue(_use_supervisor_enabled())
 
     def test_config_class_attribute_is_bool(self) -> None:
         from src.config import Config
@@ -382,3 +396,81 @@ class CLIVerblessSupervisorDispatchTest(unittest.TestCase):
         supervisor_mock.return_value.run.assert_called_once()
 
 
+_SERVE_DEPRECATION_NOTICE = (
+    "soulprint serve is deprecated; use `soulprint` directly. "
+    "The supervisor will become the only entry point in a future release."
+)
+
+
+class CLIServeDeprecationTest(unittest.TestCase):
+    """Cover the ``soulprint serve`` deprecation notice (Campaign 02 B5b)."""
+
+    def _run_and_capture(self, argv: list[str]) -> tuple[str, str, int | None]:
+        from src.cli import main
+        out_buf = io.StringIO()
+        err_buf = io.StringIO()
+        exit_code: int | None = None
+        try:
+            with patch("sys.stdout", out_buf), patch("sys.stderr", err_buf):
+                main(argv)
+        except SystemExit as exc:
+            exit_code = int(exc.code) if exc.code is not None else 0
+        return out_buf.getvalue(), err_buf.getvalue(), exit_code
+
+    def test_serve_emits_notice_to_stderr_when_flag_on(self) -> None:
+        from src.config import Config
+        with patch.object(Config, "USE_SUPERVISOR", True):
+            with patch("src.main.main"):
+                _stdout, stderr, _code = self._run_and_capture(["serve", "--no-browser"])
+        self.assertIn(_SERVE_DEPRECATION_NOTICE, stderr)
+
+    def test_serve_emits_notice_to_stderr_when_flag_off(self) -> None:
+        from src.config import Config
+        with patch.object(Config, "USE_SUPERVISOR", False):
+            with patch("src.main.main"):
+                _stdout, stderr, _code = self._run_and_capture(["serve", "--no-browser"])
+        self.assertIn(_SERVE_DEPRECATION_NOTICE, stderr)
+
+    def test_serve_notice_does_not_block_legacy_dispatch(self) -> None:
+        from src.cli import main
+        from src.config import Config
+        err_buf = io.StringIO()
+        with patch.object(Config, "USE_SUPERVISOR", True):
+            with patch("src.main.main") as run_server_mock, patch(
+                "src.runtime.supervisor.Supervisor"
+            ) as supervisor_mock, patch("sys.stderr", err_buf):
+                main(["serve", "--no-browser"])
+        self.assertIn(_SERVE_DEPRECATION_NOTICE, err_buf.getvalue())
+        run_server_mock.assert_called_once()
+        supervisor_mock.assert_not_called()
+
+    def test_serve_notice_is_stderr_not_stdout(self) -> None:
+        from src.config import Config
+        with patch.object(Config, "USE_SUPERVISOR", True):
+            with patch("src.main.main"):
+                stdout, stderr, _code = self._run_and_capture(["serve", "--no-browser"])
+        self.assertIn(_SERVE_DEPRECATION_NOTICE, stderr)
+        self.assertNotIn(_SERVE_DEPRECATION_NOTICE, stdout)
+
+    def test_bare_soulprint_flag_on_does_not_emit_notice(self) -> None:
+        from src.config import Config
+        supervisor_mock = MagicMock()
+        supervisor_mock.return_value.run.return_value = 0
+        with patch.object(Config, "USE_SUPERVISOR", True):
+            with patch("src.runtime.supervisor.Supervisor", supervisor_mock):
+                _stdout, stderr, _code = self._run_and_capture([])
+        self.assertNotIn(_SERVE_DEPRECATION_NOTICE, stderr)
+
+    def test_bare_soulprint_flag_off_does_not_emit_notice(self) -> None:
+        from src.config import Config
+        with patch.object(Config, "USE_SUPERVISOR", False):
+            with patch("src.main.main"):
+                _stdout, stderr, _code = self._run_and_capture([])
+        self.assertNotIn(_SERVE_DEPRECATION_NOTICE, stderr)
+
+    def test_supervise_subcommand_does_not_emit_notice(self) -> None:
+        supervisor_mock = MagicMock()
+        supervisor_mock.return_value.run.return_value = 0
+        with patch("src.runtime.supervisor.Supervisor", supervisor_mock):
+            _stdout, stderr, _code = self._run_and_capture(["_supervise"])
+        self.assertNotIn(_SERVE_DEPRECATION_NOTICE, stderr)
