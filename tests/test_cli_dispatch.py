@@ -301,9 +301,10 @@ class CLIBareInvocationDispatchTest(unittest.TestCase):
 
         called_path = supervisor_mock.return_value.run.call_args.args[0]
         self.assertNotEqual(called_path, tmpdir / "Procfile.dev")
-        self.assertEqual(called_path.name, "Procfile.dev")
-        self.assertEqual(called_path.parent.name, "runtime")
         self.assertTrue(called_path.exists())
+        # Materialized fallback must pin the interpreter to sys.executable
+        # rather than rely on a PATH-resolved ``python``.
+        self.assertIn(sys.executable, called_path.read_text(encoding="utf-8"))
 
     def test_bare_soulprint_propagates_supervisor_exit_code(self) -> None:
         from src.cli import main

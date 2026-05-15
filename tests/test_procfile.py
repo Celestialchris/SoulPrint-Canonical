@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import re
+import sys
 import unittest
 from pathlib import Path
 
@@ -109,7 +111,7 @@ class DefaultProcfileResolverTest(unittest.TestCase):
 
         self.assertEqual(result, tmpdir / "Procfile.dev")
 
-    def test_returns_packaged_procfile_when_cwd_has_none(self):
+    def test_returns_materialized_procfile_when_cwd_has_none(self):
         tmpdir = make_test_temp_dir(self, "procfile-cwd-absent")
         self._chdir(tmpdir)
 
@@ -117,9 +119,7 @@ class DefaultProcfileResolverTest(unittest.TestCase):
 
         self.assertNotEqual(result, tmpdir / "Procfile.dev")
         self.assertTrue(result.exists())
-        self.assertEqual(result.name, "Procfile.dev")
-        # Resolver should pick the package-data copy alongside src/runtime/.
-        self.assertEqual(result.parent.name, "runtime")
+        self.assertNotEqual(result.parent, tmpdir)
 
     def test_returns_pathlib_path(self):
         tmpdir = make_test_temp_dir(self, "procfile-path-type")
@@ -129,7 +129,7 @@ class DefaultProcfileResolverTest(unittest.TestCase):
 
         self.assertIsInstance(result, Path)
 
-    def test_packaged_procfile_parses_as_flask_line(self):
+    def test_packaged_procfile_parses_with_sys_executable(self):
         tmpdir = make_test_temp_dir(self, "procfile-packaged-content")
         self._chdir(tmpdir)
 
@@ -140,9 +140,28 @@ class DefaultProcfileResolverTest(unittest.TestCase):
             text.startswith("flask:"),
             f"packaged Procfile must start with 'flask:', got {text!r}",
         )
-        self.assertEqual(parse(text), [("flask", ["python", "-m", "src.main"])])
+        self.assertEqual(
+            parse(text),
+            [("flask", [sys.executable, "-m", "src.main"])],
+        )
 
-    def test_packaged_procfile_matches_repo_root_when_present(self):
+    def test_packaged_procfile_pins_python_to_sys_executable(self):
+        tmpdir = make_test_temp_dir(self, "procfile-python-pinned")
+        self._chdir(tmpdir)
+
+        result = default_procfile_path()
+        text = result.read_text(encoding="utf-8")
+
+        # Materialized text must contain sys.executable and must not contain
+        # a bare ``python`` token (matching only the standalone form, not
+        # paths like ``/usr/bin/python`` or names like ``python3``).
+        self.assertIn(sys.executable, text)
+        self.assertIsNone(
+            re.search(r"(?m)(^|[\s:])python(?=\s|$)", text),
+            f"materialized Procfile must not contain a bare 'python' token: {text!r}",
+        )
+
+    def test_packaged_procfile_matches_repo_root_after_substitution(self):
         repo_root_procfile = Path(__file__).resolve().parent.parent / "Procfile.dev"
         if not repo_root_procfile.exists():
             self.skipTest("repo-root Procfile.dev not present in this checkout")
@@ -150,12 +169,20 @@ class DefaultProcfileResolverTest(unittest.TestCase):
         tmpdir = make_test_temp_dir(self, "procfile-packaged-vs-root")
         self._chdir(tmpdir)
 
-        packaged = default_procfile_path()
+        repo_services = parse(repo_root_procfile.read_text(encoding="utf-8"))
+        materialized_services = parse_file(default_procfile_path())
 
-        self.assertEqual(
-            packaged.read_text(encoding="utf-8"),
-            repo_root_procfile.read_text(encoding="utf-8"),
-        )
+        self.assertEqual(len(repo_services), len(materialized_services))
+        for (rname, rcmd), (mname, mcmd) in zip(repo_services, materialized_services):
+            self.assertEqual(rname, mname)
+            self.assertEqual(len(rcmd), len(mcmd))
+            # Only the leading interpreter token may differ; trailing args
+            # must match the repo-root command verbatim.
+            self.assertEqual(rcmd[1:], mcmd[1:])
+            if rcmd and rcmd[0] == "python":
+                self.assertEqual(mcmd[0], sys.executable)
+            else:
+                self.assertEqual(rcmd[0], mcmd[0])
 
     def test_packaged_procfile_round_trips_through_parse_file(self):
         tmpdir = make_test_temp_dir(self, "procfile-packaged-roundtrip")
@@ -163,7 +190,10 @@ class DefaultProcfileResolverTest(unittest.TestCase):
 
         result = parse_file(default_procfile_path())
 
-        self.assertEqual(result, [("flask", ["python", "-m", "src.main"])])
+        self.assertEqual(
+            result,
+            [("flask", [sys.executable, "-m", "src.main"])],
+        )
 
 
 if __name__ == "__main__":

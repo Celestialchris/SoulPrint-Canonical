@@ -12,25 +12,76 @@ Supports the minimum subset SoulPrint needs:
 from __future__ import annotations
 
 import re
+import sys
+import tempfile
 from importlib import resources
 from pathlib import Path
 
 _NAME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]*$")
+# Bare ``python`` token bordered by start-of-line / whitespace / colon on the
+# left and whitespace / end-of-line on the right. Does not match ``python3``,
+# ``pythonista``, or absolute paths like ``/usr/bin/python``.
+_BARE_PYTHON_RE = re.compile(r"(?m)(^|[\s:])python(?=\s|$)")
 
 
 def default_procfile_path() -> Path:
     """Resolve the Procfile path used by bare ``soulprint``.
 
     Returns the cwd ``Procfile.dev`` when present (the dev-mode override),
-    otherwise the packaged ``src/runtime/Procfile.dev`` so pip-installed users
-    outside the checkout do not crash on a missing cwd Procfile.
+    otherwise materializes the packaged ``src/runtime/Procfile.dev`` with the
+    bare ``python`` token pinned to ``sys.executable``. The pin prevents
+    pip-installed users (pipx shims, desktop launchers, or invoking
+    ``/path/to/venv/bin/soulprint`` without activating that venv) from falling
+    through to a PATH-resolved ``python`` that may not have ``src`` importable.
     """
 
     cwd_path = Path.cwd() / "Procfile.dev"
     if cwd_path.exists():
         return cwd_path
-    packaged = resources.files("src.runtime").joinpath("Procfile.dev")
-    return Path(str(packaged))
+    return _materialize_packaged_procfile()
+
+
+def _materialize_packaged_procfile() -> Path:
+    """Write the packaged Procfile to a temp file with ``python`` pinned."""
+
+    if any(ch.isspace() for ch in sys.executable):
+        raise RuntimeError(
+            f"Cannot materialize packaged Procfile: sys.executable "
+            f"{sys.executable!r} contains whitespace, which the Procfile "
+            "parser tokenizes with simple whitespace splitting. Run soulprint "
+            "from a venv whose interpreter path has no spaces, or place a "
+            "Procfile.dev in your working directory."
+        )
+
+    packaged_text = (
+        resources.files("src.runtime")
+        .joinpath("Procfile.dev")
+        .read_text(encoding="utf-8")
+    )
+    pinned_text = _pin_python_to_sys_executable(packaged_text)
+
+    handle = tempfile.NamedTemporaryFile(
+        prefix="soulprint-procfile-",
+        suffix=".dev",
+        delete=False,
+        mode="w",
+        encoding="utf-8",
+    )
+    try:
+        handle.write(pinned_text)
+    finally:
+        handle.close()
+    return Path(handle.name)
+
+
+def _pin_python_to_sys_executable(text: str) -> str:
+    """Replace bare ``python`` command tokens with ``sys.executable``.
+
+    Uses a callable replacement so backslashes in Windows interpreter paths
+    are not re-interpreted as regex backreferences.
+    """
+
+    return _BARE_PYTHON_RE.sub(lambda m: m.group(1) + sys.executable, text)
 
 
 class MalformedProcfileError(ValueError):
