@@ -75,7 +75,7 @@ class FreeRoutesUnaffectedTest(_FreemiumTestBase):
 
     def test_free_routes_accessible_without_license(self):
         free_routes = [
-            "/", "/imported", "/chats", "/federated", "/passport",
+            "/", "/library", "/imported", "/chats", "/federated", "/passport",
             "/answer-traces", "/summary", "/intelligence",
         ]
         for route in free_routes:
@@ -90,7 +90,7 @@ class WorkspaceTierBadgeTest(_FreemiumTestBase):
     license_override = "false"
 
     def test_workspace_accessible_when_unlicensed(self):
-        response = self.client.get("/")
+        response = self.client.get("/library")
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         self.assertIn("SoulPrint", html)
@@ -102,7 +102,7 @@ class WorkspaceProBadgeTest(_FreemiumTestBase):
     license_override = "true"
 
     def test_workspace_accessible_when_licensed(self):
-        response = self.client.get("/")
+        response = self.client.get("/library")
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         self.assertIn("SoulPrint", html)

@@ -27,13 +27,13 @@ class WebShellRouteTest(unittest.TestCase):
     def _restore_sqlite_uri(self):
         Config.SQLALCHEMY_DATABASE_URI = self._old_uri
 
-    def test_home_route_renders_shared_navigation_shell(self):
-        response = self.client.get("/")
+    def test_library_route_renders_shared_navigation_shell(self):
+        response = self.client.get("/library")
 
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         self.assertIn("sidebar", html)
-        self.assertIn("Workspace", html)
+        self.assertIn("Library", html)
         self.assertIn('href="/chats"', html)
         self.assertIn('href="/imported"', html)
         # Import flow lives in the Continuity sidebar group, linking to /import

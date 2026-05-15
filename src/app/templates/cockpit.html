@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Cockpit · SoulPrint{% endblock %}
+{% block page_title %}Cockpit{% endblock %}
+{% block page_desc %}local runtime status{% endblock %}
+
+{% block content %}
+
+<div class="workspace-canvas">
+
+  <section class="cockpit-status">
+    {% if service_data.supervisor_running %}
+      {% set svc_count = service_data.services|length %}
+      <p class="metadata-line">
+        Supervisor running. {{ svc_count }} service{{ '' if svc_count == 1 else 's' }} reporting.
+      </p>
+    {% else %}
+      <p class="metadata-line">Supervisor not running</p>
+      <p class="metadata-note">
+        Your archive is still available. Open the Library to browse what you have on disk.
+      </p>
+    {% endif %}
+
+    {% if preferred_port_busy %}
+      <p class="metadata-note">
+        Preferred port {{ preferred_port }} was busy; Flask is listening on port {{ active_flask_port }}.
+      </p>
+    {% endif %}
+  </section>
+
+  {% if service_data.services %}
+  <section>
+    <h3 class="workspace-section__label">SERVICES</h3>
+    <ul class="recent-list">
+      {% for svc in service_data.services %}
+      <li class="recent-list__row">
+        <span class="recent-list__title">{{ svc.name }}</span>
+        <span class="recent-list__provider">{{ 'ok' if svc.ok else 'down' }}</span>
+        <span class="recent-list__time">
+          {% if svc.latency_ms is not none %}{{ '%.1f'|format(svc.latency_ms) }} ms{% endif %}
+        </span>
+        <span class="metadata-line">{{ svc.host }}:{{ svc.port }} · {{ svc.detail }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section>
+    <h3 class="workspace-section__label">READER</h3>
+    <p class="metadata-line">{{ reader_status }}</p>
+  </section>
+
+  {% if ledger_pulse %}
+  <section class="workspace-recent">
+    <h3 class="workspace-section__label workspace-section__label--accent">LEDGER PULSE</h3>
+    <ul class="recent-list">
+      {% for row in ledger_pulse %}
+      <li class="recent-list__row">
+        <span class="recent-list__dot" style="background-color: var(--lane-{{ row.provider|replace('_', '-') }})"></span>
+        <a class="recent-list__title" href="{{ url_for('imported_explorer', conversation_id=row.id) }}">{{ row.title }}</a>
+        <span class="recent-list__provider">{{ row.provider|provider_display_name }}</span>
+        <span class="recent-list__time">{{ row.relative_time }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <section>
+    <h3 class="workspace-section__label">LEDGER PULSE</h3>
+    <p class="metadata-note">No imported conversations yet.</p>
+  </section>
+  {% endif %}
+
+  <section>
+    <h3 class="workspace-section__label">JUMP TO</h3>
+    <ul class="content-list">
+      <li><a href="{{ url_for('library') }}">Library</a></li>
+      <li><a href="{{ url_for('ask') }}">Ask</a></li>
+      <li><a href="{{ url_for('import_conversations') }}">Import</a></li>
+      <li><a href="{{ url_for('passport_surface') }}">Memory Passport</a></li>
+    </ul>
+  </section>
+
+</div>{# /.workspace-canvas #}
+
+{% endblock %}
