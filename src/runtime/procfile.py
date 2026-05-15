@@ -12,9 +12,25 @@ Supports the minimum subset SoulPrint needs:
 from __future__ import annotations
 
 import re
+from importlib import resources
 from pathlib import Path
 
 _NAME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]*$")
+
+
+def default_procfile_path() -> Path:
+    """Resolve the Procfile path used by bare ``soulprint``.
+
+    Returns the cwd ``Procfile.dev`` when present (the dev-mode override),
+    otherwise the packaged ``src/runtime/Procfile.dev`` so pip-installed users
+    outside the checkout do not crash on a missing cwd Procfile.
+    """
+
+    cwd_path = Path.cwd() / "Procfile.dev"
+    if cwd_path.exists():
+        return cwd_path
+    packaged = resources.files("src.runtime").joinpath("Procfile.dev")
+    return Path(str(packaged))
 
 
 class MalformedProcfileError(ValueError):

@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
+import os
 import unittest
+from pathlib import Path
 
-from src.runtime.procfile import MalformedProcfileError, parse, parse_file
+from src.runtime.procfile import (
+    MalformedProcfileError,
+    default_procfile_path,
+    parse,
+    parse_file,
+)
 from tests.temp_helpers import make_test_temp_dir
 
 
@@ -80,6 +87,81 @@ class ProcfileParseFileTest(unittest.TestCase):
         path.write_text("flask: python -m src.main\n", encoding="utf-8")
 
         result = parse_file(path)
+
+        self.assertEqual(result, [("flask", ["python", "-m", "src.main"])])
+
+
+class DefaultProcfileResolverTest(unittest.TestCase):
+    """Cover ``default_procfile_path`` resolver behavior (Campaign 02 B5c)."""
+
+    def _chdir(self, target: Path) -> None:
+        original_cwd = os.getcwd()
+        self.addCleanup(os.chdir, original_cwd)
+        os.chdir(target)
+
+    def test_returns_cwd_procfile_when_present(self):
+        tmpdir = make_test_temp_dir(self, "procfile-cwd-present")
+        cwd_procfile = tmpdir / "Procfile.dev"
+        cwd_procfile.write_text("flask: python -m src.main\n", encoding="utf-8")
+        self._chdir(tmpdir)
+
+        result = default_procfile_path()
+
+        self.assertEqual(result, tmpdir / "Procfile.dev")
+
+    def test_returns_packaged_procfile_when_cwd_has_none(self):
+        tmpdir = make_test_temp_dir(self, "procfile-cwd-absent")
+        self._chdir(tmpdir)
+
+        result = default_procfile_path()
+
+        self.assertNotEqual(result, tmpdir / "Procfile.dev")
+        self.assertTrue(result.exists())
+        self.assertEqual(result.name, "Procfile.dev")
+        # Resolver should pick the package-data copy alongside src/runtime/.
+        self.assertEqual(result.parent.name, "runtime")
+
+    def test_returns_pathlib_path(self):
+        tmpdir = make_test_temp_dir(self, "procfile-path-type")
+        self._chdir(tmpdir)
+
+        result = default_procfile_path()
+
+        self.assertIsInstance(result, Path)
+
+    def test_packaged_procfile_parses_as_flask_line(self):
+        tmpdir = make_test_temp_dir(self, "procfile-packaged-content")
+        self._chdir(tmpdir)
+
+        result = default_procfile_path()
+        text = result.read_text(encoding="utf-8")
+
+        self.assertTrue(
+            text.startswith("flask:"),
+            f"packaged Procfile must start with 'flask:', got {text!r}",
+        )
+        self.assertEqual(parse(text), [("flask", ["python", "-m", "src.main"])])
+
+    def test_packaged_procfile_matches_repo_root_when_present(self):
+        repo_root_procfile = Path(__file__).resolve().parent.parent / "Procfile.dev"
+        if not repo_root_procfile.exists():
+            self.skipTest("repo-root Procfile.dev not present in this checkout")
+
+        tmpdir = make_test_temp_dir(self, "procfile-packaged-vs-root")
+        self._chdir(tmpdir)
+
+        packaged = default_procfile_path()
+
+        self.assertEqual(
+            packaged.read_text(encoding="utf-8"),
+            repo_root_procfile.read_text(encoding="utf-8"),
+        )
+
+    def test_packaged_procfile_round_trips_through_parse_file(self):
+        tmpdir = make_test_temp_dir(self, "procfile-packaged-roundtrip")
+        self._chdir(tmpdir)
+
+        result = parse_file(default_procfile_path())
 
         self.assertEqual(result, [("flask", ["python", "-m", "src.main"])])
 

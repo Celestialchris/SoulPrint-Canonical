@@ -53,6 +53,7 @@ include = ["src", "src.*"]
 
 [tool.setuptools.package-data]
 "src.app" = ["templates/*.html", "static/*"]
+"src.runtime" = ["Procfile.dev"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
