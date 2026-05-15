@@ -7,6 +7,7 @@ import re
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from src.runtime.procfile import (
     MalformedProcfileError,
@@ -80,6 +81,40 @@ class ProcfileParseTest(unittest.TestCase):
 
         self.assertEqual(ctx.exception.line_number, 2)
         self.assertIn("duplicate service name", ctx.exception.reason)
+
+    def test_double_quoted_token_preserves_internal_whitespace(self):
+        result = parse('flask: "/path with space/python" -m src.main')
+
+        self.assertEqual(
+            result,
+            [("flask", ["/path with space/python", "-m", "src.main"])],
+        )
+
+    def test_single_quoted_token_preserves_whitespace_and_backslashes(self):
+        result = parse("flask: 'C:\\Program Files\\Python\\python.exe' -m src.main")
+
+        self.assertEqual(
+            result,
+            [("flask", ["C:\\Program Files\\Python\\python.exe", "-m", "src.main"])],
+        )
+
+    def test_unquoted_backslashes_are_literal(self):
+        # Windows interpreter paths without surrounding quotes must survive
+        # tokenization with backslashes intact; the parser disables shell
+        # escape semantics for exactly this reason.
+        result = parse("flask: C:\\Python312\\python.exe -m src.main")
+
+        self.assertEqual(
+            result,
+            [("flask", ["C:\\Python312\\python.exe", "-m", "src.main"])],
+        )
+
+    def test_unbalanced_quote_raises_malformed_procfile_error(self):
+        with self.assertRaises(MalformedProcfileError) as ctx:
+            parse("flask: 'unterminated")
+
+        self.assertEqual(ctx.exception.line_number, 1)
+        self.assertIn("tokenization", ctx.exception.reason)
 
 
 class ProcfileParseFileTest(unittest.TestCase):
@@ -194,6 +229,30 @@ class DefaultProcfileResolverTest(unittest.TestCase):
             result,
             [("flask", [sys.executable, "-m", "src.main"])],
         )
+
+    def test_packaged_procfile_handles_sys_executable_with_whitespace(self):
+        """Codex P2 follow-up: a venv inside ``Program Files`` must work."""
+
+        tmpdir = make_test_temp_dir(self, "procfile-exec-with-space")
+        self._chdir(tmpdir)
+
+        fake_exec = "/path with space/python"
+        with patch("src.runtime.procfile.sys.executable", fake_exec):
+            result = default_procfile_path()
+            tokens = parse_file(result)
+
+        self.assertEqual(tokens, [("flask", [fake_exec, "-m", "src.main"])])
+
+    def test_packaged_procfile_handles_windows_program_files_path(self):
+        tmpdir = make_test_temp_dir(self, "procfile-exec-program-files")
+        self._chdir(tmpdir)
+
+        fake_exec = "C:\\Program Files\\Python312\\python.exe"
+        with patch("src.runtime.procfile.sys.executable", fake_exec):
+            result = default_procfile_path()
+            tokens = parse_file(result)
+
+        self.assertEqual(tokens, [("flask", [fake_exec, "-m", "src.main"])])
 
 
 if __name__ == "__main__":

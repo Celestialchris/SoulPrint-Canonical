@@ -5,13 +5,16 @@ Supports the minimum subset SoulPrint needs:
 - one service per line as ``<name>: <command>``;
 - blank lines and full-line ``#`` comments are ignored;
 - service names match ``[a-zA-Z][a-zA-Z0-9_-]*``;
-- commands are tokenized with simple whitespace splitting (no shell);
-- no pipes, redirection, ``&&``, or inline comments.
+- commands are tokenized with POSIX-like quote handling: whitespace splits
+  tokens, single- or double-quoted strings group whitespace together, and
+  backslashes are literal so Windows interpreter paths round-trip;
+- no pipes, redirection, ``&&``, inline comments, or shell escape semantics.
 """
 
 from __future__ import annotations
 
 import re
+import shlex
 import sys
 import tempfile
 from importlib import resources
@@ -44,15 +47,6 @@ def default_procfile_path() -> Path:
 def _materialize_packaged_procfile() -> Path:
     """Write the packaged Procfile to a temp file with ``python`` pinned."""
 
-    if any(ch.isspace() for ch in sys.executable):
-        raise RuntimeError(
-            f"Cannot materialize packaged Procfile: sys.executable "
-            f"{sys.executable!r} contains whitespace, which the Procfile "
-            "parser tokenizes with simple whitespace splitting. Run soulprint "
-            "from a venv whose interpreter path has no spaces, or place a "
-            "Procfile.dev in your working directory."
-        )
-
     packaged_text = (
         resources.files("src.runtime")
         .joinpath("Procfile.dev")
@@ -75,13 +69,16 @@ def _materialize_packaged_procfile() -> Path:
 
 
 def _pin_python_to_sys_executable(text: str) -> str:
-    """Replace bare ``python`` command tokens with ``sys.executable``.
+    """Replace bare ``python`` command tokens with quoted ``sys.executable``.
 
-    Uses a callable replacement so backslashes in Windows interpreter paths
-    are not re-interpreted as regex backreferences.
+    Uses ``shlex.quote`` so interpreter paths that contain whitespace (Windows
+    installs under ``C:\\Program Files``, virtualenvs inside spaced folders)
+    round-trip safely through the Procfile parser. The callable replacement
+    keeps backslashes verbatim instead of triggering regex backreferences.
     """
 
-    return _BARE_PYTHON_RE.sub(lambda m: m.group(1) + sys.executable, text)
+    replacement = shlex.quote(sys.executable)
+    return _BARE_PYTHON_RE.sub(lambda m: m.group(1) + replacement, text)
 
 
 class MalformedProcfileError(ValueError):
@@ -128,9 +125,30 @@ def parse(text: str) -> list[tuple[str, list[str]]]:
                 index, raw_line, f"duplicate service name {name!r}"
             )
         seen_names.add(name)
-        tokens = command.split()
+        try:
+            tokens = _tokenize_command(command)
+        except ValueError as exc:
+            raise MalformedProcfileError(
+                index, raw_line, f"command tokenization failed: {exc}"
+            )
         services.append((name, tokens))
     return services
+
+
+def _tokenize_command(command: str) -> list[str]:
+    """Split a Procfile command into tokens with POSIX-like quote handling.
+
+    Whitespace splits tokens. Single- and double-quoted runs group content.
+    Backslashes are literal (``escape = ""``), so Windows interpreter paths
+    survive unquoted as well as quoted. ``#`` is not treated as an inline
+    comment marker, matching the parser docstring.
+    """
+
+    lex = shlex.shlex(command, posix=True)
+    lex.whitespace_split = True
+    lex.commenters = ""
+    lex.escape = ""
+    return list(lex)
 
 
 def parse_file(path: str | Path) -> list[tuple[str, list[str]]]:
