@@ -230,8 +230,13 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
 
     if args.command is None:
-        from src.main import main as run_server
-        run_server()
+        from src.config import Config
+        if Config.USE_SUPERVISOR:
+            from src.runtime.supervisor import Supervisor
+            sys.exit(Supervisor().run(Path.cwd() / "Procfile.dev"))
+        else:
+            from src.main import main as run_server
+            run_server()
     elif args.command == "serve":
         _cmd_serve(args)
     elif args.command == "info":
