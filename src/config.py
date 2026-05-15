@@ -29,8 +29,8 @@ def sqlite_uri_from_path(path: str | Path) -> str:
 def _use_supervisor_enabled() -> bool:
     value = os.getenv("SOULPRINT_USE_SUPERVISOR")
     if value is None:
-        return False
-    return value.strip().lower() in {"1", "true", "yes", "on"}
+        return True
+    return value.strip().lower() not in {"0", "false", "no", "off"}
 
 
 class Config:

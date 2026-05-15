@@ -18,6 +18,11 @@ def _default_db() -> Path:
 
 
 def _cmd_serve(args: argparse.Namespace) -> None:
+    print(
+        "soulprint serve is deprecated; use `soulprint` directly. "
+        "The supervisor will become the only entry point in a future release.",
+        file=sys.stderr,
+    )
     if args.port is not None:
         os.environ["SOULPRINT_PORT"] = str(args.port)
     if args.host is not None:
@@ -231,9 +236,10 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.command is None:
         from src.config import Config
-        if Config.USE_SUPERVISOR:
+        procfile_path = Path.cwd() / "Procfile.dev"
+        if Config.USE_SUPERVISOR and procfile_path.exists():
             from src.runtime.supervisor import Supervisor
-            sys.exit(Supervisor().run(Path.cwd() / "Procfile.dev"))
+            sys.exit(Supervisor().run(procfile_path))
         else:
             from src.main import main as run_server
             run_server()
