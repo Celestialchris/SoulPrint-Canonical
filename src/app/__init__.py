@@ -17,6 +17,8 @@ from .models.db import db
 from .. import soulprint_home
 from ..config import Config, normalize_sqlite_uri
 from ..runtime import default_instance_dir, static_dir, templates_dir
+from ..runtime import ports as runtime_ports
+from ..runtime.probes import HTTPProbe
 from .models import ConversationAsset, ImportedConversation, ImportedMessage, ImportRun, MemoryEntry, MessageAsset
 from .import_runs import classify_import_outcome, latest_import_runs, record_import_run
 from .citation_handoff import build_answer_trace_citation_view
@@ -1008,6 +1010,77 @@ def create_app():
         if entry is None:
             return jsonify({"error": "not found"}), 404
         return jsonify(_serialize_note(entry))
+
+    @app.get("/healthz")
+    def healthz():
+        return jsonify({"ok": True}), 200
+
+    @app.get("/api/services")
+    def api_services():
+        entries = runtime_ports.read_entries()
+        ports_json_path = soulprint_home.run_dir() / "ports.json"
+        ports_json_present = ports_json_path.exists()
+
+        services: list[dict] = []
+        supervisor_running = False
+
+        for name, info in entries.items():
+            host = info.get("host", "127.0.0.1")
+            port = info.get("port")
+            pid = info.get("pid")
+            started_at = info.get("started_at")
+
+            pid_alive = pid is not None and runtime_ports.is_pid_alive(int(pid))
+
+            if not pid_alive:
+                services.append({
+                    "name": name,
+                    "ok": False,
+                    "latency_ms": None,
+                    "detail": "process not running",
+                    "host": host,
+                    "port": port,
+                    "pid": pid,
+                    "started_at": started_at,
+                })
+                continue
+
+            supervisor_running = True
+
+            if name == "flask" and port is not None:
+                probe = HTTPProbe(
+                    name="flask",
+                    url=f"http://{host}:{port}/healthz",
+                )
+                result = probe.probe()
+                services.append({
+                    "name": name,
+                    "ok": result.ok,
+                    "latency_ms": result.latency_ms,
+                    "detail": result.detail,
+                    "host": host,
+                    "port": port,
+                    "pid": pid,
+                    "started_at": started_at,
+                })
+            else:
+                services.append({
+                    "name": name,
+                    "ok": True,
+                    "latency_ms": None,
+                    "detail": "process running; no probe configured",
+                    "host": host,
+                    "port": port,
+                    "pid": pid,
+                    "started_at": started_at,
+                })
+
+        return jsonify({
+            "schema_version": 1,
+            "supervisor_running": supervisor_running,
+            "ports_json_present": ports_json_present,
+            "services": services,
+        })
 
     @app.get("/imported/<int:conversation_id>/explorer")
     def imported_explorer(conversation_id: int):
