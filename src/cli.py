@@ -17,34 +17,11 @@ def _default_db() -> Path:
     return default_instance_dir() / "soulprint.db"
 
 
-def _cmd_serve(args: argparse.Namespace) -> None:
-    print(
-        "soulprint serve is deprecated; use `soulprint` directly. "
-        "The supervisor will become the only entry point in a future release.",
-        file=sys.stderr,
-    )
-    if args.port is not None:
-        os.environ["SOULPRINT_PORT"] = str(args.port)
-    if args.host is not None:
-        os.environ["SOULPRINT_HOST"] = args.host
-    if args.no_browser:
-        os.environ["SOULPRINT_OPEN_BROWSER"] = "0"
-    from src.main import main as run_server
-    run_server()
-
-
-def _cmd_supervise(args: argparse.Namespace) -> int:
-    from src.runtime.supervisor import Supervisor
-
-    procfile_path = Path(args.procfile) if args.procfile else Path.cwd() / "Procfile.dev"
-    return Supervisor().run(procfile_path)
-
-
 def _cmd_info(args: argparse.Namespace) -> None:
     db_path = Path(args.db) if args.db else _default_db()
     if not db_path.exists():
         print(
-            f"Database not found at {db_path}. Run soulprint serve first to initialize.",
+            f"Database not found at {db_path}. Run soulprint first to initialize.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -214,11 +191,6 @@ def main(argv: list[str] | None = None) -> None:
     )
     sub = parser.add_subparsers(dest="command")
 
-    serve_p = sub.add_parser("serve", help="Start the SoulPrint web server")
-    serve_p.add_argument("--port", type=int, default=None)
-    serve_p.add_argument("--host", default=None)
-    serve_p.add_argument("--no-browser", action="store_true")
-
     info_p = sub.add_parser("info", help="Show archive statistics")
     info_p.add_argument("--json", action="store_true")
     info_p.add_argument("--db", default=None, metavar="PATH")
@@ -229,30 +201,18 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("mcp-config", help="Print a ready-to-paste .mcp.json block")
 
-    supervise_p = sub.add_parser("_supervise", help=argparse.SUPPRESS)
-    supervise_p.add_argument("--procfile", default=None, metavar="PATH")
-
     args = parser.parse_args(argv)
 
     if args.command is None:
-        from src.config import Config
-        procfile_path = Path.cwd() / "Procfile.dev"
-        if Config.USE_SUPERVISOR and procfile_path.exists():
-            from src.runtime.supervisor import Supervisor
-            sys.exit(Supervisor().run(procfile_path))
-        else:
-            from src.main import main as run_server
-            run_server()
-    elif args.command == "serve":
-        _cmd_serve(args)
+        from src.runtime.supervisor import Supervisor
+        from src.runtime.procfile import default_procfile_path
+        sys.exit(Supervisor().run(default_procfile_path()))
     elif args.command == "info":
         _cmd_info(args)
     elif args.command == "verify":
         _cmd_verify(args)
     elif args.command == "mcp-config":
         _cmd_mcp_config(args)
-    elif args.command == "_supervise":
-        sys.exit(_cmd_supervise(args))
 
 
 if __name__ == "__main__":
