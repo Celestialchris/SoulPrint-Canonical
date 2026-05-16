@@ -725,6 +725,24 @@ def create_app():
                 "ALTER TABLE memory_entry ADD COLUMN is_starred BOOLEAN NOT NULL DEFAULT 0"
             )
             _gc.commit()
+        if "captured_via_id" not in _mcols:
+            _gc.execute(
+                "ALTER TABLE memory_entry ADD COLUMN captured_via_id INTEGER"
+            )
+            _gc.commit()
+        _me_indexes = {
+            r[0]
+            for r in _gc.execute(
+                "SELECT name FROM sqlite_master WHERE type='index'"
+                " AND tbl_name='memory_entry'"
+            )
+        }
+        if "idx_memory_entry_captured_via_id" not in _me_indexes:
+            _gc.execute(
+                "CREATE INDEX IF NOT EXISTS idx_memory_entry_captured_via_id"
+                " ON memory_entry(captured_via_id)"
+            )
+            _gc.commit()
         _ca_indexes = {
             r[0]
             for r in _gc.execute(
