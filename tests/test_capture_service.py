@@ -259,6 +259,27 @@ class RecordCaptureTest(unittest.TestCase):
         self.assertIsNotNone(row)
         self.assertIn("AUTOINCREMENT", row[0])
 
+    def test_capture_timestamp_indexes_preserve_desc_ordering(self):
+        # The model is the create_all schema source; its timestamp indexes
+        # must emit DESC to match migration 001. The migration uses
+        # CREATE INDEX IF NOT EXISTS, so it cannot repair an ASC index the
+        # model path already created under the same name.
+        conn = sqlite3.connect(self.db_path)
+        self.addCleanup(conn.close)
+        index_sql = dict(
+            conn.execute(
+                "SELECT name, sql FROM sqlite_master WHERE type='index' "
+                "AND name IN ('idx_capture_received_at', 'idx_capture_adapter')"
+            ).fetchall()
+        )
+
+        self.assertIn(
+            "received_at_unix DESC", index_sql["idx_capture_received_at"]
+        )
+        self.assertIn(
+            "captured_at_unix DESC", index_sql["idx_capture_adapter"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
