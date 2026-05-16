@@ -14,6 +14,17 @@
       <span class="recent-list__provider">{{ c.adapter_id }}</span>
       <span class="recent-list__time">{{ c.received_at_unix|format_ts }}</span>
       <span class="metadata-line">capture #{{ c.id }} · {{ c.payload_kind }}</span>
+      <form method="post" action="{{ url_for('inbox.promote', capture_id=c.id) }}">
+        <button type="submit">Promote</button>
+      </form>
+      <form method="post" action="{{ url_for('inbox.reject', capture_id=c.id) }}">
+        <input name="reason" required placeholder="reason">
+        <button type="submit">Reject</button>
+      </form>
+      <form method="post" action="{{ url_for('inbox.quarantine', capture_id=c.id) }}">
+        <input name="reason" required placeholder="reason">
+        <button type="submit">Quarantine</button>
+      </form>
     </li>
     {% endfor %}
   </ul>
@@ -21,4 +32,56 @@
   <p class="metadata-note">Inbox empty</p>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var rows = Array.prototype.slice.call(
+    document.querySelectorAll(".recent-list__row")
+  );
+  if (!rows.length) { return; }
+  var focused = 0;
+
+  function render() {
+    rows.forEach(function (row, i) {
+      row.classList.toggle("recent-list__row--is-focused", i === focused);
+    });
+    rows[focused].scrollIntoView({ block: "nearest" });
+  }
+
+  function move(delta) {
+    focused = Math.max(0, Math.min(rows.length - 1, focused + delta));
+    render();
+  }
+
+  function reasonInput(formIndex) {
+    var form = rows[focused].querySelectorAll("form")[formIndex];
+    return form ? form.querySelector('input[name="reason"]') : null;
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if (event.target.tagName === "INPUT" || event.target.tagName === "TEXTAREA") {
+      if (event.key === "Escape") { event.target.blur(); }
+      return;
+    }
+    if (event.key === "j" || event.key === "ArrowDown") {
+      event.preventDefault();
+      move(1);
+    } else if (event.key === "k" || event.key === "ArrowUp") {
+      event.preventDefault();
+      move(-1);
+    } else if (event.key === "p") {
+      event.preventDefault();
+      rows[focused].querySelectorAll("form")[0].requestSubmit();
+    } else if (event.key === "r" || event.key === "q") {
+      event.preventDefault();
+      var input = reasonInput(event.key === "r" ? 1 : 2);
+      if (input) { input.focus(); }
+    }
+  });
+
+  render();
+})();
+</script>
 {% endblock %}

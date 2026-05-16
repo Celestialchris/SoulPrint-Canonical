@@ -1270,6 +1270,8 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
   color: var(--t3);
   flex-shrink: 0;
 }
+/* Inbox cockpit: the keyboard-focused row. */
+.workspace-canvas .recent-list__row--is-focused { background: var(--accent-soft); }
 
 /* Right panel — scoped under .context-panel. .provider-list collides at ~792. */
 .context-panel .context-block { margin-bottom: 24px; padding: 0 16px; }
