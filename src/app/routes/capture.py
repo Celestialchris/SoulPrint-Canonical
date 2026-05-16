@@ -10,6 +10,7 @@ is disabled with 503 until ``SOULPRINT_CAPTURE_TOKEN`` is configured.
 from __future__ import annotations
 
 import hmac
+import math
 
 from flask import Blueprint, current_app, jsonify, request
 
@@ -39,7 +40,14 @@ def _parse_envelope_fields(body: dict) -> dict | None:
     # bool is an int subclass; reject it explicitly so True/False is not a time.
     if isinstance(captured_at, bool) or not isinstance(captured_at, (int, float)):
         return None
-    fields["captured_at_unix"] = float(captured_at)
+
+    captured_at_unix = float(captured_at)
+    # NaN/Infinity pass the float check but crash int() truncation in
+    # content_hash; reject them here so a bad timestamp is a 400, not a 500.
+    if not math.isfinite(captured_at_unix):
+        return None
+
+    fields["captured_at_unix"] = captured_at_unix
 
     for name in ("body_html", "source_url", "source_title"):
         value = body.get(name)

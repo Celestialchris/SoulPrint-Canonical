@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import unittest
 
 from src.app import create_app
@@ -159,6 +160,36 @@ class ApiCaptureRouteTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()["error"], "invalid_envelope")
+
+    def test_post_nan_captured_at_returns_400_invalid_envelope(self):
+        # json.dumps writes a bare NaN token that the JSON parser accepts, so
+        # the non-finite value reaches the route and must be rejected there.
+        raw_body = json.dumps(self._envelope(captured_at_unix=float("nan")))
+
+        response = self.client.post(
+            "/api/capture",
+            data=raw_body,
+            content_type="application/json",
+            headers={"Authorization": f"Bearer {_CAPTURE_TOKEN}"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "invalid_envelope")
+        self.assertEqual(self._capture_count(), 0)
+
+    def test_post_infinite_captured_at_returns_400_invalid_envelope(self):
+        raw_body = json.dumps(self._envelope(captured_at_unix=float("inf")))
+
+        response = self.client.post(
+            "/api/capture",
+            data=raw_body,
+            content_type="application/json",
+            headers={"Authorization": f"Bearer {_CAPTURE_TOKEN}"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "invalid_envelope")
+        self.assertEqual(self._capture_count(), 0)
 
     def test_post_unknown_adapter_returns_400(self):
         response = self.client.post(
