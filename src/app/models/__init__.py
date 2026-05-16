@@ -1,3 +1,7 @@
+from sqlalchemy.orm import validates
+
+from src.capture.lifecycle import VALID_STATUSES
+
 from .db import db
 
 
@@ -13,6 +17,11 @@ class MemoryEntry(db.Model):
         default=False,
         server_default="0",
         index=True,
+    )
+    captured_via_id = db.Column(db.Integer, nullable=True)
+
+    __table_args__ = (
+        db.Index("idx_memory_entry_captured_via_id", "captured_via_id"),
     )
 
     def __repr__(self):
@@ -204,3 +213,12 @@ class Capture(db.Model):
         db.Index("idx_capture_adapter", adapter_id, captured_at_unix.desc()),
         {"sqlite_autoincrement": True},
     )
+
+    @validates("status")
+    def _validate_status(self, key, value):
+        if value not in VALID_STATUSES:
+            raise ValueError(
+                f"Capture.status must be one of {sorted(VALID_STATUSES)}, "
+                f"got {value!r}"
+            )
+        return value

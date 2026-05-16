@@ -11,10 +11,11 @@ import os
 import time
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
 
-from src.app.models import Capture
+from src.app.models import Capture, MemoryEntry
 from src.app.models.db import db
 from src.capture.content_hash import (
     CONTENT_HASH_RECIPE_VERSION,
@@ -22,6 +23,7 @@ from src.capture.content_hash import (
     content_hash,
     sha256_hex,
 )
+from src.capture.lifecycle import InvalidTransitionError, transition
 from src.capture.paths import ensure_inbox_layout, new_dir, tmp_dir
 from src.capture.registry import validate_envelope
 
@@ -185,4 +187,260 @@ def record_capture(envelope: CaptureEnvelope) -> CaptureResult:
         raw_payload_hash=raw_payload_hash,
         existed=False,
         filesystem_path=relative_path,
+    )
+
+
+class CaptureNotFoundError(LookupError):
+    """Raised when a capture_id does not match any row."""
+
+
+@dataclass(slots=True, frozen=True)
+class LifecycleResult:
+    """The outcome of a capture lifecycle transition.
+
+    For terminal transitions (reject, quarantine), ``decided_at_unix`` and
+    ``decided_by`` are set. For the intermediate triage transition both are
+    None, because triage is not a decision outcome and writes neither column.
+    """
+
+    capture_id: int
+    from_status: str
+    to_status: str
+    decided_at_unix: float | None
+    decided_by: str | None
+
+
+def _transition_capture(
+    capture_id: int,
+    *,
+    target_status: str,
+    allowed_sources: tuple[str, ...],
+    values: dict[str, float | str],
+) -> str:
+    """Compare-and-swap a capture row to ``target_status``; return its prior status.
+
+    Loads the row, validates the transition against the lifecycle matrix as a
+    pre-flight check, then issues a conditional UPDATE whose WHERE clause names
+    both the id and the permitted source statuses. A rowcount of 0 means a
+    concurrent transition moved the row between the pre-flight read and the
+    UPDATE: the loser rolls back and raises rather than overwriting the winner.
+
+    Raises:
+        CaptureNotFoundError: if no row has this capture_id.
+        InvalidTransitionError: if the transition is illegal, or if it lost a
+            concurrency race (the row is no longer in an allowed source state).
+    """
+
+    row = db.session.get(Capture, capture_id)
+    if row is None:
+        raise CaptureNotFoundError(f"No capture row with id {capture_id!r}")
+    from_status = row.status
+    transition(from_status, target_status)
+
+    result = db.session.execute(
+        db.update(Capture)
+        .where(Capture.id == capture_id)
+        .where(Capture.status.in_(allowed_sources))
+        .values(status=target_status, **values)
+    )
+    if result.rowcount == 0:
+        db.session.rollback()
+        current = db.session.get(Capture, capture_id)
+        if current is None:
+            raise CaptureNotFoundError(f"No capture row with id {capture_id!r}")
+        raise InvalidTransitionError(
+            f"Cannot transition capture {capture_id} from {current.status!r} "
+            f"to {target_status!r}"
+        )
+    db.session.commit()
+    return from_status
+
+
+def reject_capture(
+    capture_id: int, reason: str, *, decided_by: str
+) -> LifecycleResult:
+    """Reject a capture, recording who decided and why.
+
+    Valid from pending, triaged, or quarantined. ``decided_by`` is a required
+    keyword-only argument so the audit trail is never silently unattributed.
+    The inbox filesystem mirror is retained: a rejected payload is audit-trail
+    evidence, not deleted.
+
+    Caller responsibility: an active Flask application context must wrap the
+    call.
+    """
+
+    now = time.time()
+    from_status = _transition_capture(
+        capture_id,
+        target_status="rejected",
+        # quarantined -> rejected is a valid matrix edge: a held capture may
+        # be rejected outright. quarantine and promote do not accept it.
+        allowed_sources=("pending", "triaged", "quarantined"),
+        values={
+            "decided_at_unix": now,
+            "decided_by": decided_by,
+            "reject_reason": reason,
+        },
+    )
+    return LifecycleResult(
+        capture_id=capture_id,
+        from_status=from_status,
+        to_status="rejected",
+        decided_at_unix=now,
+        decided_by=decided_by,
+    )
+
+
+def quarantine_capture(
+    capture_id: int, reason: str, *, decided_by: str
+) -> LifecycleResult:
+    """Quarantine a capture, recording who decided and why.
+
+    Valid from pending or triaged. ``decided_by`` is a required keyword-only
+    argument. The inbox filesystem mirror is retained; quarantine has
+    indefinite retention, and recovery is the quarantined -> triaged edge.
+
+    Caller responsibility: an active Flask application context must wrap the
+    call.
+    """
+
+    now = time.time()
+    from_status = _transition_capture(
+        capture_id,
+        target_status="quarantined",
+        allowed_sources=("pending", "triaged"),
+        values={
+            "decided_at_unix": now,
+            "decided_by": decided_by,
+            "quarantine_reason": reason,
+        },
+    )
+    return LifecycleResult(
+        capture_id=capture_id,
+        from_status=from_status,
+        to_status="quarantined",
+        decided_at_unix=now,
+        decided_by=decided_by,
+    )
+
+
+def triage_capture(capture_id: int) -> LifecycleResult:
+    """Move a capture into the triaged state.
+
+    Valid from pending or quarantined (the quarantine recovery edge). Triage
+    is an intermediate transition, not a decision outcome: it writes only
+    ``triaged_at_unix`` and leaves ``decided_at_unix`` and ``decided_by`` NULL
+    until a terminal transition. It therefore takes no ``decided_by``.
+
+    Caller responsibility: an active Flask application context must wrap the
+    call.
+    """
+
+    now = time.time()
+    from_status = _transition_capture(
+        capture_id,
+        target_status="triaged",
+        allowed_sources=("pending", "quarantined"),
+        values={"triaged_at_unix": now},
+    )
+    return LifecycleResult(
+        capture_id=capture_id,
+        from_status=from_status,
+        to_status="triaged",
+        decided_at_unix=None,
+        decided_by=None,
+    )
+
+
+@dataclass(slots=True, frozen=True)
+class PromoteResult:
+    """The outcome of a promote_capture call.
+
+    Unlike LifecycleResult, ``decided_at_unix`` and ``decided_by`` are always
+    set (promotion is a terminal decision), and ``memory_entry_id`` carries the
+    id of the canonical MemoryEntry the capture was promoted into.
+    """
+
+    capture_id: int
+    memory_entry_id: int
+    from_status: str
+    decided_at_unix: float
+    decided_by: str
+
+
+def promote_capture(
+    capture_id: int, *, decided_by: str, tags: str | None = None
+) -> PromoteResult:
+    """Promote a capture into a canonical MemoryEntry, linked by captured_via_id.
+
+    Valid from pending or triaged. ``decided_by`` is a required keyword-only
+    argument. The new MemoryEntry mirrors the /save and /api/clip conventions
+    (role "user", timestamp datetime.utcnow()); its captured_via_id points back
+    to the originating capture, where the true capture time stays preserved on
+    captured_at_unix.
+
+    The MemoryEntry is created and flushed before the compare-and-swap UPDATE
+    on the capture row, all in one transaction, so a race loser rolls back and
+    leaves no orphan MemoryEntry. Empty body_text is permitted; B2 adds no
+    content validation. No FTS indexing happens here; B3 wires that when the
+    promote path becomes user-reachable.
+
+    Caller responsibility: an active Flask application context must wrap the
+    call.
+
+    Raises:
+        CaptureNotFoundError: if no row has this capture_id.
+        InvalidTransitionError: if the capture is not pending or triaged, or if
+            the promotion lost a concurrency race.
+    """
+
+    row = db.session.get(Capture, capture_id)
+    if row is None:
+        raise CaptureNotFoundError(f"No capture row with id {capture_id!r}")
+    from_status = row.status
+    transition(from_status, "promoted")
+
+    now = time.time()
+    memory_entry = MemoryEntry(
+        timestamp=datetime.utcnow(),
+        role="user",
+        content=row.body_text,
+        tags=tags if tags is not None else (row.tags or None),
+        is_starred=False,
+        captured_via_id=capture_id,
+    )
+    db.session.add(memory_entry)
+    db.session.flush()
+    memory_entry_id = memory_entry.id
+
+    result = db.session.execute(
+        db.update(Capture)
+        .where(Capture.id == capture_id)
+        .where(Capture.status.in_(("pending", "triaged")))
+        .values(
+            status="promoted",
+            decided_at_unix=now,
+            decided_by=decided_by,
+            promoted_to_kind="memory_entry",
+            promoted_to_id=memory_entry_id,
+        )
+    )
+    if result.rowcount == 0:
+        db.session.rollback()
+        current = db.session.get(Capture, capture_id)
+        if current is None:
+            raise CaptureNotFoundError(f"No capture row with id {capture_id!r}")
+        raise InvalidTransitionError(
+            f"Cannot transition capture {capture_id} from {current.status!r} "
+            f"to 'promoted'"
+        )
+    db.session.commit()
+
+    return PromoteResult(
+        capture_id=capture_id,
+        memory_entry_id=memory_entry_id,
+        from_status=from_status,
+        decided_at_unix=now,
+        decided_by=decided_by,
     )
