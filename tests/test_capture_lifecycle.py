@@ -13,6 +13,7 @@ from src.capture.lifecycle import (
     VALID_STATUSES,
     VALID_TRANSITIONS,
     InvalidTransitionError,
+    sources_for,
     transition,
 )
 from tests.temp_helpers import make_test_temp_dir, release_app_db_handles
@@ -75,6 +76,37 @@ class TransitionMatrixTest(unittest.TestCase):
 
     def test_invalid_transition_error_is_value_error(self):
         self.assertTrue(issubclass(InvalidTransitionError, ValueError))
+
+
+class SourcesForTest(unittest.TestCase):
+    """Pure-function tests for the sources_for transition-matrix inverter."""
+
+    def test_sources_for_returns_inverse_per_target(self):
+        # sources_for(target) is the set of statuses with an edge into target.
+        expected = {
+            "triaged": frozenset({"pending", "quarantined"}),
+            "promoted": frozenset({"pending", "triaged"}),
+            "rejected": frozenset({"pending", "triaged", "quarantined"}),
+            "quarantined": frozenset({"pending", "triaged"}),
+            "pending": frozenset(),
+        }
+        for target, sources in expected.items():
+            self.assertEqual(sources_for(target), sources)
+
+    def test_sources_for_pending_returns_empty(self):
+        # pending is a valid status with no inbound edge: empty, not an error.
+        self.assertEqual(sources_for("pending"), frozenset())
+
+    def test_sources_for_unknown_raises(self):
+        with self.assertRaises(InvalidTransitionError):
+            sources_for("bogus")
+
+    def test_sources_for_is_true_inverse(self):
+        # Every source sources_for yields must carry the target in its own
+        # forward edge set: sources_for is a genuine inverse of the matrix.
+        for target in VALID_STATUSES:
+            for src in sources_for(target):
+                self.assertIn(target, VALID_TRANSITIONS[src])
 
 
 class CaptureStatusValidatorTest(unittest.TestCase):

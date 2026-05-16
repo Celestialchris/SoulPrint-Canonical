@@ -56,3 +56,24 @@ def transition(from_status: str, to_status: str) -> None:
         raise InvalidTransitionError(
             f"Transition {from_status!r} -> {to_status!r} is not permitted"
         )
+
+
+def sources_for(target_status: str) -> frozenset[str]:
+    """Return the set of source statuses that can transition to target_status.
+
+    Inverts VALID_TRANSITIONS so the service layer can build its
+    compare-and-swap WHERE clause from the single source of truth instead of
+    hand-listing source statuses. A valid status with no inbound edge
+    (``pending``) returns an empty frozenset.
+
+    Raises:
+        InvalidTransitionError if target_status is not a known status.
+    """
+
+    if target_status not in VALID_STATUSES:
+        raise InvalidTransitionError(f"Unknown target status: {target_status!r}")
+    return frozenset(
+        src
+        for src, targets in VALID_TRANSITIONS.items()
+        if target_status in targets
+    )

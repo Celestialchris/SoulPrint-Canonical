@@ -23,6 +23,8 @@ from .models import ConversationAsset, ImportedConversation, ImportedMessage, Im
 from .import_runs import classify_import_outcome, latest_import_runs, record_import_run
 from .citation_handoff import build_answer_trace_citation_view
 from .decorators import require_license
+from .routes.capture import capture_bp
+from .routes.inbox import inbox_bp
 from .licensing import get_license_status, is_licensed
 from .viewmodels import build_workspace_summary
 from sqlalchemy import func
@@ -2997,4 +2999,6 @@ def create_app():
             return redirect(url_for("scan_claude_code"))
         return render_template("scan_claude_code_results.html", result=scan_result)
 
+    app.register_blueprint(capture_bp)
+    app.register_blueprint(inbox_bp)
     return app

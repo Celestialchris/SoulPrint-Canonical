@@ -23,7 +23,7 @@ from src.capture.content_hash import (
     content_hash,
     sha256_hex,
 )
-from src.capture.lifecycle import InvalidTransitionError, transition
+from src.capture.lifecycle import InvalidTransitionError, sources_for, transition
 from src.capture.paths import ensure_inbox_layout, new_dir, tmp_dir
 from src.capture.registry import validate_envelope
 
@@ -214,7 +214,6 @@ def _transition_capture(
     capture_id: int,
     *,
     target_status: str,
-    allowed_sources: tuple[str, ...],
     values: dict[str, float | str],
 ) -> str:
     """Compare-and-swap a capture row to ``target_status``; return its prior status.
@@ -231,6 +230,7 @@ def _transition_capture(
             concurrency race (the row is no longer in an allowed source state).
     """
 
+    allowed_sources = sources_for(target_status)
     row = db.session.get(Capture, capture_id)
     if row is None:
         raise CaptureNotFoundError(f"No capture row with id {capture_id!r}")
@@ -274,9 +274,6 @@ def reject_capture(
     from_status = _transition_capture(
         capture_id,
         target_status="rejected",
-        # quarantined -> rejected is a valid matrix edge: a held capture may
-        # be rejected outright. quarantine and promote do not accept it.
-        allowed_sources=("pending", "triaged", "quarantined"),
         values={
             "decided_at_unix": now,
             "decided_by": decided_by,
@@ -309,7 +306,6 @@ def quarantine_capture(
     from_status = _transition_capture(
         capture_id,
         target_status="quarantined",
-        allowed_sources=("pending", "triaged"),
         values={
             "decided_at_unix": now,
             "decided_by": decided_by,
@@ -341,7 +337,6 @@ def triage_capture(capture_id: int) -> LifecycleResult:
     from_status = _transition_capture(
         capture_id,
         target_status="triaged",
-        allowed_sources=("pending", "quarantined"),
         values={"triaged_at_unix": now},
     )
     return LifecycleResult(
@@ -417,7 +412,7 @@ def promote_capture(
     result = db.session.execute(
         db.update(Capture)
         .where(Capture.id == capture_id)
-        .where(Capture.status.in_(("pending", "triaged")))
+        .where(Capture.status.in_(sources_for("promoted")))
         .values(
             status="promoted",
             decided_at_unix=now,
