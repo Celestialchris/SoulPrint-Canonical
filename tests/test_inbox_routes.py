@@ -103,10 +103,24 @@ class InboxGetRouteTest(_InboxRouteTestBase):
         self.assertIn("first pending capture", html)
         self.assertIn("second pending capture", html)
 
+    def test_get_inbox_renders_pending_and_triaged_rows(self):
+        self._make_capture(body_text="a pending capture", status="pending")
+        self._make_capture(body_text="a triaged capture", status="triaged")
+
+        response = self.client.get("/inbox")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("a pending capture", html)
+        self.assertIn("a triaged capture", html)
+
     def test_get_inbox_filters_out_terminal_states(self):
         self._make_capture(body_text="visible pending capture", status="pending")
         self._make_capture(body_text="hidden promoted capture", status="promoted")
         self._make_capture(body_text="hidden rejected capture", status="rejected")
+        self._make_capture(
+            body_text="hidden quarantined capture", status="quarantined"
+        )
 
         response = self.client.get("/inbox")
 
@@ -114,6 +128,7 @@ class InboxGetRouteTest(_InboxRouteTestBase):
         self.assertIn("visible pending capture", html)
         self.assertNotIn("hidden promoted capture", html)
         self.assertNotIn("hidden rejected capture", html)
+        self.assertNotIn("hidden quarantined capture", html)
 
     def test_get_inbox_orders_by_received_at_desc(self):
         self._make_capture(body_text="older capture", received_at_unix=1000.0)

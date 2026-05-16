@@ -1,8 +1,8 @@
 """The /inbox capture cockpit: the read view and the three action routes.
 
-GET /inbox renders the pending capture queue. POST /inbox/<id>/promote,
-.../reject, and .../quarantine drive the B2 lifecycle service and are guarded
-by a same-origin check.
+GET /inbox renders the queue of captures awaiting a decision. POST
+/inbox/<id>/promote, .../reject, and .../quarantine drive the B2 lifecycle
+service and are guarded by a same-origin check.
 
 src.capture.service is imported inside each action handler, not at module
 scope: it imports src.app.models, which runs the app factory that registers
@@ -29,10 +29,13 @@ inbox_bp = Blueprint("inbox", __name__)
 
 @inbox_bp.get("/inbox")
 def show_inbox():
-    """Render every pending capture, newest first."""
+    """Render every capture awaiting a decision, newest first."""
 
+    # pending and triaged both await a terminal decision and support the
+    # promote/reject/quarantine actions; promoted, rejected, and quarantined
+    # are excluded from the cockpit.
     captures = (
-        Capture.query.filter_by(status="pending")
+        Capture.query.filter(Capture.status.in_(("pending", "triaged")))
         .order_by(Capture.received_at_unix.desc())
         .all()
     )

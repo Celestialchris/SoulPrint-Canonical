@@ -189,10 +189,21 @@ def api_capture():
 
     try:
         result = record_capture(CaptureEnvelope(**fields))
-    except CaptureContractError as exc:
+    except CaptureContractError:
         # Defense in depth: steps 4-8 should have caught every contract error.
+        # The exception text is logged, never returned: it can leak internal
+        # validation detail to the caller.
+        current_app.logger.warning(
+            "Capture contract violation reached route boundary.",
+            exc_info=True,
+        )
         return (
-            jsonify({"error": "contract_violation", "message": str(exc)}),
+            jsonify(
+                {
+                    "error": "contract_violation",
+                    "message": "The capture payload violates the adapter contract.",
+                }
+            ),
             400,
         )
 
