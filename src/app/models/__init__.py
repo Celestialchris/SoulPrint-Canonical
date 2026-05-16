@@ -18,6 +18,11 @@ class MemoryEntry(db.Model):
         server_default="0",
         index=True,
     )
+    captured_via_id = db.Column(db.Integer, nullable=True)
+
+    __table_args__ = (
+        db.Index("idx_memory_entry_captured_via_id", "captured_via_id"),
+    )
 
     def __repr__(self):
         return f"<MemoryEntry {self.id} {self.timestamp} {self.role}>"
