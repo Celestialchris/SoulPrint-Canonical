@@ -155,3 +155,52 @@ class ImportRun(db.Model):
     conversations_skipped = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     conversations_failed = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     error_message = db.Column(db.String(500), nullable=True)
+
+
+class Capture(db.Model):
+    """Raw captured payload awaiting triage; the Campaign 03 capture ledger."""
+
+    __tablename__ = "capture"
+
+    id = db.Column(db.Integer, primary_key=True)
+    adapter_id = db.Column(db.Text, nullable=False)
+    adapter_version = db.Column(db.Text, nullable=False)
+    payload_kind = db.Column(db.Text, nullable=False)
+    body_text = db.Column(db.Text, nullable=False)
+    body_html = db.Column(db.Text, nullable=True)
+    source_url = db.Column(db.Text, nullable=True)
+    source_title = db.Column(db.Text, nullable=True)
+    metadata_json = db.Column(db.Text, nullable=True)
+    hints_json = db.Column(db.Text, nullable=True)
+    content_hash = db.Column(db.String(64), nullable=False)
+    content_hash_recipe_version = db.Column(db.Integer, nullable=False)
+    raw_payload_hash = db.Column(db.String(64), nullable=False)
+    captured_at_unix = db.Column(db.Float, nullable=False)
+    received_at_unix = db.Column(db.Float, nullable=False)
+    status = db.Column(
+        db.Text,
+        nullable=False,
+        default="pending",
+        server_default="pending",
+    )
+    triaged_at_unix = db.Column(db.Float, nullable=True)
+    decided_at_unix = db.Column(db.Float, nullable=True)
+    decided_by = db.Column(db.Text, nullable=True)
+    reject_reason = db.Column(db.Text, nullable=True)
+    quarantine_reason = db.Column(db.Text, nullable=True)
+    promoted_to_kind = db.Column(db.Text, nullable=True)
+    promoted_to_id = db.Column(db.Integer, nullable=True)
+    tags = db.Column(db.Text, nullable=True)
+    filesystem_path = db.Column(db.Text, nullable=True)
+
+    __table_args__ = (
+        db.CheckConstraint(
+            "status IN ('pending','triaged','promoted','rejected','quarantined')",
+            name="capture_status_chk",
+        ),
+        db.Index("idx_capture_status", "status"),
+        db.Index("idx_capture_content_hash", "content_hash", unique=True),
+        db.Index("idx_capture_received_at", received_at_unix.desc()),
+        db.Index("idx_capture_adapter", adapter_id, captured_at_unix.desc()),
+        {"sqlite_autoincrement": True},
+    )
