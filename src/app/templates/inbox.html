@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox · SoulPrint{% endblock %}
+{% block page_title %}Inbox{% endblock %}
+{% block page_desc %}pending captures awaiting a decision{% endblock %}
+
+{% block content %}
+<div class="workspace-canvas">
+  {% if captures %}
+  <ul class="recent-list">
+    {% for c in captures %}
+    <li class="recent-list__row">
+      <span class="recent-list__title">{{ c.source_title or (c.body_text|truncate(90, true)) or "Untitled capture" }}</span>
+      <span class="recent-list__provider">{{ c.adapter_id }}</span>
+      <span class="recent-list__time">{{ c.received_at_unix|format_ts }}</span>
+      <span class="metadata-line">capture #{{ c.id }} · {{ c.payload_kind }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="metadata-note">Inbox empty</p>
+  {% endif %}
+</div>
+{% endblock %}
