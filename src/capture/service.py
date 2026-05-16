@@ -85,12 +85,12 @@ def record_capture(envelope: CaptureEnvelope) -> CaptureResult:
     """Persist a capture envelope to the ledger plus a durable filesystem mirror.
 
     Behavior, in order:
-      1. Compute content_hash via the recipe-v1 helper.
-      2. Compute raw_payload_hash = sha256_hex(canonical_json(envelope)).
-      3. Dedup pre-check: if a Capture row with the same content_hash already
+      1. Validate the envelope against its adapter contract.
+      2. Compute content_hash via the recipe-v1 helper.
+      3. Compute raw_payload_hash = sha256_hex(canonical_json(envelope)).
+      4. Dedup pre-check: if a Capture row with the same content_hash already
          exists, return a CaptureResult(existed=True, ...) describing that
          stored row. No filesystem write, no DB commit.
-      4. Validate the envelope against its adapter contract.
       5. Ensure the inbox layout, write canonical JSON to inbox/tmp/<uuid>.json,
          then os.replace() it to inbox/new/<uuid>.json.
       6. Insert a Capture row with status='pending' and filesystem_path stored
@@ -98,12 +98,16 @@ def record_capture(envelope: CaptureEnvelope) -> CaptureResult:
       7. Commit once.
       8. Return CaptureResult(existed=False, ...).
 
-    Dedup is atomic. Step 3 is only a fast path; the authority is the unique
+    Validation is step 1 by design: an envelope that violates its adapter
+    contract (oversized body, unknown adapter, disallowed payload kind) is
+    rejected before any hashing, canonicalization, or dedup work runs.
+
+    Dedup is atomic. Step 4 is only a fast path; the authority is the unique
     index on capture.content_hash. If a concurrent capture commits the same
-    content_hash after step 3, the step 6 insert raises IntegrityError; the
+    content_hash after step 4, the step 6 insert raises IntegrityError; the
     filesystem mirror from step 5 is removed, the transaction is rolled back,
     and the stored winner is returned as a CaptureResult(existed=True, ...),
-    the same outcome as step 3.
+    the same outcome as step 4.
 
     Every existed=True CaptureResult describes the stored row, never the
     rejected incoming envelope. A content_hash match can still differ on
@@ -116,6 +120,8 @@ def record_capture(envelope: CaptureEnvelope) -> CaptureResult:
     Caller responsibility: an active Flask application context must wrap the
     call.
     """
+
+    validate_envelope(envelope)
 
     content_hash_value = content_hash(
         envelope.adapter_id,
@@ -130,8 +136,6 @@ def record_capture(envelope: CaptureEnvelope) -> CaptureResult:
     existing = Capture.query.filter_by(content_hash=content_hash_value).first()
     if existing is not None:
         return _existing_capture_result(existing)
-
-    validate_envelope(envelope)
 
     ensure_inbox_layout()
     filename = f"{uuid.uuid4().hex}.json"

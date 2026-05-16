@@ -16,8 +16,8 @@ from src.capture.content_hash import (
     content_hash,
     sha256_hex,
 )
-from src.capture.paths import new_dir, tmp_dir
-from src.capture.registry import CaptureContractError, validate_envelope
+from src.capture.paths import ensure_inbox_layout, new_dir, tmp_dir
+from src.capture.registry import CaptureContractError
 from src.capture.service import CaptureEnvelope, CaptureResult, record_capture
 from tests.temp_helpers import (
     make_test_temp_dir,
@@ -150,6 +150,7 @@ class RecordCaptureTest(unittest.TestCase):
     def test_record_capture_dedup_absorbs_insert_race(self):
         # A duplicate content_hash committed between the dedup pre-check and
         # the insert is absorbed by the unique-index IntegrityError fallback.
+        # ensure_inbox_layout is the seam: it runs in that exact window.
         envelope = _make_envelope()
         expected_hash = content_hash(
             envelope.adapter_id,
@@ -159,11 +160,10 @@ class RecordCaptureTest(unittest.TestCase):
             envelope.captured_at_unix,
         )
 
-        def racing_validate(env):
-            # Runs in the window between the dedup pre-check and the insert:
-            # commit a row with the same content_hash, exactly as a concurrent
-            # capture would, so record_capture's own insert loses the race.
-            validate_envelope(env)
+        def racing_layout():
+            # Commit a row with the same content_hash, exactly as a concurrent
+            # capture would, so record_capture's own insert loses the race;
+            # then run the real layout the patched call stands in for.
             db.session.add(
                 Capture(
                     adapter_id="soulprint-cli",
@@ -179,9 +179,10 @@ class RecordCaptureTest(unittest.TestCase):
                 )
             )
             db.session.commit()
+            ensure_inbox_layout()
 
         with self.app.app_context():
-            with patch("src.capture.service.validate_envelope", racing_validate):
+            with patch("src.capture.service.ensure_inbox_layout", racing_layout):
                 result = record_capture(envelope)
             winner = (
                 db.session.query(Capture)
@@ -244,6 +245,33 @@ class RecordCaptureTest(unittest.TestCase):
         with self.app.app_context():
             with self.assertRaises(CaptureContractError):
                 record_capture(envelope)
+
+    def test_record_capture_validates_before_hashing(self):
+        # An oversized body must be rejected by validate_envelope before any
+        # hashing or canonicalization runs, so the adapter size cap actually
+        # protects the capture path from doomed-payload CPU and allocations.
+        oversized = "a" * (64 * 1024 + 1)
+        envelope = _make_envelope(
+            adapter_id="soulprint-app-save",
+            payload_kind="paste",
+            body_text=oversized,
+        )
+
+        def explode(*args, **kwargs):
+            raise AssertionError("hashing ran before validation")
+
+        with self.app.app_context():
+            with (
+                patch("src.capture.service.content_hash", explode),
+                patch("src.capture.service.canonical_json", explode),
+                self.assertRaises(CaptureContractError),
+            ):
+                record_capture(envelope)
+
+            row_count = db.session.query(Capture).count()
+
+        self.assertEqual(row_count, 0)
+        self.assertEqual(len(list(new_dir().glob("*.json"))), 0)
 
     def test_capture_table_uses_sqlite_autoincrement(self):
         # The live app builds the capture schema via db.create_all(), so the
