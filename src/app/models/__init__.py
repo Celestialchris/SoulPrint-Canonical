@@ -1,3 +1,7 @@
+from sqlalchemy.orm import validates
+
+from src.capture.lifecycle import VALID_STATUSES
+
 from .db import db
 
 
@@ -204,3 +208,12 @@ class Capture(db.Model):
         db.Index("idx_capture_adapter", adapter_id, captured_at_unix.desc()),
         {"sqlite_autoincrement": True},
     )
+
+    @validates("status")
+    def _validate_status(self, key, value):
+        if value not in VALID_STATUSES:
+            raise ValueError(
+                f"Capture.status must be one of {sorted(VALID_STATUSES)}, "
+                f"got {value!r}"
+            )
+        return value
