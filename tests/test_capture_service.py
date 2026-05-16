@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 from flask import Flask
 
@@ -15,7 +16,7 @@ from src.capture.content_hash import (
     sha256_hex,
 )
 from src.capture.paths import new_dir, tmp_dir
-from src.capture.registry import CaptureContractError
+from src.capture.registry import CaptureContractError, validate_envelope
 from src.capture.service import CaptureEnvelope, CaptureResult, record_capture
 from tests.temp_helpers import (
     make_test_temp_dir,
@@ -144,6 +145,63 @@ class RecordCaptureTest(unittest.TestCase):
         self.assertEqual(len(after_first), 1)
         self.assertEqual(len(after_second), 1)
         self.assertTrue(second.existed)
+
+    def test_record_capture_dedup_absorbs_insert_race(self):
+        # A duplicate content_hash committed between the dedup pre-check and
+        # the insert is absorbed by the unique-index IntegrityError fallback.
+        envelope = _make_envelope()
+        expected_hash = content_hash(
+            envelope.adapter_id,
+            envelope.payload_kind,
+            envelope.body_text,
+            envelope.source_url,
+            envelope.captured_at_unix,
+        )
+
+        def racing_validate(env):
+            # Runs in the window between the dedup pre-check and the insert:
+            # commit a row with the same content_hash, exactly as a concurrent
+            # capture would, so record_capture's own insert loses the race.
+            validate_envelope(env)
+            db.session.add(
+                Capture(
+                    adapter_id="soulprint-cli",
+                    adapter_version="1",
+                    payload_kind="paste",
+                    body_text="winning body",
+                    content_hash=expected_hash,
+                    content_hash_recipe_version=CONTENT_HASH_RECIPE_VERSION,
+                    raw_payload_hash="winner-raw-payload-hash",
+                    captured_at_unix=1.0,
+                    received_at_unix=2.0,
+                    status="pending",
+                )
+            )
+            db.session.commit()
+
+        with self.app.app_context():
+            with patch("src.capture.service.validate_envelope", racing_validate):
+                result = record_capture(envelope)
+            winner = (
+                db.session.query(Capture)
+                .filter_by(content_hash=expected_hash)
+                .one()
+            )
+            winner_id = winner.id
+            row_count = db.session.query(Capture).count()
+
+        self.assertTrue(result.existed)
+        self.assertEqual(result.capture_id, winner_id)
+        self.assertEqual(result.content_hash, expected_hash)
+        # The dedup result carries the stored winner's raw_payload_hash, never
+        # the rejected incoming envelope's.
+        self.assertEqual(result.raw_payload_hash, "winner-raw-payload-hash")
+        # The winner row stored no filesystem mirror; the result mirrors that.
+        self.assertIsNone(result.filesystem_path)
+        # The losing insert left no extra row behind...
+        self.assertEqual(row_count, 1)
+        # ...and removed its own filesystem mirror instead of orphaning it.
+        self.assertEqual(len(list(new_dir().glob("*.json"))), 0)
 
     def test_record_capture_writes_inbox_new_json(self):
         with self.app.app_context():

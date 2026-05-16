@@ -199,7 +199,7 @@ class Capture(db.Model):
             name="capture_status_chk",
         ),
         db.Index("idx_capture_status", "status"),
-        db.Index("idx_capture_content_hash", "content_hash"),
+        db.Index("idx_capture_content_hash", "content_hash", unique=True),
         db.Index("idx_capture_received_at", "received_at_unix"),
         db.Index("idx_capture_adapter", "adapter_id", "captured_at_unix"),
     )

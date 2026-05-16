@@ -50,8 +50,14 @@ _EXPECTED_INDEXES = {
 }
 
 
-def _insert_capture(conn: sqlite3.Connection, status: str) -> None:
-    """Insert a minimal capture row with the given status (parameterized)."""
+def _insert_capture(
+    conn: sqlite3.Connection, status: str, content_hash: str = "h"
+) -> None:
+    """Insert a minimal capture row with the given status (parameterized).
+
+    ``content_hash`` is a parameter because idx_capture_content_hash is a
+    unique index: callers inserting more than one row must vary it.
+    """
 
     conn.execute(
         "INSERT INTO capture "
@@ -59,7 +65,7 @@ def _insert_capture(conn: sqlite3.Connection, status: str) -> None:
         "content_hash_recipe_version, raw_payload_hash, captured_at_unix, "
         "received_at_unix, status) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ("soulprint-cli", "1", "paste", "hello", "h", 1, "r", 1.0, 2.0, status),
+        ("soulprint-cli", "1", "paste", "hello", content_hash, 1, "r", 1.0, 2.0, status),
     )
 
 
@@ -151,9 +157,10 @@ class CaptureMigrationTest(unittest.TestCase):
             _insert_capture(conn, "bogus")
         conn.rollback()
 
-        # Each of the five valid statuses inserts cleanly.
+        # Each of the five valid statuses inserts cleanly. content_hash varies
+        # per row because idx_capture_content_hash is a unique index.
         for status in ("pending", "triaged", "promoted", "rejected", "quarantined"):
-            _insert_capture(conn, status)
+            _insert_capture(conn, status, content_hash=f"hash-{status}")
         conn.commit()
 
         count = conn.execute("SELECT COUNT(*) FROM capture").fetchone()[0]
@@ -168,6 +175,22 @@ class CaptureMigrationTest(unittest.TestCase):
         names = {row[1] for row in index_list}
 
         self.assertTrue(_EXPECTED_INDEXES.issubset(names))
+
+    def test_001_content_hash_index_is_unique(self):
+        run_migrations(self.db_path)
+        conn = self._connect()
+
+        # PRAGMA index_list row layout: seq, name, unique, origin, partial.
+        index_list = conn.execute("PRAGMA index_list(capture)").fetchall()
+        unique_flag = {row[1]: row[2] for row in index_list}
+        self.assertEqual(unique_flag["idx_capture_content_hash"], 1)
+
+        # The unique index is enforced: a duplicate content_hash is rejected
+        # at INSERT time, which is what makes record_capture's dedup atomic.
+        _insert_capture(conn, "pending", content_hash="dup")
+        with self.assertRaises(sqlite3.IntegrityError):
+            _insert_capture(conn, "pending", content_hash="dup")
+        conn.rollback()
 
 
 if __name__ == "__main__":

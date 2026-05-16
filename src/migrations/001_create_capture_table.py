@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS capture (
 );
 
 CREATE INDEX IF NOT EXISTS idx_capture_status ON capture(status);
-CREATE INDEX IF NOT EXISTS idx_capture_content_hash ON capture(content_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_capture_content_hash ON capture(content_hash);
 CREATE INDEX IF NOT EXISTS idx_capture_received_at ON capture(received_at_unix DESC);
 CREATE INDEX IF NOT EXISTS idx_capture_adapter ON capture(adapter_id, captured_at_unix DESC);
 """

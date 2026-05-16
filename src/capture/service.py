@@ -12,6 +12,8 @@ import time
 import uuid
 from dataclasses import dataclass
 
+from sqlalchemy.exc import IntegrityError
+
 from src.app.models import Capture
 from src.app.models.db import db
 from src.capture.content_hash import (
@@ -67,15 +69,27 @@ def _optional_json(value: dict | None) -> str | None:
     return canonical_json(value)
 
 
+def _existing_capture_result(existing: Capture) -> CaptureResult:
+    """Build the existed=True CaptureResult for an already-stored capture."""
+
+    return CaptureResult(
+        capture_id=existing.id,
+        content_hash=existing.content_hash,
+        raw_payload_hash=existing.raw_payload_hash,
+        existed=True,
+        filesystem_path=existing.filesystem_path,
+    )
+
+
 def record_capture(envelope: CaptureEnvelope) -> CaptureResult:
     """Persist a capture envelope to the ledger plus a durable filesystem mirror.
 
     Behavior, in order:
       1. Compute content_hash via the recipe-v1 helper.
       2. Compute raw_payload_hash = sha256_hex(canonical_json(envelope)).
-      3. Dedup: if a Capture row with the same content_hash exists, return a
-         CaptureResult(existed=True, ...) carrying that row's id and stored
-         filesystem_path. No filesystem write, no DB commit.
+      3. Dedup pre-check: if a Capture row with the same content_hash already
+         exists, return a CaptureResult(existed=True, ...) describing that
+         stored row. No filesystem write, no DB commit.
       4. Validate the envelope against its adapter contract.
       5. Ensure the inbox layout, write canonical JSON to inbox/tmp/<uuid>.json,
          then os.replace() it to inbox/new/<uuid>.json.
@@ -83,6 +97,19 @@ def record_capture(envelope: CaptureEnvelope) -> CaptureResult:
          relative to inbox_root() ("new/<uuid>.json").
       7. Commit once.
       8. Return CaptureResult(existed=False, ...).
+
+    Dedup is atomic. Step 3 is only a fast path; the authority is the unique
+    index on capture.content_hash. If a concurrent capture commits the same
+    content_hash after step 3, the step 6 insert raises IntegrityError; the
+    filesystem mirror from step 5 is removed, the transaction is rolled back,
+    and the stored winner is returned as a CaptureResult(existed=True, ...),
+    the same outcome as step 3.
+
+    Every existed=True CaptureResult describes the stored row, never the
+    rejected incoming envelope. A content_hash match can still differ on
+    raw_payload_hash: the recipe-v1 content hash excludes adapter_version,
+    body_html, source_title, metadata, hints, sub-minute timestamp precision,
+    and trailing body whitespace, while raw_payload_hash covers all of them.
 
     Lifecycle columns (triaged_at_unix onward) are left NULL; B2 writes them.
 
@@ -102,13 +129,7 @@ def record_capture(envelope: CaptureEnvelope) -> CaptureResult:
 
     existing = Capture.query.filter_by(content_hash=content_hash_value).first()
     if existing is not None:
-        return CaptureResult(
-            capture_id=existing.id,
-            content_hash=content_hash_value,
-            raw_payload_hash=raw_payload_hash,
-            existed=True,
-            filesystem_path=existing.filesystem_path,
-        )
+        return _existing_capture_result(existing)
 
     validate_envelope(envelope)
 
@@ -139,7 +160,18 @@ def record_capture(envelope: CaptureEnvelope) -> CaptureResult:
         filesystem_path=relative_path,
     )
     db.session.add(row)
-    db.session.flush()
+    try:
+        db.session.flush()
+    except IntegrityError:
+        # A concurrent capture committed the same content_hash between the
+        # step 3 pre-check and this insert; the unique index rejected ours.
+        # Undo our partial work and return the stored winner.
+        db.session.rollback()
+        new_path.unlink(missing_ok=True)
+        existing = Capture.query.filter_by(content_hash=content_hash_value).first()
+        if existing is None:
+            raise
+        return _existing_capture_result(existing)
     capture_id = row.id
     db.session.commit()
 
