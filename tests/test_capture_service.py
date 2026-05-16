@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 from flask import Flask
 
-from src.app.models import Capture
+from src.app.models import Capture, MemoryEntry
 from src.app.models.db import db
 from src.capture.content_hash import (
     CONTENT_HASH_RECIPE_VERSION,
@@ -26,6 +26,8 @@ from src.capture.service import (
     CaptureNotFoundError,
     CaptureResult,
     LifecycleResult,
+    PromoteResult,
+    promote_capture,
     quarantine_capture,
     record_capture,
     reject_capture,
@@ -565,6 +567,144 @@ class TriageCaptureTest(_LifecycleServiceTestBase):
 
             self.assertIsNone(result.decided_at_unix)
             self.assertIsNone(result.decided_by)
+
+
+class PromoteCaptureTest(_LifecycleServiceTestBase):
+    def test_promote_capture_creates_memory_entry(self):
+        with self.app.app_context():
+            cap_id = _make_capture(status="pending", body_text="promote me").id
+
+            result = promote_capture(cap_id, decided_by="curator")
+
+            self.assertIsInstance(result, PromoteResult)
+            entry = db.session.get(MemoryEntry, result.memory_entry_id)
+            self.assertIsNotNone(entry)
+            self.assertEqual(entry.content, "promote me")
+            self.assertEqual(entry.role, "user")
+            self.assertIsNotNone(entry.timestamp)
+
+    def test_promote_capture_links_captured_via_id(self):
+        with self.app.app_context():
+            cap_id = _make_capture(status="pending").id
+
+            result = promote_capture(cap_id, decided_by="curator")
+
+            entry = db.session.get(MemoryEntry, result.memory_entry_id)
+            self.assertEqual(entry.captured_via_id, cap_id)
+
+    def test_promote_capture_sets_promotion_metadata(self):
+        with self.app.app_context():
+            cap_id = _make_capture(status="triaged").id
+
+            before = time.time()
+            result = promote_capture(cap_id, decided_by="curator")
+            after = time.time()
+
+            row = db.session.get(Capture, cap_id)
+            self.assertEqual(row.status, "promoted")
+            self.assertEqual(row.promoted_to_kind, "memory_entry")
+            self.assertEqual(row.promoted_to_id, result.memory_entry_id)
+            self.assertEqual(row.decided_by, "curator")
+            self.assertGreaterEqual(row.decided_at_unix, before)
+            self.assertLessEqual(row.decided_at_unix, after)
+            self.assertEqual(result.from_status, "triaged")
+
+    def test_promote_capture_carries_tags_parameter(self):
+        with self.app.app_context():
+            cap_id = _make_capture(status="pending", tags="capture-tag").id
+
+            result = promote_capture(
+                cap_id, decided_by="curator", tags="explicit-tag"
+            )
+
+            entry = db.session.get(MemoryEntry, result.memory_entry_id)
+            self.assertEqual(entry.tags, "explicit-tag")
+
+    def test_promote_capture_falls_back_to_capture_tags(self):
+        with self.app.app_context():
+            cap_id = _make_capture(status="pending", tags="capture-tag").id
+
+            result = promote_capture(cap_id, decided_by="curator")
+
+            entry = db.session.get(MemoryEntry, result.memory_entry_id)
+            self.assertEqual(entry.tags, "capture-tag")
+
+    def test_promote_capture_falls_back_to_null_tags(self):
+        with self.app.app_context():
+            cap_id = _make_capture(status="pending", tags=None).id
+
+            result = promote_capture(cap_id, decided_by="curator")
+
+            entry = db.session.get(MemoryEntry, result.memory_entry_id)
+            self.assertIsNone(entry.tags)
+
+    def test_promote_capture_allows_empty_body_text(self):
+        # B1 permits captures with empty body_text; B2 adds no stricter rule.
+        with self.app.app_context():
+            cap_id = _make_capture(status="pending", body_text="").id
+
+            result = promote_capture(cap_id, decided_by="curator")
+
+            entry = db.session.get(MemoryEntry, result.memory_entry_id)
+            self.assertEqual(entry.content, "")
+
+    def test_promote_capture_raises_on_terminal_source(self):
+        with self.app.app_context():
+            cap_id = _make_capture(status="rejected").id
+
+            with self.assertRaises(InvalidTransitionError):
+                promote_capture(cap_id, decided_by="curator")
+
+    def test_promote_capture_raises_on_missing_id(self):
+        with self.app.app_context():
+            with self.assertRaises(CaptureNotFoundError):
+                promote_capture(999999, decided_by="curator")
+
+    def test_promote_capture_requires_decided_by_keyword(self):
+        # decided_by is keyword-only: a positional second argument is rejected.
+        with self.app.app_context():
+            cap_id = _make_capture(status="pending").id
+
+            with self.assertRaises(TypeError):
+                promote_capture(cap_id, "curator")
+
+    def test_promote_capture_concurrent_safe(self):
+        # A competing reject commits between the pre-flight read and the
+        # compare-and-swap; the promote loser rolls back, leaves no orphan
+        # MemoryEntry, and raises.
+        with self.app.app_context():
+            cap_id = _make_capture(status="pending").id
+
+            def racing_transition(*args):
+                db.session.execute(
+                    db.update(Capture)
+                    .where(Capture.id == cap_id)
+                    .values(
+                        status="rejected",
+                        decided_at_unix=111.0,
+                        decided_by="race-winner",
+                        reject_reason="winner reason",
+                    )
+                )
+                db.session.commit()
+
+            with patch("src.capture.service.transition", racing_transition):
+                with self.assertRaises(InvalidTransitionError):
+                    promote_capture(cap_id, decided_by="loser")
+
+            row = db.session.get(Capture, cap_id)
+            self.assertEqual(row.status, "rejected")
+            self.assertEqual(db.session.query(MemoryEntry).count(), 0)
+
+    def test_promote_capture_does_not_call_fts_index(self):
+        # B2 does not index promoted memories; B3 wires FTS at the route.
+        with self.app.app_context():
+            cap_id = _make_capture(status="pending").id
+
+            with patch("src.retrieval.fts.index_new_note") as mock_index:
+                promote_capture(cap_id, decided_by="curator")
+
+            mock_index.assert_not_called()
 
 
 if __name__ == "__main__":
