@@ -13,11 +13,12 @@ from src.capture.content_hash import (
 )
 
 
-# Frozen recipe-v1 digest. Computed once against the fully-specified envelope
-# in test_content_hash_matches_recipe_v1; a failure here means recipe v1
-# changed and CONTENT_HASH_RECIPE_VERSION must be bumped to 2.
+# Frozen recipe-v1 digest: sha256 of the canonical_json array of the five
+# recipe fields, computed against the fully-specified envelope in
+# test_content_hash_matches_recipe_v1. Once recipe v1 is in use, a failure
+# here means the recipe changed and CONTENT_HASH_RECIPE_VERSION must bump.
 _RECIPE_V1_EXPECTED = (
-    "2427d7f82310f0a91a6e7828d2717a8b3a2405e89592831f43729c289d6e5a7c"
+    "65c8cf5ea650dc7064611470aa6f6eb42d2615b89c1490c95a36a7b072886e10"
 )
 
 # Standard FIPS 180-2 SHA-256 test vector for the ASCII string "abc".
@@ -76,6 +77,15 @@ class ContentHashRecipeTest(unittest.TestCase):
         empty_url = content_hash("a", "paste", "x", "", 1000.0)
 
         self.assertEqual(none_url, empty_url)
+
+    def test_content_hash_disambiguates_embedded_nul(self):
+        # A NUL inside a field must not blur the boundary with the next
+        # field. The old "\x00".join recipe collided these two envelopes;
+        # the canonical_json array keeps them distinct.
+        embedded_in_body = content_hash("a", "paste", "x\0y", "z", 1000.0)
+        embedded_in_url = content_hash("a", "paste", "x", "y\0z", 1000.0)
+
+        self.assertNotEqual(embedded_in_body, embedded_in_url)
 
     def test_content_hash_recipe_version_is_one(self):
         self.assertEqual(CONTENT_HASH_RECIPE_VERSION, 1)

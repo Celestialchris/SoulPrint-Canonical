@@ -55,17 +55,23 @@ def content_hash(
     Stability properties: ``captured_at_unix`` is truncated to a minute
     boundary, ``body_text`` is NFC-normalized and right-stripped, and a
     ``source_url`` of ``None`` hashes identically to an empty string.
+
+    Recipe v1 hashes the five fields as a ``canonical_json`` array, not a
+    delimiter-joined string. JSON quoting keeps the field boundaries
+    unambiguous even when a value contains the delimiter byte: a NUL inside
+    ``body_text`` or ``source_url`` can no longer blur into the next field.
     """
 
     minute_truncated = (int(captured_at_unix) // 60) * 60
     normalized_body = unicodedata.normalize("NFC", body_text).rstrip()
 
-    parts = [
-        adapter_id,
-        payload_kind,
-        normalized_body,
-        source_url or "",
-        str(minute_truncated),
-    ]
-    payload = "\x00".join(parts)
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    payload = canonical_json(
+        [
+            adapter_id,
+            payload_kind,
+            normalized_body,
+            source_url or "",
+            str(minute_truncated),
+        ]
+    )
+    return sha256_hex(payload)
