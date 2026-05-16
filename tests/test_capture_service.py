@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 import unittest
 from unittest.mock import patch
 
@@ -243,6 +244,20 @@ class RecordCaptureTest(unittest.TestCase):
         with self.app.app_context():
             with self.assertRaises(CaptureContractError):
                 record_capture(envelope)
+
+    def test_capture_table_uses_sqlite_autoincrement(self):
+        # The live app builds the capture schema via db.create_all(), so the
+        # model must emit AUTOINCREMENT to match migration 001 and keep
+        # capture ids monotonic (SQLite reuses plain rowids after a delete).
+        conn = sqlite3.connect(self.db_path)
+        self.addCleanup(conn.close)
+        row = conn.execute(
+            "SELECT sql FROM sqlite_master "
+            "WHERE type='table' AND name='capture'"
+        ).fetchone()
+
+        self.assertIsNotNone(row)
+        self.assertIn("AUTOINCREMENT", row[0])
 
 
 if __name__ == "__main__":
