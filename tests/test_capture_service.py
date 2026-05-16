@@ -707,5 +707,45 @@ class PromoteCaptureTest(_LifecycleServiceTestBase):
             mock_index.assert_not_called()
 
 
+class ServiceDerivationTest(_LifecycleServiceTestBase):
+    """The four lifecycle functions derive their CAS source set from sources_for."""
+
+    def test_service_where_clause_derives_from_sources_for(self):
+        # Patching sources_for to a frozenset that excludes "pending" must make
+        # every service function reject a pending capture. A hand-listed source
+        # tuple would still admit "pending" and succeed; only a WHERE clause
+        # genuinely derived from sources_for produces the rowcount-0 raise.
+        invocations = [
+            (
+                "reject_capture",
+                lambda cid: reject_capture(cid, "reason", decided_by="operator"),
+            ),
+            (
+                "quarantine_capture",
+                lambda cid: quarantine_capture(cid, "reason", decided_by="operator"),
+            ),
+            (
+                "triage_capture",
+                lambda cid: triage_capture(cid),
+            ),
+            (
+                "promote_capture",
+                lambda cid: promote_capture(cid, decided_by="operator"),
+            ),
+        ]
+        for name, invoke in invocations:
+            with self.app.app_context():
+                cap_id = _make_capture(status="pending").id
+                with patch(
+                    "src.capture.service.sources_for",
+                    lambda _target: frozenset({"triaged"}),
+                ):
+                    with self.assertRaises(
+                        InvalidTransitionError,
+                        msg=f"{name} did not derive its WHERE clause from sources_for",
+                    ):
+                        invoke(cap_id)
+
+
 if __name__ == "__main__":
     unittest.main()
